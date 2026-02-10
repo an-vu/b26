@@ -21,4 +21,8 @@ public class ClickAbuseGuard {
     lastAccepted.put(key, now);
     return true;
   }
+
+  public void clear() {
+    lastAccepted.clear();
+  }
 }
