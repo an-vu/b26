@@ -1,11 +1,14 @@
-import { Component } from '@angular/core';
-import { CardComponent } from '../card/card.component';
+import { Component, Input } from '@angular/core';
+import type { Card } from '../../models/profile';
+import { CardComponent } from '../card/card';
 
 @Component({
   selector: 'app-card-grid',
   standalone: true,
   imports: [CardComponent],
-  templateUrl: './card-grid.component.html',
-  styleUrl: './card-grid.component.css',
+  templateUrl: './card-grid.html',
+  styleUrl: './card-grid.css',
 })
-export class CardGridComponent {}
+export class CardGridComponent {
+  @Input({ required: true }) cards!: Card[];
+}

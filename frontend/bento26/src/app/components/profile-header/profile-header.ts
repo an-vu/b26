@@ -1,11 +1,12 @@
-import { Component } from '@angular/core';
+import { Component, Input } from '@angular/core';
 
 @Component({
   selector: 'app-profile-header',
-  imports: [],
+  standalone: true,
   templateUrl: './profile-header.html',
   styleUrl: './profile-header.css',
 })
-export class ProfileHeader {
-
+export class ProfileHeaderComponent {
+  @Input({ required: true }) name!: string;
+  @Input({ required: true }) headline!: string;
 }
