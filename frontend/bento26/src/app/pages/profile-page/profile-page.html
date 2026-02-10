@@ -1,10 +1,12 @@
-<main class="page" *ngIf="profile$ | async as p; else loading">
-  <app-profile-header [name]="p.name" [headline]="p.headline"></app-profile-header>
-  <app-card-grid [cards]="p.cards"></app-card-grid>
-</main>
-
-<ng-template #loading>
-  <main class="page">
+<ng-container *ngIf="pageState$ | async as state">
+  <main class="page" *ngIf="state.status === 'ready'">
+    <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
+    <app-card-grid [cards]="state.profile.cards"></app-card-grid>
+  </main>
+  <main class="page" *ngIf="state.status === 'loading'">
     <p>Loading...</p>
   </main>
-</ng-template>
+  <main class="page" *ngIf="state.status === 'missing'">
+    <p>Profile not found.</p>
+  </main>
+</ng-container>

@@ -1,0 +1,11 @@
+{
+  "id": "berkshire",
+  "name": "An Vu",
+  "headline": "Software Engineering - Angular + Spring Boot",
+  "cards": [
+    { "id": "github", "label": "GitHub", "href": "https://github.com/" },
+    { "id": "linkedin", "label": "LinkedIn", "href": "https://linkedin.com/" },
+    { "id": "resume", "label": "Resume", "href": "#" },
+    { "id": "projects", "label": "Projects", "href": "#" }
+  ]
+}
