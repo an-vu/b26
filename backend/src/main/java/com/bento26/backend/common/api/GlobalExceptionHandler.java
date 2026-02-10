@@ -1,5 +1,7 @@
 package com.bento26.backend.common.api;
 
+import com.bento26.backend.analytics.domain.CardNotFoundForProfileException;
+import com.bento26.backend.analytics.domain.ClickRateLimitedException;
 import com.bento26.backend.profile.domain.InvalidProfileUpdateException;
 import com.bento26.backend.profile.domain.ProfileNotFoundException;
 import java.util.List;
@@ -40,5 +42,17 @@ public class GlobalExceptionHandler {
   public ValidationErrorResponse handleInvalidUpdate(InvalidProfileUpdateException exception) {
     return new ValidationErrorResponse(
         "Validation failed", List.of(new ValidationFieldError("cards", exception.getMessage())));
+  }
+
+  @ExceptionHandler(CardNotFoundForProfileException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleCardNotInProfile(CardNotFoundForProfileException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(ClickRateLimitedException.class)
+  @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
+  public ApiError handleClickRateLimit(ClickRateLimitedException exception) {
+    return new ApiError(exception.getMessage());
   }
 }
