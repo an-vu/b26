@@ -167,4 +167,22 @@ class ApiIntegrationTest {
         .andExpect(status().isTooManyRequests())
         .andExpect(jsonPath("$.message").value("Too many click events. Try again shortly."));
   }
+
+  @Test
+  void getWidgets_returns200WithSeededData() throws Exception {
+    mockMvc
+        .perform(get("/api/profile/default/widgets"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$[0].type").isNotEmpty())
+        .andExpect(jsonPath("$[0].config").exists());
+  }
+
+  @Test
+  void getWidgets_missingProfile_returns404() throws Exception {
+    mockMvc
+        .perform(get("/api/profile/not-here/widgets"))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Profile not found: not-here"));
+  }
 }
