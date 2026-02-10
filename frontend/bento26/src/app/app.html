@@ -1,8 +1,1 @@
-<main class="page" *ngIf="profile as p">
-  <app-profile-header [name]="p.name" [headline]="p.headline"></app-profile-header>
-  <app-card-grid [cards]="p.cards"></app-card-grid>
-</main>
-
-<main class="page" *ngIf="!profile">
-  <p>Loading...</p>
-</main>
+<router-outlet></router-outlet>

@@ -1,0 +1,10 @@
+<main class="page" *ngIf="profile$ | async as p; else loading">
+  <app-profile-header [name]="p.name" [headline]="p.headline"></app-profile-header>
+  <app-card-grid [cards]="p.cards"></app-card-grid>
+</main>
+
+<ng-template #loading>
+  <main class="page">
+    <p>Loading...</p>
+  </main>
+</ng-template>
