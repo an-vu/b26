@@ -93,4 +93,3 @@ Runs at: `http://localhost:8080`
 * `PUT /api/profile/{handle}`
 * `POST /api/click/{cardId}`
 * `GET /api/analytics/{handle}`
-
