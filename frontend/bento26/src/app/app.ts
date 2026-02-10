@@ -1,12 +1,12 @@
-import { Component, signal } from '@angular/core';
-import { RouterOutlet } from '@angular/router';
+import { Component } from '@angular/core';
+import { ProfileHeaderComponent } from './components/profile-header/profile-header.component';
+import { CardGridComponent } from './components/card-grid/card-grid.component';
 
 @Component({
   selector: 'app-root',
-  imports: [RouterOutlet],
+  standalone: true,
+  imports: [ProfileHeaderComponent, CardGridComponent],
   templateUrl: './app.html',
-  styleUrl: './app.css'
+  styleUrl: './app.css',
 })
-export class App {
-  protected readonly title = signal('bento-26');
-}
+export class AppComponent {}
