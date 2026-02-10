@@ -82,7 +82,7 @@ Runs at: `http://localhost:4200`
 
 ```bash
 cd backend
-./mvnw spring-boot:run
+mvn spring-boot:run
 ```
 
 Runs at: `http://localhost:8080`
