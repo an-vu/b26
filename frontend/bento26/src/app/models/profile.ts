@@ -10,3 +10,9 @@ export type Profile = {
   headline: string;
   cards: Card[];
 };
+
+export type UpdateProfileRequest = {
+  name: string;
+  headline: string;
+  cards: Card[];
+};

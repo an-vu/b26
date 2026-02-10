@@ -2,50 +2,74 @@ package com.bento26.backend.profile.domain;
 
 import com.bento26.backend.profile.api.CardDto;
 import com.bento26.backend.profile.api.ProfileDto;
+import com.bento26.backend.profile.api.UpdateCardRequest;
+import com.bento26.backend.profile.api.UpdateProfileRequest;
+import com.bento26.backend.profile.persistence.CardEntity;
+import com.bento26.backend.profile.persistence.ProfileEntity;
+import com.bento26.backend.profile.persistence.ProfileRepository;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class ProfileService {
-  private static final Map<String, ProfileDto> PROFILES =
-      Map.of(
-          "default",
-          new ProfileDto(
-              "default",
-              "An Vu",
-              "Software Engineer - Angular + Java",
-              List.of(
-                  new CardDto("github", "GitHub", "https://github.com/"),
-                  new CardDto("linkedin", "LinkedIn", "https://linkedin.com/"),
-                  new CardDto("resume", "Resume", "#"),
-                  new CardDto("projects", "Projects", "#"))),
-          "berkshire",
-          new ProfileDto(
-              "berkshire",
-              "An Vu",
-              "Software Engineering - Angular + Spring Boot",
-              List.of(
-                  new CardDto("github", "GitHub", "https://github.com/"),
-                  new CardDto("linkedin", "LinkedIn", "https://linkedin.com/"),
-                  new CardDto("resume", "Resume", "#"),
-                  new CardDto("projects", "Projects", "#"))),
-          "union-pacific",
-          new ProfileDto(
-              "union-pacific",
-              "An Vu",
-              "Software Engineering - Angular + Java",
-              List.of(
-                  new CardDto("github", "GitHub", "https://github.com/"),
-                  new CardDto("linkedin", "LinkedIn", "https://linkedin.com/"),
-                  new CardDto("resume", "Resume", "#"),
-                  new CardDto("projects", "Projects", "#"))));
+  private final ProfileRepository profileRepository;
 
+  public ProfileService(ProfileRepository profileRepository) {
+    this.profileRepository = profileRepository;
+  }
+
+  @Transactional(readOnly = true)
   public ProfileDto getProfile(String profileId) {
-    ProfileDto profile = PROFILES.get(profileId);
-    if (profile == null) {
-      throw new ProfileNotFoundException(profileId);
+    ProfileEntity profile =
+        profileRepository
+            .findById(profileId)
+            .orElseThrow(() -> new ProfileNotFoundException(profileId));
+    return toDto(profile);
+  }
+
+  @Transactional
+  public ProfileDto updateProfile(String profileId, UpdateProfileRequest request) {
+    ProfileEntity profile =
+        profileRepository
+            .findById(profileId)
+            .orElseThrow(() -> new ProfileNotFoundException(profileId));
+
+    validateNoDuplicateCardIds(request.cards());
+
+    profile.setName(request.name());
+    profile.setHeadline(request.headline());
+    profile.getCards().clear();
+    for (UpdateCardRequest requestCard : request.cards()) {
+      CardEntity card = new CardEntity();
+      card.setId(requestCard.id());
+      card.setLabel(requestCard.label());
+      card.setHref(requestCard.href());
+      card.setProfile(profile);
+      profile.getCards().add(card);
     }
-    return profile;
+
+    return toDto(profileRepository.save(profile));
+  }
+
+  private static void validateNoDuplicateCardIds(List<UpdateCardRequest> cards) {
+    Set<String> ids = new HashSet<>();
+    for (UpdateCardRequest card : cards) {
+      if (!ids.add(card.id())) {
+        throw new InvalidProfileUpdateException("cards contain duplicate id: " + card.id());
+      }
+    }
+  }
+
+  private static ProfileDto toDto(ProfileEntity profile) {
+    return new ProfileDto(
+        profile.getId(),
+        profile.getName(),
+        profile.getHeadline(),
+        profile.getCards().stream()
+            .map(card -> new CardDto(card.getId(), card.getLabel(), card.getHref()))
+            .toList());
   }
 }
