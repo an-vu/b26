@@ -1,12 +1,24 @@
-import { Component, Input } from '@angular/core';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
 
-@Component({
-  selector: 'app-card',
-  standalone: true,
-  templateUrl: './card.component.html',
-  styleUrl: './card.component.css',
-})
-export class CardComponent {
-  @Input({ required: true }) href!: string;
-  @Input({ required: true }) label!: string;
-}
+import { CardComponent } from './card';
+
+describe('CardComponent', () => {
+  let component: CardComponent;
+  let fixture: ComponentFixture<CardComponent>;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [CardComponent],
+    }).compileComponents();
+
+    fixture = TestBed.createComponent(CardComponent);
+    component = fixture.componentInstance;
+    component.label = 'GitHub';
+    component.href = 'https://github.com/';
+    fixture.detectChanges();
+  });
+
+  it('should create', () => {
+    expect(component).toBeTruthy();
+  });
+});
