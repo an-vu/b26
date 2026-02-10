@@ -1,0 +1,20 @@
+.page { max-width: 960px; margin: 0 auto; padding: 24px; }
+.header { margin-bottom: 16px; }
+.title { margin: 0 0 6px; }
+.subtitle { margin: 0; opacity: 0.75; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.card {
+  display: block;
+  padding: 16px;
+  border: 1px solid rgba(0,0,0,0.15);
+  border-radius: 12px;
+  text-decoration: none;
+  color: inherit;
+}
+.card:hover { border-color: rgba(0,0,0,0.35); }
