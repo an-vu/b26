@@ -2,6 +2,7 @@
 # OS
 # =====================
 .DS_Store
+Thumbs.db
 
 # =====================
 # Logs
@@ -12,6 +13,8 @@ npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
 lerna-debug.log*
+testem.log
+libpeerconnection.log
 
 # =====================
 # Node / Frontend
@@ -28,6 +31,13 @@ dist/
 .node_repl_history
 *.tsbuildinfo
 *.tgz
+tmp/
+out-tsc/
+bazel-out/
+.sass-cache/
+connect.lock
+typings/
+__screenshots__/
 
 # Framework build outputs
 .next/
@@ -49,6 +59,20 @@ out/
 !.yarn/sdks
 !.yarn/versions
 
+# IDE / Editor
+.idea/
+*.iml
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+.history/*
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
 # =====================
 # Java / Spring Boot
 # =====================
@@ -57,8 +81,6 @@ build/
 out/
 *.class
 .gradle/
-.idea/
-*.iml
 
 # =====================
 # Coverage / Testing
