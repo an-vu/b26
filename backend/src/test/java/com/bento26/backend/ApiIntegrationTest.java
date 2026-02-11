@@ -2,6 +2,8 @@ package com.bento26.backend;
 
 import com.bento26.backend.analytics.domain.ClickAbuseGuard;
 import com.bento26.backend.analytics.persistence.ClickEventRepository;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -9,7 +11,9 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
@@ -22,6 +26,7 @@ class ApiIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ClickEventRepository clickEventRepository;
   @Autowired private ClickAbuseGuard clickAbuseGuard;
+  @Autowired private ObjectMapper objectMapper;
 
   @BeforeEach
   void clearClicks() {
@@ -184,5 +189,141 @@ class ApiIntegrationTest {
         .perform(get("/api/profile/not-here/widgets"))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Profile not found: not-here"));
+  }
+
+  @Test
+  void postWidget_valid_returns201() throws Exception {
+    String payload =
+        """
+        {
+          "type": "embed",
+          "title": "Demo Embed",
+          "layout": "span-1",
+          "config": { "embedUrl": "https://example.com/embed" },
+          "enabled": true,
+          "order": 5
+        }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/profile/default/widgets")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.type").value("embed"))
+        .andExpect(jsonPath("$.title").value("Demo Embed"))
+        .andExpect(jsonPath("$.config.embedUrl").value("https://example.com/embed"));
+  }
+
+  @Test
+  void putWidget_valid_returns200() throws Exception {
+    long widgetId = createWidgetAndReturnId();
+    String payload =
+        """
+        {
+          "type": "map",
+          "title": "Updated Places",
+          "layout": "span-2",
+          "config": { "places": ["Omaha, NE", "Austin, TX"] },
+          "enabled": true,
+          "order": 2
+        }
+        """;
+
+    mockMvc
+        .perform(
+            put("/api/profile/default/widgets/{widgetId}", widgetId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").value(widgetId))
+        .andExpect(jsonPath("$.type").value("map"))
+        .andExpect(jsonPath("$.config.places.length()").value(2));
+  }
+
+  @Test
+  void deleteWidget_valid_returns204() throws Exception {
+    long widgetId = createWidgetAndReturnId();
+
+    mockMvc
+        .perform(delete("/api/profile/default/widgets/{widgetId}", widgetId))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(delete("/api/profile/default/widgets/{widgetId}", widgetId))
+        .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void postWidget_invalidConfig_returns400() throws Exception {
+    String payload =
+        """
+        {
+          "type": "embed",
+          "title": "Bad Embed",
+          "layout": "span-1",
+          "config": { "embedUrl": "not-a-url" },
+          "enabled": true,
+          "order": 0
+        }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/profile/default/widgets")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("embed config requires a valid http embedUrl"));
+  }
+
+  @Test
+  void putWidget_wrongProfile_returns404() throws Exception {
+    long widgetId = createWidgetAndReturnId();
+    String payload =
+        """
+        {
+          "type": "embed",
+          "title": "Other",
+          "layout": "span-1",
+          "config": { "embedUrl": "https://example.com/embed" },
+          "enabled": true,
+          "order": 1
+        }
+        """;
+
+    mockMvc
+        .perform(
+            put("/api/profile/berkshire/widgets/{widgetId}", widgetId)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isNotFound());
+  }
+
+  private long createWidgetAndReturnId() throws Exception {
+    String payload =
+        """
+        {
+          "type": "embed",
+          "title": "Seeded in test",
+          "layout": "span-1",
+          "config": { "embedUrl": "https://example.com/embed" },
+          "enabled": true,
+          "order": 9
+        }
+        """;
+
+    MvcResult result =
+        mockMvc
+            .perform(
+                post("/api/profile/default/widgets")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(payload))
+            .andExpect(status().isCreated())
+            .andReturn();
+
+    JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
+    return body.get("id").asLong();
   }
 }

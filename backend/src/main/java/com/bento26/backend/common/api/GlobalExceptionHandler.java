@@ -4,6 +4,8 @@ import com.bento26.backend.analytics.domain.CardNotFoundForProfileException;
 import com.bento26.backend.analytics.domain.ClickRateLimitedException;
 import com.bento26.backend.profile.domain.InvalidProfileUpdateException;
 import com.bento26.backend.profile.domain.ProfileNotFoundException;
+import com.bento26.backend.widget.domain.InvalidWidgetConfigException;
+import com.bento26.backend.widget.domain.WidgetNotFoundForProfileException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -53,6 +55,18 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(ClickRateLimitedException.class)
   @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
   public ApiError handleClickRateLimit(ClickRateLimitedException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(InvalidWidgetConfigException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ApiError handleInvalidWidgetConfig(InvalidWidgetConfigException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(WidgetNotFoundForProfileException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handleWidgetNotFound(WidgetNotFoundForProfileException exception) {
     return new ApiError(exception.getMessage());
   }
 }
