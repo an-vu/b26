@@ -24,7 +24,7 @@ describe('ProfileService', () => {
   it('should call backend GET profile endpoint', () => {
     service.getProfile('default').subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default');
+    const req = httpMock.expectOne('/api/profile/default');
     expect(req.request.method).toBe('GET');
     req.flush({ id: 'default', name: 'An', headline: 'H', cards: [] });
   });
@@ -38,7 +38,7 @@ describe('ProfileService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default');
+    const req = httpMock.expectOne('/api/profile/default');
     expect(req.request.method).toBe('PUT');
     req.flush({});
   });
@@ -46,7 +46,7 @@ describe('ProfileService', () => {
   it('should call backend GET widgets endpoint', () => {
     service.getWidgets('default').subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets');
+    const req = httpMock.expectOne('/api/profile/default/widgets');
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
@@ -63,7 +63,7 @@ describe('ProfileService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets');
+    const req = httpMock.expectOne('/api/profile/default/widgets');
     expect(req.request.method).toBe('POST');
     req.flush({});
   });
@@ -80,7 +80,7 @@ describe('ProfileService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets/1');
+    const req = httpMock.expectOne('/api/profile/default/widgets/1');
     expect(req.request.method).toBe('PUT');
     req.flush({});
   });
@@ -88,7 +88,7 @@ describe('ProfileService', () => {
   it('should call backend DELETE widget endpoint', () => {
     service.deleteWidget('default', 1).subscribe();
 
-    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets/1');
+    const req = httpMock.expectOne('/api/profile/default/widgets/1');
     expect(req.request.method).toBe('DELETE');
     req.flush({});
   });
