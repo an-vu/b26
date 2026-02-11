@@ -94,6 +94,7 @@ npm start
 Runs at: `http://localhost:4200`
 LAN access (same Wi-Fi): `http://<your-mac-ip>:4200`
 
+
 ### Backend
 
 ```bash
@@ -162,3 +163,30 @@ You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*`
 3. Open `http://localhost:8080/actuator/health` and confirm health JSON response.
 4. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
 5. From UI, add/edit/delete one widget and refresh to confirm persistence.
+
+# `How to access the app on any device in the same network`
+
+Suggested wiki outline:
+1. Start app (`npm run dev`)
+2. Find host machine IP (`ipconfig getifaddr en0` / `en1`)
+3. Open `http://<host-ip>:4200` from phone/tablet
+4. Troubleshooting:
+   - same Wi‑Fi required
+   - firewall permission
+   - avoid `localhost` on phone
+
+Find your Mac IP:
+
+```bash
+ipconfig getifaddr en0
+```
+
+If `en0` is empty:
+
+```bash
+ipconfig getifaddr en1
+```
+
+On iPhone/tablet (same Wi-Fi), open:
+- `http://<your-mac-ip>:4200`
+- `http://<your-mac-ip>:4200/u/default`
