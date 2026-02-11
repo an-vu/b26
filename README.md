@@ -93,3 +93,29 @@ Runs at: `http://localhost:8080`
 * `PUT /api/profile/{handle}`
 * `POST /api/click/{cardId}`
 * `GET /api/analytics/{handle}`
+
+## Docker (Local Full Stack)
+
+### Build and Run
+
+```bash
+docker compose up --build
+```
+
+### URLs
+
+- Frontend: `http://localhost:4200`
+- Backend API: `http://localhost:8080`
+
+### Stop
+
+```bash
+docker compose down
+```
+
+### Smoke Checklist
+
+1. Open `http://localhost:4200/u/default` and confirm page renders.
+2. Open `http://localhost:8080/api/profile/default` and confirm JSON response.
+3. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
+4. From UI, add/edit/delete one widget and refresh to confirm persistence.

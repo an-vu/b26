@@ -1,0 +1,18 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: bento26-backend
+    ports:
+      - "8080:8080"
+
+  frontend:
+    build:
+      context: ./frontend/bento26
+      dockerfile: Dockerfile
+    container_name: bento26-frontend
+    depends_on:
+      - backend
+    ports:
+      - "4200:80"
