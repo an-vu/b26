@@ -113,6 +113,34 @@ Note: `http://localhost:8080/` returns a Spring 404 page because root (`/`) is n
 * `POST /api/click/{cardId}`
 * `GET /api/analytics/{handle}`
 
+## Live Deployment
+
+- Frontend (Vercel): `https://b26-frontend.vercel.app`
+- Backend (Render): `https://b26-backend.onrender.com`
+- Backend health: `https://b26-backend.onrender.com/actuator/health`
+
+### Deployment Workflow
+
+1. Push changes to `main`.
+2. Vercel auto-deploys frontend from `frontend/`.
+3. Render auto-deploys backend from `backend/`.
+
+### Provider Config (Current)
+
+- Vercel:
+  - Root Directory: `frontend`
+  - Build Command: `npm run build`
+  - Output Directory: `dist/bento-26/browser`
+  - Rewrites: `frontend/vercel.json` forwards `/api/*` and `/actuator/*` to Render backend
+- Render:
+  - Service type: Docker web service
+  - Root/Context: `backend`
+  - Dockerfile: `backend/Dockerfile`
+  - Health check: `/actuator/health`
+  - Required env vars:
+    - `SPRING_PROFILES_ACTIVE=prod`
+    - `APP_CORS_ALLOWED_ORIGINS=https://b26-frontend.vercel.app`
+
 ## Docker (Local Full Stack)
 
 ### Build and Run
@@ -164,7 +192,7 @@ You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*`
 4. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
 5. From UI, add/edit/delete one widget and refresh to confirm persistence.
 
-# `How to access the app on any device in the same network`
+## How to Access From Another Device (Same Network)
 
 Suggested wiki outline:
 1. Start app (`npm run dev`)
