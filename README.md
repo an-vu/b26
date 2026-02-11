@@ -68,6 +68,13 @@ This implementation exists to show **applied engineering judgment**, not necessi
 
 ## Getting Started (Local)
 
+### One Command (Frontend + Backend)
+
+```bash
+npm install
+npm run dev
+```
+
 ### Frontend
 
 ```bash

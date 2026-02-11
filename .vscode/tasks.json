@@ -1,0 +1,60 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "start:frontend",
+      "type": "shell",
+      "command": "npm run dev:frontend",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "frontend"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": "^(.*)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Building|Watch mode enabled",
+          "endsPattern": "Local:\\s+http://localhost:4200/"
+        }
+      }
+    },
+    {
+      "label": "start:backend",
+      "type": "shell",
+      "command": "npm run dev:backend",
+      "isBackground": true,
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "group": "backend"
+      },
+      "problemMatcher": {
+        "owner": "custom",
+        "pattern": [
+          {
+            "regexp": "^(.*)$",
+            "message": 1
+          }
+        ],
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Starting",
+          "endsPattern": "Started .*Application"
+        }
+      }
+    },
+    {
+      "label": "start:app",
+      "dependsOn": ["start:frontend", "start:backend"],
+      "dependsOrder": "parallel"
+    }
+  ]
+}
