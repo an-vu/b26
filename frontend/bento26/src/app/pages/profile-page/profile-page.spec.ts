@@ -12,6 +12,9 @@ describe('ProfilePageComponent', () => {
     getProfile: ProfileService['getProfile'];
     updateProfile: ProfileService['updateProfile'];
     getWidgets: ProfileService['getWidgets'];
+    createWidget: ProfileService['createWidget'];
+    updateWidget: ProfileService['updateWidget'];
+    deleteWidget: ProfileService['deleteWidget'];
   };
 
   const routeStub = {
@@ -35,6 +38,27 @@ describe('ProfilePageComponent', () => {
           cards: [],
         }),
       getWidgets: () => of([]),
+      createWidget: () =>
+        of({
+          id: 1,
+          type: 'embed',
+          title: 'Now Playing',
+          layout: 'span-1',
+          config: { embedUrl: 'https://example.com/embed' },
+          enabled: true,
+          order: 0,
+        }),
+      updateWidget: () =>
+        of({
+          id: 1,
+          type: 'embed',
+          title: 'Now Playing',
+          layout: 'span-1',
+          config: { embedUrl: 'https://example.com/embed' },
+          enabled: true,
+          order: 0,
+        }),
+      deleteWidget: () => of(undefined),
     };
 
     await TestBed.configureTestingModule({

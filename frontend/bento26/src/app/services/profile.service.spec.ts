@@ -50,4 +50,46 @@ describe('ProfileService', () => {
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
+
+  it('should call backend POST widget endpoint', () => {
+    service
+      .createWidget('default', {
+        type: 'embed',
+        title: 'Now Playing',
+        layout: 'span-1',
+        config: { embedUrl: 'https://example.com/embed' },
+        enabled: true,
+        order: 0,
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets');
+    expect(req.request.method).toBe('POST');
+    req.flush({});
+  });
+
+  it('should call backend PUT widget endpoint', () => {
+    service
+      .updateWidget('default', 1, {
+        type: 'map',
+        title: 'Places',
+        layout: 'span-2',
+        config: { places: ['Omaha, NE'] },
+        enabled: true,
+        order: 1,
+      })
+      .subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets/1');
+    expect(req.request.method).toBe('PUT');
+    req.flush({});
+  });
+
+  it('should call backend DELETE widget endpoint', () => {
+    service.deleteWidget('default', 1).subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets/1');
+    expect(req.request.method).toBe('DELETE');
+    req.flush({});
+  });
 });
