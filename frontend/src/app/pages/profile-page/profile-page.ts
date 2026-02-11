@@ -71,7 +71,12 @@ export class ProfilePageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.profileService.getWidgets(params.get('profileId') ?? 'default').pipe(catchError(() => of<Widget[]>([])))
+          this.profileService
+            .getWidgets(params.get('profileId') ?? 'default')
+            .pipe(
+              map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
+              catchError(() => of<Widget[]>([]))
+            )
         )
       )
     )

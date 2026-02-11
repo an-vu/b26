@@ -4,6 +4,7 @@ import { defer, of, throwError } from 'rxjs';
 
 import { ProfilePageComponent } from './profile-page';
 import { ProfileService } from '../../services/profile.service';
+import type { Widget } from '../../models/widget';
 
 describe('ProfilePageComponent', () => {
   let component: ProfilePageComponent;
@@ -16,12 +17,14 @@ describe('ProfilePageComponent', () => {
     updateWidget: ProfileService['updateWidget'];
     deleteWidget: ProfileService['deleteWidget'];
   };
+  let updateWidgetCalls: Array<{ widgetId: number; order: number }> = [];
 
   const routeStub = {
     paramMap: of(convertToParamMap({ profileId: 'default' })),
   };
 
   beforeEach(async () => {
+    updateWidgetCalls = [];
     profileServiceStub = {
       getProfile: () =>
         of({
@@ -48,16 +51,18 @@ describe('ProfilePageComponent', () => {
           enabled: true,
           order: 0,
         }),
-      updateWidget: () =>
-        of({
-          id: 1,
-          type: 'embed',
-          title: 'Now Playing',
-          layout: 'span-1',
-          config: { embedUrl: 'https://example.com/embed' },
-          enabled: true,
-          order: 0,
-        }),
+      updateWidget: (_profileId: string, widgetId: number, payload) => {
+        updateWidgetCalls.push({ widgetId, order: payload.order });
+        return of({
+          id: widgetId,
+          type: payload.type,
+          title: payload.title,
+          layout: payload.layout,
+          config: payload.config,
+          enabled: payload.enabled,
+          order: payload.order,
+        } as Widget);
+      },
       deleteWidget: () => of(undefined),
     };
 
@@ -71,14 +76,6 @@ describe('ProfilePageComponent', () => {
   });
 
   it('should create', () => {
-    profileServiceStub.getProfile = () =>
-      of({
-        id: 'default',
-        name: 'An Vu',
-        headline: 'Software Engineer',
-        cards: [],
-      });
-
     fixture = TestBed.createComponent(ProfilePageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -109,5 +106,73 @@ describe('ProfilePageComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Profile not found.');
+  });
+
+  it('should normalize and persist order when moving widgets down', () => {
+    fixture = TestBed.createComponent(ProfilePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const widgets: Widget[] = [
+      {
+        id: 1,
+        type: 'embed',
+        title: 'One',
+        layout: 'span-1',
+        config: { embedUrl: 'https://example.com/1' },
+        enabled: true,
+        order: 0,
+      },
+      {
+        id: 2,
+        type: 'embed',
+        title: 'Two',
+        layout: 'span-1',
+        config: { embedUrl: 'https://example.com/2' },
+        enabled: true,
+        order: 1,
+      },
+    ];
+
+    component.startWidgetEdit(widgets);
+    const firstDraft = component.widgetDrafts[0];
+    component.moveWidget('default', firstDraft, 1);
+
+    expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([2, 1]);
+    expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 1]);
+    expect(updateWidgetCalls.length).toBe(2);
+    expect(updateWidgetCalls[0]).toEqual({ widgetId: 2, order: 0 });
+    expect(updateWidgetCalls[1]).toEqual({ widgetId: 1, order: 1 });
+  });
+
+  it('should sort widget drafts by order when entering edit mode', () => {
+    fixture = TestBed.createComponent(ProfilePageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+
+    const widgets: Widget[] = [
+      {
+        id: 10,
+        type: 'map',
+        title: 'Late',
+        layout: 'span-1',
+        config: { places: ['A'] },
+        enabled: true,
+        order: 5,
+      },
+      {
+        id: 11,
+        type: 'embed',
+        title: 'Early',
+        layout: 'span-1',
+        config: { embedUrl: 'https://example.com' },
+        enabled: true,
+        order: 0,
+      },
+    ];
+
+    component.startWidgetEdit(widgets);
+    expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([11, 10]);
+    expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 5]);
   });
 });
