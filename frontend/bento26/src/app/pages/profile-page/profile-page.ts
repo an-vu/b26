@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
-import { catchError, finalize, map, of, startWith, Subject } from 'rxjs';
+import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 import { ProfileService } from '../../services/profile.service';
@@ -118,7 +118,7 @@ export class ProfilePageComponent {
   }
 
   startWidgetEdit(widgets: Widget[]) {
-    this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget));
+    this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.widgetSaveError = '';
     this.isWidgetEditMode = true;
@@ -179,6 +179,25 @@ export class ProfilePageComponent {
     this.saveWidget(profileId, { ...this.newWidgetDraft });
   }
 
+  moveWidget(profileId: string, draft: WidgetDraft, direction: -1 | 1) {
+    if (this.isWidgetSaving) {
+      return;
+    }
+    const currentIndex = this.widgetDrafts.indexOf(draft);
+    if (currentIndex < 0) {
+      return;
+    }
+    const targetIndex = currentIndex + direction;
+    if (targetIndex < 0 || targetIndex >= this.widgetDrafts.length) {
+      return;
+    }
+
+    const nextDrafts = [...this.widgetDrafts];
+    [nextDrafts[currentIndex], nextDrafts[targetIndex]] = [nextDrafts[targetIndex], nextDrafts[currentIndex]];
+    this.widgetDrafts = this.withNormalizedOrder(nextDrafts);
+    this.persistWidgetOrder(profileId);
+  }
+
   onNewWidgetTypeChange() {
     this.resetWidgetConfigForType(this.newWidgetDraft);
   }
@@ -190,7 +209,7 @@ export class ProfilePageComponent {
   private refreshWidgetDrafts(profileId: string) {
     this.profileService.getWidgets(profileId).subscribe({
       next: (widgets) => {
-        this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget));
+        this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
         this.newWidgetDraft = this.createEmptyWidgetDraft();
         this.reload$.next();
       },
@@ -267,5 +286,35 @@ export class ProfilePageComponent {
       return;
     }
     draft.embedUrl = '';
+  }
+
+  private withNormalizedOrder(drafts: WidgetDraft[]): WidgetDraft[] {
+    return drafts.map((draft, index) => ({ ...draft, order: index }));
+  }
+
+  private persistWidgetOrder(profileId: string) {
+    const existingDrafts = this.widgetDrafts.filter((draft): draft is WidgetDraft & { id: number } => !!draft.id);
+    if (existingDrafts.length === 0) {
+      return;
+    }
+
+    this.isWidgetSaving = true;
+    this.widgetSaveError = '';
+    const updates = existingDrafts.map((draft) => {
+      const payload = this.buildWidgetPayload(draft);
+      if (!payload) {
+        return of(null);
+      }
+      return this.profileService.updateWidget(profileId, draft.id, payload);
+    });
+
+    forkJoin(updates)
+      .pipe(finalize(() => (this.isWidgetSaving = false)))
+      .subscribe({
+        next: () => this.reload$.next(),
+        error: (error) => {
+          this.widgetSaveError = error?.error?.message ?? 'Unable to reorder widgets.';
+        },
+      });
   }
 }

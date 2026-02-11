@@ -58,7 +58,15 @@
         <div class="widget-editor" *ngIf="isWidgetEditMode">
           <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-          <article class="widget-editor-card" *ngFor="let draft of widgetDrafts">
+          <article class="widget-editor-card" *ngFor="let draft of widgetDrafts; let i = index">
+            <div class="widget-editor-head">
+              <h3>{{ draft.title || 'Widget' }}</h3>
+              <div class="widget-editor-actions">
+                <button type="button" (click)="moveWidget(state.profile.id, draft, -1)" [disabled]="isWidgetSaving || i === 0">Up</button>
+                <button type="button" (click)="moveWidget(state.profile.id, draft, 1)" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
+              </div>
+            </div>
+
             <label>
               Type
               <select [name]="'widget-type-' + (draft.id ?? 'new')" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
@@ -76,7 +84,7 @@
             </label>
             <label>
               Order
-              <input type="number" [name]="'widget-order-' + (draft.id ?? 'new')" [(ngModel)]="draft.order" min="0" />
+              <input type="number" [name]="'widget-order-' + (draft.id ?? 'new')" [(ngModel)]="draft.order" min="0" disabled />
             </label>
             <label class="checkbox">
               <input type="checkbox" [name]="'widget-enabled-' + (draft.id ?? 'new')" [(ngModel)]="draft.enabled" />
@@ -133,15 +141,15 @@
               <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" rows="4"></textarea>
             </label>
 
-          <div class="widget-editor-actions">
-            <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
-          </div>
-        </article>
+            <div class="widget-editor-actions">
+              <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
+            </div>
+          </article>
 
-        <div class="widget-editor-actions">
-          <button type="button" (click)="cancelWidgetEdit()">Done</button>
+          <div class="widget-editor-actions">
+            <button type="button" (click)="cancelWidgetEdit()">Done</button>
+          </div>
         </div>
-      </div>
 
         <ng-container *ngIf="!isWidgetEditMode">
           <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
