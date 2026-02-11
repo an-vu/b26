@@ -52,6 +52,13 @@
   font-size: 18px;
 }
 
+.widgets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
 .widgets-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
@@ -61,4 +68,38 @@
 .widgets-empty {
   margin: 0;
   opacity: 0.75;
+}
+
+.widget-editor {
+  display: grid;
+  gap: 12px;
+}
+
+.widget-editor-card {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.widget-editor-card h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.widget-editor-card label {
+  display: grid;
+  gap: 4px;
+}
+
+.widget-editor-card .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-editor-actions {
+  display: flex;
+  gap: 8px;
 }

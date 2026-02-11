@@ -9,3 +9,12 @@ export type Widget = {
   enabled: boolean;
   order: number;
 };
+
+export type UpsertWidgetRequest = {
+  type: string;
+  title: string;
+  layout: string;
+  config: WidgetConfig;
+  enabled: boolean;
+  order: number;
+};
