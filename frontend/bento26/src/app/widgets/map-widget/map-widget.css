@@ -1,0 +1,22 @@
+.widget {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+}
+
+.widget h3 {
+  margin: 0;
+  font-size: 14px;
+}
+
+.places {
+  margin: 0;
+  padding-left: 18px;
+}
+
+.fallback {
+  margin: 0;
+  font-size: 14px;
+}

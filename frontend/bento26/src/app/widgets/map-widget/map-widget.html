@@ -1,0 +1,9 @@
+<article class="widget">
+  <h3>{{ widget.title }}</h3>
+  <ul *ngIf="places.length > 0; else empty" class="places">
+    <li *ngFor="let place of places">{{ place }}</li>
+  </ul>
+  <ng-template #empty>
+    <p class="fallback">No places configured yet.</p>
+  </ng-template>
+</article>

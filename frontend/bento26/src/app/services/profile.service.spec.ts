@@ -42,4 +42,12 @@ describe('ProfileService', () => {
     expect(req.request.method).toBe('PUT');
     req.flush({});
   });
+
+  it('should call backend GET widgets endpoint', () => {
+    service.getWidgets('default').subscribe();
+
+    const req = httpMock.expectOne('http://localhost:8080/api/profile/default/widgets');
+    expect(req.request.method).toBe('GET');
+    req.flush([]);
+  });
 });

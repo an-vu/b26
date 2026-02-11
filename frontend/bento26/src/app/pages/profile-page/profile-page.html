@@ -48,6 +48,17 @@
     <ng-container *ngIf="!isEditMode">
       <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
       <app-card-grid [cards]="state.profile.cards"></app-card-grid>
+
+      <section class="widgets-section" *ngIf="widgets$ | async as widgets">
+        <h2>Widgets</h2>
+        <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
+        <div class="widgets-grid" *ngIf="widgets.length > 0">
+          <app-widget-host
+            *ngFor="let widget of widgets; trackBy: trackWidget"
+            [widget]="widget"
+          ></app-widget-host>
+        </div>
+      </section>
     </ng-container>
   </main>
   <main class="page" *ngIf="state.status === 'loading'">
