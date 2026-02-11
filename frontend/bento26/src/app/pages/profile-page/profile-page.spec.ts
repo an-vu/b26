@@ -11,6 +11,7 @@ describe('ProfilePageComponent', () => {
   let profileServiceStub: {
     getProfile: ProfileService['getProfile'];
     updateProfile: ProfileService['updateProfile'];
+    getWidgets: ProfileService['getWidgets'];
   };
 
   const routeStub = {
@@ -33,6 +34,7 @@ describe('ProfilePageComponent', () => {
           headline: 'Software Engineer',
           cards: [],
         }),
+      getWidgets: () => of([]),
     };
 
     await TestBed.configureTestingModule({

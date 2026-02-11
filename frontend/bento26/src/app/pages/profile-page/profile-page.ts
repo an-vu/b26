@@ -9,6 +9,8 @@ import { ProfileService } from '../../services/profile.service';
 import { ProfileHeaderComponent } from '../../components/profile-header/profile-header';
 import { CardGridComponent } from '../../components/card-grid/card-grid';
 import type { Profile, UpdateProfileRequest } from '../../models/profile';
+import type { Widget } from '../../models/widget';
+import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
 
 type ProfilePageState =
   | { status: 'loading' }
@@ -18,7 +20,7 @@ type ProfilePageState =
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileHeaderComponent, CardGridComponent],
+  imports: [CommonModule, FormsModule, ProfileHeaderComponent, CardGridComponent, WidgetHostComponent],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
@@ -42,6 +44,17 @@ export class ProfilePageComponent {
             catchError(() => of<ProfilePageState>({ status: 'missing' })),
             startWith<ProfilePageState>({ status: 'loading' })
           )
+        )
+      )
+    )
+  );
+
+  widgets$ = this.reload$.pipe(
+    startWith(undefined),
+    switchMap(() =>
+      this.route.paramMap.pipe(
+        switchMap((params) =>
+          this.profileService.getWidgets(params.get('profileId') ?? 'default').pipe(catchError(() => of<Widget[]>([])))
         )
       )
     )
@@ -81,5 +94,9 @@ export class ProfilePageComponent {
         this.saveError = error?.error?.message ?? 'Unable to save profile.';
       },
     });
+  }
+
+  trackWidget(index: number, widget: Widget) {
+    return widget.id ?? index;
   }
 }
