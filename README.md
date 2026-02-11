@@ -117,5 +117,6 @@ docker compose down
 
 1. Open `http://localhost:4200/u/default` and confirm page renders.
 2. Open `http://localhost:8080/api/profile/default` and confirm JSON response.
-3. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
-4. From UI, add/edit/delete one widget and refresh to confirm persistence.
+3. Open `http://localhost:8080/actuator/health` and confirm health JSON response.
+4. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
+5. From UI, add/edit/delete one widget and refresh to confirm persistence.
