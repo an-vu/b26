@@ -68,6 +68,14 @@ This implementation exists to show **applied engineering judgment**, not necessi
 
 ## Getting Started (Local)
 
+### VS Code (One Click, Separate Terminals)
+
+1. Open **Run and Debug** in VS Code.
+2. Select **Run App (Frontend + Backend)**.
+3. Click the green play button.
+
+This starts frontend and backend in separate terminal panels.
+
 ### One Command (Frontend + Backend)
 
 ```bash
@@ -84,6 +92,7 @@ npm start
 ````
 
 Runs at: `http://localhost:4200`
+LAN access (same Wi-Fi): `http://<your-mac-ip>:4200`
 
 ### Backend
 
@@ -93,6 +102,8 @@ mvn spring-boot:run
 ```
 
 Runs at: `http://localhost:8080`
+
+Note: `http://localhost:8080/` returns a Spring 404 page because root (`/`) is not mapped. Use API routes like `http://localhost:8080/api/profile/default`.
 
 ## API Endpoints (Planned)
 
@@ -140,8 +151,9 @@ You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*`
 
 ### Frontend API Base URL
 
-- Dev build uses: `http://localhost:8080`
-- Production build uses: `/api` (proxied by Nginx to backend in Docker)
+- Frontend uses relative API paths (`/api/...`) in both dev and production.
+- Dev server proxy (`frontend/proxy.conf.json`) forwards `/api` and `/actuator` to `http://localhost:8080`.
+- Production Nginx proxy forwards `/api` and `/actuator` to backend in Docker/deploy.
 
 ### Smoke Checklist
 
