@@ -106,12 +106,35 @@ docker compose up --build
 
 - Frontend: `http://localhost:4200`
 - Backend API: `http://localhost:8080`
+- Backend health: `http://localhost:8080/actuator/health`
 
 ### Stop
 
 ```bash
 docker compose down
 ```
+
+## Runtime Config (Dev vs Prod)
+
+### Backend Profiles
+
+- Default profile: `dev` (H2 in-memory, reset on restart)
+- Docker Compose profile: `prod` (H2 file DB at `/data`, persists via Docker volume)
+
+### Backend Environment Variables
+
+- `SPRING_PROFILES_ACTIVE` (example: `prod`)
+- `APP_CORS_ALLOWED_ORIGINS` (comma-separated origins)
+- `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`
+- `SPRING_DATASOURCE_DRIVER_CLASS_NAME` (optional, defaults to H2 driver)
+- `SPRING_JPA_HIBERNATE_DDL_AUTO` (optional, default in `prod` is `update`)
+
+You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*` values in deploy.
+
+### Frontend API Base URL
+
+- Dev build uses: `http://localhost:8080`
+- Production build uses: `/api` (proxied by Nginx to backend in Docker)
 
 ### Smoke Checklist
 
