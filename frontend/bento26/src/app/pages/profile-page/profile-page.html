@@ -133,15 +133,15 @@
               <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" rows="4"></textarea>
             </label>
 
-            <div class="widget-editor-actions">
-              <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
-            </div>
-          </article>
-
           <div class="widget-editor-actions">
-            <button type="button" (click)="cancelWidgetEdit()" [disabled]="isWidgetSaving">Done</button>
+            <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
           </div>
+        </article>
+
+        <div class="widget-editor-actions">
+          <button type="button" (click)="cancelWidgetEdit()">Done</button>
         </div>
+      </div>
 
         <ng-container *ngIf="!isWidgetEditMode">
           <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>

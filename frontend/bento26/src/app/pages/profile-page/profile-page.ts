@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
-import { catchError, map, of, startWith, Subject } from 'rxjs';
+import { catchError, finalize, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 
 import { ProfileService } from '../../services/profile.service';
@@ -135,7 +135,10 @@ export class ProfilePageComponent {
   saveWidget(profileId: string, draft: WidgetDraft) {
     const payload = this.buildWidgetPayload(draft);
     if (!payload) {
-      this.widgetSaveError = 'Invalid widget config.';
+      this.widgetSaveError =
+        draft.type === 'embed'
+          ? 'Embed URL must start with http:// or https://.'
+          : 'Map widgets need at least one place.';
       return;
     }
     this.isWidgetSaving = true;
@@ -145,10 +148,9 @@ export class ProfilePageComponent {
       ? this.profileService.updateWidget(profileId, draft.id, payload)
       : this.profileService.createWidget(profileId, payload);
 
-    request$.subscribe({
+    request$.pipe(finalize(() => (this.isWidgetSaving = false))).subscribe({
       next: () => this.refreshWidgetDrafts(profileId),
       error: (error) => {
-        this.isWidgetSaving = false;
         this.widgetSaveError = error?.error?.message ?? 'Unable to save widget.';
       },
     });
@@ -162,17 +164,19 @@ export class ProfilePageComponent {
 
     this.isWidgetSaving = true;
     this.widgetSaveError = '';
-    this.profileService.deleteWidget(profileId, draft.id).subscribe({
+    this.profileService
+      .deleteWidget(profileId, draft.id)
+      .pipe(finalize(() => (this.isWidgetSaving = false)))
+      .subscribe({
       next: () => this.refreshWidgetDrafts(profileId),
       error: (error) => {
-        this.isWidgetSaving = false;
         this.widgetSaveError = error?.error?.message ?? 'Unable to delete widget.';
       },
     });
   }
 
   addNewWidget(profileId: string) {
-    this.saveWidget(profileId, this.newWidgetDraft);
+    this.saveWidget(profileId, { ...this.newWidgetDraft });
   }
 
   onNewWidgetTypeChange() {
@@ -186,13 +190,11 @@ export class ProfilePageComponent {
   private refreshWidgetDrafts(profileId: string) {
     this.profileService.getWidgets(profileId).subscribe({
       next: (widgets) => {
-        this.isWidgetSaving = false;
         this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget));
         this.newWidgetDraft = this.createEmptyWidgetDraft();
         this.reload$.next();
       },
       error: (error) => {
-        this.isWidgetSaving = false;
         this.widgetSaveError = error?.error?.message ?? 'Unable to reload widgets.';
       },
     });
@@ -236,12 +238,13 @@ export class ProfilePageComponent {
     };
 
     if (draft.type === 'embed') {
-      if (!draft.embedUrl.trim()) {
+      const embedUrl = draft.embedUrl.trim();
+      if (!/^https?:\/\//i.test(embedUrl)) {
         return null;
       }
       return {
         ...base,
-        config: { embedUrl: draft.embedUrl.trim() },
+        config: { embedUrl },
       };
     }
 
