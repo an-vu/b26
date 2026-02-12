@@ -5,7 +5,7 @@
       "name": "Start Frontend (Angular)",
       "type": "node-terminal",
       "request": "launch",
-      "command": "npm run dev:frontend",
+      "command": "zsh -lc 'until nc -z 127.0.0.1 8080; do sleep 1; done; npm run dev:frontend'",
       "cwd": "${workspaceFolder}"
     },
     {
