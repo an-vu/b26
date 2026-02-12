@@ -7,7 +7,6 @@ import { FormsModule } from '@angular/forms';
 
 import { ProfileService } from '../../services/profile.service';
 import { ProfileHeaderComponent } from '../../components/profile-header/profile-header';
-import { CardGridComponent } from '../../components/card-grid/card-grid';
 import type { Profile } from '../../models/profile';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
@@ -33,7 +32,7 @@ type WidgetDraft = {
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileHeaderComponent, CardGridComponent, WidgetHostComponent],
+  imports: [CommonModule, FormsModule, ProfileHeaderComponent, WidgetHostComponent],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
