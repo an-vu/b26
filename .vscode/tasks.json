@@ -53,8 +53,8 @@
     },
     {
       "label": "start:app",
-      "dependsOn": ["start:frontend", "start:backend"],
-      "dependsOrder": "parallel"
+      "dependsOn": ["start:backend", "start:frontend"],
+      "dependsOrder": "sequence"
     }
   ]
 }
