@@ -26,7 +26,7 @@ describe('ProfileService', () => {
 
     const req = httpMock.expectOne('/api/profile/default');
     expect(req.request.method).toBe('GET');
-    req.flush({ id: 'default', name: 'An', headline: 'H', cards: [] });
+    req.flush({ id: 'default', name: 'An', headline: 'H' });
   });
 
   it('should call backend PUT profile endpoint', () => {

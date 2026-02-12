@@ -1,6 +1,5 @@
 package com.bento26.backend.profile.domain;
 
-import com.bento26.backend.profile.api.CardDto;
 import com.bento26.backend.profile.api.ProfileDto;
 import com.bento26.backend.profile.api.UpdateCardRequest;
 import com.bento26.backend.profile.api.UpdateProfileRequest;
@@ -64,12 +63,6 @@ public class ProfileService {
   }
 
   private static ProfileDto toDto(ProfileEntity profile) {
-    return new ProfileDto(
-        profile.getId(),
-        profile.getName(),
-        profile.getHeadline(),
-        profile.getCards().stream()
-            .map(card -> new CardDto(card.getId(), card.getLabel(), card.getHref()))
-            .toList());
+    return new ProfileDto(profile.getId(), profile.getName(), profile.getHeadline());
   }
 }

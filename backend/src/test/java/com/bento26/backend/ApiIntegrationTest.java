@@ -40,8 +40,7 @@ class ApiIntegrationTest {
         .perform(get("/api/profile/default"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value("default"))
-        .andExpect(jsonPath("$.name").isNotEmpty())
-        .andExpect(jsonPath("$.cards").isArray());
+        .andExpect(jsonPath("$.name").isNotEmpty());
   }
 
   @Test
@@ -72,14 +71,12 @@ class ApiIntegrationTest {
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Updated Name"))
-        .andExpect(jsonPath("$.cards.length()").value(2));
+        .andExpect(jsonPath("$.name").value("Updated Name"));
 
     mockMvc
         .perform(get("/api/profile/default"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Updated Name"))
-        .andExpect(jsonPath("$.cards.length()").value(2));
+        .andExpect(jsonPath("$.name").value("Updated Name"));
   }
 
   @Test

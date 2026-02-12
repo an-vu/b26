@@ -31,14 +31,12 @@ describe('ProfilePageComponent', () => {
           id: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
-          cards: [],
         }),
       updateProfile: () =>
         of({
           id: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
-          cards: [],
         }),
       getWidgets: () => of([]),
       createWidget: () =>
@@ -89,7 +87,6 @@ describe('ProfilePageComponent', () => {
           id: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
-          cards: [],
         })
       );
 
