@@ -82,6 +82,19 @@ export class ProfilePageComponent {
     return widget.id ?? index;
   }
 
+  tileLayoutClass(layout: string) {
+    if (layout === 'span-1x2') {
+      return 'tile-span-1x2';
+    }
+    if (layout === 'span-2x2') {
+      return 'tile-span-2x2';
+    }
+    if (layout === 'span-2') {
+      return 'tile-span-2';
+    }
+    return 'tile-span-1';
+  }
+
   startWidgetEdit(widgets: Widget[]) {
     this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
     this.newWidgetDraft = this.createEmptyWidgetDraft();

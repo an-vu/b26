@@ -9,8 +9,7 @@
         <article
           class="widget-tile widget-edit-tile"
           *ngFor="let draft of widgetDrafts; let i = index"
-          [class.tile-span-2]="draft.layout === 'span-2'"
-          [class.tile-span-1]="draft.layout !== 'span-2'"
+          [class]=" 'widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
         >
           <div class="widget-editor-head">
             <h3>{{ draft.title || 'Widget' }}</h3>
@@ -35,8 +34,10 @@
           <label>
             Layout
             <select [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout">
-              <option value="span-1">span-1</option>
-              <option value="span-2">span-2</option>
+              <option value="span-1">1c x 1r</option>
+              <option value="span-2">2c x 1r</option>
+              <option value="span-1x2">1c x 2r</option>
+              <option value="span-2x2">2c x 2r</option>
             </select>
           </label>
           <label class="checkbox">
@@ -64,9 +65,7 @@
         </article>
 
         <article
-          class="widget-tile widget-edit-tile add-widget-tile"
-          [class.tile-span-2]="newWidgetDraft.layout === 'span-2'"
-          [class.tile-span-1]="newWidgetDraft.layout !== 'span-2'"
+          [class]="'widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
         >
           <h3>Add widget</h3>
           <label>
@@ -84,8 +83,10 @@
           <label>
             Layout
             <select name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout">
-              <option value="span-1">span-1</option>
-              <option value="span-2">span-2</option>
+              <option value="span-1">1c x 1r</option>
+              <option value="span-2">2c x 1r</option>
+              <option value="span-1x2">1c x 2r</option>
+              <option value="span-2x2">2c x 2r</option>
             </select>
           </label>
           <label class="checkbox">
@@ -118,8 +119,7 @@
           <div
             class="widget-tile"
             *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
-            [class.tile-span-2]="widget.layout === 'span-2'"
-            [class.tile-span-1]="widget.layout !== 'span-2'"
+            [class]=" 'widget-tile ' + tileLayoutClass(widget.layout)"
           >
             <app-widget-host [widget]="widget"></app-widget-host>
           </div>
