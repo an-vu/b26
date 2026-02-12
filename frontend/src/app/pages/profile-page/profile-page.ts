@@ -44,8 +44,11 @@ export class ProfilePageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   widgetSaveError = '';
+  newWidgetValidationError = '';
   widgetDrafts: WidgetDraft[] = [];
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
+  deletedWidgetIds: number[] = [];
+  private draftValidationErrors = new WeakMap<WidgetDraft, string>();
 
   pageState$ = this.reload$.pipe(
     startWith(undefined),
@@ -98,7 +101,10 @@ export class ProfilePageComponent {
   startWidgetEdit(widgets: Widget[]) {
     this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
     this.newWidgetDraft = this.createEmptyWidgetDraft();
+    this.deletedWidgetIds = [];
     this.widgetSaveError = '';
+    this.newWidgetValidationError = '';
+    this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.isWidgetEditMode = true;
   }
 
@@ -106,58 +112,44 @@ export class ProfilePageComponent {
     this.isWidgetEditMode = false;
     this.isWidgetSaving = false;
     this.widgetSaveError = '';
+    this.newWidgetValidationError = '';
     this.widgetDrafts = [];
     this.newWidgetDraft = this.createEmptyWidgetDraft();
+    this.deletedWidgetIds = [];
+    this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
   }
 
-  saveWidget(profileId: string, draft: WidgetDraft) {
-    const payload = this.buildWidgetPayload(draft);
-    if (!payload) {
-      this.widgetSaveError =
-        draft.type === 'map'
-          ? 'Map widgets need at least one place.'
-          : 'Widget URL must start with http:// or https://.';
-      return;
-    }
-    this.isWidgetSaving = true;
-    this.widgetSaveError = '';
-
-    const request$ = draft.id
-      ? this.profileService.updateWidget(profileId, draft.id, payload)
-      : this.profileService.createWidget(profileId, payload);
-
-    request$.pipe(finalize(() => (this.isWidgetSaving = false))).subscribe({
-      next: () => this.refreshWidgetDrafts(profileId),
-      error: (error) => {
-        this.widgetSaveError = error?.error?.message ?? 'Unable to save widget.';
-      },
-    });
-  }
-
-  deleteWidget(profileId: string, draft: WidgetDraft) {
+  deleteWidget(draft: WidgetDraft) {
     if (!draft.id) {
       this.widgetDrafts = this.widgetDrafts.filter((item) => item !== draft);
+      this.widgetDrafts = this.withNormalizedOrder(this.widgetDrafts);
       return;
     }
+    this.deletedWidgetIds = [...this.deletedWidgetIds, draft.id];
+    this.widgetDrafts = this.widgetDrafts.filter((item) => item !== draft);
+    this.widgetDrafts = this.withNormalizedOrder(this.widgetDrafts);
+  }
 
-    this.isWidgetSaving = true;
+  addNewWidget() {
+    const validationMessage = this.getWidgetValidationMessage(this.newWidgetDraft);
+    if (validationMessage) {
+      this.newWidgetValidationError = validationMessage;
+      return;
+    }
+    const draft = {
+      ...this.newWidgetDraft,
+      id: undefined,
+      order: this.widgetDrafts.length,
+      embedUrl: this.normalizeHttpUrl(this.newWidgetDraft.embedUrl) ?? this.newWidgetDraft.embedUrl,
+      linkUrl: this.normalizeHttpUrl(this.newWidgetDraft.linkUrl) ?? this.newWidgetDraft.linkUrl,
+    };
+    this.widgetDrafts = [...this.widgetDrafts, draft];
+    this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.widgetSaveError = '';
-    this.profileService
-      .deleteWidget(profileId, draft.id)
-      .pipe(finalize(() => (this.isWidgetSaving = false)))
-      .subscribe({
-      next: () => this.refreshWidgetDrafts(profileId),
-      error: (error) => {
-        this.widgetSaveError = error?.error?.message ?? 'Unable to delete widget.';
-      },
-    });
+    this.newWidgetValidationError = '';
   }
 
-  addNewWidget(profileId: string) {
-    this.saveWidget(profileId, { ...this.newWidgetDraft });
-  }
-
-  moveWidget(profileId: string, draft: WidgetDraft, direction: -1 | 1) {
+  moveWidget(draft: WidgetDraft, direction: -1 | 1) {
     if (this.isWidgetSaving) {
       return;
     }
@@ -173,28 +165,72 @@ export class ProfilePageComponent {
     const nextDrafts = [...this.widgetDrafts];
     [nextDrafts[currentIndex], nextDrafts[targetIndex]] = [nextDrafts[targetIndex], nextDrafts[currentIndex]];
     this.widgetDrafts = this.withNormalizedOrder(nextDrafts);
-    this.persistWidgetOrder(profileId);
+  }
+
+  doneWidgetEdit(profileId: string) {
+    const normalizedDrafts = this.withNormalizedOrder([...this.widgetDrafts]);
+    this.widgetDrafts = normalizedDrafts;
+    this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
+    this.newWidgetValidationError = '';
+
+    for (const draft of normalizedDrafts) {
+      const validationMessage = this.getWidgetValidationMessage(draft);
+      if (validationMessage) {
+        this.draftValidationErrors.set(draft, validationMessage);
+        this.widgetSaveError = 'Fix highlighted widget fields before saving.';
+        return;
+      }
+    }
+
+    const updates = normalizedDrafts
+      .filter((draft): draft is WidgetDraft & { id: number } => !!draft.id)
+      .map((draft) => this.profileService.updateWidget(profileId, draft.id, this.buildWidgetPayload(draft)!));
+
+    const creates = normalizedDrafts
+      .filter((draft) => !draft.id)
+      .map((draft) => this.profileService.createWidget(profileId, this.buildWidgetPayload(draft)!));
+
+    const deletes = this.deletedWidgetIds.map((widgetId) => this.profileService.deleteWidget(profileId, widgetId));
+    const requests = [...deletes, ...updates, ...creates];
+
+    this.isWidgetSaving = true;
+    this.widgetSaveError = '';
+    forkJoin(requests.length > 0 ? requests : [of(null)])
+      .pipe(finalize(() => (this.isWidgetSaving = false)))
+      .subscribe({
+        next: () => {
+          this.cancelWidgetEdit();
+          this.reload$.next();
+        },
+        error: (error) => {
+          this.widgetSaveError = error?.error?.message ?? 'Unable to save widget changes.';
+        },
+      });
   }
 
   onNewWidgetTypeChange() {
     this.resetWidgetConfigForType(this.newWidgetDraft);
+    this.newWidgetValidationError = '';
   }
 
   onWidgetTypeChange(draft: WidgetDraft) {
     this.resetWidgetConfigForType(draft);
+    this.draftValidationErrors.delete(draft);
   }
 
-  private refreshWidgetDrafts(profileId: string) {
-    this.profileService.getWidgets(profileId).subscribe({
-      next: (widgets) => {
-        this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
-        this.newWidgetDraft = this.createEmptyWidgetDraft();
-        this.reload$.next();
-      },
-      error: (error) => {
-        this.widgetSaveError = error?.error?.message ?? 'Unable to reload widgets.';
-      },
-    });
+  onWidgetDraftFieldChange(draft: WidgetDraft) {
+    this.draftValidationErrors.delete(draft);
+    if (this.widgetSaveError === 'Fix highlighted widget fields before saving.') {
+      this.widgetSaveError = '';
+    }
+  }
+
+  onNewWidgetFieldChange() {
+    this.newWidgetValidationError = '';
+  }
+
+  getDraftValidationError(draft: WidgetDraft) {
+    return this.draftValidationErrors.get(draft) ?? '';
   }
 
   private toWidgetDraft(widget: Widget): WidgetDraft {
@@ -236,14 +272,25 @@ export class ProfilePageComponent {
       order: draft.order,
     };
 
-    if (draft.type === 'embed' || draft.type === 'link') {
-      const url = (draft.type === 'embed' ? draft.embedUrl : draft.linkUrl).trim();
-      if (!/^https?:\/\//i.test(url)) {
+    if (draft.type === 'embed') {
+      const url = this.normalizeHttpUrl(draft.embedUrl);
+      if (!url) {
         return null;
       }
       return {
         ...base,
-        config: draft.type === 'embed' ? { embedUrl: url } : { url },
+        config: { embedUrl: url },
+      };
+    }
+
+    if (draft.type === 'link') {
+      const url = this.normalizeHttpUrl(draft.linkUrl);
+      if (!url) {
+        return null;
+      }
+      return {
+        ...base,
+        config: { url },
       };
     }
 
@@ -279,30 +326,41 @@ export class ProfilePageComponent {
     return drafts.map((draft, index) => ({ ...draft, order: index }));
   }
 
-  private persistWidgetOrder(profileId: string) {
-    const existingDrafts = this.widgetDrafts.filter((draft): draft is WidgetDraft & { id: number } => !!draft.id);
-    if (existingDrafts.length === 0) {
-      return;
+  private getWidgetValidationMessage(draft: WidgetDraft): string {
+    if (draft.type === 'map') {
+      const places = draft.placesText
+        .split('\n')
+        .map((line) => line.trim())
+        .filter((line) => line.length > 0);
+      if (places.length === 0) {
+        return 'Map widgets need at least one place.';
+      }
+      return '';
+    }
+    if (draft.type === 'embed') {
+      return this.normalizeHttpUrl(draft.embedUrl) ? '' : 'Embed URL must be a valid web address.';
+    }
+    return this.normalizeHttpUrl(draft.linkUrl) ? '' : 'Link URL must be a valid web address.';
+  }
+
+  private normalizeHttpUrl(raw: string): string | null {
+    const trimmed = raw.trim();
+    if (trimmed.length === 0) {
+      return null;
     }
 
-    this.isWidgetSaving = true;
-    this.widgetSaveError = '';
-    const updates = existingDrafts.map((draft) => {
-      const payload = this.buildWidgetPayload(draft);
-      if (!payload) {
-        return of(null);
-      }
-      return this.profileService.updateWidget(profileId, draft.id, payload);
-    });
+    const hasScheme = /^[a-zA-Z][a-zA-Z0-9+.-]*:/.test(trimmed);
+    const candidate = hasScheme ? trimmed : `https://${trimmed}`;
 
-    forkJoin(updates)
-      .pipe(finalize(() => (this.isWidgetSaving = false)))
-      .subscribe({
-        next: () => this.reload$.next(),
-        error: (error) => {
-          this.widgetSaveError = error?.error?.message ?? 'Unable to reorder widgets.';
-        },
-      });
+    try {
+      const parsed = new URL(candidate);
+      if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') {
+        return null;
+      }
+      return parsed.toString();
+    } catch {
+      return null;
+    }
   }
 
 }
