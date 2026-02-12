@@ -15,8 +15,9 @@
         "owner": "custom",
         "pattern": [
           {
-            "regexp": "^(.*)$",
-            "message": 1
+            "regexp": "^\\s*\\[problem\\]\\s+([^:]+):(.*)$",
+            "file": 1,
+            "message": 2
           }
         ],
         "background": {
@@ -40,8 +41,9 @@
         "owner": "custom",
         "pattern": [
           {
-            "regexp": "^(.*)$",
-            "message": 1
+            "regexp": "^\\s*\\[problem\\]\\s+([^:]+):(.*)$",
+            "file": 1,
+            "message": 2
           }
         ],
         "background": {
