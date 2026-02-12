@@ -54,6 +54,36 @@
   pointer-events: none;
 }
 
+.widget-tile.cdk-drag-preview {
+  opacity: 0.96;
+  transform: scale(1.02);
+  box-shadow: 0 14px 26px rgba(0, 0, 0, 0.2);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.widget-tile.cdk-drag-placeholder {
+  opacity: 1;
+}
+
+.widget-tile-placeholder {
+  width: 100%;
+  height: 100%;
+  border: 2px dashed rgba(0, 0, 0, 0.45);
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.06);
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: rgba(0, 0, 0, 0.65);
+}
+
+.widgets-grid.cdk-drop-list-dragging .widget-tile:not(.cdk-drag-placeholder) {
+  transition: transform 120ms ease-out;
+}
+
 .widgets-empty {
   margin: 0;
   opacity: 0.75;
