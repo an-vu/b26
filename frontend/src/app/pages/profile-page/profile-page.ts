@@ -1,5 +1,6 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
@@ -32,7 +33,7 @@ type WidgetDraft = {
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileHeaderComponent, WidgetHostComponent],
+  imports: [CommonModule, FormsModule, DragDropModule, ProfileHeaderComponent, WidgetHostComponent],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
@@ -172,43 +173,26 @@ export class ProfilePageComponent {
     this.resetWidgetConfigForType(draft);
   }
 
-  onWidgetTileDragStart(event: DragEvent, index: number) {
+  onWidgetDragStarted(index: number) {
     if (this.isWidgetEditMode || this.isWidgetSaving) {
       return;
-    }
-    if (event.dataTransfer) {
-      event.dataTransfer.effectAllowed = 'move';
-      event.dataTransfer.setData('text/plain', String(index));
     }
     this.draggingTileIndex = index;
   }
 
-  onWidgetTileDragOver(event: DragEvent) {
-    if (this.draggingTileIndex === null) {
+  onWidgetDrop(profileId: string, widgets: Widget[], event: CdkDragDrop<Widget[]>) {
+    if (this.isWidgetEditMode || this.isWidgetSaving) {
       return;
     }
-    event.preventDefault();
-    if (event.dataTransfer) {
-      event.dataTransfer.dropEffect = 'move';
-    }
-  }
-
-  onWidgetTileDrop(profileId: string, widgets: Widget[], dropIndex: number) {
-    if (this.draggingTileIndex === null || this.isWidgetEditMode || this.isWidgetSaving) {
-      return;
-    }
-    const dragIndex = this.draggingTileIndex;
     this.draggingTileIndex = null;
-    if (dragIndex === dropIndex || dragIndex < 0 || dragIndex >= widgets.length) {
+    if (event.previousIndex === event.currentIndex) {
       return;
     }
-
-    const moved = widgets.splice(dragIndex, 1)[0];
-    widgets.splice(dropIndex, 0, moved);
+    moveItemInArray(widgets, event.previousIndex, event.currentIndex);
     this.persistWidgetOrderFromWidgets(profileId, widgets);
   }
 
-  onWidgetTileDragEnd() {
+  onWidgetDragEnded() {
     this.draggingTileIndex = null;
   }
 
