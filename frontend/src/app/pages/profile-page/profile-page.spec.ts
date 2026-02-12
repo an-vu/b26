@@ -12,6 +12,7 @@ describe('ProfilePageComponent', () => {
   let profileServiceStub: {
     getProfile: ProfileService['getProfile'];
     updateProfile: ProfileService['updateProfile'];
+    updateProfileMeta: ProfileService['updateProfileMeta'];
     getWidgets: ProfileService['getWidgets'];
     createWidget: ProfileService['createWidget'];
     updateWidget: ProfileService['updateWidget'];
@@ -33,6 +34,12 @@ describe('ProfilePageComponent', () => {
           headline: 'Software Engineer',
         }),
       updateProfile: () =>
+        of({
+          id: 'default',
+          name: 'An Vu',
+          headline: 'Software Engineer',
+        }),
+      updateProfileMeta: () =>
         of({
           id: 'default',
           name: 'An Vu',
@@ -131,7 +138,14 @@ describe('ProfilePageComponent', () => {
       },
     ];
 
-    component.startWidgetEdit(widgets);
+    component.startWidgetEdit(
+      {
+        id: 'default',
+        name: 'An Vu',
+        headline: 'Software Engineer',
+      },
+      widgets
+    );
     const firstDraft = component.widgetDrafts[0];
     component.moveWidget(firstDraft, 1);
 
@@ -166,7 +180,14 @@ describe('ProfilePageComponent', () => {
       },
     ];
 
-    component.startWidgetEdit(widgets);
+    component.startWidgetEdit(
+      {
+        id: 'default',
+        name: 'An Vu',
+        headline: 'Software Engineer',
+      },
+      widgets
+    );
     expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([11, 10]);
     expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 5]);
   });

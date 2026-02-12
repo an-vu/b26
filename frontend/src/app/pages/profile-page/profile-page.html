@@ -2,7 +2,21 @@
   <main class="page" *ngIf="state.status === 'ready'">
     <div class="profile-layout">
       <aside class="profile-left">
-        <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
+        <ng-container *ngIf="isWidgetEditMode; else profileView">
+          <section class="profile-meta-editor">
+            <label>
+              Name
+              <input type="text" name="profile-name" [(ngModel)]="profileDraftName" />
+            </label>
+            <label>
+              Headline
+              <input type="text" name="profile-headline" [(ngModel)]="profileDraftHeadline" />
+            </label>
+          </section>
+        </ng-container>
+        <ng-template #profileView>
+          <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
+        </ng-template>
       </aside>
 
       <section class="widgets-section" *ngIf="widgets$ | async as widgets">
@@ -138,7 +152,7 @@
       <button
         type="button"
         *ngIf="!isWidgetEditMode; else doneButton"
-        (click)="startWidgetEdit(widgets)"
+        (click)="startWidgetEdit(state.profile, widgets)"
       >
         Edit
       </button>
