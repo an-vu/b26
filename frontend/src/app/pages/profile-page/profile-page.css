@@ -47,20 +47,17 @@
   opacity: 0.75;
 }
 
-.widget-editor {
-  display: grid;
-  gap: 12px;
-}
-
-.widget-editor-card {
+.widget-edit-tile {
   border: 1px solid rgba(0, 0, 0, 0.15);
   border-radius: 10px;
   padding: 10px;
   display: grid;
+  align-content: start;
   gap: 8px;
+  overflow: auto;
 }
 
-.widget-editor-card h3 {
+.widget-edit-tile h3 {
   margin: 0;
   font-size: 14px;
 }
@@ -72,20 +69,39 @@
   gap: 8px;
 }
 
-.widget-editor-card label {
+.widget-edit-tile label {
   display: grid;
   gap: 4px;
 }
 
-.widget-editor-card .checkbox {
+.widget-edit-tile input,
+.widget-edit-tile select,
+.widget-edit-tile textarea {
+  min-width: 0;
+}
+
+.widget-edit-tile textarea {
+  resize: vertical;
+}
+
+.widget-edit-tile .checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
+.widget-edit-tile .checkbox input {
+  margin: 0;
+}
+
 .widget-editor-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: 8px;
+}
+
+.add-widget-tile {
+  border-style: dashed;
 }
 
 .bottom-actions {

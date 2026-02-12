@@ -3,10 +3,15 @@
     <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
 
     <section class="widgets-section" *ngIf="widgets$ | async as widgets">
-      <div class="widget-editor" *ngIf="isWidgetEditMode">
-        <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
+      <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-        <article class="widget-editor-card" *ngFor="let draft of widgetDrafts; let i = index">
+      <div class="widgets-grid" *ngIf="isWidgetEditMode">
+        <article
+          class="widget-tile widget-edit-tile"
+          *ngFor="let draft of widgetDrafts; let i = index"
+          [class.tile-span-2]="draft.layout === 'span-2'"
+          [class.tile-span-1]="draft.layout !== 'span-2'"
+        >
           <div class="widget-editor-head">
             <h3>{{ draft.title || 'Widget' }}</h3>
             <div class="widget-editor-actions">
@@ -34,10 +39,6 @@
               <option value="span-2">span-2</option>
             </select>
           </label>
-          <label>
-            Order
-            <input type="number" [name]="'widget-order-' + (draft.id ?? 'new')" [(ngModel)]="draft.order" min="0" disabled />
-          </label>
           <label class="checkbox">
             <input type="checkbox" [name]="'widget-enabled-' + (draft.id ?? 'new')" [(ngModel)]="draft.enabled" />
             Enabled
@@ -57,13 +58,17 @@
           </label>
 
           <div class="widget-editor-actions">
-            <button type="button" (click)="saveWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Save widget</button>
+            <button type="button" (click)="saveWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Save</button>
             <button type="button" (click)="deleteWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Delete</button>
           </div>
         </article>
 
-        <article class="widget-editor-card">
-          <h3>Add new widget</h3>
+        <article
+          class="widget-tile widget-edit-tile add-widget-tile"
+          [class.tile-span-2]="newWidgetDraft.layout === 'span-2'"
+          [class.tile-span-1]="newWidgetDraft.layout !== 'span-2'"
+        >
+          <h3>Add widget</h3>
           <label>
             Type
             <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
@@ -82,10 +87,6 @@
               <option value="span-1">span-1</option>
               <option value="span-2">span-2</option>
             </select>
-          </label>
-          <label>
-            Order
-            <input type="number" name="new-widget-order" [(ngModel)]="newWidgetDraft.order" min="0" />
           </label>
           <label class="checkbox">
             <input type="checkbox" name="new-widget-enabled" [(ngModel)]="newWidgetDraft.enabled" />
@@ -106,10 +107,9 @@
           </label>
 
           <div class="widget-editor-actions">
-            <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
+            <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add</button>
           </div>
         </article>
-
       </div>
 
       <ng-container *ngIf="!isWidgetEditMode">
