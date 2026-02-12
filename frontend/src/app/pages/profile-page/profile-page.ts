@@ -8,7 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { ProfileService } from '../../services/profile.service';
 import { ProfileHeaderComponent } from '../../components/profile-header/profile-header';
 import { CardGridComponent } from '../../components/card-grid/card-grid';
-import type { Profile, UpdateProfileRequest } from '../../models/profile';
+import type { Profile } from '../../models/profile';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
 
@@ -41,10 +41,6 @@ export class ProfilePageComponent {
   private profileService = inject(ProfileService);
   private reload$ = new Subject<void>();
 
-  isEditMode = false;
-  isSaving = false;
-  saveError = '';
-  editDraft: UpdateProfileRequest | null = null;
   isWidgetEditMode = false;
   isWidgetSaving = false;
   widgetSaveError = '';
@@ -81,42 +77,6 @@ export class ProfilePageComponent {
       )
     )
   );
-
-  startEdit(profile: Profile) {
-    this.editDraft = {
-      name: profile.name,
-      headline: profile.headline,
-      cards: profile.cards.map((card) => ({ ...card })),
-    };
-    this.saveError = '';
-    this.isEditMode = true;
-  }
-
-  cancelEdit() {
-    this.isEditMode = false;
-    this.isSaving = false;
-    this.saveError = '';
-    this.editDraft = null;
-  }
-
-  saveProfile(profileId: string) {
-    if (!this.editDraft || this.isSaving) {
-      return;
-    }
-    this.isSaving = true;
-    this.saveError = '';
-
-    this.profileService.updateProfile(profileId, this.editDraft).subscribe({
-      next: () => {
-        this.cancelEdit();
-        this.reload$.next();
-      },
-      error: (error) => {
-        this.isSaving = false;
-        this.saveError = error?.error?.message ?? 'Unable to save profile.';
-      },
-    });
-  }
 
   trackWidget(index: number, widget: Widget) {
     return widget.id ?? index;
