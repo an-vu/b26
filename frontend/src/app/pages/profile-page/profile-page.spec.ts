@@ -105,7 +105,7 @@ describe('ProfilePageComponent', () => {
     expect(compiled.textContent).toContain('Profile not found.');
   });
 
-  it('should normalize and persist order when moving widgets down', () => {
+  it('should normalize local order when moving widgets down', () => {
     fixture = TestBed.createComponent(ProfilePageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
@@ -133,13 +133,11 @@ describe('ProfilePageComponent', () => {
 
     component.startWidgetEdit(widgets);
     const firstDraft = component.widgetDrafts[0];
-    component.moveWidget('default', firstDraft, 1);
+    component.moveWidget(firstDraft, 1);
 
     expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([2, 1]);
     expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 1]);
-    expect(updateWidgetCalls.length).toBe(2);
-    expect(updateWidgetCalls[0]).toEqual({ widgetId: 2, order: 0 });
-    expect(updateWidgetCalls[1]).toEqual({ widgetId: 1, order: 1 });
+    expect(updateWidgetCalls.length).toBe(0);
   });
 
   it('should sort widget drafts by order when entering edit mode', () => {
