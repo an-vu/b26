@@ -98,23 +98,14 @@ public class ProfileDataSeeder {
 
   private static void backfillMissingLinkWidgets(
       ProfileRepository profileRepository, WidgetRepository widgetRepository) {
-    List<ProfileEntity> profiles = profileRepository.findAll();
+    List<ProfileEntity> profiles = profileRepository.findAllWithCards();
     java.util.ArrayList<WidgetEntity> missingWidgets = new java.util.ArrayList<>();
-    java.util.ArrayList<WidgetEntity> updatedWidgets = new java.util.ArrayList<>();
 
     for (ProfileEntity profile : profiles) {
       List<WidgetEntity> existing = widgetRepository.findByProfile_IdOrderBySortOrderAsc(profile.getId());
-      for (WidgetEntity widget : existing) {
-          if ("embed".equals(widget.getType()) && "Now Playing".equals(widget.getTitle())) {
-            if (!"span-2".equals(widget.getLayout())) {
-              widget.setLayout("span-2");
-              updatedWidgets.add(widget);
-            }
-          }
-        }
-        int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
-        java.util.Set<String> existingLinkTitles =
-            existing.stream()
+      int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
+      java.util.Set<String> existingLinkTitles =
+          existing.stream()
               .filter(widget -> "link".equals(widget.getType()))
               .map(WidgetEntity::getTitle)
               .collect(java.util.stream.Collectors.toSet());
@@ -137,9 +128,6 @@ public class ProfileDataSeeder {
 
     if (!missingWidgets.isEmpty()) {
       widgetRepository.saveAll(missingWidgets);
-    }
-    if (!updatedWidgets.isEmpty()) {
-      widgetRepository.saveAll(updatedWidgets);
     }
   }
 
