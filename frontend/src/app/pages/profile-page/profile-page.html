@@ -114,28 +114,14 @@
 
       <ng-container *ngIf="!isWidgetEditMode">
         <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-        <div
-          class="widgets-grid"
-          *ngIf="widgets.length > 0"
-          [class.is-dragging]="draggingTileIndex !== null"
-          cdkDropList
-          [cdkDropListData]="widgets"
-          (cdkDropListDropped)="onWidgetDrop(state.profile.id, widgets, $event)"
-        >
+        <div class="widgets-grid" *ngIf="widgets.length > 0">
           <div
             class="widget-tile"
             *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
-            [class.is-dragging]="draggingTileIndex === i"
             [class.tile-span-2]="widget.layout === 'span-2'"
             [class.tile-span-1]="widget.layout !== 'span-2'"
-            cdkDrag
-            (cdkDragStarted)="onWidgetDragStarted(i)"
-            (cdkDragEnded)="onWidgetDragEnded()"
           >
             <app-widget-host [widget]="widget"></app-widget-host>
-            <ng-template cdkDragPlaceholder>
-              <div class="widget-tile-placeholder">Drop here</div>
-            </ng-template>
           </div>
         </div>
       </ng-container>
