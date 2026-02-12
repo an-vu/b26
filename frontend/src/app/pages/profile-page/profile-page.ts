@@ -44,6 +44,7 @@ export class ProfilePageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   widgetSaveError = '';
+  draggingTileIndex: number | null = null;
   widgetDrafts: WidgetDraft[] = [];
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
 
@@ -171,6 +172,46 @@ export class ProfilePageComponent {
     this.resetWidgetConfigForType(draft);
   }
 
+  onWidgetTileDragStart(event: DragEvent, index: number) {
+    if (this.isWidgetEditMode || this.isWidgetSaving) {
+      return;
+    }
+    if (event.dataTransfer) {
+      event.dataTransfer.effectAllowed = 'move';
+      event.dataTransfer.setData('text/plain', String(index));
+    }
+    this.draggingTileIndex = index;
+  }
+
+  onWidgetTileDragOver(event: DragEvent) {
+    if (this.draggingTileIndex === null) {
+      return;
+    }
+    event.preventDefault();
+    if (event.dataTransfer) {
+      event.dataTransfer.dropEffect = 'move';
+    }
+  }
+
+  onWidgetTileDrop(profileId: string, widgets: Widget[], dropIndex: number) {
+    if (this.draggingTileIndex === null || this.isWidgetEditMode || this.isWidgetSaving) {
+      return;
+    }
+    const dragIndex = this.draggingTileIndex;
+    this.draggingTileIndex = null;
+    if (dragIndex === dropIndex || dragIndex < 0 || dragIndex >= widgets.length) {
+      return;
+    }
+
+    const moved = widgets.splice(dragIndex, 1)[0];
+    widgets.splice(dropIndex, 0, moved);
+    this.persistWidgetOrderFromWidgets(profileId, widgets);
+  }
+
+  onWidgetTileDragEnd() {
+    this.draggingTileIndex = null;
+  }
+
   private refreshWidgetDrafts(profileId: string) {
     this.profileService.getWidgets(profileId).subscribe({
       next: (widgets) => {
@@ -288,6 +329,34 @@ export class ProfilePageComponent {
         next: () => this.reload$.next(),
         error: (error) => {
           this.widgetSaveError = error?.error?.message ?? 'Unable to reorder widgets.';
+        },
+      });
+  }
+
+  private persistWidgetOrderFromWidgets(profileId: string, widgets: Widget[]) {
+    this.isWidgetSaving = true;
+
+    const updates = widgets.map((widget, index) =>
+      this.profileService.updateWidget(profileId, widget.id, {
+        type: widget.type,
+        title: widget.title,
+        layout: widget.layout,
+        config: widget.config,
+        enabled: widget.enabled,
+        order: index,
+      })
+    );
+
+    forkJoin(updates)
+      .pipe(finalize(() => (this.isWidgetSaving = false)))
+      .subscribe({
+        next: (updatedWidgets) => {
+          const normalized = updatedWidgets.sort((a, b) => a.order - b.order);
+          widgets.splice(0, widgets.length, ...normalized);
+        },
+        error: (error) => {
+          this.widgetSaveError = error?.error?.message ?? 'Unable to reorder widgets.';
+          this.reload$.next();
         },
       });
   }

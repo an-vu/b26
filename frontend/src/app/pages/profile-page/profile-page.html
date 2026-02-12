@@ -108,11 +108,19 @@
 
       <ng-container *ngIf="!isWidgetEditMode">
         <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-        <div class="widgets-grid" *ngIf="widgets.length > 0">
-          <app-widget-host
-            *ngFor="let widget of widgets; trackBy: trackWidget"
-            [widget]="widget"
-          ></app-widget-host>
+        <div class="widgets-grid" *ngIf="widgets.length > 0" [class.is-dragging]="draggingTileIndex !== null">
+          <div
+            class="widget-tile"
+            *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
+            [class.is-dragging]="draggingTileIndex === i"
+            draggable="true"
+            (dragstart)="onWidgetTileDragStart($event, i)"
+            (dragover)="onWidgetTileDragOver($event)"
+            (drop)="onWidgetTileDrop(state.profile.id, widgets, i)"
+            (dragend)="onWidgetTileDragEnd()"
+          >
+            <app-widget-host [widget]="widget"></app-widget-host>
+          </div>
         </div>
       </ng-container>
     </section>

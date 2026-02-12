@@ -22,8 +22,27 @@
   gap: 12px;
 }
 
-.widgets-grid app-widget-host {
+.widget-tile {
   aspect-ratio: 1 / 1;
+  cursor: grab;
+}
+
+.widget-tile.is-dragging {
+  opacity: 0.5;
+}
+
+.widget-tile:active {
+  cursor: grabbing;
+}
+
+.widget-tile app-widget-host {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.widgets-grid.is-dragging iframe {
+  pointer-events: none;
 }
 
 .widgets-empty {
