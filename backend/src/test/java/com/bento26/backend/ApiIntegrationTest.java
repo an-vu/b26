@@ -24,6 +24,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@SuppressWarnings("null")
 class ApiIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ClickEventRepository clickEventRepository;

@@ -16,6 +16,7 @@
         "pattern": [
           {
             "regexp": "^\\s*\\[problem\\]\\s+([^:]+):(.*)$",
+            "kind": "file",
             "file": 1,
             "message": 2
           }
@@ -42,6 +43,7 @@
         "pattern": [
           {
             "regexp": "^\\s*\\[problem\\]\\s+([^:]+):(.*)$",
+            "kind": "file",
             "file": 1,
             "message": 2
           }
