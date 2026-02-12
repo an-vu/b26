@@ -1,7 +1,6 @@
 <ng-container *ngIf="pageState$ | async as state">
   <main class="page" *ngIf="state.status === 'ready'">
     <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
-    <app-card-grid [cards]="state.profile.cards"></app-card-grid>
 
     <section class="widgets-section" *ngIf="widgets$ | async as widgets">
       <div class="widgets-header">
