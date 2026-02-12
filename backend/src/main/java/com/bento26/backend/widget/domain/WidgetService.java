@@ -110,6 +110,14 @@ public class WidgetService {
       return;
     }
 
+    if ("link".equals(type)) {
+      JsonNode url = config.get("url");
+      if (url == null || !url.isTextual() || !url.asText().startsWith("http")) {
+        throw new InvalidWidgetConfigException("link config requires a valid http url");
+      }
+      return;
+    }
+
     throw new InvalidWidgetConfigException("unsupported widget type: " + type);
   }
 

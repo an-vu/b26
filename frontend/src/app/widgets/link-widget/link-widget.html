@@ -1,0 +1,9 @@
+<article class="widget">
+  <h3>{{ widget.title }}</h3>
+  <a *ngIf="url; else invalid" class="link" [href]="url" target="_blank" rel="noreferrer noopener">
+    Visit
+  </a>
+  <ng-template #invalid>
+    <p class="fallback">Link URL is missing or invalid.</p>
+  </ng-template>
+</article>

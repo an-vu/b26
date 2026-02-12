@@ -279,6 +279,30 @@ class ApiIntegrationTest {
   }
 
   @Test
+  void postWidget_linkValid_returns201() throws Exception {
+    String payload =
+        """
+        {
+          "type": "link",
+          "title": "GitHub",
+          "layout": "span-1",
+          "config": { "url": "https://github.com/an-vu" },
+          "enabled": true,
+          "order": 3
+        }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/profile/default/widgets")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.type").value("link"))
+        .andExpect(jsonPath("$.config.url").value("https://github.com/an-vu"));
+  }
+
+  @Test
   void putWidget_wrongProfile_returns404() throws Exception {
     long widgetId = createWidgetAndReturnId();
     String payload =

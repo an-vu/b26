@@ -25,6 +25,7 @@
             Type
             <select [name]="'widget-type-' + (draft.id ?? 'new')" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
               <option value="embed">Embed</option>
+              <option value="link">Link</option>
               <option value="map">Map</option>
             </select>
           </label>
@@ -49,6 +50,10 @@
             Embed URL
             <input type="text" [name]="'widget-embed-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.embedUrl" />
           </label>
+          <label *ngIf="draft.type === 'link'">
+            Link URL
+            <input type="text" [name]="'widget-link-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.linkUrl" />
+          </label>
           <label *ngIf="draft.type === 'map'">
             Places (one per line)
             <textarea [name]="'widget-places-' + (draft.id ?? 'new')" [(ngModel)]="draft.placesText" rows="4"></textarea>
@@ -66,6 +71,7 @@
             Type
             <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
               <option value="embed">Embed</option>
+              <option value="link">Link</option>
               <option value="map">Map</option>
             </select>
           </label>
@@ -89,6 +95,10 @@
           <label *ngIf="newWidgetDraft.type === 'embed'">
             Embed URL
             <input type="text" name="new-widget-embed-url" [(ngModel)]="newWidgetDraft.embedUrl" />
+          </label>
+          <label *ngIf="newWidgetDraft.type === 'link'">
+            Link URL
+            <input type="text" name="new-widget-link-url" [(ngModel)]="newWidgetDraft.linkUrl" />
           </label>
           <label *ngIf="newWidgetDraft.type === 'map'">
             Places (one per line)

@@ -17,7 +17,7 @@ type ProfilePageState =
   | { status: 'ready'; profile: Profile }
   | { status: 'missing' };
 
-type WidgetType = 'embed' | 'map';
+type WidgetType = 'embed' | 'map' | 'link';
 type WidgetDraft = {
   id?: number;
   type: WidgetType;
@@ -26,6 +26,7 @@ type WidgetDraft = {
   enabled: boolean;
   order: number;
   embedUrl: string;
+  linkUrl: string;
   placesText: string;
 };
 
@@ -101,9 +102,9 @@ export class ProfilePageComponent {
     const payload = this.buildWidgetPayload(draft);
     if (!payload) {
       this.widgetSaveError =
-        draft.type === 'embed'
-          ? 'Embed URL must start with http:// or https://.'
-          : 'Map widgets need at least one place.';
+        draft.type === 'map'
+          ? 'Map widgets need at least one place.'
+          : 'Widget URL must start with http:// or https://.';
       return;
     }
     this.isWidgetSaving = true;
@@ -190,12 +191,13 @@ export class ProfilePageComponent {
       : [];
     return {
       id: widget.id,
-      type: widget.type === 'map' ? 'map' : 'embed',
+      type: widget.type === 'map' ? 'map' : widget.type === 'link' ? 'link' : 'embed',
       title: widget.title,
       layout: widget.layout,
       enabled: widget.enabled,
       order: widget.order,
       embedUrl: typeof widget.config['embedUrl'] === 'string' ? widget.config['embedUrl'] : '',
+      linkUrl: typeof widget.config['url'] === 'string' ? widget.config['url'] : '',
       placesText: places.join('\n'),
     };
   }
@@ -208,6 +210,7 @@ export class ProfilePageComponent {
       enabled: true,
       order: 0,
       embedUrl: '',
+      linkUrl: '',
       placesText: '',
     };
   }
@@ -221,14 +224,14 @@ export class ProfilePageComponent {
       order: draft.order,
     };
 
-    if (draft.type === 'embed') {
-      const embedUrl = draft.embedUrl.trim();
-      if (!/^https?:\/\//i.test(embedUrl)) {
+    if (draft.type === 'embed' || draft.type === 'link') {
+      const url = (draft.type === 'embed' ? draft.embedUrl : draft.linkUrl).trim();
+      if (!/^https?:\/\//i.test(url)) {
         return null;
       }
       return {
         ...base,
-        config: { embedUrl },
+        config: draft.type === 'embed' ? { embedUrl: url } : { url },
       };
     }
 
@@ -247,10 +250,17 @@ export class ProfilePageComponent {
 
   private resetWidgetConfigForType(draft: WidgetDraft) {
     if (draft.type === 'embed') {
+      draft.linkUrl = '';
+      draft.placesText = '';
+      return;
+    }
+    if (draft.type === 'link') {
+      draft.embedUrl = '';
       draft.placesText = '';
       return;
     }
     draft.embedUrl = '';
+    draft.linkUrl = '';
   }
 
   private withNormalizedOrder(drafts: WidgetDraft[]): WidgetDraft[] {
