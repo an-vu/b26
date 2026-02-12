@@ -1,6 +1,5 @@
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
@@ -33,7 +32,7 @@ type WidgetDraft = {
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, DragDropModule, ProfileHeaderComponent, WidgetHostComponent],
+  imports: [CommonModule, FormsModule, ProfileHeaderComponent, WidgetHostComponent],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
@@ -45,7 +44,6 @@ export class ProfilePageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   widgetSaveError = '';
-  draggingTileIndex: number | null = null;
   widgetDrafts: WidgetDraft[] = [];
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
 
@@ -173,29 +171,6 @@ export class ProfilePageComponent {
     this.resetWidgetConfigForType(draft);
   }
 
-  onWidgetDragStarted(index: number) {
-    if (this.isWidgetEditMode || this.isWidgetSaving) {
-      return;
-    }
-    this.draggingTileIndex = index;
-  }
-
-  onWidgetDrop(profileId: string, widgets: Widget[], event: CdkDragDrop<Widget[]>) {
-    if (this.isWidgetEditMode || this.isWidgetSaving) {
-      return;
-    }
-    this.draggingTileIndex = null;
-    if (event.previousIndex === event.currentIndex) {
-      return;
-    }
-    moveItemInArray(widgets, event.previousIndex, event.currentIndex);
-    this.persistWidgetOrderFromWidgets(profileId, widgets);
-  }
-
-  onWidgetDragEnded() {
-    this.draggingTileIndex = null;
-  }
-
   private refreshWidgetDrafts(profileId: string) {
     this.profileService.getWidgets(profileId).subscribe({
       next: (widgets) => {
@@ -317,31 +292,4 @@ export class ProfilePageComponent {
       });
   }
 
-  private persistWidgetOrderFromWidgets(profileId: string, widgets: Widget[]) {
-    this.isWidgetSaving = true;
-
-    const updates = widgets.map((widget, index) =>
-      this.profileService.updateWidget(profileId, widget.id, {
-        type: widget.type,
-        title: widget.title,
-        layout: widget.layout,
-        config: widget.config,
-        enabled: widget.enabled,
-        order: index,
-      })
-    );
-
-    forkJoin(updates)
-      .pipe(finalize(() => (this.isWidgetSaving = false)))
-      .subscribe({
-        next: (updatedWidgets) => {
-          const normalized = updatedWidgets.sort((a, b) => a.order - b.order);
-          widgets.splice(0, widgets.length, ...normalized);
-        },
-        error: (error) => {
-          this.widgetSaveError = error?.error?.message ?? 'Unable to reorder widgets.';
-          this.reload$.next();
-        },
-      });
-  }
 }
