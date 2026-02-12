@@ -29,7 +29,10 @@
           </label>
           <label>
             Layout
-            <input type="text" [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout" />
+            <select [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout">
+              <option value="span-1">span-1</option>
+              <option value="span-2">span-2</option>
+            </select>
           </label>
           <label>
             Order
@@ -75,7 +78,10 @@
           </label>
           <label>
             Layout
-            <input type="text" name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout" />
+            <select name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout">
+              <option value="span-1">span-1</option>
+              <option value="span-2">span-2</option>
+            </select>
           </label>
           <label>
             Order
@@ -113,6 +119,8 @@
             class="widget-tile"
             *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
             [class.is-dragging]="draggingTileIndex === i"
+            [class.tile-span-2]="widget.layout === 'span-2'"
+            [class.tile-span-1]="widget.layout !== 'span-2'"
             draggable="true"
             (dragstart)="onWidgetTileDragStart($event, i)"
             (dragover)="onWidgetTileDragOver($event)"

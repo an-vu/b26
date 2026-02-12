@@ -63,7 +63,7 @@ public class ProfileDataSeeder {
                 defaultProfile,
                 "embed",
                 "Now Playing",
-                "span-1",
+                "span-2",
                 "{\"embedUrl\":\"https://open.spotify.com/embed/track/4uLU6hMCjMI75M1A2tKUQC\"}",
                 0));
         widgets.add(
@@ -100,12 +100,21 @@ public class ProfileDataSeeder {
       ProfileRepository profileRepository, WidgetRepository widgetRepository) {
     List<ProfileEntity> profiles = profileRepository.findAll();
     java.util.ArrayList<WidgetEntity> missingWidgets = new java.util.ArrayList<>();
+    java.util.ArrayList<WidgetEntity> updatedWidgets = new java.util.ArrayList<>();
 
     for (ProfileEntity profile : profiles) {
       List<WidgetEntity> existing = widgetRepository.findByProfile_IdOrderBySortOrderAsc(profile.getId());
-      int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
-      java.util.Set<String> existingLinkTitles =
-          existing.stream()
+      for (WidgetEntity widget : existing) {
+          if ("embed".equals(widget.getType()) && "Now Playing".equals(widget.getTitle())) {
+            if (!"span-2".equals(widget.getLayout())) {
+              widget.setLayout("span-2");
+              updatedWidgets.add(widget);
+            }
+          }
+        }
+        int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
+        java.util.Set<String> existingLinkTitles =
+            existing.stream()
               .filter(widget -> "link".equals(widget.getType()))
               .map(WidgetEntity::getTitle)
               .collect(java.util.stream.Collectors.toSet());
@@ -128,6 +137,9 @@ public class ProfileDataSeeder {
 
     if (!missingWidgets.isEmpty()) {
       widgetRepository.saveAll(missingWidgets);
+    }
+    if (!updatedWidgets.isEmpty()) {
+      widgetRepository.saveAll(updatedWidgets);
     }
   }
 
