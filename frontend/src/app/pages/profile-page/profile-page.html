@@ -1,167 +1,120 @@
 <ng-container *ngIf="pageState$ | async as state">
   <main class="page" *ngIf="state.status === 'ready'">
-    <div class="toolbar">
-      <button *ngIf="!isEditMode" type="button" (click)="startEdit(state.profile)">Edit profile</button>
-    </div>
+    <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
+    <app-card-grid [cards]="state.profile.cards"></app-card-grid>
 
-    <form
-      class="edit-form"
-      *ngIf="isEditMode && editDraft as draft"
-      (ngSubmit)="saveProfile(state.profile.id)"
-    >
-      <label>
-        Name
-        <input type="text" name="name" [(ngModel)]="draft.name" required />
-      </label>
-
-      <label>
-        Headline
-        <input type="text" name="headline" [(ngModel)]="draft.headline" required />
-      </label>
-
-      <section class="cards-editor">
-        <h3>Cards</h3>
-        <div class="card-editor-row" *ngFor="let card of draft.cards; let i = index">
-          <label>
-            Card Id
-            <input type="text" [name]="'card-id-' + i" [(ngModel)]="card.id" required />
-          </label>
-          <label>
-            Label
-            <input type="text" [name]="'card-label-' + i" [(ngModel)]="card.label" required />
-          </label>
-          <label>
-            URL
-            <input type="text" [name]="'card-href-' + i" [(ngModel)]="card.href" required />
-          </label>
-        </div>
-      </section>
-
-      <p class="error" *ngIf="saveError">{{ saveError }}</p>
-
-      <div class="form-actions">
-        <button type="submit" [disabled]="isSaving">{{ isSaving ? 'Saving...' : 'Save' }}</button>
-        <button type="button" (click)="cancelEdit()" [disabled]="isSaving">Cancel</button>
+    <section class="widgets-section" *ngIf="widgets$ | async as widgets">
+      <div class="widgets-header">
+        <h2>Widgets</h2>
+        <button *ngIf="!isWidgetEditMode" type="button" (click)="startWidgetEdit(widgets)">Edit</button>
       </div>
-    </form>
 
-    <ng-container *ngIf="!isEditMode">
-      <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
-      <app-card-grid [cards]="state.profile.cards"></app-card-grid>
+      <div class="widget-editor" *ngIf="isWidgetEditMode">
+        <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-      <section class="widgets-section" *ngIf="widgets$ | async as widgets">
-        <div class="widgets-header">
-          <h2>Widgets</h2>
-          <button *ngIf="!isWidgetEditMode" type="button" (click)="startWidgetEdit(widgets)">Edit widgets</button>
-        </div>
-
-        <div class="widget-editor" *ngIf="isWidgetEditMode">
-          <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
-
-          <article class="widget-editor-card" *ngFor="let draft of widgetDrafts; let i = index">
-            <div class="widget-editor-head">
-              <h3>{{ draft.title || 'Widget' }}</h3>
-              <div class="widget-editor-actions">
-                <button type="button" (click)="moveWidget(state.profile.id, draft, -1)" [disabled]="isWidgetSaving || i === 0">Up</button>
-                <button type="button" (click)="moveWidget(state.profile.id, draft, 1)" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
-              </div>
-            </div>
-
-            <label>
-              Type
-              <select [name]="'widget-type-' + (draft.id ?? 'new')" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
-                <option value="embed">Embed</option>
-                <option value="map">Map</option>
-              </select>
-            </label>
-            <label>
-              Title
-              <input type="text" [name]="'widget-title-' + (draft.id ?? 'new')" [(ngModel)]="draft.title" />
-            </label>
-            <label>
-              Layout
-              <input type="text" [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout" />
-            </label>
-            <label>
-              Order
-              <input type="number" [name]="'widget-order-' + (draft.id ?? 'new')" [(ngModel)]="draft.order" min="0" disabled />
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" [name]="'widget-enabled-' + (draft.id ?? 'new')" [(ngModel)]="draft.enabled" />
-              Enabled
-            </label>
-
-            <label *ngIf="draft.type === 'embed'">
-              Embed URL
-              <input type="text" [name]="'widget-embed-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.embedUrl" />
-            </label>
-            <label *ngIf="draft.type === 'map'">
-              Places (one per line)
-              <textarea [name]="'widget-places-' + (draft.id ?? 'new')" [(ngModel)]="draft.placesText" rows="4"></textarea>
-            </label>
-
+        <article class="widget-editor-card" *ngFor="let draft of widgetDrafts; let i = index">
+          <div class="widget-editor-head">
+            <h3>{{ draft.title || 'Widget' }}</h3>
             <div class="widget-editor-actions">
-              <button type="button" (click)="saveWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Save widget</button>
-              <button type="button" (click)="deleteWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Delete</button>
+              <button type="button" (click)="moveWidget(state.profile.id, draft, -1)" [disabled]="isWidgetSaving || i === 0">Up</button>
+              <button type="button" (click)="moveWidget(state.profile.id, draft, 1)" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
             </div>
-          </article>
+          </div>
 
-          <article class="widget-editor-card">
-            <h3>Add new widget</h3>
-            <label>
-              Type
-              <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
-                <option value="embed">Embed</option>
-                <option value="map">Map</option>
-              </select>
-            </label>
-            <label>
-              Title
-              <input type="text" name="new-widget-title" [(ngModel)]="newWidgetDraft.title" />
-            </label>
-            <label>
-              Layout
-              <input type="text" name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout" />
-            </label>
-            <label>
-              Order
-              <input type="number" name="new-widget-order" [(ngModel)]="newWidgetDraft.order" min="0" />
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" name="new-widget-enabled" [(ngModel)]="newWidgetDraft.enabled" />
-              Enabled
-            </label>
+          <label>
+            Type
+            <select [name]="'widget-type-' + (draft.id ?? 'new')" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
+              <option value="embed">Embed</option>
+              <option value="map">Map</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input type="text" [name]="'widget-title-' + (draft.id ?? 'new')" [(ngModel)]="draft.title" />
+          </label>
+          <label>
+            Layout
+            <input type="text" [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout" />
+          </label>
+          <label>
+            Order
+            <input type="number" [name]="'widget-order-' + (draft.id ?? 'new')" [(ngModel)]="draft.order" min="0" disabled />
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" [name]="'widget-enabled-' + (draft.id ?? 'new')" [(ngModel)]="draft.enabled" />
+            Enabled
+          </label>
 
-            <label *ngIf="newWidgetDraft.type === 'embed'">
-              Embed URL
-              <input type="text" name="new-widget-embed-url" [(ngModel)]="newWidgetDraft.embedUrl" />
-            </label>
-            <label *ngIf="newWidgetDraft.type === 'map'">
-              Places (one per line)
-              <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" rows="4"></textarea>
-            </label>
-
-            <div class="widget-editor-actions">
-              <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
-            </div>
-          </article>
+          <label *ngIf="draft.type === 'embed'">
+            Embed URL
+            <input type="text" [name]="'widget-embed-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.embedUrl" />
+          </label>
+          <label *ngIf="draft.type === 'map'">
+            Places (one per line)
+            <textarea [name]="'widget-places-' + (draft.id ?? 'new')" [(ngModel)]="draft.placesText" rows="4"></textarea>
+          </label>
 
           <div class="widget-editor-actions">
-            <button type="button" (click)="cancelWidgetEdit()">Done</button>
+            <button type="button" (click)="saveWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Save widget</button>
+            <button type="button" (click)="deleteWidget(state.profile.id, draft)" [disabled]="isWidgetSaving">Delete</button>
           </div>
-        </div>
+        </article>
 
-        <ng-container *ngIf="!isWidgetEditMode">
-          <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-          <div class="widgets-grid" *ngIf="widgets.length > 0">
-            <app-widget-host
-              *ngFor="let widget of widgets; trackBy: trackWidget"
-              [widget]="widget"
-            ></app-widget-host>
+        <article class="widget-editor-card">
+          <h3>Add new widget</h3>
+          <label>
+            Type
+            <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
+              <option value="embed">Embed</option>
+              <option value="map">Map</option>
+            </select>
+          </label>
+          <label>
+            Title
+            <input type="text" name="new-widget-title" [(ngModel)]="newWidgetDraft.title" />
+          </label>
+          <label>
+            Layout
+            <input type="text" name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout" />
+          </label>
+          <label>
+            Order
+            <input type="number" name="new-widget-order" [(ngModel)]="newWidgetDraft.order" min="0" />
+          </label>
+          <label class="checkbox">
+            <input type="checkbox" name="new-widget-enabled" [(ngModel)]="newWidgetDraft.enabled" />
+            Enabled
+          </label>
+
+          <label *ngIf="newWidgetDraft.type === 'embed'">
+            Embed URL
+            <input type="text" name="new-widget-embed-url" [(ngModel)]="newWidgetDraft.embedUrl" />
+          </label>
+          <label *ngIf="newWidgetDraft.type === 'map'">
+            Places (one per line)
+            <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" rows="4"></textarea>
+          </label>
+
+          <div class="widget-editor-actions">
+            <button type="button" (click)="addNewWidget(state.profile.id)" [disabled]="isWidgetSaving">Add widget</button>
           </div>
-        </ng-container>
-      </section>
-    </ng-container>
+        </article>
+
+        <div class="widget-editor-actions">
+          <button type="button" (click)="cancelWidgetEdit()">Done</button>
+        </div>
+      </div>
+
+      <ng-container *ngIf="!isWidgetEditMode">
+        <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
+        <div class="widgets-grid" *ngIf="widgets.length > 0">
+          <app-widget-host
+            *ngFor="let widget of widgets; trackBy: trackWidget"
+            [widget]="widget"
+          ></app-widget-host>
+        </div>
+      </ng-container>
+    </section>
   </main>
   <main class="page" *ngIf="state.status === 'loading'">
     <p>Loading...</p>
