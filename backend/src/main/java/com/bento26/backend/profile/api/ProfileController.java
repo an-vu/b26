@@ -3,6 +3,7 @@ package com.bento26.backend.profile.api;
 import com.bento26.backend.profile.domain.ProfileService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,5 +28,11 @@ public class ProfileController {
   public ProfileDto updateProfile(
       @PathVariable String profileId, @Valid @RequestBody UpdateProfileRequest request) {
     return profileService.updateProfile(profileId, request);
+  }
+
+  @PatchMapping("/{profileId}/meta")
+  public ProfileDto updateProfileMeta(
+      @PathVariable String profileId, @Valid @RequestBody UpdateProfileMetaRequest request) {
+    return profileService.updateProfileMeta(profileId, request);
   }
 }

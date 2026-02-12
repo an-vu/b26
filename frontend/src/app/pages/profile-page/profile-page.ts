@@ -45,6 +45,8 @@ export class ProfilePageComponent {
   isWidgetSaving = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
+  profileDraftName = '';
+  profileDraftHeadline = '';
   widgetDrafts: WidgetDraft[] = [];
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
   deletedWidgetIds: number[] = [];
@@ -98,8 +100,10 @@ export class ProfilePageComponent {
     return 'tile-span-1';
   }
 
-  startWidgetEdit(widgets: Widget[]) {
+  startWidgetEdit(profile: Profile, widgets: Widget[]) {
     this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
+    this.profileDraftName = profile.name;
+    this.profileDraftHeadline = profile.headline;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
     this.widgetSaveError = '';
@@ -113,6 +117,8 @@ export class ProfilePageComponent {
     this.isWidgetSaving = false;
     this.widgetSaveError = '';
     this.newWidgetValidationError = '';
+    this.profileDraftName = '';
+    this.profileDraftHeadline = '';
     this.widgetDrafts = [];
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
@@ -172,6 +178,12 @@ export class ProfilePageComponent {
     this.widgetDrafts = normalizedDrafts;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.newWidgetValidationError = '';
+    const trimmedName = this.profileDraftName.trim();
+    const trimmedHeadline = this.profileDraftHeadline.trim();
+    if (!trimmedName || !trimmedHeadline) {
+      this.widgetSaveError = 'Name and headline are required.';
+      return;
+    }
 
     for (const draft of normalizedDrafts) {
       const validationMessage = this.getWidgetValidationMessage(draft);
@@ -191,7 +203,11 @@ export class ProfilePageComponent {
       .map((draft) => this.profileService.createWidget(profileId, this.buildWidgetPayload(draft)!));
 
     const deletes = this.deletedWidgetIds.map((widgetId) => this.profileService.deleteWidget(profileId, widgetId));
-    const requests = [...deletes, ...updates, ...creates];
+    const profileUpdate = this.profileService.updateProfileMeta(profileId, {
+      name: trimmedName,
+      headline: trimmedHeadline,
+    });
+    const requests = [profileUpdate, ...deletes, ...updates, ...creates];
 
     this.isWidgetSaving = true;
     this.widgetSaveError = '';

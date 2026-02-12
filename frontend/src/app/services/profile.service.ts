@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import type { Profile, UpdateProfileRequest } from '../models/profile';
+import type { Profile, UpdateProfileMetaRequest, UpdateProfileRequest } from '../models/profile';
 import type { UpsertWidgetRequest, Widget } from '../models/widget';
 import { environment } from '../../environments/environment';
 
@@ -15,6 +15,10 @@ export class ProfileService {
 
   updateProfile(profileId: string, payload: UpdateProfileRequest): Observable<Profile> {
     return this.http.put<Profile>(`${environment.apiBaseUrl}/api/profile/${profileId}`, payload);
+  }
+
+  updateProfileMeta(profileId: string, payload: UpdateProfileMetaRequest): Observable<Profile> {
+    return this.http.patch<Profile>(`${environment.apiBaseUrl}/api/profile/${profileId}/meta`, payload);
   }
 
   getWidgets(profileId: string): Observable<Widget[]> {

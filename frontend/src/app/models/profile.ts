@@ -15,3 +15,8 @@ export type UpdateProfileRequest = {
   headline: string;
   cards: Card[];
 };
+
+export type UpdateProfileMetaRequest = {
+  name: string;
+  headline: string;
+};
