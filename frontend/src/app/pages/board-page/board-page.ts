@@ -44,6 +44,7 @@ export class BoardPageComponent {
   private analyticsService = inject(AnalyticsService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private reload$ = new Subject<void>();
+  private hasLoadedPageStateOnce = false;
 
   isWidgetEditMode = false;
   isWidgetSaving = false;
@@ -53,6 +54,7 @@ export class BoardPageComponent {
   boardDraftName = '';
   boardDraftHeadline = '';
   widgetDrafts: WidgetDraft[] = [];
+  activeWidgetSettingsId: number | null = null;
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
   deletedWidgetIds: number[] = [];
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
@@ -61,16 +63,23 @@ export class BoardPageComponent {
     startWith(undefined),
     switchMap(() =>
       this.route.paramMap.pipe(
-        switchMap((params) =>
-          this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
+        switchMap((params) => {
+          const boardState$ = this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
             tap((board) => {
               this.analyticsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
             }),
             map((board): BoardPageState => ({ status: 'ready', board })),
-            catchError(() => of<BoardPageState>({ status: 'missing' })),
-            startWith<BoardPageState>({ status: 'loading' })
-          )
-        )
+            catchError(() => of<BoardPageState>({ status: 'missing' }))
+          );
+          return this.hasLoadedPageStateOnce
+            ? boardState$
+            : boardState$.pipe(startWith<BoardPageState>({ status: 'loading' }));
+        }),
+        tap((state) => {
+          if (state.status !== 'loading') {
+            this.hasLoadedPageStateOnce = true;
+          }
+        })
       )
     )
   );
@@ -127,6 +136,7 @@ export class BoardPageComponent {
     this.widgetSaveError = '';
     this.newWidgetValidationError = '';
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
+    this.activeWidgetSettingsId = null;
     this.isWidgetEditMode = true;
   }
 
@@ -165,12 +175,16 @@ export class BoardPageComponent {
     this.boardDraftName = '';
     this.boardDraftHeadline = '';
     this.widgetDrafts = [];
+    this.activeWidgetSettingsId = null;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
   }
 
   deleteWidget(draft: WidgetDraft) {
+    if (draft.id && this.activeWidgetSettingsId === draft.id) {
+      this.activeWidgetSettingsId = null;
+    }
     if (!draft.id) {
       this.widgetDrafts = this.widgetDrafts.filter((item) => item !== draft);
       this.widgetDrafts = this.withNormalizedOrder(this.widgetDrafts);
@@ -216,6 +230,31 @@ export class BoardPageComponent {
     const nextDrafts = [...this.widgetDrafts];
     [nextDrafts[currentIndex], nextDrafts[targetIndex]] = [nextDrafts[targetIndex], nextDrafts[currentIndex]];
     this.widgetDrafts = this.withNormalizedOrder(nextDrafts);
+  }
+
+  openWidgetSettings(draft: WidgetDraft) {
+    if (this.isWidgetSaving || !draft.id) {
+      return;
+    }
+    this.activeWidgetSettingsId = draft.id;
+    this.draftValidationErrors.delete(draft);
+  }
+
+  isWidgetSettingsOpen(draft: WidgetDraft) {
+    return !!draft.id && this.activeWidgetSettingsId === draft.id;
+  }
+
+  widgetPreviewFromDraft(draft: WidgetDraft, index: number): Widget {
+    const payload = this.buildWidgetPayload(draft);
+    return {
+      id: draft.id ?? -(index + 1),
+      type: draft.type,
+      title: draft.title,
+      layout: draft.layout,
+      config: payload?.config ?? {},
+      enabled: draft.enabled,
+      order: draft.order,
+    };
   }
 
   doneWidgetEdit(boardId: string) {

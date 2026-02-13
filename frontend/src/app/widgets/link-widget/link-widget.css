@@ -1,5 +1,7 @@
 .link {
   width: fit-content;
+  align-self: start;
+  justify-self: start;
   text-decoration: none;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 8px;
