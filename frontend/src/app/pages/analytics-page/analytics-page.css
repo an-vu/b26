@@ -1,0 +1,30 @@
+.label {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.value {
+  margin: 0;
+  font-size: 28px;
+  line-height: 1;
+}
+
+.placeholder {
+  margin: 0;
+  opacity: 0.75;
+}
+
+.top-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 6px;
+}
+
+.top-list li {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}

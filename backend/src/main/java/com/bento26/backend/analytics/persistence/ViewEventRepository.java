@@ -1,0 +1,10 @@
+package com.bento26.backend.analytics.persistence;
+
+import java.time.Instant;
+import org.springframework.data.jpa.repository.JpaRepository;
+
+public interface ViewEventRepository extends JpaRepository<ViewEventEntity, Long> {
+  long countByBoardId(String boardId);
+
+  long countByBoardIdAndOccurredAtGreaterThanEqual(String boardId, Instant occurredAt);
+}

@@ -1,0 +1,95 @@
+<ng-container *ngIf="state$ | async as state">
+  <main class="page" *ngIf="state.status === 'ready'">
+    <div class="board-shell">
+      <aside class="board-rail">
+        <app-board-header
+          [name]="'Analytics'"
+          [headline]="'Overview of your profile performance'"
+        ></app-board-header>
+      </aside>
+
+      <section class="board-content">
+        <div class="board-grid">
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Total Visits</p>
+            <p class="value">{{ state.summary.totalVisits }}</p>
+          </article>
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Last 30 Days</p>
+            <p class="value">{{ state.summary.visitsLast30Days }}</p>
+          </article>
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Today</p>
+            <p class="value">{{ state.summary.visitsToday }}</p>
+          </article>
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Total Clicks</p>
+            <p class="value">{{ state.summary.totalClicks }}</p>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-2">
+            <p class="label">Visits Over Time</p>
+            <p class="placeholder">Line chart placeholder (x: day, y: visits)</p>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Device Breakdown</p>
+            <p class="placeholder">Pie chart placeholder (desktop/mobile/tablet)</p>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Top Countries</p>
+            <p class="placeholder">Ranking placeholder (#1 USA, #2 ...)</p>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-1">
+            <p class="label">Top Boards</p>
+            <p class="placeholder">Traffic ranking placeholder (which board gets most visits)</p>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-2">
+            <p class="label">Top Widgets Clicked</p>
+            <ul class="top-list" *ngIf="state.summary.topClickedLinks.length > 0; else noClicks">
+              <li *ngFor="let item of state.summary.topClickedLinks">
+                <span>{{ item.cardId }}</span>
+                <span>{{ item.clickCount }}</span>
+              </li>
+            </ul>
+            <ng-template #noClicks>
+              <p class="placeholder">No clicks yet.</p>
+            </ng-template>
+          </article>
+
+          <article class="board-tile board-card analytics-tile tile-span-2">
+            <p class="label">Peak Hour/Day Heatmap</p>
+            <p class="placeholder">Heatmap placeholder (hours x days activity intensity)</p>
+          </article>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-actions">
+      <button type="button" routerLink="/">Logo</button>
+      <div class="account-menu-wrap">
+        <button type="button" (click)="toggleAccountMenu()">Account</button>
+        <div class="account-menu" *ngIf="isAccountMenuOpen">
+          <p class="account-menu-label">Boards</p>
+          <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
+          <button type="button" class="account-link">Create New Board</button>
+          <hr />
+          <a class="account-link" routerLink="/analytics" (click)="closeAccountMenu()">Analytics</a>
+          <button type="button" class="account-link">Settings</button>
+          <button type="button" class="account-link">Sign Out</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <main class="page" *ngIf="state.status === 'loading'">
+    <p>Loading analytics...</p>
+  </main>
+
+  <main class="page" *ngIf="state.status === 'error'">
+    <p>Unable to load analytics right now.</p>
+  </main>
+</ng-container>

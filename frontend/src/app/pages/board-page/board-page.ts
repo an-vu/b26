@@ -1,12 +1,13 @@
 import { Component, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { switchMap } from 'rxjs/operators';
+import { switchMap, tap } from 'rxjs/operators';
 import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
+import { AnalyticsService } from '../../services/analytics.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
@@ -40,6 +41,7 @@ type WidgetDraft = {
 export class BoardPageComponent {
   private route = inject(ActivatedRoute);
   private boardService = inject(BoardService);
+  private analyticsService = inject(AnalyticsService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private reload$ = new Subject<void>();
 
@@ -61,6 +63,9 @@ export class BoardPageComponent {
       this.route.paramMap.pipe(
         switchMap((params) =>
           this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
+            tap((board) => {
+              this.analyticsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
+            }),
             map((board): BoardPageState => ({ status: 'ready', board })),
             catchError(() => of<BoardPageState>({ status: 'missing' })),
             startWith<BoardPageState>({ status: 'loading' })

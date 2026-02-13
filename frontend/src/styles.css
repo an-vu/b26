@@ -1,1 +1,137 @@
-/* You can add global styles to this file, and also import other style files */
+.board-shell {
+  display: grid;
+  grid-template-columns: 24% 76%;
+  align-items: start;
+}
+
+.board-rail {
+  min-width: 0;
+}
+
+.board-content {
+  margin-top: 0;
+  display: grid;
+  gap: 10px;
+  min-width: 0;
+}
+
+.board-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.board-tile {
+  cursor: default;
+}
+
+.board-card,
+.widget {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  padding: 12px;
+  display: grid;
+  gap: 8px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.board-card {
+  align-content: start;
+}
+
+.board-card--compact {
+  padding: 10px;
+}
+
+.board-card--scroll {
+  overflow: auto;
+}
+
+.tile-span-1 {
+  grid-column: span 1;
+  aspect-ratio: 1 / 1;
+}
+
+.tile-span-2 {
+  grid-column: span 2;
+  aspect-ratio: 2 / 1;
+}
+
+.tile-span-1x2 {
+  grid-column: span 1;
+  aspect-ratio: 1 / 2;
+}
+
+.tile-span-2x2 {
+  grid-column: span 2;
+  aspect-ratio: 1 / 1;
+}
+
+.bottom-actions {
+  position: fixed;
+  left: 16px;
+  bottom: 16px;
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  z-index: 30;
+}
+
+.account-menu-wrap {
+  position: relative;
+}
+
+.account-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  min-width: 220px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.account-menu-label {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.account-menu a,
+.account-link {
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.account-menu hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  margin: 4px 0;
+}
+
+@media (max-width: 1024px) {
+  .board-shell {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .board-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .board-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

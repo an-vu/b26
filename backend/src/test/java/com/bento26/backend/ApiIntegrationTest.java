@@ -2,6 +2,7 @@ package com.bento26.backend;
 
 import com.bento26.backend.analytics.domain.ClickAbuseGuard;
 import com.bento26.backend.analytics.persistence.ClickEventRepository;
+import com.bento26.backend.analytics.persistence.ViewEventRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,12 +29,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ApiIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ClickEventRepository clickEventRepository;
+  @Autowired private ViewEventRepository viewEventRepository;
   @Autowired private ClickAbuseGuard clickAbuseGuard;
   @Autowired private ObjectMapper objectMapper;
 
   @BeforeEach
   void clearClicks() {
     clickEventRepository.deleteAll();
+    viewEventRepository.deleteAll();
     clickAbuseGuard.clear();
   }
 
@@ -171,6 +174,60 @@ class ApiIntegrationTest {
                 .content(clickPayload))
         .andExpect(status().isTooManyRequests())
         .andExpect(jsonPath("$.message").value("Too many click events. Try again shortly."));
+  }
+
+  @Test
+  void postView_andGetSummary_work() throws Exception {
+    String viewPayload =
+        """
+        { "boardId": "default", "source": "direct" }
+        """;
+    String clickPayload =
+        """
+        { "boardId": "default" }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/analytics/view")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header("User-Agent", "Mozilla/5.0 (iPhone)")
+                .content(viewPayload))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(
+            post("/api/click/github")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(clickPayload))
+        .andExpect(status().isNoContent());
+
+    mockMvc
+        .perform(get("/api/analytics/default/summary"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boardId").value("default"))
+        .andExpect(jsonPath("$.totalVisits").value(1))
+        .andExpect(jsonPath("$.visitsLast30Days").value(1))
+        .andExpect(jsonPath("$.visitsToday").value(1))
+        .andExpect(jsonPath("$.totalClicks").value(1))
+        .andExpect(jsonPath("$.topClickedLinks[0].cardId").value("github"))
+        .andExpect(jsonPath("$.topClickedLinks[0].clickCount").value(1));
+  }
+
+  @Test
+  void postView_missingBoard_returns404() throws Exception {
+    String viewPayload =
+        """
+        { "boardId": "not-here", "source": "direct" }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/analytics/view")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(viewPayload))
+        .andExpect(status().isNotFound())
+        .andExpect(jsonPath("$.message").value("Board not found: not-here"));
   }
 
   @Test

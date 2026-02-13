@@ -35,4 +35,17 @@ public class AnalyticsController {
   public AnalyticsResponse getAnalytics(@PathVariable String boardId) {
     return analyticsService.getAnalytics(boardId);
   }
+
+  @PostMapping("/analytics/view")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void recordView(@Valid @RequestBody RecordViewRequest request, HttpServletRequest servletRequest) {
+    String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
+    String userAgent = servletRequest.getHeader("User-Agent");
+    analyticsService.recordView(request.boardId(), sourceIp, request.source(), userAgent);
+  }
+
+  @GetMapping("/analytics/{boardId}/summary")
+  public AnalyticsSummaryResponse getSummary(@PathVariable String boardId) {
+    return analyticsService.getSummary(boardId);
+  }
 }

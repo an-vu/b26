@@ -1,7 +1,7 @@
 <ng-container *ngIf="pageState$ | async as state">
   <main class="page" *ngIf="state.status === 'ready'">
-    <div class="board-layout">
-      <aside class="board-left">
+    <div class="board-shell">
+      <aside class="board-rail">
         <ng-container *ngIf="isWidgetEditMode; else boardView">
           <section class="board-meta-editor">
             <label>
@@ -19,14 +19,13 @@
         </ng-template>
       </aside>
 
-      <section class="widgets-section" *ngIf="widgets$ | async as widgets">
+      <section class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
         <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-        <div class="widgets-grid" *ngIf="isWidgetEditMode">
+        <div class="board-grid" *ngIf="isWidgetEditMode">
           <article
-            class="widget-tile widget-edit-tile"
             *ngFor="let draft of widgetDrafts; let i = index"
-            [class]=" 'widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+            [class]="'board-tile board-card board-card--compact board-card--scroll widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
           >
             <div class="widget-editor-head">
               <h3>{{ draft.title || 'Widget' }}</h3>
@@ -82,7 +81,7 @@
           </article>
 
           <article
-            [class]="'widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
+            [class]="'board-tile board-card board-card--compact board-card--scroll widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
           >
             <h3>Add widget</h3>
             <label>
@@ -133,11 +132,11 @@
 
         <ng-container *ngIf="!isWidgetEditMode">
           <p class="widgets-empty" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-          <div class="widgets-grid" *ngIf="widgets.length > 0">
+          <div class="board-grid" *ngIf="widgets.length > 0">
             <div
-              class="widget-tile"
+              class="board-tile widget-tile"
               *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
-              [class]=" 'widget-tile ' + tileLayoutClass(widget.layout)"
+              [class]="'board-tile widget-tile ' + tileLayoutClass(widget.layout)"
             >
               <app-widget-host [widget]="widget"></app-widget-host>
             </div>
@@ -155,7 +154,7 @@
           <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
           <button type="button" class="account-link">Create New Board</button>
           <hr />
-          <button type="button" class="account-link">Analytics</button>
+          <a class="account-link" routerLink="/analytics" (click)="closeAccountMenu()">Analytics</a>
           <button type="button" class="account-link">Settings</button>
           <button type="button" class="account-link">Sign Out</button>
         </div>
