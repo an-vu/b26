@@ -81,3 +81,10 @@
 .add-widget-tile {
   border-style: dashed;
 }
+
+.add-widget-tile--collapsed {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  align-content: center;
+}

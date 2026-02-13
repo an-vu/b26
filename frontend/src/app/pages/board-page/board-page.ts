@@ -50,6 +50,7 @@ export class BoardPageComponent {
   isAccountMenuOpen = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
+  isAddWidgetExpanded = false;
   boardDraftName = '';
   boardDraftHeadline = '';
   widgetDrafts: WidgetDraft[] = [];
@@ -134,6 +135,7 @@ export class BoardPageComponent {
     this.deletedWidgetIds = [];
     this.widgetSaveError = '';
     this.newWidgetValidationError = '';
+    this.isAddWidgetExpanded = false;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.activeWidgetSettingsId = null;
     this.isWidgetEditMode = true;
@@ -171,6 +173,7 @@ export class BoardPageComponent {
     this.isWidgetSaving = false;
     this.widgetSaveError = '';
     this.newWidgetValidationError = '';
+    this.isAddWidgetExpanded = false;
     this.boardDraftName = '';
     this.boardDraftHeadline = '';
     this.widgetDrafts = [];
@@ -210,6 +213,12 @@ export class BoardPageComponent {
     this.widgetDrafts = [...this.widgetDrafts, draft];
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.widgetSaveError = '';
+    this.newWidgetValidationError = '';
+    this.isAddWidgetExpanded = false;
+  }
+
+  openAddWidgetForm() {
+    this.isAddWidgetExpanded = true;
     this.newWidgetValidationError = '';
   }
 
@@ -372,7 +381,7 @@ export class BoardPageComponent {
   private createEmptyWidgetDraft(): WidgetDraft {
     return {
       type: 'embed',
-      title: 'New widget',
+      title: '',
       layout: 'span-1',
       enabled: true,
       order: 0,

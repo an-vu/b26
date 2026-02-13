@@ -96,47 +96,59 @@
           </article>
 
           <article
-            [class]="'board-tile board-card board-card--compact board-card--scroll widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
+            [class]="'board-tile board-card board-card--compact widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
+            [class.board-card--scroll]="isAddWidgetExpanded"
+            [class.add-widget-tile--collapsed]="!isAddWidgetExpanded"
           >
-            <h3>Add widget</h3>
-            <label>
-              Type
-              <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
-                <option value="embed">Embed</option>
-                <option value="link">Link</option>
-                <option value="map">Map</option>
-              </select>
-            </label>
-            <label>
-              Title
-              <input type="text" name="new-widget-title" [(ngModel)]="newWidgetDraft.title" (ngModelChange)="onNewWidgetFieldChange()" />
-            </label>
-            <label>
-              Layout
-              <select name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout" (ngModelChange)="onNewWidgetFieldChange()">
-                <option value="span-1">1c x 1r</option>
-                <option value="span-2">2c x 1r</option>
-                <option value="span-1x2">1c x 2r</option>
-                <option value="span-2x2">2c x 2r</option>
-              </select>
-            </label>
-            <label *ngIf="newWidgetDraft.type === 'embed'">
-              Embed URL
-              <input type="text" name="new-widget-embed-url" [(ngModel)]="newWidgetDraft.embedUrl" (ngModelChange)="onNewWidgetFieldChange()" />
-            </label>
-            <label *ngIf="newWidgetDraft.type === 'link'">
-              Link URL
-              <input type="text" name="new-widget-link-url" [(ngModel)]="newWidgetDraft.linkUrl" (ngModelChange)="onNewWidgetFieldChange()" />
-            </label>
-            <label *ngIf="newWidgetDraft.type === 'map'">
-              Places (one per line)
-              <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" (ngModelChange)="onNewWidgetFieldChange()" rows="4"></textarea>
-            </label>
-            <p class="field-error" *ngIf="newWidgetValidationError">{{ newWidgetValidationError }}</p>
+            <ng-container *ngIf="isAddWidgetExpanded; else addWidgetCollapsed">
+              <div class="widget-editor-head">
+                <input
+                  type="text"
+                  class="widget-title-inline inline-edit"
+                  name="new-widget-title"
+                  [(ngModel)]="newWidgetDraft.title"
+                  (ngModelChange)="onNewWidgetFieldChange()"
+                  placeholder="Widget Name..."
+                />
+              </div>
+              <label>
+                Type
+                <select name="new-widget-type" [(ngModel)]="newWidgetDraft.type" (ngModelChange)="onNewWidgetTypeChange()">
+                  <option value="embed">Embed</option>
+                  <option value="link">Link</option>
+                  <option value="map">Map</option>
+                </select>
+              </label>
+              <label>
+                Layout
+                <select name="new-widget-layout" [(ngModel)]="newWidgetDraft.layout" (ngModelChange)="onNewWidgetFieldChange()">
+                  <option value="span-1">1c x 1r</option>
+                  <option value="span-2">2c x 1r</option>
+                  <option value="span-1x2">1c x 2r</option>
+                  <option value="span-2x2">2c x 2r</option>
+                </select>
+              </label>
+              <label *ngIf="newWidgetDraft.type === 'embed'">
+                Embed URL
+                <input type="text" name="new-widget-embed-url" [(ngModel)]="newWidgetDraft.embedUrl" (ngModelChange)="onNewWidgetFieldChange()" />
+              </label>
+              <label *ngIf="newWidgetDraft.type === 'link'">
+                Link URL
+                <input type="text" name="new-widget-link-url" [(ngModel)]="newWidgetDraft.linkUrl" (ngModelChange)="onNewWidgetFieldChange()" />
+              </label>
+              <label *ngIf="newWidgetDraft.type === 'map'">
+                Places (one per line)
+                <textarea name="new-widget-places" [(ngModel)]="newWidgetDraft.placesText" (ngModelChange)="onNewWidgetFieldChange()" rows="4"></textarea>
+              </label>
+              <p class="field-error" *ngIf="newWidgetValidationError">{{ newWidgetValidationError }}</p>
 
-            <div class="widget-editor-actions">
-              <button type="button" (click)="addNewWidget()" [disabled]="isWidgetSaving">Add</button>
-            </div>
+              <div class="widget-editor-actions">
+                <button type="button" (click)="addNewWidget()" [disabled]="isWidgetSaving">Add</button>
+              </div>
+            </ng-container>
+            <ng-template #addWidgetCollapsed>
+              <button type="button" (click)="openAddWidgetForm()" [disabled]="isWidgetSaving">Add Widget</button>
+            </ng-template>
           </article>
         </div>
 
