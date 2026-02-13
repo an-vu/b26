@@ -17,6 +17,7 @@ public class ProfileDataSeeder {
   CommandLineRunner seedProfiles(ProfileRepository profileRepository, WidgetRepository widgetRepository) {
     return args -> {
       if (profileRepository.count() > 0) {
+        ensureHomeProfile(profileRepository, widgetRepository);
         backfillMissingLinkWidgets(profileRepository, widgetRepository);
         return;
       }
@@ -50,7 +51,12 @@ public class ProfileDataSeeder {
                       new CardSeed("github", "GitHub", "https://github.com/"),
                       new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
                       new CardSeed("resume", "Resume", "#"),
-                      new CardSeed("projects", "Projects", "#")))));
+                      new CardSeed("projects", "Projects", "#"))),
+              buildProfile(
+                  "home",
+                  "B26",
+                  "Angular x Java",
+                  List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
 
       Map<String, ProfileEntity> byId =
           profiles.stream().collect(java.util.stream.Collectors.toMap(ProfileEntity::getId, p -> p));
@@ -94,6 +100,41 @@ public class ProfileDataSeeder {
 
       widgetRepository.saveAll(widgets);
     };
+  }
+
+  private static void ensureHomeProfile(
+      ProfileRepository profileRepository, WidgetRepository widgetRepository) {
+    ProfileEntity homeProfile =
+        profileRepository
+            .findById("home")
+            .orElseGet(
+                () ->
+                    profileRepository.save(
+                        buildProfile(
+                            "home",
+                            "B26",
+                            "Angular x Java",
+                            List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
+
+    boolean hasComingSoonWidget =
+        widgetRepository.findByProfile_IdOrderBySortOrderAsc("home").stream()
+            .anyMatch(widget -> "Coming soon".equals(widget.getTitle()));
+    if (!hasComingSoonWidget) {
+      int nextOrder =
+          widgetRepository.findByProfile_IdOrderBySortOrderAsc("home").stream()
+                  .mapToInt(WidgetEntity::getSortOrder)
+                  .max()
+                  .orElse(-1)
+              + 1;
+      widgetRepository.save(
+          buildWidget(
+              homeProfile,
+              "link",
+              "Coming soon",
+              "span-1",
+              "{\"url\":\"https://anvu.tech/\"}",
+              nextOrder));
+    }
   }
 
   private static void backfillMissingLinkWidgets(

@@ -147,17 +147,17 @@
     </div>
 
     <div class="bottom-actions" *ngIf="widgets$ | async as widgets">
-      <button type="button">Logo</button>
+      <button type="button" routerLink="/">Logo</button>
       <button type="button">Account</button>
       <button
         type="button"
-        *ngIf="!isWidgetEditMode; else doneButton"
+        *ngIf="!isWidgetEditMode && !isHomeProfile(state.profile); else doneButton"
         (click)="startWidgetEdit(state.profile, widgets)"
       >
         Edit
       </button>
       <ng-template #doneButton>
-        <button type="button" (click)="doneWidgetEdit(state.profile.id)" [disabled]="isWidgetSaving">Done</button>
+        <button type="button" *ngIf="!isHomeProfile(state.profile)" (click)="doneWidgetEdit(state.profile.id)" [disabled]="isWidgetSaving">Done</button>
       </ng-template>
     </div>
   </main>
