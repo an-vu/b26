@@ -4,6 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
 import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 
 import { ProfileService } from '../../services/profile.service';
 import { ProfileHeaderComponent } from '../../components/profile-header/profile-header';
@@ -32,7 +33,7 @@ type WidgetDraft = {
 @Component({
   selector: 'app-profile-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, ProfileHeaderComponent, WidgetHostComponent],
+  imports: [CommonModule, FormsModule, RouterLink, ProfileHeaderComponent, WidgetHostComponent],
   templateUrl: './profile-page.html',
   styleUrl: './profile-page.css',
 })
@@ -57,7 +58,7 @@ export class ProfilePageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.profileService.getProfile(params.get('profileId') ?? 'default').pipe(
+          this.profileService.getProfile(this.resolveProfileId(params.get('profileId'))).pipe(
             map((profile): ProfilePageState => ({ status: 'ready', profile })),
             catchError(() => of<ProfilePageState>({ status: 'missing' })),
             startWith<ProfilePageState>({ status: 'loading' })
@@ -73,7 +74,7 @@ export class ProfilePageComponent {
       this.route.paramMap.pipe(
         switchMap((params) =>
           this.profileService
-            .getWidgets(params.get('profileId') ?? 'default')
+            .getWidgets(this.resolveProfileId(params.get('profileId')))
             .pipe(
               map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
               catchError(() => of<Widget[]>([]))
@@ -98,6 +99,10 @@ export class ProfilePageComponent {
       return 'tile-span-2';
     }
     return 'tile-span-1';
+  }
+
+  isHomeProfile(profile: Profile) {
+    return profile.id === 'home';
   }
 
   startWidgetEdit(profile: Profile, widgets: Widget[]) {
@@ -340,6 +345,17 @@ export class ProfilePageComponent {
 
   private withNormalizedOrder(drafts: WidgetDraft[]): WidgetDraft[] {
     return drafts.map((draft, index) => ({ ...draft, order: index }));
+  }
+
+  private resolveProfileId(routeParamProfileId: string | null): string {
+    const dataProfileId = this.route.snapshot?.data?.['profileId'];
+    if (routeParamProfileId && routeParamProfileId.trim().length > 0) {
+      return routeParamProfileId;
+    }
+    if (typeof dataProfileId === 'string' && dataProfileId.trim().length > 0) {
+      return dataProfileId;
+    }
+    return 'default';
   }
 
   private getWidgetValidationMessage(draft: WidgetDraft): string {
