@@ -13,7 +13,7 @@ A bento-style personal portfolio web app built to showcase Angular and Java usin
 - Java
 - Spring Boot
 - REST API
-- H2 in-memory database
+- H2 file-based database (dev), pluggable to PostgreSQL (prod)
 
 ### Tooling
 - GitHub
@@ -165,8 +165,33 @@ docker compose down
 
 ### Backend Runtime Profiles
 
-- Default profile: `dev` (H2 in-memory, reset on restart)
+- Default profile: `dev` (H2 file DB at `${user.home}/.b26/bento26-dev`, persists across restarts)
 - Docker Compose profile: `prod` (H2 file DB at `/data`, persists via Docker volume)
+- PostgreSQL profile: `postgres` (external Postgres via `SPRING_DATASOURCE_*`)
+
+### Flyway Migrations
+
+- Flyway is enabled for app profiles by default.
+- Initial schema migration: `backend/src/main/resources/db/migration/V1__init_schema.sql`
+- Existing local DBs are handled with `spring.flyway.baseline-on-migrate=true`
+- Test profile keeps Flyway disabled to avoid test lifecycle conflicts.
+
+### Run Backend with PostgreSQL
+
+Set env vars and run with `postgres` profile:
+
+```bash
+cd backend
+SPRING_PROFILES_ACTIVE=postgres \
+SPRING_DATASOURCE_URL='jdbc:postgresql://<host>:5432/<db>' \
+SPRING_DATASOURCE_USERNAME='<user>' \
+SPRING_DATASOURCE_PASSWORD='<password>' \
+mvn spring-boot:run
+```
+
+Notes:
+- PostgreSQL driver defaults to `org.postgresql.Driver`.
+- In `postgres` profile, Hibernate is set to `validate` (schema must come from Flyway).
 
 ### Backend Environment Variables
 
@@ -191,6 +216,32 @@ You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*`
 3. Open `http://localhost:8080/actuator/health` and confirm health JSON response.
 4. Open `http://localhost:8080/api/board/default/widgets` and confirm widget JSON array.
 5. From UI, add/edit/delete one widget and refresh to confirm persistence.
+
+## Dev Data Safety
+
+### Stable Local DB Path
+
+- Dev DB uses: `${user.home}/.b26/bento26-dev.mv.db`
+- This path is stable even if you run backend from different folders.
+- Override path only if needed: `B26_DATA_DIR=/custom/path`
+
+### Backup / Restore
+
+Create backup:
+
+```bash
+npm run db:backup
+```
+
+Restore backup:
+
+```bash
+npm run db:restore -- ./backups/<backup-file>.tgz
+```
+
+Notes:
+- Restore overwrites current local dev DB files.
+- Restart backend after restore.
 
 ## How to Access From Another Device (Same Network)
 
