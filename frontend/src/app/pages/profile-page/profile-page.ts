@@ -1,4 +1,4 @@
-import { Component, inject } from '@angular/core';
+import { Component, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap } from 'rxjs/operators';
@@ -40,6 +40,7 @@ type WidgetDraft = {
 export class ProfilePageComponent {
   private route = inject(ActivatedRoute);
   private profileService = inject(ProfileService);
+  private elementRef = inject(ElementRef<HTMLElement>);
   private reload$ = new Subject<void>();
 
   isWidgetEditMode = false;
@@ -130,6 +131,25 @@ export class ProfilePageComponent {
 
   closeAccountMenu() {
     this.isAccountMenuOpen = false;
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (!this.isAccountMenuOpen) {
+      return;
+    }
+    const target = event.target;
+    const menuWrap = this.elementRef.nativeElement.querySelector('.account-menu-wrap');
+    if (!(target instanceof Node) || !menuWrap || !menuWrap.contains(target)) {
+      this.closeAccountMenu();
+    }
+  }
+
+  @HostListener('document:keydown.escape')
+  onEscapeKey() {
+    if (this.isAccountMenuOpen) {
+      this.closeAccountMenu();
+    }
   }
 
   cancelWidgetEdit() {
