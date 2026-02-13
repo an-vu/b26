@@ -2,24 +2,24 @@
   "version": "0.2.0",
   "configurations": [
     {
-      "name": "Start Frontend (Angular)",
-      "type": "node-terminal",
-      "request": "launch",
-      "command": "zsh -lc 'until nc -z 127.0.0.1 8080; do sleep 1; done; npm run dev:frontend'",
-      "cwd": "${workspaceFolder}"
-    },
-    {
       "name": "Start Backend (Spring Boot)",
       "type": "node-terminal",
       "request": "launch",
       "command": "npm run dev:backend",
+      "cwd": "${workspaceFolder}"
+    },
+    {
+      "name": "Start Frontend (Angular)",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "zsh -lc 'until nc -z 127.0.0.1 8080; do sleep 1; done; npm run dev:frontend'",
       "cwd": "${workspaceFolder}"
     }
   ],
   "compounds": [
     {
       "name": "Run App (Frontend + Backend)",
-      "configurations": ["Start Frontend (Angular)", "Start Backend (Spring Boot)"],
+      "configurations": ["Start Backend (Spring Boot)", "Start Frontend (Angular)"],
       "stopAll": true
     }
   ]
