@@ -1,17 +1,7 @@
-.widget h3 {
-  margin: 0;
-  font-size: 14px;
-}
-
 .link {
   width: fit-content;
   text-decoration: none;
   border: 1px solid rgba(0, 0, 0, 0.2);
   border-radius: 8px;
   padding: 6px 10px;
-}
-
-.fallback {
-  margin: 0;
-  font-size: 14px;
 }
