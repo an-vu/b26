@@ -15,7 +15,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/profile")
+@RequestMapping("/api/board")
 public class WidgetController {
   private final WidgetService widgetService;
 
@@ -23,29 +23,29 @@ public class WidgetController {
     this.widgetService = widgetService;
   }
 
-  @GetMapping("/{profileId}/widgets")
-  public List<WidgetDto> getWidgets(@PathVariable String profileId) {
-    return widgetService.getWidgetsForProfile(profileId);
+  @GetMapping("/{boardId}/widgets")
+  public List<WidgetDto> getWidgets(@PathVariable String boardId) {
+    return widgetService.getWidgetsForBoard(boardId);
   }
 
-  @PostMapping("/{profileId}/widgets")
+  @PostMapping("/{boardId}/widgets")
   @ResponseStatus(HttpStatus.CREATED)
   public WidgetDto createWidget(
-      @PathVariable String profileId, @Valid @RequestBody UpsertWidgetRequest request) {
-    return widgetService.createWidget(profileId, request);
+      @PathVariable String boardId, @Valid @RequestBody UpsertWidgetRequest request) {
+    return widgetService.createWidget(boardId, request);
   }
 
-  @PutMapping("/{profileId}/widgets/{widgetId}")
+  @PutMapping("/{boardId}/widgets/{widgetId}")
   public WidgetDto updateWidget(
-      @PathVariable String profileId,
+      @PathVariable String boardId,
       @PathVariable long widgetId,
       @Valid @RequestBody UpsertWidgetRequest request) {
-    return widgetService.updateWidget(profileId, widgetId, request);
+    return widgetService.updateWidget(boardId, widgetId, request);
   }
 
-  @DeleteMapping("/{profileId}/widgets/{widgetId}")
+  @DeleteMapping("/{boardId}/widgets/{widgetId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
-  public void deleteWidget(@PathVariable String profileId, @PathVariable long widgetId) {
-    widgetService.deleteWidget(profileId, widgetId);
+  public void deleteWidget(@PathVariable String boardId, @PathVariable long widgetId) {
+    widgetService.deleteWidget(boardId, widgetId);
   }
 }

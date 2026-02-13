@@ -28,11 +28,11 @@ public class AnalyticsController {
       @Valid @RequestBody RecordClickRequest request,
       HttpServletRequest servletRequest) {
     String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
-    analyticsService.recordClick(request.profileId(), cardId, sourceIp);
+    analyticsService.recordClick(request.boardId(), cardId, sourceIp);
   }
 
-  @GetMapping("/analytics/{profileId}")
-  public AnalyticsResponse getAnalytics(@PathVariable String profileId) {
-    return analyticsService.getAnalytics(profileId);
+  @GetMapping("/analytics/{boardId}")
+  public AnalyticsResponse getAnalytics(@PathVariable String boardId) {
+    return analyticsService.getAnalytics(boardId);
   }
 }

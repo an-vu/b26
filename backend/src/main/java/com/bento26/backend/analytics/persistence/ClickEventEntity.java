@@ -16,7 +16,7 @@ public class ClickEventEntity {
   private Long id;
 
   @Column(nullable = false)
-  private String profileId;
+  private String boardId;
 
   @Column(nullable = false)
   private String cardId;
@@ -31,12 +31,12 @@ public class ClickEventEntity {
     return id;
   }
 
-  public String getProfileId() {
-    return profileId;
+  public String getBoardId() {
+    return boardId;
   }
 
-  public void setProfileId(String profileId) {
-    this.profileId = profileId;
+  public void setBoardId(String boardId) {
+    this.boardId = boardId;
   }
 
   public String getCardId() {

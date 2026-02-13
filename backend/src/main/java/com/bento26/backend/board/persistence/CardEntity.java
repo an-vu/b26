@@ -1,4 +1,4 @@
-package com.bento26.backend.profile.persistence;
+package com.bento26.backend.board.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -27,8 +27,8 @@ public class CardEntity {
   private String href;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "profile_id", nullable = false)
-  private ProfileEntity profile;
+  @JoinColumn(name = "board_id", nullable = false)
+  private BoardEntity board;
 
   public Long getPk() {
     return pk;
@@ -58,11 +58,11 @@ public class CardEntity {
     this.href = href;
   }
 
-  public ProfileEntity getProfile() {
-    return profile;
+  public BoardEntity getBoard() {
+    return board;
   }
 
-  public void setProfile(ProfileEntity profile) {
-    this.profile = profile;
+  public void setBoard(BoardEntity board) {
+    this.board = board;
   }
 }

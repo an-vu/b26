@@ -6,15 +6,15 @@ import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxj
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
-import { ProfileService } from '../../services/profile.service';
-import { ProfileHeaderComponent } from '../../components/profile-header/profile-header';
-import type { Profile } from '../../models/profile';
+import { BoardService } from '../../services/board.service';
+import { BoardHeaderComponent } from '../../components/board-header/board-header';
+import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
 
-type ProfilePageState =
+type BoardPageState =
   | { status: 'loading' }
-  | { status: 'ready'; profile: Profile }
+  | { status: 'ready'; board: Board }
   | { status: 'missing' };
 
 type WidgetType = 'embed' | 'map' | 'link';
@@ -31,15 +31,15 @@ type WidgetDraft = {
 };
 
 @Component({
-  selector: 'app-profile-page',
+  selector: 'app-board-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, ProfileHeaderComponent, WidgetHostComponent],
-  templateUrl: './profile-page.html',
-  styleUrl: './profile-page.css',
+  imports: [CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
+  templateUrl: './board-page.html',
+  styleUrl: './board-page.css',
 })
-export class ProfilePageComponent {
+export class BoardPageComponent {
   private route = inject(ActivatedRoute);
-  private profileService = inject(ProfileService);
+  private boardService = inject(BoardService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private reload$ = new Subject<void>();
 
@@ -48,8 +48,8 @@ export class ProfilePageComponent {
   isAccountMenuOpen = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
-  profileDraftName = '';
-  profileDraftHeadline = '';
+  boardDraftName = '';
+  boardDraftHeadline = '';
   widgetDrafts: WidgetDraft[] = [];
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
   deletedWidgetIds: number[] = [];
@@ -60,10 +60,10 @@ export class ProfilePageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.profileService.getProfile(this.resolveProfileId(params.get('profileId'))).pipe(
-            map((profile): ProfilePageState => ({ status: 'ready', profile })),
-            catchError(() => of<ProfilePageState>({ status: 'missing' })),
-            startWith<ProfilePageState>({ status: 'loading' })
+          this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
+            map((board): BoardPageState => ({ status: 'ready', board })),
+            catchError(() => of<BoardPageState>({ status: 'missing' })),
+            startWith<BoardPageState>({ status: 'loading' })
           )
         )
       )
@@ -75,8 +75,8 @@ export class ProfilePageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.profileService
-            .getWidgets(this.resolveProfileId(params.get('profileId')))
+          this.boardService
+            .getWidgets(this.resolveBoardId(params.get('boardId')))
             .pipe(
               map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
               catchError(() => of<Widget[]>([]))
@@ -90,10 +90,10 @@ export class ProfilePageComponent {
     return widget.id ?? index;
   }
 
-  accountProfiles = [
-    { label: 'Default', route: '/u/default' },
-    { label: 'Berkshire', route: '/u/berkshire' },
-    { label: 'Union Pacific', route: '/u/union-pacific' },
+  accountBoards = [
+    { label: 'Default', route: '/b/default' },
+    { label: 'Berkshire', route: '/b/berkshire' },
+    { label: 'Union Pacific', route: '/b/union-pacific' },
   ];
 
   tileLayoutClass(layout: string) {
@@ -109,14 +109,14 @@ export class ProfilePageComponent {
     return 'tile-span-1';
   }
 
-  isHomeProfile(profile: Profile) {
-    return profile.id === 'home';
+  isHomeBoard(board: Board) {
+    return board.id === 'home';
   }
 
-  startWidgetEdit(profile: Profile, widgets: Widget[]) {
+  startWidgetEdit(board: Board, widgets: Widget[]) {
     this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
-    this.profileDraftName = profile.name;
-    this.profileDraftHeadline = profile.headline;
+    this.boardDraftName = board.name;
+    this.boardDraftHeadline = board.headline;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
     this.widgetSaveError = '';
@@ -157,8 +157,8 @@ export class ProfilePageComponent {
     this.isWidgetSaving = false;
     this.widgetSaveError = '';
     this.newWidgetValidationError = '';
-    this.profileDraftName = '';
-    this.profileDraftHeadline = '';
+    this.boardDraftName = '';
+    this.boardDraftHeadline = '';
     this.widgetDrafts = [];
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
@@ -213,13 +213,13 @@ export class ProfilePageComponent {
     this.widgetDrafts = this.withNormalizedOrder(nextDrafts);
   }
 
-  doneWidgetEdit(profileId: string) {
+  doneWidgetEdit(boardId: string) {
     const normalizedDrafts = this.withNormalizedOrder([...this.widgetDrafts]);
     this.widgetDrafts = normalizedDrafts;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.newWidgetValidationError = '';
-    const trimmedName = this.profileDraftName.trim();
-    const trimmedHeadline = this.profileDraftHeadline.trim();
+    const trimmedName = this.boardDraftName.trim();
+    const trimmedHeadline = this.boardDraftHeadline.trim();
     if (!trimmedName || !trimmedHeadline) {
       this.widgetSaveError = 'Name and headline are required.';
       return;
@@ -236,18 +236,18 @@ export class ProfilePageComponent {
 
     const updates = normalizedDrafts
       .filter((draft): draft is WidgetDraft & { id: number } => !!draft.id)
-      .map((draft) => this.profileService.updateWidget(profileId, draft.id, this.buildWidgetPayload(draft)!));
+      .map((draft) => this.boardService.updateWidget(boardId, draft.id, this.buildWidgetPayload(draft)!));
 
     const creates = normalizedDrafts
       .filter((draft) => !draft.id)
-      .map((draft) => this.profileService.createWidget(profileId, this.buildWidgetPayload(draft)!));
+      .map((draft) => this.boardService.createWidget(boardId, this.buildWidgetPayload(draft)!));
 
-    const deletes = this.deletedWidgetIds.map((widgetId) => this.profileService.deleteWidget(profileId, widgetId));
-    const profileUpdate = this.profileService.updateProfileMeta(profileId, {
+    const deletes = this.deletedWidgetIds.map((widgetId) => this.boardService.deleteWidget(boardId, widgetId));
+    const boardUpdate = this.boardService.updateBoardMeta(boardId, {
       name: trimmedName,
       headline: trimmedHeadline,
     });
-    const requests = [profileUpdate, ...deletes, ...updates, ...creates];
+    const requests = [boardUpdate, ...deletes, ...updates, ...creates];
 
     this.isWidgetSaving = true;
     this.widgetSaveError = '';
@@ -382,13 +382,13 @@ export class ProfilePageComponent {
     return drafts.map((draft, index) => ({ ...draft, order: index }));
   }
 
-  private resolveProfileId(routeParamProfileId: string | null): string {
-    const dataProfileId = this.route.snapshot?.data?.['profileId'];
-    if (routeParamProfileId && routeParamProfileId.trim().length > 0) {
-      return routeParamProfileId;
+  private resolveBoardId(routeParamBoardId: string | null): string {
+    const dataBoardId = this.route.snapshot?.data?.['boardId'];
+    if (routeParamBoardId && routeParamBoardId.trim().length > 0) {
+      return routeParamBoardId;
     }
-    if (typeof dataProfileId === 'string' && dataProfileId.trim().length > 0) {
-      return dataProfileId;
+    if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
+      return dataBoardId;
     }
     return 'default';
   }

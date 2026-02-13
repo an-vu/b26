@@ -2,44 +2,44 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { defer, of, throwError } from 'rxjs';
 
-import { ProfilePageComponent } from './profile-page';
-import { ProfileService } from '../../services/profile.service';
+import { BoardPageComponent } from './board-page';
+import { BoardService } from '../../services/board.service';
 import type { Widget } from '../../models/widget';
 
-describe('ProfilePageComponent', () => {
-  let component: ProfilePageComponent;
-  let fixture: ComponentFixture<ProfilePageComponent>;
-  let profileServiceStub: {
-    getProfile: ProfileService['getProfile'];
-    updateProfile: ProfileService['updateProfile'];
-    updateProfileMeta: ProfileService['updateProfileMeta'];
-    getWidgets: ProfileService['getWidgets'];
-    createWidget: ProfileService['createWidget'];
-    updateWidget: ProfileService['updateWidget'];
-    deleteWidget: ProfileService['deleteWidget'];
+describe('BoardPageComponent', () => {
+  let component: BoardPageComponent;
+  let fixture: ComponentFixture<BoardPageComponent>;
+  let boardServiceStub: {
+    getBoard: BoardService['getBoard'];
+    updateBoard: BoardService['updateBoard'];
+    updateBoardMeta: BoardService['updateBoardMeta'];
+    getWidgets: BoardService['getWidgets'];
+    createWidget: BoardService['createWidget'];
+    updateWidget: BoardService['updateWidget'];
+    deleteWidget: BoardService['deleteWidget'];
   };
   let updateWidgetCalls: Array<{ widgetId: number; order: number }> = [];
 
   const routeStub = {
-    paramMap: of(convertToParamMap({ profileId: 'default' })),
+    paramMap: of(convertToParamMap({ boardId: 'default' })),
   };
 
   beforeEach(async () => {
     updateWidgetCalls = [];
-    profileServiceStub = {
-      getProfile: () =>
+    boardServiceStub = {
+      getBoard: () =>
         of({
           id: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
-      updateProfile: () =>
+      updateBoard: () =>
         of({
           id: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
-      updateProfileMeta: () =>
+      updateBoardMeta: () =>
         of({
           id: 'default',
           name: 'An Vu',
@@ -56,7 +56,7 @@ describe('ProfilePageComponent', () => {
           enabled: true,
           order: 0,
         }),
-      updateWidget: (_profileId: string, widgetId: number, payload) => {
+      updateWidget: (_boardId: string, widgetId: number, payload) => {
         updateWidgetCalls.push({ widgetId, order: payload.order });
         return of({
           id: widgetId,
@@ -72,23 +72,23 @@ describe('ProfilePageComponent', () => {
     };
 
     await TestBed.configureTestingModule({
-      imports: [ProfilePageComponent],
+      imports: [BoardPageComponent],
       providers: [
-        { provide: ProfileService, useValue: profileServiceStub },
+        { provide: BoardService, useValue: boardServiceStub },
         { provide: ActivatedRoute, useValue: routeStub },
       ],
     }).compileComponents();
   });
 
   it('should create', () => {
-    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
     expect(component).toBeTruthy();
   });
 
-  it('should render loading state before profile resolves', () => {
-    profileServiceStub.getProfile = () =>
+  it('should render loading state before board resolves', () => {
+    boardServiceStub.getBoard = () =>
       defer(() =>
         Promise.resolve({
           id: 'default',
@@ -97,23 +97,23 @@ describe('ProfilePageComponent', () => {
         })
       );
 
-    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture = TestBed.createComponent(BoardPageComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Loading...');
   });
 
-  it('should render missing state when profile request fails', () => {
-    profileServiceStub.getProfile = () => throwError(() => new Error('boom'));
+  it('should render missing state when board request fails', () => {
+    boardServiceStub.getBoard = () => throwError(() => new Error('boom'));
 
-    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture = TestBed.createComponent(BoardPageComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.textContent).toContain('Profile not found.');
+    expect(compiled.textContent).toContain('Board not found.');
   });
 
   it('should normalize local order when moving widgets down', () => {
-    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 
@@ -155,7 +155,7 @@ describe('ProfilePageComponent', () => {
   });
 
   it('should sort widget drafts by order when entering edit mode', () => {
-    fixture = TestBed.createComponent(ProfilePageComponent);
+    fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
 

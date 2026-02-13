@@ -1,8 +1,9 @@
 import { Routes } from '@angular/router';
-import { ProfilePageComponent } from './pages/profile-page/profile-page';
+import { BoardPageComponent } from './pages/board-page/board-page';
 
 export const routes: Routes = [
-  { path: '', component: ProfilePageComponent, data: { profileId: 'home' } },
-  { path: 'u/:profileId', component: ProfilePageComponent },
+  { path: '', component: BoardPageComponent, data: { boardId: 'home' } },
+  { path: 'b/:boardId', component: BoardPageComponent },
+  { path: 'u/:boardId', redirectTo: 'b/:boardId' },
   { path: '**', redirectTo: '' },
 ];

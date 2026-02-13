@@ -5,7 +5,7 @@ import java.util.Optional;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface WidgetRepository extends JpaRepository<WidgetEntity, Long> {
-  List<WidgetEntity> findByProfile_IdOrderBySortOrderAsc(String profileId);
+  List<WidgetEntity> findByBoard_IdOrderBySortOrderAsc(String boardId);
 
-  Optional<WidgetEntity> findByIdAndProfile_Id(Long id, String profileId);
+  Optional<WidgetEntity> findByIdAndBoard_Id(Long id, String boardId);
 }

@@ -1,8 +1,8 @@
-package com.bento26.backend.profile.domain;
+package com.bento26.backend.board.domain;
 
-import com.bento26.backend.profile.persistence.CardEntity;
-import com.bento26.backend.profile.persistence.ProfileEntity;
-import com.bento26.backend.profile.persistence.ProfileRepository;
+import com.bento26.backend.board.persistence.CardEntity;
+import com.bento26.backend.board.persistence.BoardEntity;
+import com.bento26.backend.board.persistence.BoardRepository;
 import com.bento26.backend.widget.persistence.WidgetEntity;
 import com.bento26.backend.widget.persistence.WidgetRepository;
 import java.util.List;
@@ -12,20 +12,20 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
 @Configuration
-public class ProfileDataSeeder {
+public class BoardDataSeeder {
   @Bean
-  CommandLineRunner seedProfiles(ProfileRepository profileRepository, WidgetRepository widgetRepository) {
+  CommandLineRunner seedBoards(BoardRepository boardRepository, WidgetRepository widgetRepository) {
     return args -> {
-      if (profileRepository.count() > 0) {
-        ensureHomeProfile(profileRepository, widgetRepository);
-        backfillMissingLinkWidgets(profileRepository, widgetRepository);
+      if (boardRepository.count() > 0) {
+        ensureHomeBoard(boardRepository, widgetRepository);
+        backfillMissingLinkWidgets(boardRepository, widgetRepository);
         return;
       }
 
-      List<ProfileEntity> profiles =
-          profileRepository.saveAll(
+      List<BoardEntity> boards =
+          boardRepository.saveAll(
               List.of(
-              buildProfile(
+              buildBoard(
                   "default",
                   "An Vu",
                   "Software Engineer - Angular + Java",
@@ -34,7 +34,7 @@ public class ProfileDataSeeder {
                       new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
                       new CardSeed("resume", "Resume", "#"),
                       new CardSeed("projects", "Projects", "#"))),
-              buildProfile(
+              buildBoard(
                   "berkshire",
                   "An Vu",
                   "Software Engineering - Angular + Spring Boot",
@@ -43,7 +43,7 @@ public class ProfileDataSeeder {
                       new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
                       new CardSeed("resume", "Resume", "#"),
                       new CardSeed("projects", "Projects", "#"))),
-              buildProfile(
+              buildBoard(
                   "union-pacific",
                   "An Vu",
                   "Software Engineering - Angular + Java",
@@ -52,21 +52,21 @@ public class ProfileDataSeeder {
                       new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
                       new CardSeed("resume", "Resume", "#"),
                       new CardSeed("projects", "Projects", "#"))),
-              buildProfile(
+              buildBoard(
                   "home",
                   "B26",
                   "Angular x Java",
                   List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
 
-      Map<String, ProfileEntity> byId =
-          profiles.stream().collect(java.util.stream.Collectors.toMap(ProfileEntity::getId, p -> p));
+      Map<String, BoardEntity> byId =
+          boards.stream().collect(java.util.stream.Collectors.toMap(BoardEntity::getId, p -> p));
       java.util.ArrayList<WidgetEntity> widgets = new java.util.ArrayList<>();
 
-      ProfileEntity defaultProfile = byId.get("default");
-      if (defaultProfile != null) {
+      BoardEntity defaultBoard = byId.get("default");
+      if (defaultBoard != null) {
         widgets.add(
             buildWidget(
-                defaultProfile,
+                defaultBoard,
                 "embed",
                 "Now Playing",
                 "span-2",
@@ -74,7 +74,7 @@ public class ProfileDataSeeder {
                 0));
         widgets.add(
             buildWidget(
-                defaultProfile,
+                defaultBoard,
                 "map",
                 "Places Visited",
                 "span-2",
@@ -82,13 +82,13 @@ public class ProfileDataSeeder {
                 1));
       }
 
-      for (ProfileEntity profile : profiles) {
-        int baseOrder = "default".equals(profile.getId()) ? 2 : 0;
+      for (BoardEntity board : boards) {
+        int baseOrder = "default".equals(board.getId()) ? 2 : 0;
         int offset = 0;
-        for (CardEntity card : profile.getCards()) {
+        for (CardEntity card : board.getCards()) {
           widgets.add(
               buildWidget(
-                  profile,
+                  board,
                   "link",
                   card.getLabel(),
                   "span-1",
@@ -102,33 +102,33 @@ public class ProfileDataSeeder {
     };
   }
 
-  private static void ensureHomeProfile(
-      ProfileRepository profileRepository, WidgetRepository widgetRepository) {
-    ProfileEntity homeProfile =
-        profileRepository
+  private static void ensureHomeBoard(
+      BoardRepository boardRepository, WidgetRepository widgetRepository) {
+    BoardEntity homeBoard =
+        boardRepository
             .findById("home")
             .orElseGet(
                 () ->
-                    profileRepository.save(
-                        buildProfile(
+                    boardRepository.save(
+                        buildBoard(
                             "home",
                             "B26",
                             "Angular x Java",
                             List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
 
     boolean hasComingSoonWidget =
-        widgetRepository.findByProfile_IdOrderBySortOrderAsc("home").stream()
+        widgetRepository.findByBoard_IdOrderBySortOrderAsc("home").stream()
             .anyMatch(widget -> "Coming soon".equals(widget.getTitle()));
     if (!hasComingSoonWidget) {
       int nextOrder =
-          widgetRepository.findByProfile_IdOrderBySortOrderAsc("home").stream()
+          widgetRepository.findByBoard_IdOrderBySortOrderAsc("home").stream()
                   .mapToInt(WidgetEntity::getSortOrder)
                   .max()
                   .orElse(-1)
               + 1;
       widgetRepository.save(
           buildWidget(
-              homeProfile,
+              homeBoard,
               "link",
               "Coming soon",
               "span-1",
@@ -138,12 +138,12 @@ public class ProfileDataSeeder {
   }
 
   private static void backfillMissingLinkWidgets(
-      ProfileRepository profileRepository, WidgetRepository widgetRepository) {
-    List<ProfileEntity> profiles = profileRepository.findAllWithCards();
+      BoardRepository boardRepository, WidgetRepository widgetRepository) {
+    List<BoardEntity> boards = boardRepository.findAllWithCards();
     java.util.ArrayList<WidgetEntity> missingWidgets = new java.util.ArrayList<>();
 
-    for (ProfileEntity profile : profiles) {
-      List<WidgetEntity> existing = widgetRepository.findByProfile_IdOrderBySortOrderAsc(profile.getId());
+    for (BoardEntity board : boards) {
+      List<WidgetEntity> existing = widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId());
       int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
       java.util.Set<String> existingLinkTitles =
           existing.stream()
@@ -151,13 +151,13 @@ public class ProfileDataSeeder {
               .map(WidgetEntity::getTitle)
               .collect(java.util.stream.Collectors.toSet());
 
-      for (CardEntity card : profile.getCards()) {
+      for (CardEntity card : board.getCards()) {
         if (existingLinkTitles.contains(card.getLabel())) {
           continue;
         }
         missingWidgets.add(
             buildWidget(
-                profile,
+                board,
                 "link",
                 card.getLabel(),
                 "span-1",
@@ -172,33 +172,33 @@ public class ProfileDataSeeder {
     }
   }
 
-  private static ProfileEntity buildProfile(
+  private static BoardEntity buildBoard(
       String id, String name, String headline, List<CardSeed> cardSeeds) {
-    ProfileEntity profile = new ProfileEntity();
-    profile.setId(id);
-    profile.setName(name);
-    profile.setHeadline(headline);
+    BoardEntity board = new BoardEntity();
+    board.setId(id);
+    board.setName(name);
+    board.setHeadline(headline);
 
     for (CardSeed seed : cardSeeds) {
       CardEntity card = new CardEntity();
       card.setId(seed.id());
       card.setLabel(seed.label());
       card.setHref(seed.href());
-      card.setProfile(profile);
-      profile.getCards().add(card);
+      card.setBoard(board);
+      board.getCards().add(card);
     }
-    return profile;
+    return board;
   }
 
   private static WidgetEntity buildWidget(
-      ProfileEntity profile,
+      BoardEntity board,
       String type,
       String title,
       String layout,
       String configJson,
       int sortOrder) {
     WidgetEntity widget = new WidgetEntity();
-    widget.setProfile(profile);
+    widget.setBoard(board);
     widget.setType(type);
     widget.setTitle(title);
     widget.setLayout(layout);

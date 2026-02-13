@@ -1,8 +1,8 @@
 package com.bento26.backend.widget.domain;
 
-import com.bento26.backend.profile.domain.ProfileNotFoundException;
-import com.bento26.backend.profile.persistence.ProfileEntity;
-import com.bento26.backend.profile.persistence.ProfileRepository;
+import com.bento26.backend.board.domain.BoardNotFoundException;
+import com.bento26.backend.board.persistence.BoardEntity;
+import com.bento26.backend.board.persistence.BoardRepository;
 import com.bento26.backend.widget.api.UpsertWidgetRequest;
 import com.bento26.backend.widget.api.WidgetDto;
 import com.bento26.backend.widget.persistence.WidgetEntity;
@@ -16,66 +16,66 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class WidgetService {
   private final WidgetRepository widgetRepository;
-  private final ProfileRepository profileRepository;
+  private final BoardRepository boardRepository;
   private final ObjectMapper objectMapper;
 
   public WidgetService(
       WidgetRepository widgetRepository,
-      ProfileRepository profileRepository,
+      BoardRepository boardRepository,
       ObjectMapper objectMapper) {
     this.widgetRepository = widgetRepository;
-    this.profileRepository = profileRepository;
+    this.boardRepository = boardRepository;
     this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
-  public List<WidgetDto> getWidgetsForProfile(String profileId) {
-    if (!profileRepository.existsById(profileId)) {
-      throw new ProfileNotFoundException(profileId);
+  public List<WidgetDto> getWidgetsForBoard(String boardId) {
+    if (!boardRepository.existsById(boardId)) {
+      throw new BoardNotFoundException(boardId);
     }
-    return widgetRepository.findByProfile_IdOrderBySortOrderAsc(profileId).stream()
+    return widgetRepository.findByBoard_IdOrderBySortOrderAsc(boardId).stream()
         .map(this::toDto)
         .toList();
   }
 
   @Transactional
-  public WidgetDto createWidget(String profileId, UpsertWidgetRequest request) {
-    ProfileEntity profile =
-        profileRepository
-            .findById(profileId)
-            .orElseThrow(() -> new ProfileNotFoundException(profileId));
+  public WidgetDto createWidget(String boardId, UpsertWidgetRequest request) {
+    BoardEntity board =
+        boardRepository
+            .findById(boardId)
+            .orElseThrow(() -> new BoardNotFoundException(boardId));
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget = new WidgetEntity();
     applyRequest(widget, request);
-    widget.setProfile(profile);
+    widget.setBoard(board);
     return toDto(widgetRepository.save(widget));
   }
 
   @Transactional
-  public WidgetDto updateWidget(String profileId, long widgetId, UpsertWidgetRequest request) {
-    if (!profileRepository.existsById(profileId)) {
-      throw new ProfileNotFoundException(profileId);
+  public WidgetDto updateWidget(String boardId, long widgetId, UpsertWidgetRequest request) {
+    if (!boardRepository.existsById(boardId)) {
+      throw new BoardNotFoundException(boardId);
     }
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget =
         widgetRepository
-            .findByIdAndProfile_Id(widgetId, profileId)
-            .orElseThrow(() -> new WidgetNotFoundForProfileException(profileId, widgetId));
+            .findByIdAndBoard_Id(widgetId, boardId)
+            .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     applyRequest(widget, request);
     return toDto(widgetRepository.save(widget));
   }
 
   @Transactional
-  public void deleteWidget(String profileId, long widgetId) {
-    if (!profileRepository.existsById(profileId)) {
-      throw new ProfileNotFoundException(profileId);
+  public void deleteWidget(String boardId, long widgetId) {
+    if (!boardRepository.existsById(boardId)) {
+      throw new BoardNotFoundException(boardId);
     }
     WidgetEntity widget =
         widgetRepository
-            .findByIdAndProfile_Id(widgetId, profileId)
-            .orElseThrow(() -> new WidgetNotFoundForProfileException(profileId, widgetId));
+            .findByIdAndBoard_Id(widgetId, boardId)
+            .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     widgetRepository.delete(widget);
   }
 

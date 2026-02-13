@@ -1,24 +1,24 @@
-.profile-layout {
+.board-layout {
   display: grid;
   grid-template-columns: 24% 76%;
   align-items: start;
 }
 
-.profile-left {
+.board-left {
   min-width: 0;
 }
 
-.profile-meta-editor {
+.board-meta-editor {
   display: grid;
   gap: 10px;
 }
 
-.profile-meta-editor label {
+.board-meta-editor label {
   display: grid;
   gap: 4px;
 }
 
-.profile-meta-editor input {
+.board-meta-editor input {
   min-width: 0;
 }
 
@@ -195,7 +195,7 @@
 }
 
 @media (max-width: 1024px) {
-  .profile-layout {
+  .board-layout {
     grid-template-columns: 1fr;
     gap: 12px;
   }

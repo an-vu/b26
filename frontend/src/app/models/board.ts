@@ -1,4 +1,4 @@
-export type Profile = {
+export type Board = {
   id: string;
   name: string;
   headline: string;
@@ -10,13 +10,13 @@ export type Card = {
   href: string;
 };
 
-export type UpdateProfileRequest = {
+export type UpdateBoardRequest = {
   name: string;
   headline: string;
   cards: Card[];
 };
 
-export type UpdateProfileMetaRequest = {
+export type UpdateBoardMetaRequest = {
   name: string;
   headline: string;
 };
