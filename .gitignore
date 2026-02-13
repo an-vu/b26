@@ -86,6 +86,10 @@ build/
 out/
 *.class
 .gradle/
+backend/data/
+*.mv.db
+*.trace.db
+backups/
 
 # =====================
 # Coverage / Testing

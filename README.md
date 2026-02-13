@@ -197,11 +197,33 @@ Notes:
 
 - `SPRING_PROFILES_ACTIVE` (example: `prod`)
 - `APP_CORS_ALLOWED_ORIGINS` (comma-separated origins)
+- `APP_ADMIN_TOKEN` (optional: protects `POST/PUT/PATCH/DELETE /api/board/**` via `X-Admin-Token`)
 - `SPRING_DATASOURCE_URL` / `SPRING_DATASOURCE_USERNAME` / `SPRING_DATASOURCE_PASSWORD`
 - `SPRING_DATASOURCE_DRIVER_CLASS_NAME` (optional, defaults to H2 driver)
 - `SPRING_JPA_HIBERNATE_DDL_AUTO` (optional, default in `prod` is `update`)
 
 You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*` values in deploy.
+
+### Optional Admin Token Protection
+
+If backend sets `APP_ADMIN_TOKEN`, mutating board/widget APIs require:
+
+- Header: `X-Admin-Token: <same token value>`
+
+Frontend support:
+
+- `frontend/src/environments/environment*.ts` includes `adminToken` (empty by default), OR
+- set token in browser storage:
+
+```js
+localStorage.setItem('b26_admin_token', '<your-token>')
+```
+
+Clear token:
+
+```js
+localStorage.removeItem('b26_admin_token')
+```
 
 ### Frontend API Base URL
 
