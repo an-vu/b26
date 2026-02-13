@@ -17,8 +17,7 @@ public class BoardDataSeeder {
   CommandLineRunner seedBoards(BoardRepository boardRepository, WidgetRepository widgetRepository) {
     return args -> {
       if (boardRepository.count() > 0) {
-        ensureHomeBoard(boardRepository, widgetRepository);
-        backfillMissingLinkWidgets(boardRepository, widgetRepository);
+        // Existing DB: never auto-backfill or re-add widgets on restart/deploy.
         return;
       }
 
@@ -100,76 +99,6 @@ public class BoardDataSeeder {
 
       widgetRepository.saveAll(widgets);
     };
-  }
-
-  private static void ensureHomeBoard(
-      BoardRepository boardRepository, WidgetRepository widgetRepository) {
-    BoardEntity homeBoard =
-        boardRepository
-            .findById("home")
-            .orElseGet(
-                () ->
-                    boardRepository.save(
-                        buildBoard(
-                            "home",
-                            "B26",
-                            "Angular x Java",
-                            List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
-
-    boolean hasComingSoonWidget =
-        widgetRepository.findByBoard_IdOrderBySortOrderAsc("home").stream()
-            .anyMatch(widget -> "Coming soon".equals(widget.getTitle()));
-    if (!hasComingSoonWidget) {
-      int nextOrder =
-          widgetRepository.findByBoard_IdOrderBySortOrderAsc("home").stream()
-                  .mapToInt(WidgetEntity::getSortOrder)
-                  .max()
-                  .orElse(-1)
-              + 1;
-      widgetRepository.save(
-          buildWidget(
-              homeBoard,
-              "link",
-              "Coming soon",
-              "span-1",
-              "{\"url\":\"https://anvu.tech/\"}",
-              nextOrder));
-    }
-  }
-
-  private static void backfillMissingLinkWidgets(
-      BoardRepository boardRepository, WidgetRepository widgetRepository) {
-    List<BoardEntity> boards = boardRepository.findAllWithCards();
-    java.util.ArrayList<WidgetEntity> missingWidgets = new java.util.ArrayList<>();
-
-    for (BoardEntity board : boards) {
-      List<WidgetEntity> existing = widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId());
-      int nextOrder = existing.stream().mapToInt(WidgetEntity::getSortOrder).max().orElse(-1) + 1;
-      java.util.Set<String> existingLinkTitles =
-          existing.stream()
-              .filter(widget -> "link".equals(widget.getType()))
-              .map(WidgetEntity::getTitle)
-              .collect(java.util.stream.Collectors.toSet());
-
-      for (CardEntity card : board.getCards()) {
-        if (existingLinkTitles.contains(card.getLabel())) {
-          continue;
-        }
-        missingWidgets.add(
-            buildWidget(
-                board,
-                "link",
-                card.getLabel(),
-                "span-1",
-                "{\"url\":\"" + card.getHref() + "\"}",
-                nextOrder));
-        nextOrder++;
-      }
-    }
-
-    if (!missingWidgets.isEmpty()) {
-      widgetRepository.saveAll(missingWidgets);
-    }
   }
 
   private static BoardEntity buildBoard(
