@@ -8,7 +8,6 @@ import { RouterLink } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
 import { AnalyticsService } from '../../services/analytics.service';
-import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
@@ -34,7 +33,7 @@ type WidgetDraft = {
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
+  imports: [CommonModule, FormsModule, RouterLink, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrl: './board-page.css',
 })
@@ -327,6 +326,26 @@ export class BoardPageComponent {
 
   onNewWidgetFieldChange() {
     this.newWidgetValidationError = '';
+  }
+
+  onBoardNameInput(event: Event) {
+    if (!this.isWidgetEditMode) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      this.boardDraftName = target.textContent ?? '';
+    }
+  }
+
+  onBoardHeadlineInput(event: Event) {
+    if (!this.isWidgetEditMode) {
+      return;
+    }
+    const target = event.target;
+    if (target instanceof HTMLElement) {
+      this.boardDraftHeadline = target.textContent ?? '';
+    }
   }
 
   getDraftValidationError(draft: WidgetDraft) {

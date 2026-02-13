@@ -43,6 +43,12 @@
   gap: 8px;
 }
 
+.widget-title-inline {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
 .widget-edit-tile textarea {
   resize: vertical;
 }
@@ -60,8 +66,16 @@
 }
 
 .widget-settings-open {
+  overflow: visible;
+}
+
+.widget-settings-panel {
   min-height: 0;
+  height: 100%;
   overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 8px;
 }
 
 .add-widget-tile {
