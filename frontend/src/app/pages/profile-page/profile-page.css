@@ -148,8 +148,50 @@
   left: 16px;
   bottom: 16px;
   display: flex;
+  align-items: flex-end;
   gap: 8px;
   z-index: 30;
+}
+
+.account-menu-wrap {
+  position: relative;
+}
+
+.account-menu {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 8px);
+  min-width: 220px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 6px;
+}
+
+.account-menu-label {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.75;
+}
+
+.account-menu a,
+.account-link {
+  text-align: left;
+  text-decoration: none;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 4px 0;
+  cursor: pointer;
+}
+
+.account-menu hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  margin: 4px 0;
 }
 
 @media (max-width: 1024px) {

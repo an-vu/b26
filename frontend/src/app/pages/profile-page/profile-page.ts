@@ -44,6 +44,7 @@ export class ProfilePageComponent {
 
   isWidgetEditMode = false;
   isWidgetSaving = false;
+  isAccountMenuOpen = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
   profileDraftName = '';
@@ -88,6 +89,12 @@ export class ProfilePageComponent {
     return widget.id ?? index;
   }
 
+  accountProfiles = [
+    { label: 'Default', route: '/u/default' },
+    { label: 'Berkshire', route: '/u/berkshire' },
+    { label: 'Union Pacific', route: '/u/union-pacific' },
+  ];
+
   tileLayoutClass(layout: string) {
     if (layout === 'span-1x2') {
       return 'tile-span-1x2';
@@ -115,6 +122,14 @@ export class ProfilePageComponent {
     this.newWidgetValidationError = '';
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.isWidgetEditMode = true;
+  }
+
+  toggleAccountMenu() {
+    this.isAccountMenuOpen = !this.isAccountMenuOpen;
+  }
+
+  closeAccountMenu() {
+    this.isAccountMenuOpen = false;
   }
 
   cancelWidgetEdit() {
