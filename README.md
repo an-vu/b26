@@ -38,9 +38,9 @@ Database (H2)
 
 ## Features
 
-- Public bento-style profile page
+- Public bento-style board page
 - Reusable card-based layout
-- Profile data fetched from REST API
+- Board data fetched from REST API
 - Basic analytics endpoints (click tracking)
 - Optional admin/editor view (demo-only, no auth)
 
@@ -104,12 +104,12 @@ mvn spring-boot:run
 
 Runs at: `http://localhost:8080`
 
-Note: `http://localhost:8080/` returns a Spring 404 page because root (`/`) is not mapped. Use API routes like `http://localhost:8080/api/profile/default`.
+Note: `http://localhost:8080/` returns a Spring 404 page because root (`/`) is not mapped. Use API routes like `http://localhost:8080/api/board/default`.
 
 ## API Endpoints (Planned)
 
-* `GET /api/profile/{handle}`
-* `PUT /api/profile/{handle}`
+* `GET /api/board/{handle}`
+* `PUT /api/board/{handle}`
 * `POST /api/click/{cardId}`
 * `GET /api/analytics/{handle}`
 
@@ -163,7 +163,7 @@ docker compose down
 
 ## Runtime Config (Dev vs Prod)
 
-### Backend Profiles
+### Backend Runtime Profiles
 
 - Default profile: `dev` (H2 in-memory, reset on restart)
 - Docker Compose profile: `prod` (H2 file DB at `/data`, persists via Docker volume)
@@ -186,10 +186,10 @@ You can switch from file-based H2 to PostgreSQL by setting `SPRING_DATASOURCE_*`
 
 ### Smoke Checklist
 
-1. Open `http://localhost:4200/u/default` and confirm page renders.
-2. Open `http://localhost:8080/api/profile/default` and confirm JSON response.
+1. Open `http://localhost:4200/b/default` and confirm page renders.
+2. Open `http://localhost:8080/api/board/default` and confirm JSON response.
 3. Open `http://localhost:8080/actuator/health` and confirm health JSON response.
-4. Open `http://localhost:8080/api/profile/default/widgets` and confirm widget JSON array.
+4. Open `http://localhost:8080/api/board/default/widgets` and confirm widget JSON array.
 5. From UI, add/edit/delete one widget and refresh to confirm persistence.
 
 ## How to Access From Another Device (Same Network)
@@ -217,4 +217,4 @@ ipconfig getifaddr en1
 
 On iPhone/tablet (same Wi-Fi), open:
 - `http://<your-mac-ip>:4200`
-- `http://<your-mac-ip>:4200/u/default`
+- `http://<your-mac-ip>:4200/b/default`

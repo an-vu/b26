@@ -1,4 +1,4 @@
-package com.bento26.backend.profile.persistence;
+package com.bento26.backend.board.persistence;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -12,8 +12,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Entity
-@Table(name = "profiles")
-public class ProfileEntity {
+@Table(name = "boards")
+public class BoardEntity {
   @Id
   @Column(nullable = false, updatable = false)
   private String id;
@@ -26,7 +26,7 @@ public class ProfileEntity {
 
   @Version private Long version;
 
-  @OneToMany(mappedBy = "profile", cascade = CascadeType.ALL, orphanRemoval = true)
+  @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
   @OrderColumn(name = "position")
   private List<CardEntity> cards = new ArrayList<>();
 

@@ -2,18 +2,18 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
 
-import { ProfileService } from './profile.service';
+import { BoardService } from './board.service';
 
-describe('ProfileService', () => {
-  let service: ProfileService;
+describe('BoardService', () => {
+  let service: BoardService;
   let httpMock: HttpTestingController;
 
   beforeEach(() => {
     TestBed.configureTestingModule({
-      providers: [provideHttpClient(), provideHttpClientTesting(), ProfileService],
+      providers: [provideHttpClient(), provideHttpClientTesting(), BoardService],
     });
 
-    service = TestBed.inject(ProfileService);
+    service = TestBed.inject(BoardService);
     httpMock = TestBed.inject(HttpTestingController);
   });
 
@@ -21,24 +21,24 @@ describe('ProfileService', () => {
     httpMock.verify();
   });
 
-  it('should call backend GET profile endpoint', () => {
-    service.getProfile('default').subscribe();
+  it('should call backend GET board endpoint', () => {
+    service.getBoard('default').subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default');
+    const req = httpMock.expectOne('/api/board/default');
     expect(req.request.method).toBe('GET');
     req.flush({ id: 'default', name: 'An', headline: 'H' });
   });
 
-  it('should call backend PUT profile endpoint', () => {
+  it('should call backend PUT board endpoint', () => {
     service
-      .updateProfile('default', {
+      .updateBoard('default', {
         name: 'An Updated',
         headline: 'Updated',
         cards: [{ id: 'github', label: 'GitHub', href: 'https://github.com/' }],
       })
       .subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default');
+    const req = httpMock.expectOne('/api/board/default');
     expect(req.request.method).toBe('PUT');
     req.flush({});
   });
@@ -46,7 +46,7 @@ describe('ProfileService', () => {
   it('should call backend GET widgets endpoint', () => {
     service.getWidgets('default').subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default/widgets');
+    const req = httpMock.expectOne('/api/board/default/widgets');
     expect(req.request.method).toBe('GET');
     req.flush([]);
   });
@@ -63,7 +63,7 @@ describe('ProfileService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default/widgets');
+    const req = httpMock.expectOne('/api/board/default/widgets');
     expect(req.request.method).toBe('POST');
     req.flush({});
   });
@@ -80,7 +80,7 @@ describe('ProfileService', () => {
       })
       .subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default/widgets/1');
+    const req = httpMock.expectOne('/api/board/default/widgets/1');
     expect(req.request.method).toBe('PUT');
     req.flush({});
   });
@@ -88,7 +88,7 @@ describe('ProfileService', () => {
   it('should call backend DELETE widget endpoint', () => {
     service.deleteWidget('default', 1).subscribe();
 
-    const req = httpMock.expectOne('/api/profile/default/widgets/1');
+    const req = httpMock.expectOne('/api/board/default/widgets/1');
     expect(req.request.method).toBe('DELETE');
     req.flush({});
   });

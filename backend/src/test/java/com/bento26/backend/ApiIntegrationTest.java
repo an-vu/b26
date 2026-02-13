@@ -38,24 +38,24 @@ class ApiIntegrationTest {
   }
 
   @Test
-  void getProfile_returns200() throws Exception {
+  void getBoard_returns200() throws Exception {
     mockMvc
-        .perform(get("/api/profile/default"))
+        .perform(get("/api/board/default"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value("default"))
         .andExpect(jsonPath("$.name").isNotEmpty());
   }
 
   @Test
-  void getProfile_missing_returns404() throws Exception {
+  void getBoard_missing_returns404() throws Exception {
     mockMvc
-        .perform(get("/api/profile/not-here"))
+        .perform(get("/api/board/not-here"))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.message").value("Profile not found: not-here"));
+        .andExpect(jsonPath("$.message").value("Board not found: not-here"));
   }
 
   @Test
-  void putProfile_valid_returns200AndPersists() throws Exception {
+  void putBoard_valid_returns200AndPersists() throws Exception {
     String payload =
         """
         {
@@ -70,20 +70,20 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/profile/default")
+            put("/api/board/default")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Updated Name"));
 
     mockMvc
-        .perform(get("/api/profile/default"))
+        .perform(get("/api/board/default"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Updated Name"));
   }
 
   @Test
-  void putProfile_invalid_returns400WithStructuredErrors() throws Exception {
+  void putBoard_invalid_returns400WithStructuredErrors() throws Exception {
     String payload =
         """
         {
@@ -95,7 +95,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/profile/default")
+            put("/api/board/default")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -107,7 +107,7 @@ class ApiIntegrationTest {
   void postClick_andGetAnalytics_work() throws Exception {
     String clickPayload =
         """
-        { "profileId": "default" }
+        { "boardId": "default" }
         """;
 
     mockMvc
@@ -127,7 +127,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(get("/api/analytics/default"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.profileId").value("default"))
+        .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalClicks").value(2))
         .andExpect(jsonPath("$.byCard.length()").value(2));
   }
@@ -136,7 +136,7 @@ class ApiIntegrationTest {
   void postClick_invalidCard_returns400() throws Exception {
     String clickPayload =
         """
-        { "profileId": "default" }
+        { "boardId": "default" }
         """;
 
     mockMvc
@@ -147,14 +147,14 @@ class ApiIntegrationTest {
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.message")
-                .value("Card 'not-a-card' does not belong to profile 'default'"));
+                .value("Card 'not-a-card' does not belong to board 'default'"));
   }
 
   @Test
   void postClick_rateLimited_returns429() throws Exception {
     String clickPayload =
         """
-        { "profileId": "default" }
+        { "boardId": "default" }
         """;
 
     mockMvc
@@ -176,7 +176,7 @@ class ApiIntegrationTest {
   @Test
   void getWidgets_returns200WithSeededData() throws Exception {
     mockMvc
-        .perform(get("/api/profile/default/widgets"))
+        .perform(get("/api/board/default/widgets"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$[0].type").isNotEmpty())
@@ -184,11 +184,11 @@ class ApiIntegrationTest {
   }
 
   @Test
-  void getWidgets_missingProfile_returns404() throws Exception {
+  void getWidgets_missingBoard_returns404() throws Exception {
     mockMvc
-        .perform(get("/api/profile/not-here/widgets"))
+        .perform(get("/api/board/not-here/widgets"))
         .andExpect(status().isNotFound())
-        .andExpect(jsonPath("$.message").value("Profile not found: not-here"));
+        .andExpect(jsonPath("$.message").value("Board not found: not-here"));
   }
 
   @Test
@@ -207,7 +207,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/profile/default/widgets")
+            post("/api/board/default/widgets")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isCreated())
@@ -233,7 +233,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/profile/default/widgets/{widgetId}", widgetId)
+            put("/api/board/default/widgets/{widgetId}", widgetId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -247,11 +247,11 @@ class ApiIntegrationTest {
     long widgetId = createWidgetAndReturnId();
 
     mockMvc
-        .perform(delete("/api/profile/default/widgets/{widgetId}", widgetId))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId))
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(delete("/api/profile/default/widgets/{widgetId}", widgetId))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId))
         .andExpect(status().isNotFound());
   }
 
@@ -271,7 +271,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/profile/default/widgets")
+            post("/api/board/default/widgets")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -294,7 +294,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/profile/default/widgets")
+            post("/api/board/default/widgets")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isCreated())
@@ -303,7 +303,7 @@ class ApiIntegrationTest {
   }
 
   @Test
-  void putWidget_wrongProfile_returns404() throws Exception {
+  void putWidget_wrongBoard_returns404() throws Exception {
     long widgetId = createWidgetAndReturnId();
     String payload =
         """
@@ -319,7 +319,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/profile/berkshire/widgets/{widgetId}", widgetId)
+            put("/api/board/berkshire/widgets/{widgetId}", widgetId)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isNotFound());
@@ -341,7 +341,7 @@ class ApiIntegrationTest {
     MvcResult result =
         mockMvc
             .perform(
-                post("/api/profile/default/widgets")
+                post("/api/board/default/widgets")
                     .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andExpect(status().isCreated())

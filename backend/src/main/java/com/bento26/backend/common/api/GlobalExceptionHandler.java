@@ -1,11 +1,11 @@
 package com.bento26.backend.common.api;
 
-import com.bento26.backend.analytics.domain.CardNotFoundForProfileException;
+import com.bento26.backend.analytics.domain.CardNotFoundForBoardException;
 import com.bento26.backend.analytics.domain.ClickRateLimitedException;
-import com.bento26.backend.profile.domain.InvalidProfileUpdateException;
-import com.bento26.backend.profile.domain.ProfileNotFoundException;
+import com.bento26.backend.board.domain.InvalidBoardUpdateException;
+import com.bento26.backend.board.domain.BoardNotFoundException;
 import com.bento26.backend.widget.domain.InvalidWidgetConfigException;
-import com.bento26.backend.widget.domain.WidgetNotFoundForProfileException;
+import com.bento26.backend.widget.domain.WidgetNotFoundForBoardException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,9 +16,9 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-  @ExceptionHandler(ProfileNotFoundException.class)
+  @ExceptionHandler(BoardNotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ApiError handleProfileNotFound(ProfileNotFoundException exception) {
+  public ApiError handleBoardNotFound(BoardNotFoundException exception) {
     return new ApiError(exception.getMessage());
   }
 
@@ -39,16 +39,16 @@ public class GlobalExceptionHandler {
         "Invalid request body", List.of(new ValidationFieldError("body", "Malformed JSON payload")));
   }
 
-  @ExceptionHandler(InvalidProfileUpdateException.class)
+  @ExceptionHandler(InvalidBoardUpdateException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ValidationErrorResponse handleInvalidUpdate(InvalidProfileUpdateException exception) {
+  public ValidationErrorResponse handleInvalidUpdate(InvalidBoardUpdateException exception) {
     return new ValidationErrorResponse(
         "Validation failed", List.of(new ValidationFieldError("cards", exception.getMessage())));
   }
 
-  @ExceptionHandler(CardNotFoundForProfileException.class)
+  @ExceptionHandler(CardNotFoundForBoardException.class)
   @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ApiError handleCardNotInProfile(CardNotFoundForProfileException exception) {
+  public ApiError handleCardNotInBoard(CardNotFoundForBoardException exception) {
     return new ApiError(exception.getMessage());
   }
 
@@ -64,9 +64,9 @@ public class GlobalExceptionHandler {
     return new ApiError(exception.getMessage());
   }
 
-  @ExceptionHandler(WidgetNotFoundForProfileException.class)
+  @ExceptionHandler(WidgetNotFoundForBoardException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ApiError handleWidgetNotFound(WidgetNotFoundForProfileException exception) {
+  public ApiError handleWidgetNotFound(WidgetNotFoundForBoardException exception) {
     return new ApiError(exception.getMessage());
   }
 }

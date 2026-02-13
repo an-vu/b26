@@ -4,9 +4,9 @@ import com.bento26.backend.analytics.api.AnalyticsResponse;
 import com.bento26.backend.analytics.api.CardAnalyticsDto;
 import com.bento26.backend.analytics.persistence.ClickEventEntity;
 import com.bento26.backend.analytics.persistence.ClickEventRepository;
-import com.bento26.backend.profile.domain.ProfileNotFoundException;
-import com.bento26.backend.profile.persistence.CardRepository;
-import com.bento26.backend.profile.persistence.ProfileRepository;
+import com.bento26.backend.board.domain.BoardNotFoundException;
+import com.bento26.backend.board.persistence.CardRepository;
+import com.bento26.backend.board.persistence.BoardRepository;
 import java.time.Instant;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -15,35 +15,35 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class AnalyticsService {
   private final ClickEventRepository clickEventRepository;
-  private final ProfileRepository profileRepository;
+  private final BoardRepository boardRepository;
   private final CardRepository cardRepository;
   private final ClickAbuseGuard clickAbuseGuard;
 
   public AnalyticsService(
       ClickEventRepository clickEventRepository,
-      ProfileRepository profileRepository,
+      BoardRepository boardRepository,
       CardRepository cardRepository,
       ClickAbuseGuard clickAbuseGuard) {
     this.clickEventRepository = clickEventRepository;
-    this.profileRepository = profileRepository;
+    this.boardRepository = boardRepository;
     this.cardRepository = cardRepository;
     this.clickAbuseGuard = clickAbuseGuard;
   }
 
   @Transactional
-  public void recordClick(String profileId, String cardId, String sourceIp) {
-    if (!profileRepository.existsById(profileId)) {
-      throw new ProfileNotFoundException(profileId);
+  public void recordClick(String boardId, String cardId, String sourceIp) {
+    if (!boardRepository.existsById(boardId)) {
+      throw new BoardNotFoundException(boardId);
     }
-    if (!cardRepository.existsByProfile_IdAndId(profileId, cardId)) {
-      throw new CardNotFoundForProfileException(profileId, cardId);
+    if (!cardRepository.existsByBoard_IdAndId(boardId, cardId)) {
+      throw new CardNotFoundForBoardException(boardId, cardId);
     }
-    if (!clickAbuseGuard.shouldAccept(sourceIp, profileId, cardId)) {
+    if (!clickAbuseGuard.shouldAccept(sourceIp, boardId, cardId)) {
       throw new ClickRateLimitedException();
     }
 
     ClickEventEntity event = new ClickEventEntity();
-    event.setProfileId(profileId);
+    event.setBoardId(boardId);
     event.setCardId(cardId);
     event.setOccurredAt(Instant.now());
     event.setSourceIp(sourceIp);
@@ -51,15 +51,15 @@ public class AnalyticsService {
   }
 
   @Transactional(readOnly = true)
-  public AnalyticsResponse getAnalytics(String profileId) {
-    if (!profileRepository.existsById(profileId)) {
-      throw new ProfileNotFoundException(profileId);
+  public AnalyticsResponse getAnalytics(String boardId) {
+    if (!boardRepository.existsById(boardId)) {
+      throw new BoardNotFoundException(boardId);
     }
-    long total = clickEventRepository.countByProfileId(profileId);
+    long total = clickEventRepository.countByBoardId(boardId);
     List<CardAnalyticsDto> byCard =
-        clickEventRepository.countByCardForProfile(profileId).stream()
+        clickEventRepository.countByCardForBoard(boardId).stream()
             .map(row -> new CardAnalyticsDto(row.getCardId(), row.getClickCount()))
             .toList();
-    return new AnalyticsResponse(profileId, total, byCard);
+    return new AnalyticsResponse(boardId, total, byCard);
   }
 }

@@ -11,9 +11,9 @@ public class ClickAbuseGuard {
   private static final Duration WINDOW = Duration.ofSeconds(2);
   private final Map<String, Instant> lastAccepted = new ConcurrentHashMap<>();
 
-  public boolean shouldAccept(String ipAddress, String profileId, String cardId) {
+  public boolean shouldAccept(String ipAddress, String boardId, String cardId) {
     Instant now = Instant.now();
-    String key = ipAddress + "|" + profileId + "|" + cardId;
+    String key = ipAddress + "|" + boardId + "|" + cardId;
     Instant previous = lastAccepted.get(key);
     if (previous != null && Duration.between(previous, now).compareTo(WINDOW) < 0) {
       return false;

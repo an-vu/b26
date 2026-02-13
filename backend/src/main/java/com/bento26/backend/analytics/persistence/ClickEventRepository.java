@@ -6,17 +6,17 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 public interface ClickEventRepository extends JpaRepository<ClickEventEntity, Long> {
-  long countByProfileId(String profileId);
+  long countByBoardId(String boardId);
 
   @Query(
       """
       select c.cardId as cardId, count(c) as clickCount
       from ClickEventEntity c
-      where c.profileId = :profileId
+      where c.boardId = :boardId
       group by c.cardId
       order by count(c) desc, c.cardId asc
       """)
-  List<CardClickCountView> countByCardForProfile(@Param("profileId") String profileId);
+  List<CardClickCountView> countByCardForBoard(@Param("boardId") String boardId);
 
   interface CardClickCountView {
     String getCardId();

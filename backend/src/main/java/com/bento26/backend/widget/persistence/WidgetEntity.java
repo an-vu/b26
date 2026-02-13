@@ -1,6 +1,6 @@
 package com.bento26.backend.widget.persistence;
 
-import com.bento26.backend.profile.persistence.ProfileEntity;
+import com.bento26.backend.board.persistence.BoardEntity;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -19,8 +19,8 @@ public class WidgetEntity {
   private Long id;
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
-  @JoinColumn(name = "profile_id", nullable = false)
-  private ProfileEntity profile;
+  @JoinColumn(name = "board_id", nullable = false)
+  private BoardEntity board;
 
   @Column(nullable = false)
   private String type;
@@ -44,12 +44,12 @@ public class WidgetEntity {
     return id;
   }
 
-  public ProfileEntity getProfile() {
-    return profile;
+  public BoardEntity getBoard() {
+    return board;
   }
 
-  public void setProfile(ProfileEntity profile) {
-    this.profile = profile;
+  public void setBoard(BoardEntity board) {
+    this.board = board;
   }
 
   public String getType() {

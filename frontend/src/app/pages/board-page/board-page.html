@@ -1,21 +1,21 @@
 <ng-container *ngIf="pageState$ | async as state">
   <main class="page" *ngIf="state.status === 'ready'">
-    <div class="profile-layout">
-      <aside class="profile-left">
-        <ng-container *ngIf="isWidgetEditMode; else profileView">
-          <section class="profile-meta-editor">
+    <div class="board-layout">
+      <aside class="board-left">
+        <ng-container *ngIf="isWidgetEditMode; else boardView">
+          <section class="board-meta-editor">
             <label>
               Name
-              <input type="text" name="profile-name" [(ngModel)]="profileDraftName" />
+              <input type="text" name="board-name" [(ngModel)]="boardDraftName" />
             </label>
             <label>
               Headline
-              <input type="text" name="profile-headline" [(ngModel)]="profileDraftHeadline" />
+              <input type="text" name="board-headline" [(ngModel)]="boardDraftHeadline" />
             </label>
           </section>
         </ng-container>
-        <ng-template #profileView>
-          <app-profile-header [name]="state.profile.name" [headline]="state.profile.headline"></app-profile-header>
+        <ng-template #boardView>
+          <app-board-header [name]="state.board.name" [headline]="state.board.headline"></app-board-header>
         </ng-template>
       </aside>
 
@@ -151,9 +151,9 @@
       <div class="account-menu-wrap">
         <button type="button" (click)="toggleAccountMenu()">Account</button>
         <div class="account-menu" *ngIf="isAccountMenuOpen">
-          <p class="account-menu-label">Profiles</p>
-          <a *ngFor="let profile of accountProfiles" [routerLink]="profile.route" (click)="closeAccountMenu()">{{ profile.label }}</a>
-          <button type="button" class="account-link">Create New Profile</button>
+          <p class="account-menu-label">Boards</p>
+          <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
+          <button type="button" class="account-link">Create New Board</button>
           <hr />
           <button type="button" class="account-link">Analytics</button>
           <button type="button" class="account-link">Settings</button>
@@ -162,13 +162,13 @@
       </div>
       <button
         type="button"
-        *ngIf="!isWidgetEditMode && !isHomeProfile(state.profile); else doneButton"
-        (click)="startWidgetEdit(state.profile, widgets)"
+        *ngIf="!isWidgetEditMode && !isHomeBoard(state.board); else doneButton"
+        (click)="startWidgetEdit(state.board, widgets)"
       >
         Edit
       </button>
       <ng-template #doneButton>
-        <button type="button" *ngIf="!isHomeProfile(state.profile)" (click)="doneWidgetEdit(state.profile.id)" [disabled]="isWidgetSaving">Done</button>
+        <button type="button" *ngIf="!isHomeBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
       </ng-template>
     </div>
   </main>
@@ -176,6 +176,6 @@
     <p>Loading...</p>
   </main>
   <main class="page" *ngIf="state.status === 'missing'">
-    <p>Profile not found.</p>
+    <p>Board not found.</p>
   </main>
 </ng-container>
