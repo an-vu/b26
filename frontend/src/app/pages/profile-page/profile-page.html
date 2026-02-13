@@ -148,7 +148,18 @@
 
     <div class="bottom-actions" *ngIf="widgets$ | async as widgets">
       <button type="button" routerLink="/">Logo</button>
-      <button type="button">Account</button>
+      <div class="account-menu-wrap">
+        <button type="button" (click)="toggleAccountMenu()">Account</button>
+        <div class="account-menu" *ngIf="isAccountMenuOpen">
+          <p class="account-menu-label">Profiles</p>
+          <a *ngFor="let profile of accountProfiles" [routerLink]="profile.route" (click)="closeAccountMenu()">{{ profile.label }}</a>
+          <button type="button" class="account-link">Create New Profile</button>
+          <hr />
+          <button type="button" class="account-link">Analytics</button>
+          <button type="button" class="account-link">Settings</button>
+          <button type="button" class="account-link">Sign Out</button>
+        </div>
+      </div>
       <button
         type="button"
         *ngIf="!isWidgetEditMode && !isHomeProfile(state.profile); else doneButton"
