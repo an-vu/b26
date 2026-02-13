@@ -9,11 +9,26 @@
   margin-bottom: 16px;
 }
 
-.title {
-  margin: 0 0 6px;
+.board-header-stack {
+  display: grid;
+  gap: 6px;
 }
 
-.subtitle,
+.title {
+  margin: 0;
+  font-size: 32px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.subtitle {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 400;
+  line-height: 1.4;
+  opacity: 0.75;
+}
+
 .text-muted {
   margin: 0;
   opacity: 0.75;
@@ -23,6 +38,37 @@
   margin: 0;
   font-size: 12px;
   opacity: 0.75;
+}
+
+.inline-edit {
+  font-family: inherit;
+  font-style: inherit;
+  font-variant: inherit;
+  font-stretch: inherit;
+  font-feature-settings: inherit;
+  line-height: inherit;
+  color: inherit;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
+  margin: 0;
+  outline: none;
+  box-shadow: none;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+  appearance: none;
+}
+
+.inline-edit::placeholder {
+  color: inherit;
+  opacity: 0.5;
+}
+
+.inline-edit:focus {
+  border-bottom-color: rgba(0, 0, 0, 0.35);
 }
 
 .board-shell {
@@ -83,18 +129,11 @@
   overflow: auto;
 }
 
-.board-meta-editor {
-  display: grid;
-  gap: 10px;
-}
-
-.board-meta-editor label,
 .widget-edit-tile label {
   display: grid;
   gap: 4px;
 }
 
-.board-meta-editor input,
 .widget-edit-tile input,
 .widget-edit-tile select,
 .widget-edit-tile textarea {
