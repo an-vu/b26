@@ -28,6 +28,7 @@
 
 .widget-edit-tile {
   display: grid;
+  position: relative;
 }
 
 .widget-edit-tile h3 {
@@ -44,6 +45,23 @@
 
 .widget-edit-tile textarea {
   resize: vertical;
+}
+
+.widget-delete-button {
+  position: absolute;
+  top: -10px;
+  left: -10px;
+  z-index: 2;
+}
+
+.widget-edit-preview {
+  height: 100%;
+  pointer-events: none;
+}
+
+.widget-settings-open {
+  min-height: 0;
+  overflow: auto;
 }
 
 .add-widget-tile {

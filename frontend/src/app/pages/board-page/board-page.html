@@ -25,59 +25,74 @@
         <div class="board-grid" *ngIf="isWidgetEditMode">
           <article
             *ngFor="let draft of widgetDrafts; let i = index"
-            [class]="'board-tile board-card board-card--compact board-card--scroll widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+            [class]="'board-tile board-card widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+            [class.widget-settings-open]="isWidgetSettingsOpen(draft)"
+            (click)="openWidgetSettings(draft)"
           >
-            <div class="widget-editor-head">
-              <h3>{{ draft.title || 'Widget' }}</h3>
-              <div class="widget-editor-actions">
-                <button type="button" (click)="moveWidget(draft, -1)" [disabled]="isWidgetSaving || i === 0">Up</button>
-                <button type="button" (click)="moveWidget(draft, 1)" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
+            <button
+              type="button"
+              class="widget-delete-button"
+              (click)="deleteWidget(draft); $event.stopPropagation()"
+              [disabled]="isWidgetSaving"
+            >
+              Delete
+            </button>
+
+            <ng-container *ngIf="isWidgetSettingsOpen(draft); else widgetPreview">
+              <div class="widget-editor-head">
+                <h3>{{ draft.title || 'Widget' }}</h3>
+                <div class="widget-editor-actions">
+                  <button type="button" (click)="moveWidget(draft, -1); $event.stopPropagation()" [disabled]="isWidgetSaving || i === 0">Up</button>
+                  <button type="button" (click)="moveWidget(draft, 1); $event.stopPropagation()" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
+                </div>
               </div>
-            </div>
 
-            <label>
-              Type
-              <select [name]="'widget-type-' + (draft.id ?? 'new')" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
-                <option value="embed">Embed</option>
-                <option value="link">Link</option>
-                <option value="map">Map</option>
-              </select>
-            </label>
-            <label>
-              Title
-              <input type="text" [name]="'widget-title-' + (draft.id ?? 'new')" [(ngModel)]="draft.title" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
-            </label>
-            <label>
-              Layout
-              <select [name]="'widget-layout-' + (draft.id ?? 'new')" [(ngModel)]="draft.layout" (ngModelChange)="onWidgetDraftFieldChange(draft)">
-                <option value="span-1">1c x 1r</option>
-                <option value="span-2">2c x 1r</option>
-                <option value="span-1x2">1c x 2r</option>
-                <option value="span-2x2">2c x 2r</option>
-              </select>
-            </label>
-            <label class="checkbox">
-              <input type="checkbox" [name]="'widget-enabled-' + (draft.id ?? 'new')" [(ngModel)]="draft.enabled" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
-              Enabled
-            </label>
+              <label>
+                Type
+                <select [name]="'widget-type-' + draft.id" [(ngModel)]="draft.type" (ngModelChange)="onWidgetTypeChange(draft)">
+                  <option value="embed">Embed</option>
+                  <option value="link">Link</option>
+                  <option value="map">Map</option>
+                </select>
+              </label>
+              <label>
+                Title
+                <input type="text" [name]="'widget-title-' + draft.id" [(ngModel)]="draft.title" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
+              </label>
+              <label>
+                Layout
+                <select [name]="'widget-layout-' + draft.id" [(ngModel)]="draft.layout" (ngModelChange)="onWidgetDraftFieldChange(draft)">
+                  <option value="span-1">1c x 1r</option>
+                  <option value="span-2">2c x 1r</option>
+                  <option value="span-1x2">1c x 2r</option>
+                  <option value="span-2x2">2c x 2r</option>
+                </select>
+              </label>
+              <label class="checkbox">
+                <input type="checkbox" [name]="'widget-enabled-' + draft.id" [(ngModel)]="draft.enabled" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
+                Enabled
+              </label>
 
-            <label *ngIf="draft.type === 'embed'">
-              Embed URL
-              <input type="text" [name]="'widget-embed-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.embedUrl" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
-            </label>
-            <label *ngIf="draft.type === 'link'">
-              Link URL
-              <input type="text" [name]="'widget-link-url-' + (draft.id ?? 'new')" [(ngModel)]="draft.linkUrl" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
-            </label>
-            <label *ngIf="draft.type === 'map'">
-              Places (one per line)
-              <textarea [name]="'widget-places-' + (draft.id ?? 'new')" [(ngModel)]="draft.placesText" (ngModelChange)="onWidgetDraftFieldChange(draft)" rows="4"></textarea>
-            </label>
-            <p class="field-error" *ngIf="getDraftValidationError(draft) as error">{{ error }}</p>
+              <label *ngIf="draft.type === 'embed'">
+                Embed URL
+                <input type="text" [name]="'widget-embed-url-' + draft.id" [(ngModel)]="draft.embedUrl" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
+              </label>
+              <label *ngIf="draft.type === 'link'">
+                Link URL
+                <input type="text" [name]="'widget-link-url-' + draft.id" [(ngModel)]="draft.linkUrl" (ngModelChange)="onWidgetDraftFieldChange(draft)" />
+              </label>
+              <label *ngIf="draft.type === 'map'">
+                Places (one per line)
+                <textarea [name]="'widget-places-' + draft.id" [(ngModel)]="draft.placesText" (ngModelChange)="onWidgetDraftFieldChange(draft)" rows="4"></textarea>
+              </label>
+              <p class="field-error" *ngIf="getDraftValidationError(draft) as error">{{ error }}</p>
+            </ng-container>
 
-            <div class="widget-editor-actions">
-              <button type="button" (click)="deleteWidget(draft)" [disabled]="isWidgetSaving">Delete</button>
-            </div>
+            <ng-template #widgetPreview>
+              <div class="widget-edit-preview">
+                <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)" [previewMode]="true"></app-widget-host>
+              </div>
+            </ng-template>
           </article>
 
           <article
