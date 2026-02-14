@@ -1,5 +1,12 @@
 <ng-container *ngIf="pageState$ | async as state">
-  <main class="page page-fixed-scroll" *ngIf="state.status === 'ready'">
+  <main
+    class="page page-fixed-scroll"
+    *ngIf="state.status === 'ready'"
+    [class.board-pattern-dots]="boardPatternDraft === 'dots'"
+    [class.board-pattern-grid]="boardPatternDraft === 'grid'"
+    [style.--board-widget-radius.px]="boardRadiusDraft"
+    [style.--board-bg-color]="boardBackgroundColorDraft"
+  >
     <div class="board-shell">
       <aside class="board-rail">
         <ng-container *ngIf="isWidgetEditMode; else boardView">
@@ -114,9 +121,59 @@
         </ng-template>
       </div>
 
-      <button type="button" class="board-identity-button" *ngIf="!isHomeBoard(state.board)">
-        {{ boardMenuLabel(state.board.id) }} (/{{ state.board.id }})
-      </button>
+      <div class="board-identity-wrap" *ngIf="!isHomeBoard(state.board)">
+        <button type="button" class="board-identity-button" (click)="toggleBoardIdentityMenu()">
+          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.id }})
+        </button>
+        <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
+          <label>
+            Board Name
+            <input type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
+          </label>
+          <label>
+            URL Name
+            <div class="slug-input-wrap">
+              <span>/</span>
+              <input type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
+            </div>
+          </label>
+          <hr />
+          <div class="board-appearance-row">
+            <label>
+              Widget Radius
+              <input type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+            </label>
+            <label for="board-theme-toggle">
+              <span>Theme</span>
+              <input type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
+            </label>
+          </div>
+          <label>
+            Background Color
+            <div class="board-color-options">
+              <button type="button" aria-label="Background color option 1"></button>
+              <button type="button" aria-label="Background color option 2"></button>
+              <button type="button" aria-label="Background color option 3"></button>
+              <button type="button" aria-label="Background color option 4"></button>
+              <button type="button" aria-label="Background color option 5"></button>
+              <button type="button" aria-label="Background color option 6"></button>
+              <button type="button" aria-label="Background color option 7"></button>
+            </div>
+          </label>
+          <label>
+            Pattern
+            <div class="board-pattern-options">
+              <button type="button" aria-label="Pattern option 1"></button>
+              <button type="button" aria-label="Pattern option 2"></button>
+              <button type="button" aria-label="Pattern option 3"></button>
+              <button type="button" aria-label="Pattern option 4"></button>
+              <button type="button" aria-label="Pattern option 5"></button>
+              <button type="button" aria-label="Pattern option 6"></button>
+              <button type="button" aria-label="Pattern option 7"></button>
+            </div>
+          </label>
+        </div>
+      </div>
     </div>
   </main>
   <main class="page" *ngIf="state.status === 'loading'">

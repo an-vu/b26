@@ -36,6 +36,7 @@ body {
 
 .page.page-fixed-scroll .board-content {
   overflow: visible;
+  background: var(--board-bg-color, transparent);
   padding-bottom: 84px;
   box-sizing: border-box;
 }
@@ -154,7 +155,7 @@ body {
 .board-card,
 .widget {
   border: 1px solid rgba(0, 0, 0, 0.15);
-  border-radius: 12px;
+  border-radius: var(--board-widget-radius, 12px);
   padding: 12px;
   display: grid;
   align-content: start;
@@ -253,10 +254,151 @@ app-widget-host.widget-host-preview .widget {
   gap: 8px;
 }
 
-.board-identity-button {
+.board-identity-wrap {
   position: absolute;
   left: 50%;
   transform: translateX(-50%);
+}
+
+.board-identity-menu {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 8px);
+  transform: translateX(-50%);
+  min-width: 260px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 10px;
+  background: #fff;
+  padding: 10px;
+  display: grid;
+  gap: 8px;
+}
+
+.board-identity-menu label {
+  display: grid;
+  gap: 4px;
+}
+
+.board-appearance-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  align-items: end;
+}
+
+.board-identity-menu hr {
+  width: 100%;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.15);
+  margin: 4px 0;
+}
+
+.slug-input-wrap {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 6px;
+}
+
+.board-color-options {
+  display: flex;
+  gap: 8px;
+}
+
+.board-color-options button {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  padding: 0;
+}
+
+.board-color-options button:nth-child(1) {
+  background: #ffffff;
+}
+
+.board-color-options button:nth-child(2) {
+  background: #f6efe3;
+}
+
+.board-color-options button:nth-child(3) {
+  background: #e6f0ff;
+}
+
+.board-color-options button:nth-child(4) {
+  background: #e8f7ee;
+}
+
+.board-color-options button:nth-child(5) {
+  background: #f6e8ff;
+}
+
+.board-color-options button:nth-child(6) {
+  background: #ffe7e7;
+}
+
+.board-color-options button:nth-child(7) {
+  background: #f0f0f0;
+}
+
+.board-pattern-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.board-pattern-options button {
+  width: 28px;
+  height: 22px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 0, 0.25);
+  background: #fff;
+  padding: 0;
+}
+
+.board-pattern-options button:nth-child(1) {
+  background: #fff;
+}
+
+.board-pattern-options button:nth-child(2) {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.2) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.board-pattern-options button:nth-child(3) {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.15) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.15) 1px, transparent 1px);
+  background-size: 6px 6px;
+}
+
+.board-pattern-options button:nth-child(4) {
+  background-image: repeating-linear-gradient(45deg, #eee, #eee 3px, #fff 3px, #fff 6px);
+}
+
+.board-pattern-options button:nth-child(5) {
+  background-image: repeating-linear-gradient(-45deg, #eee, #eee 3px, #fff 3px, #fff 6px);
+}
+
+.board-pattern-options button:nth-child(6) {
+  background-image: repeating-linear-gradient(90deg, #eee, #eee 3px, #fff 3px, #fff 6px);
+}
+
+.board-pattern-options button:nth-child(7) {
+  background-image: linear-gradient(135deg, #f4f4f4 25%, #fff 25%, #fff 50%, #f4f4f4 50%, #f4f4f4 75%, #fff 75%, #fff);
+  background-size: 8px 8px;
+}
+
+.page.board-pattern-dots .board-content {
+  background-image: radial-gradient(rgba(0, 0, 0, 0.14) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+
+.page.board-pattern-grid .board-content {
+  background-image:
+    linear-gradient(to right, rgba(0, 0, 0, 0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(0, 0, 0, 0.12) 1px, transparent 1px);
+  background-size: 18px 18px;
 }
 
 .account-menu-wrap {
