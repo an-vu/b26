@@ -1,3 +1,9 @@
+html,
+body {
+  margin: 0;
+  padding: 0;
+}
+
 .page {
   --header-title-font-size: 32px;
   --header-title-line-height: 1.2;
@@ -7,6 +13,30 @@
   width: 100%;
   margin: 0;
   padding: 24px;
+  box-sizing: border-box;
+}
+
+.page.page-fixed-scroll {
+  min-height: 100dvh;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+}
+
+.page.page-fixed-scroll .board-shell {
+  flex: 1;
+  align-items: stretch;
+}
+
+.page.page-fixed-scroll .board-rail {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
+.page.page-fixed-scroll .board-content {
+  overflow: visible;
+  padding-bottom: 84px;
   box-sizing: border-box;
 }
 

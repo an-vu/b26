@@ -1,5 +1,5 @@
 <ng-container *ngIf="pageState$ | async as state">
-  <main class="page" *ngIf="state.status === 'ready'">
+  <main class="page page-fixed-scroll" *ngIf="state.status === 'ready'">
     <div class="board-shell">
       <aside class="board-rail">
         <ng-container *ngIf="isWidgetEditMode; else boardView">
@@ -114,7 +114,7 @@
         </ng-template>
       </div>
 
-      <button type="button" class="board-identity-button">
+      <button type="button" class="board-identity-button" *ngIf="!isHomeBoard(state.board)">
         {{ boardMenuLabel(state.board.id) }} (/{{ state.board.id }})
       </button>
     </div>
