@@ -73,6 +73,11 @@
       <div class="account-menu-wrap">
         <button type="button" (click)="toggleAccountMenu()">Account</button>
         <div class="account-menu" *ngIf="isAccountMenuOpen">
+          <section class="account-user">
+            <p class="account-user-name">{{ accountUser.name }}</p>
+            <p class="account-user-handle text-muted">{{ accountUser.username }}</p>
+          </section>
+          <hr />
           <p class="account-menu-label meta-label">Boards</p>
           <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
           <button type="button" class="account-link">Create New Board</button>
