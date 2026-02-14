@@ -63,7 +63,14 @@ public class BoardDataSeeder {
                   "home",
                   "B26",
                   "Angular x Java",
-                  List.of(new CardSeed("home", "Home", "https://anvu.tech/")))));
+                  List.of(new CardSeed("home", "Home", "https://anvu.tech/"))),
+              buildBoard(
+                  "insights",
+                  "Insights",
+                  "insights",
+                  "Insights",
+                  "Overview of your profile performance",
+                  List.of())));
 
       Map<String, BoardEntity> byId =
           boards.stream().collect(java.util.stream.Collectors.toMap(BoardEntity::getId, p -> p));

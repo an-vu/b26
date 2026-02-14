@@ -1,8 +1,8 @@
 package com.bento26.backend;
 
-import com.bento26.backend.analytics.domain.ClickAbuseGuard;
-import com.bento26.backend.analytics.persistence.ClickEventRepository;
-import com.bento26.backend.analytics.persistence.ViewEventRepository;
+import com.bento26.backend.insights.domain.ClickAbuseGuard;
+import com.bento26.backend.insights.persistence.ClickEventRepository;
+import com.bento26.backend.insights.persistence.ViewEventRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -158,7 +158,7 @@ class ApiIntegrationTest {
   }
 
   @Test
-  void postClick_andGetAnalytics_work() throws Exception {
+  void postClick_andGetInsights_work() throws Exception {
     String clickPayload =
         """
         { "boardId": "default" }
@@ -179,7 +179,7 @@ class ApiIntegrationTest {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/analytics/default"))
+        .perform(get("/api/insights/default"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalClicks").value(2))
@@ -240,7 +240,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/analytics/view")
+            post("/api/insights/view")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("User-Agent", "Mozilla/5.0 (iPhone)")
                 .content(viewPayload))
@@ -254,7 +254,7 @@ class ApiIntegrationTest {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/analytics/default/summary"))
+        .perform(get("/api/insights/default/summary"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalVisits").value(1))
@@ -274,11 +274,30 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/analytics/view")
+            post("/api/insights/view")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(viewPayload))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Board not found: not-here"));
+  }
+
+  @Test
+  void legacyAnalyticsEndpoints_removed() throws Exception {
+    String viewPayload =
+        """
+        { "boardId": "default", "source": "direct" }
+        """;
+
+    mockMvc
+        .perform(
+            post("/api/analytics/view")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(viewPayload))
+        .andExpect(status().isNotFound());
+
+    mockMvc
+        .perform(get("/api/analytics/default/summary"))
+        .andExpect(status().isNotFound());
   }
 
   @Test

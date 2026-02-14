@@ -1,4 +1,4 @@
-package com.bento26.backend.analytics.api;
+package com.bento26.backend.insights.api;
 
 import jakarta.validation.constraints.NotBlank;
 

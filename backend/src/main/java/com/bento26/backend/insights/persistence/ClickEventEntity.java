@@ -1,4 +1,4 @@
-package com.bento26.backend.analytics.persistence;
+package com.bento26.backend.insights.persistence;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

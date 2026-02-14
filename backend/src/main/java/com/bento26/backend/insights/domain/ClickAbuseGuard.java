@@ -1,4 +1,4 @@
-package com.bento26.backend.analytics.domain;
+package com.bento26.backend.insights.domain;
 
 import java.time.Duration;
 import java.time.Instant;

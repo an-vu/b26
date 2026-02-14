@@ -1,4 +1,4 @@
-package com.bento26.backend.analytics.domain;
+package com.bento26.backend.insights.domain;
 
 public class CardNotFoundForBoardException extends RuntimeException {
   public CardNotFoundForBoardException(String boardId, String cardId) {

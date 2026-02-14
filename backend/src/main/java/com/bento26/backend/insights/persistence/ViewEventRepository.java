@@ -1,4 +1,4 @@
-package com.bento26.backend.analytics.persistence;
+package com.bento26.backend.insights.persistence;
 
 import java.time.Instant;
 import org.springframework.data.jpa.repository.JpaRepository;

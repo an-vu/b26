@@ -1,7 +1,7 @@
 package com.bento26.backend.common.api;
 
-import com.bento26.backend.analytics.domain.CardNotFoundForBoardException;
-import com.bento26.backend.analytics.domain.ClickRateLimitedException;
+import com.bento26.backend.insights.domain.CardNotFoundForBoardException;
+import com.bento26.backend.insights.domain.ClickRateLimitedException;
 import com.bento26.backend.board.domain.InvalidBoardUpdateException;
 import com.bento26.backend.board.domain.BoardNotFoundException;
 import com.bento26.backend.widget.domain.InvalidWidgetConfigException;

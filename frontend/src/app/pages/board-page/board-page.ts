@@ -8,7 +8,7 @@ import { RouterLink } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
-import { AnalyticsService } from '../../services/analytics.service';
+import { InsightsService } from '../../services/insights.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
@@ -44,7 +44,7 @@ export class BoardPageComponent {
   private route = inject(ActivatedRoute);
   private boardService = inject(BoardService);
   private boardStore = inject(BoardStoreService);
-  private analyticsService = inject(AnalyticsService);
+  private insightsService = inject(InsightsService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
@@ -85,7 +85,7 @@ export class BoardPageComponent {
         switchMap((params) => {
           const boardState$ = this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
             tap((board) => {
-              this.analyticsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
+              this.insightsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
             }),
             map((board): BoardPageState => ({ status: 'ready', board })),
             catchError(() => of<BoardPageState>({ status: 'missing' }))
@@ -168,6 +168,10 @@ export class BoardPageComponent {
 
   isHomeBoard(board: Board) {
     return board.id === 'home';
+  }
+
+  isSystemBoard(board: Board) {
+    return board.id === 'home' || board.id === 'insights';
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {

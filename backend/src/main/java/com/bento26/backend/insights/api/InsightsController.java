@@ -1,6 +1,6 @@
-package com.bento26.backend.analytics.api;
+package com.bento26.backend.insights.api;
 
-import com.bento26.backend.analytics.domain.AnalyticsService;
+import com.bento26.backend.insights.domain.InsightsService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -14,11 +14,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api")
-public class AnalyticsController {
-  private final AnalyticsService analyticsService;
+public class InsightsController {
+  private final InsightsService insightsService;
 
-  public AnalyticsController(AnalyticsService analyticsService) {
-    this.analyticsService = analyticsService;
+  public InsightsController(InsightsService insightsService) {
+    this.insightsService = insightsService;
   }
 
   @PostMapping("/click/{cardId}")
@@ -28,24 +28,24 @@ public class AnalyticsController {
       @Valid @RequestBody RecordClickRequest request,
       HttpServletRequest servletRequest) {
     String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
-    analyticsService.recordClick(request.boardId(), cardId, sourceIp);
+    insightsService.recordClick(request.boardId(), cardId, sourceIp);
   }
 
-  @GetMapping("/analytics/{boardId}")
-  public AnalyticsResponse getAnalytics(@PathVariable String boardId) {
-    return analyticsService.getAnalytics(boardId);
+  @GetMapping("/insights/{boardId}")
+  public InsightsResponse getInsights(@PathVariable String boardId) {
+    return insightsService.getInsights(boardId);
   }
 
-  @PostMapping("/analytics/view")
+  @PostMapping("/insights/view")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void recordView(@Valid @RequestBody RecordViewRequest request, HttpServletRequest servletRequest) {
     String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
     String userAgent = servletRequest.getHeader("User-Agent");
-    analyticsService.recordView(request.boardId(), sourceIp, request.source(), userAgent);
+    insightsService.recordView(request.boardId(), sourceIp, request.source(), userAgent);
   }
 
-  @GetMapping("/analytics/{boardId}/summary")
-  public AnalyticsSummaryResponse getSummary(@PathVariable String boardId) {
-    return analyticsService.getSummary(boardId);
+  @GetMapping("/insights/{boardId}/summary")
+  public InsightsSummaryResponse getSummary(@PathVariable String boardId) {
+    return insightsService.getSummary(boardId);
   }
 }

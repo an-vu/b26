@@ -1,12 +1,12 @@
-package com.bento26.backend.analytics.domain;
+package com.bento26.backend.insights.domain;
 
-import com.bento26.backend.analytics.api.AnalyticsResponse;
-import com.bento26.backend.analytics.api.AnalyticsSummaryResponse;
-import com.bento26.backend.analytics.api.CardAnalyticsDto;
-import com.bento26.backend.analytics.persistence.ClickEventEntity;
-import com.bento26.backend.analytics.persistence.ClickEventRepository;
-import com.bento26.backend.analytics.persistence.ViewEventEntity;
-import com.bento26.backend.analytics.persistence.ViewEventRepository;
+import com.bento26.backend.insights.api.InsightsResponse;
+import com.bento26.backend.insights.api.InsightsSummaryResponse;
+import com.bento26.backend.insights.api.CardInsightsDto;
+import com.bento26.backend.insights.persistence.ClickEventEntity;
+import com.bento26.backend.insights.persistence.ClickEventRepository;
+import com.bento26.backend.insights.persistence.ViewEventEntity;
+import com.bento26.backend.insights.persistence.ViewEventRepository;
 import com.bento26.backend.board.domain.BoardNotFoundException;
 import com.bento26.backend.board.persistence.CardRepository;
 import com.bento26.backend.board.persistence.BoardRepository;
@@ -18,14 +18,14 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
-public class AnalyticsService {
+public class InsightsService {
   private final ClickEventRepository clickEventRepository;
   private final ViewEventRepository viewEventRepository;
   private final BoardRepository boardRepository;
   private final CardRepository cardRepository;
   private final ClickAbuseGuard clickAbuseGuard;
 
-  public AnalyticsService(
+  public InsightsService(
       ClickEventRepository clickEventRepository,
       ViewEventRepository viewEventRepository,
       BoardRepository boardRepository,
@@ -74,20 +74,20 @@ public class AnalyticsService {
   }
 
   @Transactional(readOnly = true)
-  public AnalyticsResponse getAnalytics(String boardId) {
+  public InsightsResponse getInsights(String boardId) {
     if (!boardRepository.existsById(boardId)) {
       throw new BoardNotFoundException(boardId);
     }
     long total = clickEventRepository.countByBoardId(boardId);
-    List<CardAnalyticsDto> byCard =
+    List<CardInsightsDto> byCard =
         clickEventRepository.countByCardForBoard(boardId).stream()
-            .map(row -> new CardAnalyticsDto(row.getCardId(), row.getClickCount()))
+            .map(row -> new CardInsightsDto(row.getCardId(), row.getClickCount()))
             .toList();
-    return new AnalyticsResponse(boardId, total, byCard);
+    return new InsightsResponse(boardId, total, byCard);
   }
 
   @Transactional(readOnly = true)
-  public AnalyticsSummaryResponse getSummary(String boardId) {
+  public InsightsSummaryResponse getSummary(String boardId) {
     if (!boardRepository.existsById(boardId)) {
       throw new BoardNotFoundException(boardId);
     }
@@ -102,13 +102,13 @@ public class AnalyticsService {
     long visitsToday =
         viewEventRepository.countByBoardIdAndOccurredAtGreaterThanEqual(boardId, startOfTodayUtc);
     long totalClicks = clickEventRepository.countByBoardId(boardId);
-    List<CardAnalyticsDto> topClickedLinks =
+    List<CardInsightsDto> topClickedLinks =
         clickEventRepository.countByCardForBoard(boardId).stream()
             .limit(5)
-            .map(row -> new CardAnalyticsDto(row.getCardId(), row.getClickCount()))
+            .map(row -> new CardInsightsDto(row.getCardId(), row.getClickCount()))
             .toList();
 
-    return new AnalyticsSummaryResponse(
+    return new InsightsSummaryResponse(
         boardId,
         totalVisits,
         visitsLast30Days,

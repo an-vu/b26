@@ -104,24 +104,23 @@
             <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
             <button type="button" class="account-link">Create New Board</button>
             <hr />
-            <a class="account-link" routerLink="/analytics" (click)="closeAccountMenu()">Analytics</a>
             <button type="button" class="account-link">Settings</button>
             <button type="button" class="account-link">Sign Out</button>
           </div>
         </div>
         <button
           type="button"
-          *ngIf="!isWidgetEditMode && !isHomeBoard(state.board); else doneButton"
+          *ngIf="!isWidgetEditMode && !isSystemBoard(state.board); else doneButton"
           (click)="startWidgetEdit(state.board, widgets)"
         >
           Edit
         </button>
         <ng-template #doneButton>
-          <button type="button" *ngIf="!isHomeBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
+          <button type="button" *ngIf="!isSystemBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
         </ng-template>
       </div>
 
-      <div class="board-identity-wrap" *ngIf="!isHomeBoard(state.board)">
+      <div class="board-identity-wrap" *ngIf="!isSystemBoard(state.board)">
         <button type="button" class="board-identity-button" (click)="toggleBoardIdentityMenu()">
           {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl || state.board.id }})
         </button>
