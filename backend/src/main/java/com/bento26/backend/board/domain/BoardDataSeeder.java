@@ -75,6 +75,14 @@ public class BoardDataSeeder {
                   "insights",
                   "Insights",
                   "Overview of your profile performance",
+                  List.of()),
+              buildBoard(
+                  "settings",
+                  "anvu",
+                  "Settings",
+                  "settings",
+                  "Settings",
+                  "Manage your account and app configuration",
                   List.of())));
 
       Map<String, BoardEntity> byId =
@@ -98,6 +106,26 @@ public class BoardDataSeeder {
                 "Places Visited",
                 "span-2",
                 "{\"places\":[\"Omaha, NE\",\"Chicago, IL\",\"San Francisco, CA\"]}",
+                1));
+      }
+
+      BoardEntity settingsBoard = byId.get("settings");
+      if (settingsBoard != null) {
+        widgets.add(
+            buildWidget(
+                settingsBoard,
+                "link",
+                "User Settings",
+                "span-2",
+                "{\"url\":\"https://example.com/settings/user\"}",
+                0));
+        widgets.add(
+            buildWidget(
+                settingsBoard,
+                "link",
+                "Admin Settings",
+                "span-2",
+                "{\"url\":\"https://example.com/settings/admin\"}",
                 1));
       }
 
