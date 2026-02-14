@@ -38,6 +38,10 @@ export class AnalyticsPageComponent {
     { label: 'Berkshire', route: '/b/berkshire' },
     { label: 'Union Pacific', route: '/b/union-pacific' },
   ];
+  accountUser = {
+    name: 'An Vu',
+    username: '@anvu',
+  };
 
   state$ = this.analyticsService.getSummary(this.analyticsBoardId).pipe(
     map(

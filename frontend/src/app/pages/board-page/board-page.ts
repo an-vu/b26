@@ -106,10 +106,18 @@ export class BoardPageComponent {
   }
 
   accountBoards = [
-    { label: 'Default', route: '/b/default' },
-    { label: 'Berkshire', route: '/b/berkshire' },
-    { label: 'Union Pacific', route: '/b/union-pacific' },
+    { id: 'default', label: 'Default', route: '/b/default' },
+    { id: 'berkshire', label: 'Berkshire', route: '/b/berkshire' },
+    { id: 'union-pacific', label: 'Union Pacific', route: '/b/union-pacific' },
   ];
+  accountUser = {
+    name: 'An Vu',
+    username: '@anvu',
+  };
+
+  boardMenuLabel(boardId: string) {
+    return this.accountBoards.find((board) => board.id === boardId)?.label ?? boardId;
+  }
 
   tileLayoutClass(layout: string) {
     if (layout === 'span-1x2') {

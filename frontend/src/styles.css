@@ -209,11 +209,24 @@ app-widget-host.widget-host-preview .widget {
 .bottom-actions {
   position: fixed;
   left: 16px;
+  right: 16px;
   bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  z-index: 30;
+}
+
+.bottom-actions-left {
   display: flex;
   align-items: flex-end;
   gap: 8px;
-  z-index: 30;
+}
+
+.board-identity-button {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
 }
 
 .account-menu-wrap {
@@ -249,6 +262,20 @@ app-widget-host.widget-host-preview .widget {
   border: 0;
   border-top: 1px solid rgba(0, 0, 0, 0.15);
   margin: 4px 0;
+}
+
+.account-user {
+  display: grid;
+  gap: 2px;
+}
+
+.account-user-name,
+.account-user-handle {
+  margin: 0;
+}
+
+.account-user-name {
+  font-weight: 700;
 }
 
 @media (max-width: 1024px) {

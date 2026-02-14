@@ -83,29 +83,40 @@
     </div>
 
     <div class="bottom-actions" *ngIf="widgets$ | async as widgets">
-      <button type="button" routerLink="/">Logo</button>
-      <div class="account-menu-wrap">
-        <button type="button" (click)="toggleAccountMenu()">Account</button>
-        <div class="account-menu" *ngIf="isAccountMenuOpen">
-          <p class="account-menu-label meta-label">Boards</p>
-          <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
-          <button type="button" class="account-link">Create New Board</button>
-          <hr />
-          <a class="account-link" routerLink="/analytics" (click)="closeAccountMenu()">Analytics</a>
-          <button type="button" class="account-link">Settings</button>
-          <button type="button" class="account-link">Sign Out</button>
+      <div class="bottom-actions-left">
+        <button type="button" routerLink="/">Logo</button>
+        <div class="account-menu-wrap">
+          <button type="button" (click)="toggleAccountMenu()">Account</button>
+          <div class="account-menu" *ngIf="isAccountMenuOpen">
+            <section class="account-user">
+              <p class="account-user-name">{{ accountUser.name }}</p>
+              <p class="account-user-handle text-muted">{{ accountUser.username }}</p>
+            </section>
+            <hr />
+            <p class="account-menu-label meta-label">Boards</p>
+            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
+            <button type="button" class="account-link">Create New Board</button>
+            <hr />
+            <a class="account-link" routerLink="/analytics" (click)="closeAccountMenu()">Analytics</a>
+            <button type="button" class="account-link">Settings</button>
+            <button type="button" class="account-link">Sign Out</button>
+          </div>
         </div>
+        <button
+          type="button"
+          *ngIf="!isWidgetEditMode && !isHomeBoard(state.board); else doneButton"
+          (click)="startWidgetEdit(state.board, widgets)"
+        >
+          Edit
+        </button>
+        <ng-template #doneButton>
+          <button type="button" *ngIf="!isHomeBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
+        </ng-template>
       </div>
-      <button
-        type="button"
-        *ngIf="!isWidgetEditMode && !isHomeBoard(state.board); else doneButton"
-        (click)="startWidgetEdit(state.board, widgets)"
-      >
-        Edit
+
+      <button type="button" class="board-identity-button">
+        {{ boardMenuLabel(state.board.id) }} (/{{ state.board.id }})
       </button>
-      <ng-template #doneButton>
-        <button type="button" *ngIf="!isHomeBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
-      </ng-template>
     </div>
   </main>
   <main class="page" *ngIf="state.status === 'loading'">
