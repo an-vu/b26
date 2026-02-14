@@ -237,6 +237,11 @@ app-widget-host.widget-host-preview .widget {
   grid-row: span 2;
 }
 
+.tile-span-4 {
+  grid-column: span 4;
+  grid-row: span 1;
+}
+
 .bottom-actions {
   position: fixed;
   left: 16px;

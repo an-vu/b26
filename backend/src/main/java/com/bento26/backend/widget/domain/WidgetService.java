@@ -39,6 +39,7 @@ public class WidgetService {
   @Transactional
   public WidgetDto createWidget(String boardId, UpsertWidgetRequest request) {
     BoardEntity board = findBoardByUrl(boardId);
+    validateLayout(request.layout());
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget = new WidgetEntity();
@@ -50,6 +51,7 @@ public class WidgetService {
   @Transactional
   public WidgetDto updateWidget(String boardId, long widgetId, UpsertWidgetRequest request) {
     BoardEntity board = findBoardByUrl(boardId);
+    validateLayout(request.layout());
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget =
@@ -115,7 +117,24 @@ public class WidgetService {
       return;
     }
 
+    if ("user-settings".equals(type) || "admin-settings".equals(type)) {
+      if (!config.isObject()) {
+        throw new InvalidWidgetConfigException(type + " config must be a JSON object");
+      }
+      return;
+    }
+
     throw new InvalidWidgetConfigException("unsupported widget type: " + type);
+  }
+
+  private static void validateLayout(String layout) {
+    if (!"span-1".equals(layout)
+        && !"span-2".equals(layout)
+        && !"span-1x2".equals(layout)
+        && !"span-2x2".equals(layout)
+        && !"span-4".equals(layout)) {
+      throw new InvalidWidgetConfigException("unsupported widget layout: " + layout);
+    }
   }
 
   private WidgetDto toDto(WidgetEntity widget) {

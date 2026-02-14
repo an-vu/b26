@@ -1,0 +1,14 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.settings-block {
+  display: grid;
+  gap: 4px;
+}
+
+.settings-block h4,
+.settings-block p {
+  margin: 0;
+}

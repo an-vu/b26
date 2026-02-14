@@ -20,7 +20,7 @@ type BoardPageState =
   | { status: 'ready'; board: Board }
   | { status: 'missing' };
 
-type WidgetType = 'embed' | 'map' | 'link';
+type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings';
 type WidgetDraft = {
   id?: number;
   type: WidgetType;
@@ -161,6 +161,9 @@ export class BoardPageComponent {
   }
 
   tileLayoutClass(layout: string) {
+    if (layout === 'span-4') {
+      return 'tile-span-4';
+    }
     if (layout === 'span-1x2') {
       return 'tile-span-1x2';
     }
@@ -462,7 +465,7 @@ export class BoardPageComponent {
       : [];
     return {
       id: widget.id,
-      type: widget.type === 'map' ? 'map' : widget.type === 'link' ? 'link' : 'embed',
+      type: this.normalizeWidgetType(widget.type),
       title: widget.title,
       layout: widget.layout,
       enabled: widget.enabled,
@@ -522,6 +525,13 @@ export class BoardPageComponent {
       };
     }
 
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+      return {
+        ...base,
+        config: {},
+      };
+    }
+
     const places = draft.placesText
       .split('\n')
       .map((line) => line.trim())
@@ -543,6 +553,12 @@ export class BoardPageComponent {
     }
     if (draft.type === 'link') {
       draft.embedUrl = '';
+      draft.placesText = '';
+      return;
+    }
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+      draft.embedUrl = '';
+      draft.linkUrl = '';
       draft.placesText = '';
       return;
     }
@@ -588,7 +604,23 @@ export class BoardPageComponent {
     if (draft.type === 'embed') {
       return this.normalizeHttpUrl(draft.embedUrl) ? '' : 'Embed URL must be a valid web address.';
     }
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+      return '';
+    }
     return this.normalizeHttpUrl(draft.linkUrl) ? '' : 'Link URL must be a valid web address.';
+  }
+
+  private normalizeWidgetType(type: string): WidgetType {
+    if (
+      type === 'embed' ||
+      type === 'map' ||
+      type === 'link' ||
+      type === 'user-settings' ||
+      type === 'admin-settings'
+    ) {
+      return type;
+    }
+    return 'embed';
   }
 
   private normalizeHttpUrl(raw: string): string | null {
