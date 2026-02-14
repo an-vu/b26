@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { switchMap, tap } from 'rxjs/operators';
 import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
@@ -42,6 +42,7 @@ type WidgetDraft = {
 })
 export class BoardPageComponent {
   private route = inject(ActivatedRoute);
+  private router = inject(Router);
   private boardService = inject(BoardService);
   private boardStore = inject(BoardStoreService);
   private insightsService = inject(InsightsService);
@@ -83,12 +84,16 @@ export class BoardPageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) => {
-          const boardState$ = this.boardService.getBoard(this.resolveBoardId(params.get('boardId'))).pipe(
-            tap((board) => {
-              this.insightsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
-            }),
-            map((board): BoardPageState => ({ status: 'ready', board })),
-            catchError(() => of<BoardPageState>({ status: 'missing' }))
+          const boardState$ = this.resolveBoardId$(params.get('boardId')).pipe(
+            switchMap((boardId) =>
+              this.boardService.getBoard(boardId).pipe(
+                tap((board) => {
+                  this.insightsService.recordView(board.id, 'direct').subscribe({ error: () => {} });
+                }),
+                map((board): BoardPageState => ({ status: 'ready', board })),
+                catchError(() => of<BoardPageState>({ status: 'missing' }))
+              )
+            )
           );
           return this.hasLoadedPageStateOnce
             ? boardState$
@@ -102,8 +107,8 @@ export class BoardPageComponent {
             this.boardIdentitySourceId = state.board.id;
             this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
             this.boardIdentityPersistedName = this.boardIdentityNameDraft;
-            this.boardIdentitySlugDraft = state.board.boardUrl || state.board.id;
-            this.boardIdentityPersistedUrl = state.board.boardUrl || state.board.id;
+            this.boardIdentitySlugDraft = state.board.boardUrl;
+            this.boardIdentityPersistedUrl = state.board.boardUrl;
           }
         })
       )
@@ -115,12 +120,14 @@ export class BoardPageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.boardService
-            .getWidgets(this.resolveBoardId(params.get('boardId')))
-            .pipe(
-              map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
-              catchError(() => of<Widget[]>([]))
+          this.resolveBoardId$(params.get('boardId')).pipe(
+            switchMap((boardId) =>
+              this.boardService.getWidgets(boardId).pipe(
+                map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
+                catchError(() => of<Widget[]>([]))
+              )
             )
+          )
         )
       )
     )
@@ -143,7 +150,7 @@ export class BoardPageComponent {
         this.accountBoards = boards.map((board) => ({
           id: board.id,
           label: board.boardName,
-          route: `/b/${board.id}`,
+          route: `/b/${board.boardUrl}`,
         }));
       });
     this.boardStore.refreshBoards();
@@ -166,12 +173,8 @@ export class BoardPageComponent {
     return 'tile-span-1';
   }
 
-  isHomeBoard(board: Board) {
-    return board.id === 'home';
-  }
-
-  isSystemBoard(board: Board) {
-    return board.id === 'home' || board.id === 'insights';
+  isReadOnlyView() {
+    return !!this.route.snapshot?.data?.['readOnly'];
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {
@@ -333,7 +336,7 @@ export class BoardPageComponent {
     };
   }
 
-  doneWidgetEdit(boardId: string) {
+  doneWidgetEdit(boardUrl: string) {
     const normalizedDrafts = this.withNormalizedOrder([...this.widgetDrafts]);
     this.widgetDrafts = normalizedDrafts;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
@@ -356,14 +359,14 @@ export class BoardPageComponent {
 
     const updates = normalizedDrafts
       .filter((draft): draft is WidgetDraft & { id: number } => !!draft.id)
-      .map((draft) => this.boardService.updateWidget(boardId, draft.id, this.buildWidgetPayload(draft)!));
+      .map((draft) => this.boardService.updateWidget(boardUrl, draft.id, this.buildWidgetPayload(draft)!));
 
     const creates = normalizedDrafts
       .filter((draft) => !draft.id)
-      .map((draft) => this.boardService.createWidget(boardId, this.buildWidgetPayload(draft)!));
+      .map((draft) => this.boardService.createWidget(boardUrl, this.buildWidgetPayload(draft)!));
 
-    const deletes = this.deletedWidgetIds.map((widgetId) => this.boardService.deleteWidget(boardId, widgetId));
-    const boardUpdate = this.boardService.updateBoardMeta(boardId, {
+    const deletes = this.deletedWidgetIds.map((widgetId) => this.boardService.deleteWidget(boardUrl, widgetId));
+    const boardUpdate = this.boardService.updateBoardMeta(boardUrl, {
       name: trimmedName,
       headline: trimmedHeadline,
     });
@@ -410,8 +413,8 @@ export class BoardPageComponent {
   }
 
   private persistBoardUrlDraft() {
-    const boardId = this.boardIdentitySourceId;
-    if (!boardId) {
+    const boardSlug = this.boardIdentityPersistedUrl;
+    if (!boardSlug) {
       return;
     }
 
@@ -433,14 +436,18 @@ export class BoardPageComponent {
     }
 
     this.boardService
-      .updateBoardIdentity(boardId, { boardName: normalizedName, boardUrl: normalizedUrl })
+      .updateBoardIdentity(boardSlug, { boardName: normalizedName, boardUrl: normalizedUrl })
       .subscribe({
       next: (board) => {
         this.boardIdentityPersistedName = board.boardName || normalizedName;
-        this.boardIdentityPersistedUrl = board.boardUrl || normalizedUrl;
+        this.boardIdentityPersistedUrl = board.boardUrl;
         this.boardIdentityNameDraft = this.boardIdentityPersistedName;
         this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
         this.boardStore.updateBoardInStore(board);
+        const currentRouteValue = this.route.snapshot.paramMap.get('boardId');
+        if (currentRouteValue && currentRouteValue !== this.boardIdentityPersistedUrl) {
+          this.router.navigate(['/b', this.boardIdentityPersistedUrl]);
+        }
       },
       error: () => {
         this.boardIdentityNameDraft = this.boardIdentityPersistedName;
@@ -547,15 +554,24 @@ export class BoardPageComponent {
     return drafts.map((draft, index) => ({ ...draft, order: index }));
   }
 
-  private resolveBoardId(routeParamBoardId: string | null): string {
+  private resolveBoardId$(routeParamBoardId: string | null) {
     const dataBoardId = this.route.snapshot?.data?.['boardId'];
+    const systemRoute = this.route.snapshot?.data?.['systemRoute'];
     if (routeParamBoardId && routeParamBoardId.trim().length > 0) {
-      return routeParamBoardId;
+      return of(routeParamBoardId);
     }
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
-      return dataBoardId;
+      return of(dataBoardId);
     }
-    return 'default';
+    if (systemRoute === 'main' || systemRoute === 'insights') {
+      return this.boardService.getSystemRoutes().pipe(
+        map((routes) =>
+          systemRoute === 'main' ? routes.globalHomepageBoardUrl : routes.globalInsightsBoardUrl
+        ),
+        catchError(() => of(systemRoute === 'main' ? 'home' : 'insights'))
+      );
+    }
+    return of('default');
   }
 
   private getWidgetValidationMessage(draft: WidgetDraft): string {

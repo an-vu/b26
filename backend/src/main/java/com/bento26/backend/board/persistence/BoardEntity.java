@@ -30,6 +30,9 @@ public class BoardEntity {
   @Column(name = "board_url", nullable = false, unique = true)
   private String boardUrl;
 
+  @Column(name = "owner_user_id", nullable = false)
+  private String ownerUserId;
+
   @Version private Long version;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -74,6 +77,14 @@ public class BoardEntity {
 
   public void setBoardUrl(String boardUrl) {
     this.boardUrl = boardUrl;
+  }
+
+  public String getOwnerUserId() {
+    return ownerUserId;
+  }
+
+  public void setOwnerUserId(String ownerUserId) {
+    this.ownerUserId = ownerUserId;
   }
 
   public Long getVersion() {

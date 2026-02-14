@@ -49,7 +49,8 @@ public class CorsConfig implements WebMvcConfigurer {
             String uri = request.getRequestURI();
             boolean isWrite = !"GET".equalsIgnoreCase(method) && !"OPTIONS".equalsIgnoreCase(method);
             boolean isBoardWrite = uri.startsWith("/api/board");
-            if (!isWrite || !isBoardWrite) {
+            boolean isSystemWrite = uri.startsWith("/api/system");
+            if (!isWrite || (!isBoardWrite && !isSystemWrite)) {
               return true;
             }
 

@@ -30,20 +30,15 @@ public class WidgetService {
 
   @Transactional(readOnly = true)
   public List<WidgetDto> getWidgetsForBoard(String boardId) {
-    if (!boardRepository.existsById(boardId)) {
-      throw new BoardNotFoundException(boardId);
-    }
-    return widgetRepository.findByBoard_IdOrderBySortOrderAsc(boardId).stream()
+    BoardEntity board = findBoardByUrl(boardId);
+    return widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId()).stream()
         .map(this::toDto)
         .toList();
   }
 
   @Transactional
   public WidgetDto createWidget(String boardId, UpsertWidgetRequest request) {
-    BoardEntity board =
-        boardRepository
-            .findById(boardId)
-            .orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = findBoardByUrl(boardId);
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget = new WidgetEntity();
@@ -54,14 +49,12 @@ public class WidgetService {
 
   @Transactional
   public WidgetDto updateWidget(String boardId, long widgetId, UpsertWidgetRequest request) {
-    if (!boardRepository.existsById(boardId)) {
-      throw new BoardNotFoundException(boardId);
-    }
+    BoardEntity board = findBoardByUrl(boardId);
     validateConfig(request.type(), request.config());
 
     WidgetEntity widget =
         widgetRepository
-            .findByIdAndBoard_Id(widgetId, boardId)
+            .findByIdAndBoard_Id(widgetId, board.getId())
             .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     applyRequest(widget, request);
     return toDto(widgetRepository.save(widget));
@@ -69,14 +62,18 @@ public class WidgetService {
 
   @Transactional
   public void deleteWidget(String boardId, long widgetId) {
-    if (!boardRepository.existsById(boardId)) {
-      throw new BoardNotFoundException(boardId);
-    }
+    BoardEntity board = findBoardByUrl(boardId);
     WidgetEntity widget =
         widgetRepository
-            .findByIdAndBoard_Id(widgetId, boardId)
+            .findByIdAndBoard_Id(widgetId, board.getId())
             .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     widgetRepository.delete(widget);
+  }
+
+  private BoardEntity findBoardByUrl(String boardUrl) {
+    return boardRepository
+        .findByBoardUrl(boardUrl)
+        .orElseThrow(() -> new BoardNotFoundException(boardUrl));
   }
 
   private void applyRequest(WidgetEntity widget, UpsertWidgetRequest request) {

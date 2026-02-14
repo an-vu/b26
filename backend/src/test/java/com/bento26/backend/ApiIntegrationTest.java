@@ -3,6 +3,7 @@ package com.bento26.backend;
 import com.bento26.backend.insights.domain.ClickAbuseGuard;
 import com.bento26.backend.insights.persistence.ClickEventRepository;
 import com.bento26.backend.insights.persistence.ViewEventRepository;
+import com.bento26.backend.board.persistence.BoardRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -19,6 +20,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -32,6 +34,7 @@ class ApiIntegrationTest {
   @Autowired private ViewEventRepository viewEventRepository;
   @Autowired private ClickAbuseGuard clickAbuseGuard;
   @Autowired private ObjectMapper objectMapper;
+  @Autowired private BoardRepository boardRepository;
 
   @BeforeEach
   void clearClicks() {
@@ -57,6 +60,37 @@ class ApiIntegrationTest {
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$[0].boardName").isNotEmpty())
         .andExpect(jsonPath("$[0].boardUrl").isNotEmpty());
+  }
+
+  @Test
+  void getSystemRoutes_returns200() throws Exception {
+    mockMvc
+        .perform(get("/api/system/routes"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.globalHomepageBoardId").isNotEmpty())
+        .andExpect(jsonPath("$.globalHomepageBoardUrl").isNotEmpty())
+        .andExpect(jsonPath("$.globalInsightsBoardId").isNotEmpty())
+        .andExpect(jsonPath("$.globalInsightsBoardUrl").isNotEmpty());
+  }
+
+  @Test
+  void patchSystemRoutes_valid_returns200() throws Exception {
+    String payload =
+        """
+        {
+          "globalHomepageBoardId": "default",
+          "globalInsightsBoardId": "insights"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            patch("/api/system/routes")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.globalHomepageBoardId").value("default"))
+        .andExpect(jsonPath("$.globalInsightsBoardId").value("insights"));
   }
 
   @Test
@@ -113,9 +147,24 @@ class ApiIntegrationTest {
         .andExpect(jsonPath("$.boardUrl").value("default-updated"));
 
     mockMvc
-        .perform(get("/api/board/default"))
+        .perform(get("/api/board/default-updated"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardUrl").value("default-updated"));
+
+    String rollbackPayload =
+        """
+        {
+          "boardUrl": "default"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default-updated/url")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(rollbackPayload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boardUrl").value("default"));
   }
 
   @Test
@@ -403,6 +452,76 @@ class ApiIntegrationTest {
                 .content(payload))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("embed config requires a valid http embedUrl"));
+  }
+
+  @Test
+  void widgets_endpoints_acceptBoardUrlSlug() throws Exception {
+    var board =
+        boardRepository.findById("default").orElseThrow(() -> new IllegalStateException("default board missing"));
+    String originalUrl = board.getBoardUrl();
+    String slug = "default-slug-test";
+    board.setBoardUrl(slug);
+    boardRepository.save(board);
+
+    try {
+      mockMvc
+          .perform(get("/api/board/{boardSlug}/widgets", slug))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$").isArray());
+
+      String createPayload =
+          """
+          {
+            "type": "link",
+            "title": "Slug Link",
+            "layout": "span-1",
+            "config": { "url": "https://example.com/" },
+            "enabled": true,
+            "order": 99
+          }
+          """;
+
+      MvcResult createResult =
+          mockMvc
+              .perform(
+                  post("/api/board/{boardSlug}/widgets", slug)
+                      .contentType(MediaType.APPLICATION_JSON)
+                      .content(createPayload))
+              .andExpect(status().isCreated())
+              .andReturn();
+
+      long widgetId = objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
+
+      String updatePayload =
+          """
+          {
+            "type": "link",
+            "title": "Slug Updated",
+            "layout": "span-1",
+            "config": { "url": "https://example.org/" },
+            "enabled": true,
+            "order": 100
+          }
+          """;
+
+      mockMvc
+          .perform(
+              put("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(updatePayload))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.id").value(widgetId))
+          .andExpect(jsonPath("$.title").value("Slug Updated"));
+
+      mockMvc
+          .perform(delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId))
+          .andExpect(status().isNoContent());
+    } finally {
+      boardRepository.findById("default").ifPresent(fresh -> {
+        fresh.setBoardUrl(originalUrl);
+        boardRepository.save(fresh);
+      });
+    }
   }
 
   @Test

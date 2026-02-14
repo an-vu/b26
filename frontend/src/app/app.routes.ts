@@ -2,9 +2,9 @@ import { Routes } from '@angular/router';
 import { BoardPageComponent } from './pages/board-page/board-page';
 
 export const routes: Routes = [
-  { path: '', component: BoardPageComponent, data: { boardId: 'home' } },
+  { path: '', component: BoardPageComponent, data: { systemRoute: 'main', readOnly: true } },
   { path: 'b/:boardId', component: BoardPageComponent },
-  { path: 'insights', redirectTo: 'b/insights' },
+  { path: 'insights', component: BoardPageComponent, data: { systemRoute: 'insights', readOnly: true } },
   { path: 'u/:boardId', redirectTo: 'b/:boardId' },
   { path: '**', redirectTo: '' },
 ];

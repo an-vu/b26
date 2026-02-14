@@ -31,3 +31,10 @@ export type UpdateBoardIdentityRequest = {
   boardName: string;
   boardUrl: string;
 };
+
+export type SystemRoutes = {
+  globalHomepageBoardId: string;
+  globalHomepageBoardUrl: string;
+  globalInsightsBoardId: string;
+  globalInsightsBoardUrl: string;
+};

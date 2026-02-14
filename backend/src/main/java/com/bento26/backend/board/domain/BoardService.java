@@ -25,7 +25,7 @@ public class BoardService {
 
   @Transactional(readOnly = true)
   public BoardDto getBoard(String boardId) {
-    BoardEntity board = findBoardByIdOrUrl(boardId);
+    BoardEntity board = findBoardByUrl(boardId);
     return toDto(board);
   }
 
@@ -39,7 +39,7 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoard(String boardId, UpdateBoardRequest request) {
-    BoardEntity board = findBoardByIdOrUrl(boardId);
+    BoardEntity board = findBoardByUrl(boardId);
 
     validateNoDuplicateCardIds(request.cards());
 
@@ -60,7 +60,7 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoardMeta(String boardId, UpdateBoardMetaRequest request) {
-    BoardEntity board = findBoardByIdOrUrl(boardId);
+    BoardEntity board = findBoardByUrl(boardId);
 
     board.setName(request.name());
     board.setHeadline(request.headline());
@@ -69,7 +69,7 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoardUrl(String boardId, UpdateBoardUrlRequest request) {
-    BoardEntity board = findBoardByIdOrUrl(boardId);
+    BoardEntity board = findBoardByUrl(boardId);
 
     String normalized = normalizeBoardUrl(request.boardUrl());
     if (boardRepository.existsByBoardUrlAndIdNot(normalized, board.getId())) {
@@ -82,7 +82,7 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoardIdentity(String boardId, UpdateBoardIdentityRequest request) {
-    BoardEntity board = findBoardByIdOrUrl(boardId);
+    BoardEntity board = findBoardByUrl(boardId);
 
     String normalizedBoardName = request.boardName().trim();
     if (normalizedBoardName.isEmpty()) {
@@ -117,11 +117,10 @@ public class BoardService {
     return normalized;
   }
 
-  private BoardEntity findBoardByIdOrUrl(String boardIdOrUrl) {
+  private BoardEntity findBoardByUrl(String boardUrl) {
     return boardRepository
-        .findById(boardIdOrUrl)
-        .or(() -> boardRepository.findByBoardUrl(boardIdOrUrl))
-        .orElseThrow(() -> new BoardNotFoundException(boardIdOrUrl));
+        .findByBoardUrl(boardUrl)
+        .orElseThrow(() -> new BoardNotFoundException(boardUrl));
   }
 
   private static BoardDto toDto(BoardEntity board) {

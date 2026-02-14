@@ -3,6 +3,7 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import type {
   Board,
+  SystemRoutes,
   UpdateBoardIdentityRequest,
   UpdateBoardMetaRequest,
   UpdateBoardRequest,
@@ -76,6 +77,10 @@ export class BoardService {
       `${environment.apiBaseUrl}/api/board/${boardId}/widgets/${widgetId}`,
       this.withAdminHeader()
     );
+  }
+
+  getSystemRoutes(): Observable<SystemRoutes> {
+    return this.http.get<SystemRoutes>(`${environment.apiBaseUrl}/api/system/routes`);
   }
 
   private withAdminHeader() {

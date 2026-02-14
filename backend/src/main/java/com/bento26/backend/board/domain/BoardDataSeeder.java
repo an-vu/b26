@@ -26,6 +26,7 @@ public class BoardDataSeeder {
               List.of(
               buildBoard(
                   "default",
+                  "anvu",
                   "Default",
                   "default",
                   "An Vu",
@@ -37,6 +38,7 @@ public class BoardDataSeeder {
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
                   "berkshire",
+                  "anvu",
                   "Berkshire",
                   "berkshire",
                   "An Vu",
@@ -48,6 +50,7 @@ public class BoardDataSeeder {
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
                   "union-pacific",
+                  "anvu",
                   "Union Pacific",
                   "union-pacific",
                   "An Vu",
@@ -59,6 +62,7 @@ public class BoardDataSeeder {
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
                   "home",
+                  "anvu",
                   "Home",
                   "home",
                   "B26",
@@ -66,6 +70,7 @@ public class BoardDataSeeder {
                   List.of(new CardSeed("home", "Home", "https://anvu.tech/"))),
               buildBoard(
                   "insights",
+                  "anvu",
                   "Insights",
                   "insights",
                   "Insights",
@@ -118,6 +123,7 @@ public class BoardDataSeeder {
 
   private static BoardEntity buildBoard(
       String id,
+      String ownerUserId,
       String boardName,
       String boardUrl,
       String name,
@@ -125,6 +131,7 @@ public class BoardDataSeeder {
       List<CardSeed> cardSeeds) {
     BoardEntity board = new BoardEntity();
     board.setId(id);
+    board.setOwnerUserId(ownerUserId);
     board.setBoardName(boardName);
     board.setBoardUrl(boardUrl);
     board.setName(name);

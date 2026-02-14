@@ -110,19 +110,19 @@
         </div>
         <button
           type="button"
-          *ngIf="!isWidgetEditMode && !isSystemBoard(state.board); else doneButton"
+          *ngIf="!isWidgetEditMode && !isReadOnlyView(); else doneButton"
           (click)="startWidgetEdit(state.board, widgets)"
         >
           Edit
         </button>
         <ng-template #doneButton>
-          <button type="button" *ngIf="!isSystemBoard(state.board)" (click)="doneWidgetEdit(state.board.id)" [disabled]="isWidgetSaving">Done</button>
+          <button type="button" *ngIf="!isReadOnlyView()" (click)="doneWidgetEdit(state.board.boardUrl)" [disabled]="isWidgetSaving">Done</button>
         </ng-template>
       </div>
 
-      <div class="board-identity-wrap" *ngIf="!isSystemBoard(state.board)">
+      <div class="board-identity-wrap" *ngIf="!isReadOnlyView()">
         <button type="button" class="board-identity-button" (click)="toggleBoardIdentityMenu()">
-          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl || state.board.id }})
+          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
         </button>
         <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
           <label>
