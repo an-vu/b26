@@ -4,6 +4,8 @@ import com.bento26.backend.board.api.BoardDto;
 import com.bento26.backend.board.api.UpdateCardRequest;
 import com.bento26.backend.board.api.UpdateBoardMetaRequest;
 import com.bento26.backend.board.api.UpdateBoardRequest;
+import com.bento26.backend.board.api.UpdateBoardIdentityRequest;
+import com.bento26.backend.board.api.UpdateBoardUrlRequest;
 import com.bento26.backend.board.persistence.CardEntity;
 import com.bento26.backend.board.persistence.BoardEntity;
 import com.bento26.backend.board.persistence.BoardRepository;
@@ -23,19 +25,21 @@ public class BoardService {
 
   @Transactional(readOnly = true)
   public BoardDto getBoard(String boardId) {
-    BoardEntity board =
-        boardRepository
-            .findById(boardId)
-            .orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = findBoardByIdOrUrl(boardId);
     return toDto(board);
+  }
+
+  @Transactional(readOnly = true)
+  public List<BoardDto> getBoards() {
+    return boardRepository.findAll().stream()
+        .map(BoardService::toDto)
+        .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
+        .toList();
   }
 
   @Transactional
   public BoardDto updateBoard(String boardId, UpdateBoardRequest request) {
-    BoardEntity board =
-        boardRepository
-            .findById(boardId)
-            .orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = findBoardByIdOrUrl(boardId);
 
     validateNoDuplicateCardIds(request.cards());
 
@@ -56,13 +60,42 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoardMeta(String boardId, UpdateBoardMetaRequest request) {
-    BoardEntity board =
-        boardRepository
-            .findById(boardId)
-            .orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = findBoardByIdOrUrl(boardId);
 
     board.setName(request.name());
     board.setHeadline(request.headline());
+    return toDto(boardRepository.save(board));
+  }
+
+  @Transactional
+  public BoardDto updateBoardUrl(String boardId, UpdateBoardUrlRequest request) {
+    BoardEntity board = findBoardByIdOrUrl(boardId);
+
+    String normalized = normalizeBoardUrl(request.boardUrl());
+    if (boardRepository.existsByBoardUrlAndIdNot(normalized, board.getId())) {
+      throw new InvalidBoardUpdateException("board_url is already used: " + normalized);
+    }
+
+    board.setBoardUrl(normalized);
+    return toDto(boardRepository.save(board));
+  }
+
+  @Transactional
+  public BoardDto updateBoardIdentity(String boardId, UpdateBoardIdentityRequest request) {
+    BoardEntity board = findBoardByIdOrUrl(boardId);
+
+    String normalizedBoardName = request.boardName().trim();
+    if (normalizedBoardName.isEmpty()) {
+      throw new InvalidBoardUpdateException("board_name is required");
+    }
+
+    String normalizedUrl = normalizeBoardUrl(request.boardUrl());
+    if (boardRepository.existsByBoardUrlAndIdNot(normalizedUrl, board.getId())) {
+      throw new InvalidBoardUpdateException("board_url is already used: " + normalizedUrl);
+    }
+
+    board.setBoardName(normalizedBoardName);
+    board.setBoardUrl(normalizedUrl);
     return toDto(boardRepository.save(board));
   }
 
@@ -75,7 +108,24 @@ public class BoardService {
     }
   }
 
+  private static String normalizeBoardUrl(String rawBoardUrl) {
+    String normalized = rawBoardUrl.trim().toLowerCase();
+    if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
+      throw new InvalidBoardUpdateException(
+          "board_url must use lowercase letters, numbers, and single hyphens");
+    }
+    return normalized;
+  }
+
+  private BoardEntity findBoardByIdOrUrl(String boardIdOrUrl) {
+    return boardRepository
+        .findById(boardIdOrUrl)
+        .or(() -> boardRepository.findByBoardUrl(boardIdOrUrl))
+        .orElseThrow(() -> new BoardNotFoundException(boardIdOrUrl));
+  }
+
   private static BoardDto toDto(BoardEntity board) {
-    return new BoardDto(board.getId(), board.getName(), board.getHeadline());
+    return new BoardDto(
+        board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline());
   }
 }

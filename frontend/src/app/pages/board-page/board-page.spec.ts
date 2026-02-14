@@ -10,9 +10,12 @@ describe('BoardPageComponent', () => {
   let component: BoardPageComponent;
   let fixture: ComponentFixture<BoardPageComponent>;
   let boardServiceStub: {
+    getBoards: BoardService['getBoards'];
     getBoard: BoardService['getBoard'];
     updateBoard: BoardService['updateBoard'];
     updateBoardMeta: BoardService['updateBoardMeta'];
+    updateBoardUrl: BoardService['updateBoardUrl'];
+    updateBoardIdentity: BoardService['updateBoardIdentity'];
     getWidgets: BoardService['getWidgets'];
     createWidget: BoardService['createWidget'];
     updateWidget: BoardService['updateWidget'];
@@ -27,21 +30,47 @@ describe('BoardPageComponent', () => {
   beforeEach(async () => {
     updateWidgetCalls = [];
     boardServiceStub = {
+      getBoards: () =>
+        of([
+          { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' },
+        ]),
       getBoard: () =>
         of({
           id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
       updateBoard: () =>
         of({
           id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
       updateBoardMeta: () =>
         of({
           id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
+          name: 'An Vu',
+          headline: 'Software Engineer',
+        }),
+      updateBoardUrl: () =>
+        of({
+          id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
+          name: 'An Vu',
+          headline: 'Software Engineer',
+        }),
+      updateBoardIdentity: () =>
+        of({
+          id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
@@ -92,6 +121,8 @@ describe('BoardPageComponent', () => {
       defer(() =>
         Promise.resolve({
           id: 'default',
+          boardName: 'Default',
+          boardUrl: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
         })
@@ -141,6 +172,8 @@ describe('BoardPageComponent', () => {
     component.startWidgetEdit(
       {
         id: 'default',
+        boardName: 'Default',
+        boardUrl: 'default',
         name: 'An Vu',
         headline: 'Software Engineer',
       },
@@ -183,6 +216,8 @@ describe('BoardPageComponent', () => {
     component.startWidgetEdit(
       {
         id: 'default',
+        boardName: 'Default',
+        boardUrl: 'default',
         name: 'An Vu',
         headline: 'Software Engineer',
       },

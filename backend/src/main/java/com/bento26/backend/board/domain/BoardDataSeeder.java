@@ -26,6 +26,8 @@ public class BoardDataSeeder {
               List.of(
               buildBoard(
                   "default",
+                  "Default",
+                  "default",
                   "An Vu",
                   "Software Engineer - Angular + Java",
                   List.of(
@@ -34,6 +36,8 @@ public class BoardDataSeeder {
                       new CardSeed("resume", "Resume", "#"),
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
+                  "berkshire",
+                  "Berkshire",
                   "berkshire",
                   "An Vu",
                   "Software Engineering - Angular + Spring Boot",
@@ -44,6 +48,8 @@ public class BoardDataSeeder {
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
                   "union-pacific",
+                  "Union Pacific",
+                  "union-pacific",
                   "An Vu",
                   "Software Engineering - Angular + Java",
                   List.of(
@@ -52,6 +58,8 @@ public class BoardDataSeeder {
                       new CardSeed("resume", "Resume", "#"),
                       new CardSeed("projects", "Projects", "#"))),
               buildBoard(
+                  "home",
+                  "Home",
                   "home",
                   "B26",
                   "Angular x Java",
@@ -102,9 +110,16 @@ public class BoardDataSeeder {
   }
 
   private static BoardEntity buildBoard(
-      String id, String name, String headline, List<CardSeed> cardSeeds) {
+      String id,
+      String boardName,
+      String boardUrl,
+      String name,
+      String headline,
+      List<CardSeed> cardSeeds) {
     BoardEntity board = new BoardEntity();
     board.setId(id);
+    board.setBoardName(boardName);
+    board.setBoardUrl(boardUrl);
     board.setName(name);
     board.setHeadline(headline);
 

@@ -1,7 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import type { Board, UpdateBoardMetaRequest, UpdateBoardRequest } from '../models/board';
+import type {
+  Board,
+  UpdateBoardIdentityRequest,
+  UpdateBoardMetaRequest,
+  UpdateBoardRequest,
+  UpdateBoardUrlRequest,
+} from '../models/board';
 import type { UpsertWidgetRequest, Widget } from '../models/widget';
 import { environment } from '../../environments/environment';
 
@@ -13,6 +19,10 @@ export class BoardService {
     return this.http.get<Board>(`${environment.apiBaseUrl}/api/board/${boardId}`);
   }
 
+  getBoards(): Observable<Board[]> {
+    return this.http.get<Board[]>(`${environment.apiBaseUrl}/api/board`);
+  }
+
   updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {
     return this.http.put<Board>(`${environment.apiBaseUrl}/api/board/${boardId}`, payload, this.withAdminHeader());
   }
@@ -20,6 +30,22 @@ export class BoardService {
   updateBoardMeta(boardId: string, payload: UpdateBoardMetaRequest): Observable<Board> {
     return this.http.patch<Board>(
       `${environment.apiBaseUrl}/api/board/${boardId}/meta`,
+      payload,
+      this.withAdminHeader()
+    );
+  }
+
+  updateBoardUrl(boardId: string, payload: UpdateBoardUrlRequest): Observable<Board> {
+    return this.http.patch<Board>(
+      `${environment.apiBaseUrl}/api/board/${boardId}/url`,
+      payload,
+      this.withAdminHeader()
+    );
+  }
+
+  updateBoardIdentity(boardId: string, payload: UpdateBoardIdentityRequest): Observable<Board> {
+    return this.http.patch<Board>(
+      `${environment.apiBaseUrl}/api/board/${boardId}/identity`,
       payload,
       this.withAdminHeader()
     );

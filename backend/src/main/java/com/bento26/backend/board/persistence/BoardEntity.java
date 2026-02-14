@@ -24,6 +24,12 @@ public class BoardEntity {
   @Column(nullable = false)
   private String headline;
 
+  @Column(name = "board_name", nullable = false)
+  private String boardName;
+
+  @Column(name = "board_url", nullable = false, unique = true)
+  private String boardUrl;
+
   @Version private Long version;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
@@ -52,6 +58,22 @@ public class BoardEntity {
 
   public void setHeadline(String headline) {
     this.headline = headline;
+  }
+
+  public String getBoardName() {
+    return boardName;
+  }
+
+  public void setBoardName(String boardName) {
+    this.boardName = boardName;
+  }
+
+  public String getBoardUrl() {
+    return boardUrl;
+  }
+
+  public void setBoardUrl(String boardUrl) {
+    this.boardUrl = boardUrl;
   }
 
   public Long getVersion() {

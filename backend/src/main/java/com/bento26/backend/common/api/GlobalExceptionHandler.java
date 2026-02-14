@@ -43,7 +43,7 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.BAD_REQUEST)
   public ValidationErrorResponse handleInvalidUpdate(InvalidBoardUpdateException exception) {
     return new ValidationErrorResponse(
-        "Validation failed", List.of(new ValidationFieldError("cards", exception.getMessage())));
+        "Validation failed", List.of(new ValidationFieldError("board", exception.getMessage())));
   }
 
   @ExceptionHandler(CardNotFoundForBoardException.class)

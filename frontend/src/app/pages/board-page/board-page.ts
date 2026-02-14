@@ -1,4 +1,4 @@
-import { Component, ElementRef, HostListener, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap, tap } from 'rxjs/operators';
@@ -7,11 +7,13 @@ import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
+import { BoardStoreService } from '../../services/board-store.service';
 import { AnalyticsService } from '../../services/analytics.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type BoardPageState =
   | { status: 'loading' }
@@ -41,8 +43,10 @@ type WidgetDraft = {
 export class BoardPageComponent {
   private route = inject(ActivatedRoute);
   private boardService = inject(BoardService);
+  private boardStore = inject(BoardStoreService);
   private analyticsService = inject(AnalyticsService);
   private elementRef = inject(ElementRef<HTMLElement>);
+  private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
   private hasLoadedPageStateOnce = false;
 
@@ -67,6 +71,8 @@ export class BoardPageComponent {
   deletedWidgetIds: number[] = [];
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
   private boardIdentitySourceId = '';
+  private boardIdentityPersistedName = '';
+  private boardIdentityPersistedUrl = '';
 
   get boardRadiusDraft() {
     return this.boardRadiusStepDraft === 1 ? 6 : this.boardRadiusStepDraft === 3 ? 24 : 12;
@@ -94,8 +100,10 @@ export class BoardPageComponent {
           }
           if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
             this.boardIdentitySourceId = state.board.id;
-            this.boardIdentityNameDraft = this.boardMenuLabel(state.board.id);
-            this.boardIdentitySlugDraft = state.board.id;
+            this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
+            this.boardIdentityPersistedName = this.boardIdentityNameDraft;
+            this.boardIdentitySlugDraft = state.board.boardUrl || state.board.id;
+            this.boardIdentityPersistedUrl = state.board.boardUrl || state.board.id;
           }
         })
       )
@@ -122,15 +130,24 @@ export class BoardPageComponent {
     return widget.id ?? index;
   }
 
-  accountBoards = [
-    { id: 'default', label: 'Default', route: '/b/default' },
-    { id: 'berkshire', label: 'Berkshire', route: '/b/berkshire' },
-    { id: 'union-pacific', label: 'Union Pacific', route: '/b/union-pacific' },
-  ];
+  accountBoards: Array<{ id: string; label: string; route: string }> = [];
   accountUser = {
     name: 'An Vu',
     username: '@anvu',
   };
+
+  constructor() {
+    this.boardStore.boards$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((boards) => {
+        this.accountBoards = boards.map((board) => ({
+          id: board.id,
+          label: board.boardName,
+          route: `/b/${board.id}`,
+        }));
+      });
+    this.boardStore.refreshBoards();
+  }
 
   boardMenuLabel(boardId: string) {
     return this.accountBoards.find((board) => board.id === boardId)?.label ?? boardId;
@@ -180,6 +197,7 @@ export class BoardPageComponent {
   }
 
   closeBoardIdentityMenu() {
+    this.persistBoardUrlDraft();
     this.isBoardIdentityMenuOpen = false;
   }
 
@@ -387,6 +405,46 @@ export class BoardPageComponent {
     return this.draftValidationErrors.get(draft) ?? '';
   }
 
+  private persistBoardUrlDraft() {
+    const boardId = this.boardIdentitySourceId;
+    if (!boardId) {
+      return;
+    }
+
+    const normalizedName = this.boardIdentityNameDraft.trim();
+    const normalizedUrl = this.normalizeBoardUrl(this.boardIdentitySlugDraft);
+    if (!normalizedName || !normalizedUrl) {
+      this.boardIdentityNameDraft = this.boardIdentityPersistedName;
+      this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
+      return;
+    }
+
+    if (
+      normalizedName === this.boardIdentityPersistedName &&
+      normalizedUrl === this.boardIdentityPersistedUrl
+    ) {
+      this.boardIdentityNameDraft = normalizedName;
+      this.boardIdentitySlugDraft = normalizedUrl;
+      return;
+    }
+
+    this.boardService
+      .updateBoardIdentity(boardId, { boardName: normalizedName, boardUrl: normalizedUrl })
+      .subscribe({
+      next: (board) => {
+        this.boardIdentityPersistedName = board.boardName || normalizedName;
+        this.boardIdentityPersistedUrl = board.boardUrl || normalizedUrl;
+        this.boardIdentityNameDraft = this.boardIdentityPersistedName;
+        this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
+        this.boardStore.updateBoardInStore(board);
+      },
+      error: () => {
+        this.boardIdentityNameDraft = this.boardIdentityPersistedName;
+        this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
+      },
+      });
+  }
+
   private toWidgetDraft(widget: Widget): WidgetDraft {
     const places = Array.isArray(widget.config['places'])
       ? (widget.config['places'] as unknown[]).filter((place): place is string => typeof place === 'string')
@@ -402,6 +460,11 @@ export class BoardPageComponent {
       linkUrl: typeof widget.config['url'] === 'string' ? widget.config['url'] : '',
       placesText: places.join('\n'),
     };
+  }
+
+  private normalizeBoardUrl(rawValue: string) {
+    const normalized = rawValue.trim().toLowerCase().replace(/\s+/g, '-');
+    return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : '';
   }
 
   private createEmptyWidgetDraft(): WidgetDraft {

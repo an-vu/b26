@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, ElementRef, HostListener, inject } from '@angular/core';
+import { Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { catchError, map, of, startWith } from 'rxjs';
 import { AnalyticsService } from '../../services/analytics.service';
+import { BoardStoreService } from '../../services/board-store.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 type AnalyticsPageState =
   | { status: 'loading' }
@@ -28,16 +30,14 @@ type AnalyticsPageState =
 })
 export class AnalyticsPageComponent {
   private analyticsService = inject(AnalyticsService);
+  private boardStore = inject(BoardStoreService);
   private elementRef = inject(ElementRef<HTMLElement>);
+  private destroyRef = inject(DestroyRef);
 
   isAccountMenuOpen = false;
   private readonly analyticsBoardId = 'default';
 
-  accountBoards = [
-    { label: 'Default', route: '/b/default' },
-    { label: 'Berkshire', route: '/b/berkshire' },
-    { label: 'Union Pacific', route: '/b/union-pacific' },
-  ];
+  accountBoards: Array<{ label: string; route: string }> = [];
   accountUser = {
     name: 'An Vu',
     username: '@anvu',
@@ -61,6 +61,15 @@ export class AnalyticsPageComponent {
   );
 
   constructor() {
+    this.boardStore.boards$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((boards) => {
+        this.accountBoards = boards.map((board) => ({
+          label: board.boardName,
+          route: `/b/${board.id}`,
+        }));
+      });
+    this.boardStore.refreshBoards();
     this.analyticsService.recordView(this.analyticsBoardId, 'analytics').subscribe({ error: () => {} });
   }
 

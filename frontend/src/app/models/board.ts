@@ -1,5 +1,7 @@
 export type Board = {
   id: string;
+  boardName: string;
+  boardUrl: string;
   name: string;
   headline: string;
 };
@@ -19,4 +21,13 @@ export type UpdateBoardRequest = {
 export type UpdateBoardMetaRequest = {
   name: string;
   headline: string;
+};
+
+export type UpdateBoardUrlRequest = {
+  boardUrl: string;
+};
+
+export type UpdateBoardIdentityRequest = {
+  boardName: string;
+  boardUrl: string;
 };

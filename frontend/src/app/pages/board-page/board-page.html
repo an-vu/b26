@@ -123,7 +123,7 @@
 
       <div class="board-identity-wrap" *ngIf="!isHomeBoard(state.board)">
         <button type="button" class="board-identity-button" (click)="toggleBoardIdentityMenu()">
-          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.id }})
+          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl || state.board.id }})
         </button>
         <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
           <label>

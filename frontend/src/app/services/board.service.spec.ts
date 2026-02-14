@@ -26,7 +26,15 @@ describe('BoardService', () => {
 
     const req = httpMock.expectOne('/api/board/default');
     expect(req.request.method).toBe('GET');
-    req.flush({ id: 'default', name: 'An', headline: 'H' });
+    req.flush({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An', headline: 'H' });
+  });
+
+  it('should call backend GET boards endpoint', () => {
+    service.getBoards().subscribe();
+
+    const req = httpMock.expectOne('/api/board');
+    expect(req.request.method).toBe('GET');
+    req.flush([{ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An', headline: 'H' }]);
   });
 
   it('should call backend PUT board endpoint', () => {
@@ -91,5 +99,33 @@ describe('BoardService', () => {
     const req = httpMock.expectOne('/api/board/default/widgets/1');
     expect(req.request.method).toBe('DELETE');
     req.flush({});
+  });
+
+  it('should call backend PATCH board url endpoint', () => {
+    service.updateBoardUrl('default', { boardUrl: 'berkshire' }).subscribe();
+
+    const req = httpMock.expectOne('/api/board/default/url');
+    expect(req.request.method).toBe('PATCH');
+    req.flush({
+      id: 'default',
+      boardName: 'Berkshire',
+      boardUrl: 'berkshire',
+      name: 'An',
+      headline: 'H',
+    });
+  });
+
+  it('should call backend PATCH board identity endpoint', () => {
+    service.updateBoardIdentity('default', { boardName: 'Berkshire', boardUrl: 'berkshire' }).subscribe();
+
+    const req = httpMock.expectOne('/api/board/default/identity');
+    expect(req.request.method).toBe('PATCH');
+    req.flush({
+      id: 'default',
+      boardName: 'Berkshire',
+      boardUrl: 'berkshire',
+      name: 'An',
+      headline: 'H',
+    });
   });
 });

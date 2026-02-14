@@ -50,6 +50,16 @@ class ApiIntegrationTest {
   }
 
   @Test
+  void getBoards_returns200() throws Exception {
+    mockMvc
+        .perform(get("/api/board"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$").isArray())
+        .andExpect(jsonPath("$[0].boardName").isNotEmpty())
+        .andExpect(jsonPath("$[0].boardUrl").isNotEmpty());
+  }
+
+  @Test
   void getBoard_missing_returns404() throws Exception {
     mockMvc
         .perform(get("/api/board/not-here"))
@@ -83,6 +93,47 @@ class ApiIntegrationTest {
         .perform(get("/api/board/default"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Updated Name"));
+  }
+
+  @Test
+  void patchBoardUrl_valid_returns200AndPersists() throws Exception {
+    String payload =
+        """
+        {
+          "boardUrl": "default-updated"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boardUrl").value("default-updated"));
+
+    mockMvc
+        .perform(get("/api/board/default"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.boardUrl").value("default-updated"));
+  }
+
+  @Test
+  void patchBoardUrl_invalidFormat_returns400() throws Exception {
+    String payload =
+        """
+        {
+          "boardUrl": "Default Updated"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Validation failed"));
   }
 
   @Test
