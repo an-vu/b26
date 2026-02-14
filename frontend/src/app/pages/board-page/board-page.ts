@@ -579,12 +579,18 @@ export class BoardPageComponent {
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
       return of(dataBoardId);
     }
-    if (systemRoute === 'main' || systemRoute === 'insights') {
+    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings') {
       return this.boardService.getSystemRoutes().pipe(
-        map((routes) =>
-          systemRoute === 'main' ? routes.globalHomepageBoardUrl : routes.globalInsightsBoardUrl
-        ),
-        catchError(() => of(systemRoute === 'main' ? 'home' : 'insights'))
+        map((routes) => {
+          if (systemRoute === 'main') {
+            return routes.globalHomepageBoardUrl;
+          }
+          if (systemRoute === 'insights') {
+            return routes.globalInsightsBoardUrl;
+          }
+          return routes.globalSettingsBoardUrl;
+        }),
+        catchError(() => of(systemRoute === 'main' ? 'home' : systemRoute === 'insights' ? 'insights' : 'settings'))
       );
     }
     return of('default');

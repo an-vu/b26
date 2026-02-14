@@ -12,6 +12,9 @@ import com.bento26.backend.board.persistence.BoardRepository;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,7 +58,7 @@ public class BoardService {
       board.getCards().add(card);
     }
 
-    return toDto(boardRepository.save(board));
+    return persist(board);
   }
 
   @Transactional
@@ -64,7 +67,7 @@ public class BoardService {
 
     board.setName(request.name());
     board.setHeadline(request.headline());
-    return toDto(boardRepository.save(board));
+    return persist(board);
   }
 
   @Transactional
@@ -77,7 +80,7 @@ public class BoardService {
     }
 
     board.setBoardUrl(normalized);
-    return toDto(boardRepository.save(board));
+    return persist(board);
   }
 
   @Transactional
@@ -96,7 +99,19 @@ public class BoardService {
 
     board.setBoardName(normalizedBoardName);
     board.setBoardUrl(normalizedUrl);
-    return toDto(boardRepository.save(board));
+    return persist(board);
+  }
+
+  private BoardDto persist(BoardEntity board) {
+    try {
+      return toDto(boardRepository.saveAndFlush(board));
+    } catch (DataIntegrityViolationException exception) {
+      throw new InvalidBoardUpdateException("board update conflicts with existing data");
+    } catch (ObjectOptimisticLockingFailureException exception) {
+      throw new InvalidBoardUpdateException("board update conflict detected, please retry");
+    } catch (JpaSystemException exception) {
+      throw new InvalidBoardUpdateException("board update failed due to persistence state");
+    }
   }
 
   private static void validateNoDuplicateCardIds(List<UpdateCardRequest> cards) {

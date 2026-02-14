@@ -18,6 +18,9 @@ public class SystemSettingsEntity {
   @Column(name = "global_insights_board_id", nullable = false)
   private String globalInsightsBoardId;
 
+  @Column(name = "global_settings_board_id", nullable = false)
+  private String globalSettingsBoardId;
+
   @Column(name = "updated_at", nullable = false)
   private OffsetDateTime updatedAt;
 
@@ -43,6 +46,14 @@ public class SystemSettingsEntity {
 
   public void setGlobalInsightsBoardId(String globalInsightsBoardId) {
     this.globalInsightsBoardId = globalInsightsBoardId;
+  }
+
+  public String getGlobalSettingsBoardId() {
+    return globalSettingsBoardId;
+  }
+
+  public void setGlobalSettingsBoardId(String globalSettingsBoardId) {
+    this.globalSettingsBoardId = globalSettingsBoardId;
   }
 
   public OffsetDateTime getUpdatedAt() {
