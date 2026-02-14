@@ -70,7 +70,9 @@ class ApiIntegrationTest {
         .andExpect(jsonPath("$.globalHomepageBoardId").isNotEmpty())
         .andExpect(jsonPath("$.globalHomepageBoardUrl").isNotEmpty())
         .andExpect(jsonPath("$.globalInsightsBoardId").isNotEmpty())
-        .andExpect(jsonPath("$.globalInsightsBoardUrl").isNotEmpty());
+        .andExpect(jsonPath("$.globalInsightsBoardUrl").isNotEmpty())
+        .andExpect(jsonPath("$.globalSettingsBoardId").isNotEmpty())
+        .andExpect(jsonPath("$.globalSettingsBoardUrl").isNotEmpty());
   }
 
   @Test
@@ -79,7 +81,8 @@ class ApiIntegrationTest {
         """
         {
           "globalHomepageBoardId": "default",
-          "globalInsightsBoardId": "insights"
+          "globalInsightsBoardId": "insights",
+          "globalSettingsBoardId": "settings"
         }
         """;
 
@@ -90,7 +93,8 @@ class ApiIntegrationTest {
                 .content(payload))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.globalHomepageBoardId").value("default"))
-        .andExpect(jsonPath("$.globalInsightsBoardId").value("insights"));
+        .andExpect(jsonPath("$.globalInsightsBoardId").value("insights"))
+        .andExpect(jsonPath("$.globalSettingsBoardId").value("settings"));
   }
 
   @Test

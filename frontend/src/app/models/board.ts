@@ -37,4 +37,6 @@ export type SystemRoutes = {
   globalHomepageBoardUrl: string;
   globalInsightsBoardId: string;
   globalInsightsBoardUrl: string;
+  globalSettingsBoardId: string;
+  globalSettingsBoardUrl: string;
 };

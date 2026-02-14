@@ -2,9 +2,34 @@
   <h3>{{ widget.title }}</h3>
 
   <section class="settings-block">
-    <h4>Admin Controls (ADMIN only)</h4>
-    <p><strong>Homepage board <code>/</code>:</strong> Placeholder</p>
-    <p><strong>Insights board <code>/insights</code>:</strong> Placeholder</p>
-    <p><strong>Settings board <code>/settings</code>:</strong> Placeholder</p>
+    <label class="settings-field">
+      <span>Homepage board for /</span>
+      <select>
+        <option value="" selected disabled>Select a board</option>
+        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
+          {{ board.boardName }} (/{{ board.boardUrl }})
+        </option>
+      </select>
+    </label>
+
+    <label class="settings-field">
+      <span>Insights board for /insights</span>
+      <select>
+        <option value="" selected disabled>Select a board</option>
+        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
+          {{ board.boardName }} (/{{ board.boardUrl }})
+        </option>
+      </select>
+    </label>
+
+    <label class="settings-field">
+      <span>Settings board for /settings</span>
+      <select>
+        <option value="" selected disabled>Select a board</option>
+        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
+          {{ board.boardName }} (/{{ board.boardUrl }})
+        </option>
+      </select>
+    </label>
   </section>
 </article>

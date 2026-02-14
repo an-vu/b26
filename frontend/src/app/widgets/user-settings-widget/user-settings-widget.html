@@ -3,14 +3,38 @@
 
   <section class="settings-block">
     <h4>Account Information</h4>
-    <p><strong>Name:</strong> Placeholder</p>
-    <p><strong>Username:</strong> Placeholder</p>
-    <p><strong>Email:</strong> Placeholder</p>
-    <p><strong>Password:</strong> Placeholder</p>
+    <label class="settings-field">
+      <span>Name</span>
+      <input type="text" placeholder="Enter your name" />
+    </label>
+    <label class="settings-field">
+      <span>Username</span>
+      <input type="text" placeholder="Enter your username" />
+    </label>
+    <label class="settings-field">
+      <span>Email</span>
+      <input type="email" placeholder="Enter your email" />
+    </label>
+    <label class="settings-field">
+      <span>Password</span>
+      <input type="password" placeholder="Enter your password" />
+    </label>
+    <div class="settings-actions">
+      <button type="button">Sign Out</button>
+      <button type="button">Delete Account</button>
+    </div>
   </section>
 
   <section class="settings-block">
-    <h4>Default Board</h4>
-    <p><strong>Primary board for <code>/username</code>:</strong> Placeholder</p>
+    <h4>Main Board</h4>
+    <label class="settings-field">
+      <span class="settings-inline-label">Main board for <code>/username</code></span>
+      <select>
+        <option value="" selected disabled>Select a board</option>
+        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
+          {{ board.boardName }} (/{{ board.boardUrl }})
+        </option>
+      </select>
+    </label>
   </section>
 </article>

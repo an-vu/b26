@@ -29,21 +29,26 @@ public class SystemSettingsService {
     SystemSettingsEntity settings = getOrCreateDefaults();
     BoardEntity homepageBoard = findBoardById(settings.getGlobalHomepageBoardId());
     BoardEntity insightsBoard = findBoardById(settings.getGlobalInsightsBoardId());
+    BoardEntity settingsBoard = findBoardById(settings.getGlobalSettingsBoardId());
     return new SystemRoutesDto(
         homepageBoard.getId(),
         homepageBoard.getBoardUrl(),
         insightsBoard.getId(),
-        insightsBoard.getBoardUrl());
+        insightsBoard.getBoardUrl(),
+        settingsBoard.getId(),
+        settingsBoard.getBoardUrl());
   }
 
   @Transactional
   public SystemRoutesDto updateRoutes(UpdateSystemRoutesRequest request) {
     BoardEntity homepageBoard = findBoardById(request.globalHomepageBoardId().trim());
     BoardEntity insightsBoard = findBoardById(request.globalInsightsBoardId().trim());
+    BoardEntity settingsBoard = findBoardById(request.globalSettingsBoardId().trim());
 
     SystemSettingsEntity settings = getOrCreateDefaults();
     settings.setGlobalHomepageBoardId(homepageBoard.getId());
     settings.setGlobalInsightsBoardId(insightsBoard.getId());
+    settings.setGlobalSettingsBoardId(settingsBoard.getId());
     settings.setUpdatedAt(OffsetDateTime.now());
     systemSettingsRepository.save(settings);
 
@@ -51,7 +56,9 @@ public class SystemSettingsService {
         homepageBoard.getId(),
         homepageBoard.getBoardUrl(),
         insightsBoard.getId(),
-        insightsBoard.getBoardUrl());
+        insightsBoard.getBoardUrl(),
+        settingsBoard.getId(),
+        settingsBoard.getBoardUrl());
   }
 
   private SystemSettingsEntity getOrCreateDefaults() {
@@ -63,6 +70,7 @@ public class SystemSettingsService {
               settings.setId(SINGLETON_ID);
               settings.setGlobalHomepageBoardId("home");
               settings.setGlobalInsightsBoardId("insights");
+              settings.setGlobalSettingsBoardId("settings");
               settings.setUpdatedAt(OffsetDateTime.now());
               return systemSettingsRepository.save(settings);
             });
