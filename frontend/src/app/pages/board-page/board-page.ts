@@ -49,16 +49,28 @@ export class BoardPageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   isAccountMenuOpen = false;
+  isBoardIdentityMenuOpen = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
   isAddWidgetExpanded = false;
   boardDraftName = '';
   boardDraftHeadline = '';
+  boardIdentityNameDraft = '';
+  boardIdentitySlugDraft = '';
+  boardThemeToggleDraft = false;
+  boardRadiusStepDraft: 1 | 2 | 3 = 2;
+  boardBackgroundColorDraft = '#ffffff';
+  boardPatternDraft: 'none' | 'dots' | 'grid' = 'none';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
   deletedWidgetIds: number[] = [];
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
+  private boardIdentitySourceId = '';
+
+  get boardRadiusDraft() {
+    return this.boardRadiusStepDraft === 1 ? 6 : this.boardRadiusStepDraft === 3 ? 24 : 12;
+  }
 
   pageState$ = this.reload$.pipe(
     startWith(undefined),
@@ -79,6 +91,11 @@ export class BoardPageComponent {
         tap((state) => {
           if (state.status !== 'loading') {
             this.hasLoadedPageStateOnce = true;
+          }
+          if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
+            this.boardIdentitySourceId = state.board.id;
+            this.boardIdentityNameDraft = this.boardMenuLabel(state.board.id);
+            this.boardIdentitySlugDraft = state.board.id;
           }
         })
       )
@@ -158,15 +175,32 @@ export class BoardPageComponent {
     this.isAccountMenuOpen = false;
   }
 
+  toggleBoardIdentityMenu() {
+    this.isBoardIdentityMenuOpen = !this.isBoardIdentityMenuOpen;
+  }
+
+  closeBoardIdentityMenu() {
+    this.isBoardIdentityMenuOpen = false;
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    if (!this.isAccountMenuOpen) {
+    if (!this.isAccountMenuOpen && !this.isBoardIdentityMenuOpen) {
       return;
     }
     const target = event.target;
-    const menuWrap = this.elementRef.nativeElement.querySelector('.account-menu-wrap');
-    if (!(target instanceof Node) || !menuWrap || !menuWrap.contains(target)) {
+    if (!(target instanceof Node)) {
       this.closeAccountMenu();
+      this.closeBoardIdentityMenu();
+      return;
+    }
+    const accountMenuWrap = this.elementRef.nativeElement.querySelector('.account-menu-wrap');
+    if (this.isAccountMenuOpen && (!accountMenuWrap || !accountMenuWrap.contains(target))) {
+      this.closeAccountMenu();
+    }
+    const boardIdentityWrap = this.elementRef.nativeElement.querySelector('.board-identity-wrap');
+    if (this.isBoardIdentityMenuOpen && (!boardIdentityWrap || !boardIdentityWrap.contains(target))) {
+      this.closeBoardIdentityMenu();
     }
   }
 
@@ -174,6 +208,9 @@ export class BoardPageComponent {
   onEscapeKey() {
     if (this.isAccountMenuOpen) {
       this.closeAccountMenu();
+    }
+    if (this.isBoardIdentityMenuOpen) {
+      this.closeBoardIdentityMenu();
     }
   }
 
