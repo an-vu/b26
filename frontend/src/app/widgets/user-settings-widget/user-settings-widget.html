@@ -6,15 +6,42 @@
       <h4>Account Information</h4>
       <label class="settings-field">
         <span>Name</span>
-        <input type="text" placeholder="Enter your name" />
+        <div class="settings-input-status-row">
+          <input
+            type="text"
+            [ngModel]="vm.displayName"
+            (ngModelChange)="onProfileFieldChanged('displayName', $event)"
+            (blur)="saveProfileIfNeeded()"
+            placeholder="Enter your name"
+          />
+          <em class="settings-saved-indicator" *ngIf="vm.profileSaved">Saved</em>
+        </div>
       </label>
       <label class="settings-field">
         <span>Username</span>
-        <input type="text" placeholder="Enter your username" />
+        <div class="settings-input-status-row">
+          <input
+            type="text"
+            [ngModel]="vm.username"
+            (ngModelChange)="onProfileFieldChanged('username', $event)"
+            (blur)="saveProfileIfNeeded()"
+            placeholder="Enter your username"
+          />
+          <em class="settings-saved-indicator" *ngIf="vm.profileSaved">Saved</em>
+        </div>
       </label>
       <label class="settings-field">
         <span>Email</span>
-        <input type="email" placeholder="Enter your email" />
+        <div class="settings-input-status-row">
+          <input
+            type="email"
+            [ngModel]="vm.email"
+            (ngModelChange)="onProfileFieldChanged('email', $event)"
+            (blur)="saveProfileIfNeeded()"
+            placeholder="Enter your email"
+          />
+          <em class="settings-saved-indicator" *ngIf="vm.profileSaved">Saved</em>
+        </div>
       </label>
       <label class="settings-field">
         <span>Password</span>

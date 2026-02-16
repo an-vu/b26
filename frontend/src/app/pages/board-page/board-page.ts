@@ -9,6 +9,7 @@ import { Router, RouterLink } from '@angular/router';
 import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
 import { InsightsService } from '../../services/insights.service';
+import { UserStoreService } from '../../services/user-store.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
@@ -46,6 +47,7 @@ export class BoardPageComponent {
   private boardService = inject(BoardService);
   private boardStore = inject(BoardStoreService);
   private insightsService = inject(InsightsService);
+  private userStore = inject(UserStoreService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
@@ -153,7 +155,19 @@ export class BoardPageComponent {
           route: `/b/${board.boardUrl}`,
         }));
       });
+    this.userStore.profile$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((profile) => {
+        if (!profile) {
+          return;
+        }
+        this.accountUser = {
+          name: profile.displayName,
+          username: `@${profile.username}`,
+        };
+      });
     this.boardStore.refreshBoards();
+    this.userStore.refreshMyProfile();
   }
 
   boardMenuLabel(boardId: string) {

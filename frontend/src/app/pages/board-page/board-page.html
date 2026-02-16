@@ -93,7 +93,7 @@
       <div class="bottom-actions-left">
         <button type="button" routerLink="/">Logo</button>
         <div class="account-menu-wrap">
-          <button type="button" (click)="toggleAccountMenu()">Account</button>
+          <button type="button" (click)="toggleAccountMenu()">{{ accountUser.username }}</button>
           <div class="account-menu" *ngIf="isAccountMenuOpen">
             <section class="account-user">
               <p class="account-user-name">{{ accountUser.name }}</p>

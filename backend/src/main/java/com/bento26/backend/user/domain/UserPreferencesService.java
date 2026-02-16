@@ -84,6 +84,7 @@ public class UserPreferencesService {
               AppUserEntity user = new AppUserEntity();
               user.setId(defaultUserId);
               user.setUsername(defaultUserId.toLowerCase());
+              user.setDisplayName(defaultUserId);
               user.setEmail(defaultUserId.toLowerCase() + "@local");
               user.setRole("ADMIN");
               return appUserRepository.save(user);

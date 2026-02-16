@@ -15,6 +15,9 @@ public class AppUserEntity {
   @Column(nullable = false, unique = true)
   private String username;
 
+  @Column(name = "display_name", nullable = false)
+  private String displayName;
+
   @Column(nullable = true)
   private String email;
 
@@ -43,6 +46,14 @@ public class AppUserEntity {
 
   public void setEmail(String email) {
     this.email = email;
+  }
+
+  public String getDisplayName() {
+    return displayName;
+  }
+
+  public void setDisplayName(String displayName) {
+    this.displayName = displayName;
   }
 
   public String getRole() {

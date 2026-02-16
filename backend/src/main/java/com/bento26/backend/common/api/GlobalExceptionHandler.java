@@ -5,6 +5,7 @@ import com.bento26.backend.insights.domain.ClickRateLimitedException;
 import com.bento26.backend.board.domain.InvalidBoardUpdateException;
 import com.bento26.backend.board.domain.BoardNotFoundException;
 import com.bento26.backend.user.domain.InvalidUserPreferencesException;
+import com.bento26.backend.user.domain.InvalidUserProfileException;
 import com.bento26.backend.user.domain.UserNotFoundException;
 import com.bento26.backend.widget.domain.InvalidWidgetConfigException;
 import com.bento26.backend.widget.domain.WidgetNotFoundForBoardException;
@@ -83,5 +84,12 @@ public class GlobalExceptionHandler {
   public ValidationErrorResponse handleInvalidUserPreferences(InvalidUserPreferencesException exception) {
     return new ValidationErrorResponse(
         "Validation failed", List.of(new ValidationFieldError("preferences", exception.getMessage())));
+  }
+
+  @ExceptionHandler(InvalidUserProfileException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ValidationErrorResponse handleInvalidUserProfile(InvalidUserProfileException exception) {
+    return new ValidationErrorResponse(
+        "Validation failed", List.of(new ValidationFieldError("profile", exception.getMessage())));
   }
 }

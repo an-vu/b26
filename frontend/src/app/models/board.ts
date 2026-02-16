@@ -64,3 +64,16 @@ export type UserMainBoard = {
   mainBoardId: string;
   mainBoardUrl: string;
 };
+
+export type UserProfile = {
+  userId: string;
+  displayName: string;
+  username: string;
+  email: string | null;
+};
+
+export type UpdateUserProfileRequest = {
+  displayName: string;
+  username: string;
+  email: string | null;
+};

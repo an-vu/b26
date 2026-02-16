@@ -10,7 +10,9 @@ import type {
   UpdateBoardUrlRequest,
   UpdateSystemRoutesRequest,
   UserMainBoard,
+  UserProfile,
   UpdateUserPreferencesRequest,
+  UpdateUserProfileRequest,
   UserPreferences,
 } from '../models/board';
 import type { UpsertWidgetRequest, Widget } from '../models/widget';
@@ -109,6 +111,18 @@ export class BoardService {
 
   getUserMainBoard(username: string): Observable<UserMainBoard> {
     return this.http.get<UserMainBoard>(`${environment.apiBaseUrl}/api/users/${username}/main-board`);
+  }
+
+  getMyProfile(): Observable<UserProfile> {
+    return this.http.get<UserProfile>(`${environment.apiBaseUrl}/api/users/me`);
+  }
+
+  updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
+    return this.http.patch<UserProfile>(
+      `${environment.apiBaseUrl}/api/users/me`,
+      payload,
+      this.withAdminHeader()
+    );
   }
 
   private withAdminHeader() {

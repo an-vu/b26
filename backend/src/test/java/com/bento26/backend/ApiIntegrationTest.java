@@ -332,6 +332,58 @@ class ApiIntegrationTest {
   }
 
   @Test
+  void getMyUserProfile_returns200() throws Exception {
+    mockMvc
+        .perform(get("/api/users/me"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.userId").value("anvu"))
+        .andExpect(jsonPath("$.displayName").isNotEmpty())
+        .andExpect(jsonPath("$.username").value("anvu"));
+  }
+
+  @Test
+  void patchMyUserProfile_valid_returns200() throws Exception {
+    String payload =
+        """
+        {
+          "displayName": "An Vu",
+          "username": "anvu",
+          "email": "anvu@local"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            patch("/api/users/me")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.displayName").value("An Vu"))
+        .andExpect(jsonPath("$.username").value("anvu"))
+        .andExpect(jsonPath("$.email").value("anvu@local"));
+  }
+
+  @Test
+  void patchMyUserProfile_invalidUsername_returns400() throws Exception {
+    String payload =
+        """
+        {
+          "displayName": "An Vu",
+          "username": "An Vu",
+          "email": "anvu@local"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            patch("/api/users/me")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Validation failed"));
+  }
+
+  @Test
   void patchMyUserPreferences_valid_returns200() throws Exception {
     String payload =
         """

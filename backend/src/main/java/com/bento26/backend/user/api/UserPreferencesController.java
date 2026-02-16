@@ -1,6 +1,7 @@
 package com.bento26.backend.user.api;
 
 import com.bento26.backend.user.domain.UserPreferencesService;
+import com.bento26.backend.user.domain.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,9 +14,23 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/users")
 public class UserPreferencesController {
   private final UserPreferencesService userPreferencesService;
+  private final UserProfileService userProfileService;
 
-  public UserPreferencesController(UserPreferencesService userPreferencesService) {
+  public UserPreferencesController(
+      UserPreferencesService userPreferencesService,
+      UserProfileService userProfileService) {
     this.userPreferencesService = userPreferencesService;
+    this.userProfileService = userProfileService;
+  }
+
+  @GetMapping("/me")
+  public UserProfileDto getMyProfile() {
+    return userProfileService.getMyProfile();
+  }
+
+  @PatchMapping("/me")
+  public UserProfileDto updateMyProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
+    return userProfileService.updateMyProfile(request);
   }
 
   @GetMapping("/me/preferences")
