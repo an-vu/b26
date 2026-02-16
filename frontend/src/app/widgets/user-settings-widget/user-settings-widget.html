@@ -1,40 +1,46 @@
 <article class="widget">
   <h3>{{ widget.title }}</h3>
 
-  <section class="settings-block">
-    <h4>Account Information</h4>
-    <label class="settings-field">
-      <span>Name</span>
-      <input type="text" placeholder="Enter your name" />
-    </label>
-    <label class="settings-field">
-      <span>Username</span>
-      <input type="text" placeholder="Enter your username" />
-    </label>
-    <label class="settings-field">
-      <span>Email</span>
-      <input type="email" placeholder="Enter your email" />
-    </label>
-    <label class="settings-field">
-      <span>Password</span>
-      <input type="password" placeholder="Enter your password" />
-    </label>
-    <div class="settings-actions">
-      <button type="button">Sign Out</button>
-      <button type="button">Delete Account</button>
-    </div>
-  </section>
+  <ng-container *ngIf="vm$ | async as vm">
+    <section class="settings-block">
+      <h4>Account Information</h4>
+      <label class="settings-field">
+        <span>Name</span>
+        <input type="text" placeholder="Enter your name" />
+      </label>
+      <label class="settings-field">
+        <span>Username</span>
+        <input type="text" placeholder="Enter your username" />
+      </label>
+      <label class="settings-field">
+        <span>Email</span>
+        <input type="email" placeholder="Enter your email" />
+      </label>
+      <label class="settings-field">
+        <span>Password</span>
+        <input type="password" placeholder="Enter your password" />
+      </label>
+      <div class="settings-actions">
+        <button type="button">Sign Out</button>
+        <button type="button">Delete Account</button>
+      </div>
+    </section>
 
-  <section class="settings-block">
-    <h4>Main Board</h4>
-    <label class="settings-field">
-      <span class="settings-inline-label">Main board for <code>/username</code></span>
-      <select>
-        <option value="" selected disabled>Select a board</option>
-        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
-          {{ board.boardName }} (/{{ board.boardUrl }})
-        </option>
-      </select>
-    </label>
-  </section>
+    <section class="settings-block">
+      <h4>Main Board</h4>
+      <label class="settings-field">
+        <span class="settings-label-inline">Main board for /{{ vm.username }}</span>
+        <div class="settings-input-status-row">
+          <select [ngModel]="vm.mainBoardId" (ngModelChange)="onMainBoardChanged($event)">
+            <option value="" selected disabled>Select a board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id">
+              {{ board.boardName }} (/{{ board.boardUrl }})
+            </option>
+          </select>
+          <em class="settings-saved-indicator" *ngIf="vm.saved">Saved</em>
+        </div>
+      </label>
+      <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
+    </section>
+  </ng-container>
 </article>

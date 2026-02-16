@@ -4,6 +4,7 @@ import com.bento26.backend.insights.domain.ClickAbuseGuard;
 import com.bento26.backend.insights.persistence.ClickEventRepository;
 import com.bento26.backend.insights.persistence.ViewEventRepository;
 import com.bento26.backend.board.persistence.BoardRepository;
+import com.bento26.backend.user.persistence.UserPreferenceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,7 @@ class ApiIntegrationTest {
   @Autowired private ClickAbuseGuard clickAbuseGuard;
   @Autowired private ObjectMapper objectMapper;
   @Autowired private BoardRepository boardRepository;
+  @Autowired private UserPreferenceRepository userPreferenceRepository;
 
   @BeforeEach
   void clearClicks() {
@@ -316,6 +318,47 @@ class ApiIntegrationTest {
         .andExpect(jsonPath("$.totalClicks").value(1))
         .andExpect(jsonPath("$.topClickedLinks[0].cardId").value("github"))
         .andExpect(jsonPath("$.topClickedLinks[0].clickCount").value(1));
+  }
+
+  @Test
+  void getMyUserPreferences_returns200() throws Exception {
+    mockMvc
+        .perform(get("/api/users/me/preferences"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.userId").value("anvu"))
+        .andExpect(jsonPath("$.username").value("anvu"))
+        .andExpect(jsonPath("$.mainBoardId").isNotEmpty())
+        .andExpect(jsonPath("$.mainBoardUrl").isNotEmpty());
+  }
+
+  @Test
+  void patchMyUserPreferences_valid_returns200() throws Exception {
+    String payload =
+        """
+        {
+          "mainBoardId": "default"
+        }
+        """;
+
+    mockMvc
+        .perform(
+            patch("/api/users/me/preferences")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(payload))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.userId").value("anvu"))
+        .andExpect(jsonPath("$.mainBoardId").value("default"));
+  }
+
+  @Test
+  void getUserMainBoardByUsername_returns200() throws Exception {
+    mockMvc
+        .perform(get("/api/users/anvu/main-board"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.userId").value("anvu"))
+        .andExpect(jsonPath("$.username").value("anvu"))
+        .andExpect(jsonPath("$.mainBoardId").isNotEmpty())
+        .andExpect(jsonPath("$.mainBoardUrl").isNotEmpty());
   }
 
   @Test

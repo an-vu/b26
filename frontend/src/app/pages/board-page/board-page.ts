@@ -84,7 +84,7 @@ export class BoardPageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) => {
-          const boardState$ = this.resolveBoardId$(params.get('boardId')).pipe(
+          const boardState$ = this.resolveBoardId$(params.get('boardId'), params.get('username')).pipe(
             switchMap((boardId) =>
               this.boardService.getBoard(boardId).pipe(
                 tap((board) => {
@@ -120,7 +120,7 @@ export class BoardPageComponent {
     switchMap(() =>
       this.route.paramMap.pipe(
         switchMap((params) =>
-          this.resolveBoardId$(params.get('boardId')).pipe(
+          this.resolveBoardId$(params.get('boardId'), params.get('username')).pipe(
             switchMap((boardId) =>
               this.boardService.getWidgets(boardId).pipe(
                 map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
@@ -570,11 +570,19 @@ export class BoardPageComponent {
     return drafts.map((draft, index) => ({ ...draft, order: index }));
   }
 
-  private resolveBoardId$(routeParamBoardId: string | null) {
+  private resolveBoardId$(routeParamBoardId: string | null, routeParamUsername: string | null) {
     const dataBoardId = this.route.snapshot?.data?.['boardId'];
     const systemRoute = this.route.snapshot?.data?.['systemRoute'];
+    const userMainRoute = !!this.route.snapshot?.data?.['userMainRoute'];
     if (routeParamBoardId && routeParamBoardId.trim().length > 0) {
       return of(routeParamBoardId);
+    }
+    if (userMainRoute && routeParamUsername && routeParamUsername.trim().length > 0) {
+      const username = routeParamUsername.trim().toLowerCase();
+      return this.boardService.getUserMainBoard(username).pipe(
+        map((result) => result.mainBoardUrl),
+        catchError(() => of('__missing-user-main-board__'))
+      );
     }
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
       return of(dataBoardId);

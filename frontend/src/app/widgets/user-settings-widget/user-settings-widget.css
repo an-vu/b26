@@ -24,10 +24,6 @@
   font-size: 14px;
 }
 
-.settings-inline-label {
-  white-space: nowrap;
-}
-
 .settings-actions {
   display: flex;
   flex-wrap: wrap;
@@ -42,6 +38,15 @@
 .settings-field select {
   width: 320px;
   max-width: 100%;
+}
+
+.settings-status {
+  margin: 0;
+  font-size: 12px;
+}
+
+.settings-status--error {
+  color: #b23a3a;
 }
 
 @media (max-width: 700px) {

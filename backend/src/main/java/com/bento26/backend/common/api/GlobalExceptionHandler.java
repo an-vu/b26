@@ -4,6 +4,8 @@ import com.bento26.backend.insights.domain.CardNotFoundForBoardException;
 import com.bento26.backend.insights.domain.ClickRateLimitedException;
 import com.bento26.backend.board.domain.InvalidBoardUpdateException;
 import com.bento26.backend.board.domain.BoardNotFoundException;
+import com.bento26.backend.user.domain.InvalidUserPreferencesException;
+import com.bento26.backend.user.domain.UserNotFoundException;
 import com.bento26.backend.widget.domain.InvalidWidgetConfigException;
 import com.bento26.backend.widget.domain.WidgetNotFoundForBoardException;
 import java.util.List;
@@ -68,5 +70,18 @@ public class GlobalExceptionHandler {
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ApiError handleWidgetNotFound(WidgetNotFoundForBoardException exception) {
     return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(UserNotFoundException.class)
+  @ResponseStatus(HttpStatus.NOT_FOUND)
+  public ApiError handleUserNotFound(UserNotFoundException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(InvalidUserPreferencesException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ValidationErrorResponse handleInvalidUserPreferences(InvalidUserPreferencesException exception) {
+    return new ValidationErrorResponse(
+        "Validation failed", List.of(new ValidationFieldError("preferences", exception.getMessage())));
   }
 }

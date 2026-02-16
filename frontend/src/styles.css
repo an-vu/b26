@@ -78,6 +78,23 @@ body {
   opacity: 0.75;
 }
 
+.settings-label-inline {
+  display: inline-block;
+}
+
+.settings-input-status-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-saved-indicator {
+  margin: 0;
+  font-style: normal;
+  font-size: 12px;
+  color: #356b3f;
+}
+
 .inline-edit {
   font-family: inherit;
   font-style: inherit;

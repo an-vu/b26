@@ -1,35 +1,46 @@
 <article class="widget">
   <h3>{{ widget.title }}</h3>
 
-  <section class="settings-block">
+  <section class="settings-block" *ngIf="vm$ | async as vm">
     <label class="settings-field">
-      <span>Homepage board for /</span>
-      <select>
-        <option value="" selected disabled>Select a board</option>
-        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
-          {{ board.boardName }} (/{{ board.boardUrl }})
-        </option>
-      </select>
+      <span class="settings-label-inline">Homepage board for /</span>
+      <div class="settings-input-status-row">
+        <select [ngModel]="vm.homepageBoardId" (ngModelChange)="onRouteSelectionChanged('homepage', $event)">
+          <option value="" selected disabled>Select a board</option>
+          <option *ngFor="let board of vm.boards" [value]="board.id">
+            {{ board.boardName }} (/{{ board.boardUrl }})
+          </option>
+        </select>
+        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'homepage'">Saved</em>
+      </div>
     </label>
 
     <label class="settings-field">
-      <span>Insights board for /insights</span>
-      <select>
-        <option value="" selected disabled>Select a board</option>
-        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
-          {{ board.boardName }} (/{{ board.boardUrl }})
-        </option>
-      </select>
+      <span class="settings-label-inline">Insights board for /insights</span>
+      <div class="settings-input-status-row">
+        <select [ngModel]="vm.insightsBoardId" (ngModelChange)="onRouteSelectionChanged('insights', $event)">
+          <option value="" selected disabled>Select a board</option>
+          <option *ngFor="let board of vm.boards" [value]="board.id">
+            {{ board.boardName }} (/{{ board.boardUrl }})
+          </option>
+        </select>
+        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'insights'">Saved</em>
+      </div>
     </label>
 
     <label class="settings-field">
-      <span>Settings board for /settings</span>
-      <select>
-        <option value="" selected disabled>Select a board</option>
-        <option *ngFor="let board of boards$ | async" [value]="board.boardUrl">
-          {{ board.boardName }} (/{{ board.boardUrl }})
-        </option>
-      </select>
+      <span class="settings-label-inline">Settings board for /settings</span>
+      <div class="settings-input-status-row">
+        <select [ngModel]="vm.settingsBoardId" (ngModelChange)="onRouteSelectionChanged('settings', $event)">
+          <option value="" selected disabled>Select a board</option>
+          <option *ngFor="let board of vm.boards" [value]="board.id">
+            {{ board.boardName }} (/{{ board.boardUrl }})
+          </option>
+        </select>
+        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'settings'">Saved</em>
+      </div>
     </label>
+
+    <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
   </section>
 </article>

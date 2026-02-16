@@ -8,6 +8,10 @@ import type {
   UpdateBoardMetaRequest,
   UpdateBoardRequest,
   UpdateBoardUrlRequest,
+  UpdateSystemRoutesRequest,
+  UserMainBoard,
+  UpdateUserPreferencesRequest,
+  UserPreferences,
 } from '../models/board';
 import type { UpsertWidgetRequest, Widget } from '../models/widget';
 import { environment } from '../../environments/environment';
@@ -81,6 +85,30 @@ export class BoardService {
 
   getSystemRoutes(): Observable<SystemRoutes> {
     return this.http.get<SystemRoutes>(`${environment.apiBaseUrl}/api/system/routes`);
+  }
+
+  updateSystemRoutes(payload: UpdateSystemRoutesRequest): Observable<SystemRoutes> {
+    return this.http.patch<SystemRoutes>(
+      `${environment.apiBaseUrl}/api/system/routes`,
+      payload,
+      this.withAdminHeader()
+    );
+  }
+
+  getMyPreferences(): Observable<UserPreferences> {
+    return this.http.get<UserPreferences>(`${environment.apiBaseUrl}/api/users/me/preferences`);
+  }
+
+  updateMyPreferences(payload: UpdateUserPreferencesRequest): Observable<UserPreferences> {
+    return this.http.patch<UserPreferences>(
+      `${environment.apiBaseUrl}/api/users/me/preferences`,
+      payload,
+      this.withAdminHeader()
+    );
+  }
+
+  getUserMainBoard(username: string): Observable<UserMainBoard> {
+    return this.http.get<UserMainBoard>(`${environment.apiBaseUrl}/api/users/${username}/main-board`);
   }
 
   private withAdminHeader() {

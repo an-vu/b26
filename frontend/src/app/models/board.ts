@@ -40,3 +40,27 @@ export type SystemRoutes = {
   globalSettingsBoardId: string;
   globalSettingsBoardUrl: string;
 };
+
+export type UpdateSystemRoutesRequest = {
+  globalHomepageBoardId: string;
+  globalInsightsBoardId: string;
+  globalSettingsBoardId: string;
+};
+
+export type UserPreferences = {
+  userId: string;
+  username: string;
+  mainBoardId: string;
+  mainBoardUrl: string;
+};
+
+export type UpdateUserPreferencesRequest = {
+  mainBoardId: string;
+};
+
+export type UserMainBoard = {
+  userId: string;
+  username: string;
+  mainBoardId: string;
+  mainBoardUrl: string;
+};

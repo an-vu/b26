@@ -104,6 +104,7 @@
             <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
             <button type="button" class="account-link">Create New Board</button>
             <hr />
+            <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
             <button type="button" class="account-link">Sign Out</button>
           </div>
