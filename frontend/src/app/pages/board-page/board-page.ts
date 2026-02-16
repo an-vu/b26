@@ -165,6 +165,16 @@ export class BoardPageComponent {
           name: profile.displayName,
           username: `@${profile.username}`,
         };
+
+        const currentUsernameParam = this.route.snapshot.paramMap.get('username');
+        const isUserMainRoute = !!this.route.snapshot.data['userMainRoute'];
+        if (
+          isUserMainRoute &&
+          currentUsernameParam &&
+          currentUsernameParam.toLowerCase() !== profile.username.toLowerCase()
+        ) {
+          this.router.navigate(['/', profile.username], { replaceUrl: true });
+        }
       });
     this.boardStore.refreshBoards();
     this.userStore.refreshMyProfile();
