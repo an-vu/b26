@@ -2,7 +2,7 @@ import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, of, Subject, timer } from 'rxjs';
-import { catchError, map, switchMap } from 'rxjs/operators';
+import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Widget } from '../../models/widget';
 import { BoardStoreService } from '../../services/board-store.service';
@@ -14,7 +14,7 @@ type UserSettingsState = {
   displayName: string;
   username: string;
   email: string;
-  profileSaved: boolean;
+  profileSavedField: 'displayName' | 'username' | 'email' | null;
   mainBoardId: string;
   saved: boolean;
   errorMessage: string;
@@ -37,14 +37,15 @@ export class UserSettingsWidgetComponent implements OnInit {
     displayName: '',
     username: 'username',
     email: '',
-    profileSaved: false,
+    profileSavedField: null,
     mainBoardId: '',
     saved: false,
     errorMessage: '',
     isHydrating: true,
   });
   private readonly saveRequests$ = new Subject<string>();
-  private readonly saveProfileRequests$ = new Subject<UpdateUserProfileRequest>();
+  private readonly saveProfileRequests$ = new Subject<void>();
+  private lastEditedProfileField: 'displayName' | 'username' | 'email' | null = null;
   readonly vm$;
 
   constructor(
@@ -73,7 +74,7 @@ export class UserSettingsWidgetComponent implements OnInit {
           this.state$.next({
             ...current,
             saved: false,
-            profileSaved: false,
+            profileSavedField: null,
             errorMessage: result.error?.error?.message ?? 'Unable to save main board',
           });
           return;
@@ -83,7 +84,7 @@ export class UserSettingsWidgetComponent implements OnInit {
           username: result.preferences.username,
           displayName: this.state$.value.displayName,
           email: this.state$.value.email,
-          profileSaved: false,
+          profileSavedField: null,
           mainBoardId: result.preferences.mainBoardId,
           saved: true,
           errorMessage: '',
@@ -102,12 +103,27 @@ export class UserSettingsWidgetComponent implements OnInit {
 
     this.saveProfileRequests$
       .pipe(
-        switchMap((payload) =>
-          this.userStore.updateMyProfile(payload).pipe(
+        debounceTime(600),
+        map(() => {
+          const current = this.state$.value;
+          return {
+            displayName: current.displayName.trim(),
+            username: current.username.trim(),
+            email: current.email.trim() || null,
+          } as UpdateUserProfileRequest;
+        }),
+        switchMap((payload) => {
+          if (!payload.displayName || !payload.username) {
+            return of({
+              ok: false as const,
+              error: { error: { message: 'displayName and username are required' } },
+            });
+          }
+          return this.userStore.updateMyProfile(payload).pipe(
             map((profile) => ({ ok: true as const, profile })),
             catchError((error) => of({ ok: false as const, error }))
-          )
-        ),
+          );
+        }),
         takeUntilDestroyed(this.destroyRef)
       )
       .subscribe((result) => {
@@ -115,7 +131,7 @@ export class UserSettingsWidgetComponent implements OnInit {
           const current = this.state$.value;
           this.state$.next({
             ...current,
-            profileSaved: false,
+            profileSavedField: null,
             errorMessage: result.error?.error?.message ?? 'Unable to save profile',
           });
           return;
@@ -126,7 +142,7 @@ export class UserSettingsWidgetComponent implements OnInit {
           displayName: result.profile.displayName,
           username: result.profile.username,
           email: result.profile.email ?? '',
-          profileSaved: true,
+          profileSavedField: this.lastEditedProfileField,
           errorMessage: '',
           isHydrating: false,
         });
@@ -135,8 +151,8 @@ export class UserSettingsWidgetComponent implements OnInit {
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
             const current = this.state$.value;
-            if (current.profileSaved) {
-              this.state$.next({ ...current, profileSaved: false });
+            if (current.profileSavedField) {
+              this.state$.next({ ...current, profileSavedField: null });
             }
           });
       });
@@ -181,7 +197,7 @@ export class UserSettingsWidgetComponent implements OnInit {
             username: preferences.username,
             mainBoardId: preferences.mainBoardId,
             saved: false,
-            profileSaved: false,
+            profileSavedField: null,
             isHydrating: false,
           });
         },
@@ -206,28 +222,17 @@ export class UserSettingsWidgetComponent implements OnInit {
   }
 
   onProfileFieldChanged(field: 'displayName' | 'username' | 'email', value: string) {
+    this.lastEditedProfileField = field;
     const current = this.state$.value;
     this.state$.next({
       ...current,
       [field]: value,
-      profileSaved: false,
+      profileSavedField: null,
       errorMessage: '',
     });
-  }
-
-  saveProfileIfNeeded() {
-    const current = this.state$.value;
     if (current.isHydrating) {
       return;
     }
-    const payload: UpdateUserProfileRequest = {
-      displayName: current.displayName.trim(),
-      username: current.username.trim(),
-      email: current.email.trim() || null,
-    };
-    if (!payload.displayName || !payload.username) {
-      return;
-    }
-    this.saveProfileRequests$.next(payload);
+    this.saveProfileRequests$.next();
   }
 }

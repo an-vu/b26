@@ -50,8 +50,8 @@ public class CorsConfig implements WebMvcConfigurer {
             boolean isWrite = !"GET".equalsIgnoreCase(method) && !"OPTIONS".equalsIgnoreCase(method);
             boolean isBoardWrite = uri.startsWith("/api/board");
             boolean isSystemWrite = uri.startsWith("/api/system");
-            boolean isUserPrefWrite = uri.startsWith("/api/users/me/");
-            if (!isWrite || (!isBoardWrite && !isSystemWrite && !isUserPrefWrite)) {
+            boolean isUserMeWrite = uri.equals("/api/users/me") || uri.startsWith("/api/users/me/");
+            if (!isWrite || (!isBoardWrite && !isSystemWrite && !isUserMeWrite)) {
               return true;
             }
 
