@@ -22,7 +22,7 @@ libpeerconnection.log
 node_modules/
 dist/
 .angular/
-frontend/bento-26/
+frontend/b26/
 **/angular-compiler.db
 **/angular-compiler.db-lock
 .cache/

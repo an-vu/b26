@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    container_name: bento26-backend
+    container_name: b26-backend
     environment:
       SPRING_PROFILES_ACTIVE: prod
       APP_CORS_ALLOWED_ORIGINS: http://localhost:4200
@@ -22,7 +22,7 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-    container_name: bento26-frontend
+    container_name: b26-frontend
     depends_on:
       backend:
         condition: service_healthy

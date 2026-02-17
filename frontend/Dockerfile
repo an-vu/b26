@@ -10,7 +10,7 @@ RUN npm run build
 FROM nginx:1.27-alpine
 RUN apk add --no-cache curl
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/dist/bento-26/browser /usr/share/nginx/html
+COPY --from=build /app/dist/b26/browser /usr/share/nginx/html
 
 EXPOSE 80
 CMD ["nginx", "-g", "daemon off;"]
