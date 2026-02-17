@@ -6,4 +6,6 @@ public record SystemRoutesDto(
     String globalInsightsBoardId,
     String globalInsightsBoardUrl,
     String globalSettingsBoardId,
-    String globalSettingsBoardUrl) {}
+    String globalSettingsBoardUrl,
+    String globalLoginBoardId,
+    String globalLoginBoardUrl) {}

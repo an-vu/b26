@@ -83,6 +83,14 @@ public class BoardDataSeeder {
                   "settings",
                   "Settings",
                   "Manage your account and app configuration",
+                  List.of()),
+              buildBoard(
+                  "login",
+                  "anvu",
+                  "Login",
+                  "login-board",
+                  "Login",
+                  "Sign in to manage your board",
                   List.of())));
 
       Map<String, BoardEntity> byId =
