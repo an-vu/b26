@@ -8,13 +8,15 @@ import type { Widget } from '../../models/widget';
 import type { UpdateSystemRoutesRequest } from '../../models/board';
 import { BoardStoreService } from '../../services/board-store.service';
 import { BoardService } from '../../services/board.service';
+import type { SystemRoutes } from '../../models/board';
 
-type SavedField = 'homepage' | 'insights' | 'settings' | null;
+type SavedField = 'homepage' | 'insights' | 'settings' | 'login' | null;
 
 type AdminSettingsState = {
   homepageBoardId: string;
   insightsBoardId: string;
   settingsBoardId: string;
+  loginBoardId: string;
   savedField: SavedField;
   errorMessage: string;
   isHydrating: boolean;
@@ -36,6 +38,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
     homepageBoardId: '',
     insightsBoardId: '',
     settingsBoardId: '',
+    loginBoardId: '',
     savedField: null,
     errorMessage: '',
     isHydrating: true,
@@ -77,9 +80,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
         }
 
         this.state$.next({
-          homepageBoardId: result.routes.globalHomepageBoardId,
-          insightsBoardId: result.routes.globalInsightsBoardId,
-          settingsBoardId: result.routes.globalSettingsBoardId,
+          ...this.routesToState(result.routes, this.state$.value),
           savedField: result.field,
           errorMessage: '',
           isHydrating: false,
@@ -104,9 +105,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
       .subscribe({
         next: (routes) => {
           this.state$.next({
-            homepageBoardId: routes.globalHomepageBoardId,
-            insightsBoardId: routes.globalInsightsBoardId,
-            settingsBoardId: routes.globalSettingsBoardId,
+            ...this.routesToState(routes, this.state$.value),
             savedField: null,
             errorMessage: '',
             isHydrating: false,
@@ -117,6 +116,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
             homepageBoardId: '',
             insightsBoardId: '',
             settingsBoardId: '',
+            loginBoardId: '',
             savedField: null,
             errorMessage: '',
             isHydrating: false,
@@ -134,7 +134,8 @@ export class AdminSettingsWidgetComponent implements OnInit {
       next.isHydrating ||
       !next.homepageBoardId ||
       !next.insightsBoardId ||
-      !next.settingsBoardId
+      !next.settingsBoardId ||
+      !next.loginBoardId
     ) {
       return;
     }
@@ -145,6 +146,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
         globalHomepageBoardId: next.homepageBoardId,
         globalInsightsBoardId: next.insightsBoardId,
         globalSettingsBoardId: next.settingsBoardId,
+        globalLoginBoardId: next.loginBoardId || 'login',
       },
     });
   }
@@ -160,6 +162,18 @@ export class AdminSettingsWidgetComponent implements OnInit {
     if (field === 'insights') {
       return { ...state, insightsBoardId: boardId };
     }
-    return { ...state, settingsBoardId: boardId };
+    if (field === 'settings') {
+      return { ...state, settingsBoardId: boardId };
+    }
+    return { ...state, loginBoardId: boardId };
+  }
+
+  private routesToState(routes: SystemRoutes, current: AdminSettingsState): Pick<AdminSettingsState, 'homepageBoardId' | 'insightsBoardId' | 'settingsBoardId' | 'loginBoardId'> {
+    return {
+      homepageBoardId: routes.globalHomepageBoardId || current.homepageBoardId || 'home',
+      insightsBoardId: routes.globalInsightsBoardId || current.insightsBoardId || 'insights',
+      settingsBoardId: routes.globalSettingsBoardId || current.settingsBoardId || 'settings',
+      loginBoardId: routes.globalLoginBoardId || current.loginBoardId || 'login',
+    };
   }
 }

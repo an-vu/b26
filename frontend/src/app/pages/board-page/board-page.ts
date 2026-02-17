@@ -611,18 +611,31 @@ export class BoardPageComponent {
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
       return of(dataBoardId);
     }
-    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings') {
+    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'login') {
       return this.boardService.getSystemRoutes().pipe(
         map((routes) => {
           if (systemRoute === 'main') {
-            return routes.globalHomepageBoardUrl;
+            return routes.globalHomepageBoardUrl || 'home';
           }
           if (systemRoute === 'insights') {
-            return routes.globalInsightsBoardUrl;
+            return routes.globalInsightsBoardUrl || 'insights';
           }
-          return routes.globalSettingsBoardUrl;
+          if (systemRoute === 'login') {
+            return routes.globalLoginBoardUrl || 'login-board';
+          }
+          return routes.globalSettingsBoardUrl || 'settings';
         }),
-        catchError(() => of(systemRoute === 'main' ? 'home' : systemRoute === 'insights' ? 'insights' : 'settings'))
+        catchError(() =>
+          of(
+            systemRoute === 'main'
+              ? 'home'
+              : systemRoute === 'insights'
+                ? 'insights'
+                : systemRoute === 'login'
+                  ? 'login-board'
+                  : 'settings'
+          )
+        )
       );
     }
     return of('default');

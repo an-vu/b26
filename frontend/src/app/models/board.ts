@@ -39,12 +39,15 @@ export type SystemRoutes = {
   globalInsightsBoardUrl: string;
   globalSettingsBoardId: string;
   globalSettingsBoardUrl: string;
+  globalLoginBoardId?: string;
+  globalLoginBoardUrl?: string;
 };
 
 export type UpdateSystemRoutesRequest = {
   globalHomepageBoardId: string;
   globalInsightsBoardId: string;
   globalSettingsBoardId: string;
+  globalLoginBoardId?: string;
 };
 
 export type UserPreferences = {
