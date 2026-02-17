@@ -130,6 +130,7 @@ public class WidgetService {
   private static void validateLayout(String layout) {
     if (!"span-1".equals(layout)
         && !"span-2".equals(layout)
+        && !"span-3".equals(layout)
         && !"span-1x2".equals(layout)
         && !"span-2x2".equals(layout)
         && !"span-4".equals(layout)) {

@@ -188,6 +188,9 @@ export class BoardPageComponent {
     if (layout === 'span-4') {
       return 'tile-span-4';
     }
+    if (layout === 'span-3') {
+      return 'tile-span-3';
+    }
     if (layout === 'span-1x2') {
       return 'tile-span-1x2';
     }
