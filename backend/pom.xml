@@ -11,11 +11,11 @@
     <relativePath/>
   </parent>
 
-  <groupId>com.bento26</groupId>
+  <groupId>com.b26</groupId>
   <artifactId>backend</artifactId>
   <version>0.0.1-SNAPSHOT</version>
-  <name>bento26-backend</name>
-  <description>Bento '26 backend API</description>
+  <name>b26-backend</name>
+  <description>b26 backend API</description>
 
   <properties>
     <java.version>17</java.version>

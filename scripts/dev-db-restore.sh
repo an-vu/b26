@@ -13,7 +13,7 @@ if [[ ! -f "$BACKUP_FILE" ]]; then
 fi
 
 DB_DIR="${B26_DATA_DIR:-$HOME/.b26}"
-DB_BASE="$DB_DIR/bento26-dev"
+DB_BASE="$DB_DIR/b26-dev"
 
 mkdir -p "$DB_DIR"
 
@@ -22,14 +22,14 @@ trap 'rm -rf "$TMP_DIR"' EXIT
 
 tar -xzf "$BACKUP_FILE" -C "$TMP_DIR"
 
-if [[ ! -f "$TMP_DIR/bento26-dev.mv.db" ]]; then
-  echo "Invalid backup: missing bento26-dev.mv.db"
+if [[ ! -f "$TMP_DIR/b26-dev.mv.db" ]]; then
+  echo "Invalid backup: missing b26-dev.mv.db"
   exit 1
 fi
 
-cp "$TMP_DIR/bento26-dev.mv.db" "$DB_BASE.mv.db"
-if [[ -f "$TMP_DIR/bento26-dev.trace.db" ]]; then
-  cp "$TMP_DIR/bento26-dev.trace.db" "$DB_BASE.trace.db"
+cp "$TMP_DIR/b26-dev.mv.db" "$DB_BASE.mv.db"
+if [[ -f "$TMP_DIR/b26-dev.trace.db" ]]; then
+  cp "$TMP_DIR/b26-dev.trace.db" "$DB_BASE.trace.db"
 fi
 
 echo "Restore complete: $DB_BASE.mv.db"

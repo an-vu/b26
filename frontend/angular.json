@@ -6,7 +6,7 @@
   },
   "newProjectRoot": "projects",
   "projects": {
-    "bento-26": {
+    "b26": {
       "projectType": "application",
       "schematics": {},
       "root": "",
@@ -67,10 +67,10 @@
           "builder": "@angular/build:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "bento-26:build:production"
+              "buildTarget": "b26:build:production"
             },
             "development": {
-              "buildTarget": "bento-26:build:development"
+              "buildTarget": "b26:build:development"
             }
           },
           "defaultConfiguration": "development"

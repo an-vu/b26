@@ -1,6 +1,6 @@
-# Bento '26
+# BlueBerry 26
 
-A bento-style personal portfolio web app built to showcase Angular and Java using Spring Boot.
+A personal portfolio web app built to showcase Angular and Java using Spring Boot.
 
 ## Tech Stack
 
@@ -47,7 +47,7 @@ Database (H2)
 ## Project Structure
 
 ```
-bento26/
+b26/
 ├─ frontend/        # Angular app
 ├─ backend/         # Spring Boot API
 ├─ docker/          # Docker configs (optional)
@@ -130,7 +130,7 @@ Note: `http://localhost:8080/` returns a Spring 404 page because root (`/`) is n
 - Vercel:
   - Root Directory: `frontend`
   - Build Command: `npm run build`
-  - Output Directory: `dist/bento-26/browser`
+  - Output Directory: `dist/b26/browser`
   - Rewrites: `frontend/vercel.json` forwards `/api/*` and `/actuator/*` to Render backend
 - Render:
   - Service type: Docker web service
@@ -165,7 +165,7 @@ docker compose down
 
 ### Backend Runtime Profiles
 
-- Default profile: `dev` (H2 file DB at `${user.home}/.b26/bento26-dev`, persists across restarts)
+- Default profile: `dev` (H2 file DB at `${user.home}/.b26/b26-dev`, persists across restarts)
 - Docker Compose profile: `prod` (H2 file DB at `/data`, persists via Docker volume)
 - PostgreSQL profile: `postgres` (external Postgres via `SPRING_DATASOURCE_*`)
 
@@ -243,7 +243,7 @@ localStorage.removeItem('b26_admin_token')
 
 ### Stable Local DB Path
 
-- Dev DB uses: `${user.home}/.b26/bento26-dev.mv.db`
+- Dev DB uses: `${user.home}/.b26/b26-dev.mv.db`
 - This path is stable even if you run backend from different folders.
 - Override path only if needed: `B26_DATA_DIR=/custom/path`
 
