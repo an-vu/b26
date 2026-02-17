@@ -91,9 +91,19 @@
 
     <div class="bottom-actions" *ngIf="widgets$ | async as widgets">
       <div class="bottom-actions-left">
-        <button type="button" routerLink="/">Logo</button>
+        <button type="button" class="bottom-action-button orb-button orb-button--red" routerLink="/">
+          <span class="orb-button__dot" aria-hidden="true"></span>
+          <span class="orb-button__label">Home</span>
+        </button>
+        <button type="button" class="bottom-action-button orb-button orb-button--yellow">
+          <span class="orb-button__dot" aria-hidden="true"></span>
+          <span class="orb-button__label">Search</span>
+        </button>
         <div class="account-menu-wrap">
-          <button type="button" (click)="toggleAccountMenu()">{{ accountUser.username }}</button>
+          <button type="button" class="bottom-action-button orb-button orb-button--blue" (click)="toggleAccountMenu()">
+            <span class="orb-button__dot" aria-hidden="true"></span>
+            <span class="orb-button__label">{{ accountUser.username }}</span>
+          </button>
           <div class="account-menu" *ngIf="isAccountMenuOpen">
             <section class="account-user">
               <p class="account-user-name">{{ accountUser.name }}</p>
@@ -109,70 +119,77 @@
             <button type="button" class="account-link">Sign Out</button>
           </div>
         </div>
-        <button
-          type="button"
-          *ngIf="!isWidgetEditMode && !isReadOnlyView(); else doneButton"
-          (click)="startWidgetEdit(state.board, widgets)"
-        >
-          Edit
-        </button>
-        <ng-template #doneButton>
-          <button type="button" *ngIf="!isReadOnlyView()" (click)="doneWidgetEdit(state.board.boardUrl)" [disabled]="isWidgetSaving">Done</button>
-        </ng-template>
       </div>
 
       <div class="board-identity-wrap" *ngIf="!isReadOnlyView()">
-        <button type="button" class="board-identity-button" (click)="toggleBoardIdentityMenu()">
-          {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
-        </button>
-        <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
-          <label>
-            Board Name
-            <input type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
-          </label>
-          <label>
-            URL Name
-            <div class="slug-input-wrap">
-              <span>/</span>
-              <input type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
-            </div>
-          </label>
-          <hr />
-          <div class="board-appearance-row">
+        <div class="board-identity-menu-anchor">
+          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()">
+            {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
+          </button>
+          <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
             <label>
-              Widget Radius
-              <input type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+              Board Name
+              <input type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
             </label>
-            <label for="board-theme-toggle">
-              <span>Theme</span>
-              <input type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
+            <label>
+              URL Name
+              <div class="slug-input-wrap">
+                <span>/</span>
+                <input type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
+              </div>
+            </label>
+            <hr />
+            <div class="board-appearance-row">
+              <label>
+                Widget Radius
+                <input type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+              </label>
+              <label for="board-theme-toggle">
+                <span>Theme</span>
+                <input type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
+              </label>
+            </div>
+            <label>
+              Background Color
+              <div class="board-color-options">
+                <button type="button" aria-label="Background color option 1"></button>
+                <button type="button" aria-label="Background color option 2"></button>
+                <button type="button" aria-label="Background color option 3"></button>
+                <button type="button" aria-label="Background color option 4"></button>
+                <button type="button" aria-label="Background color option 5"></button>
+                <button type="button" aria-label="Background color option 6"></button>
+                <button type="button" aria-label="Background color option 7"></button>
+              </div>
+            </label>
+            <label>
+              Pattern
+              <div class="board-pattern-options">
+                <button type="button" aria-label="Pattern option 1"></button>
+                <button type="button" aria-label="Pattern option 2"></button>
+                <button type="button" aria-label="Pattern option 3"></button>
+                <button type="button" aria-label="Pattern option 4"></button>
+                <button type="button" aria-label="Pattern option 5"></button>
+                <button type="button" aria-label="Pattern option 6"></button>
+                <button type="button" aria-label="Pattern option 7"></button>
+              </div>
             </label>
           </div>
-          <label>
-            Background Color
-            <div class="board-color-options">
-              <button type="button" aria-label="Background color option 1"></button>
-              <button type="button" aria-label="Background color option 2"></button>
-              <button type="button" aria-label="Background color option 3"></button>
-              <button type="button" aria-label="Background color option 4"></button>
-              <button type="button" aria-label="Background color option 5"></button>
-              <button type="button" aria-label="Background color option 6"></button>
-              <button type="button" aria-label="Background color option 7"></button>
-            </div>
-          </label>
-          <label>
-            Pattern
-            <div class="board-pattern-options">
-              <button type="button" aria-label="Pattern option 1"></button>
-              <button type="button" aria-label="Pattern option 2"></button>
-              <button type="button" aria-label="Pattern option 3"></button>
-              <button type="button" aria-label="Pattern option 4"></button>
-              <button type="button" aria-label="Pattern option 5"></button>
-              <button type="button" aria-label="Pattern option 6"></button>
-              <button type="button" aria-label="Pattern option 7"></button>
-            </div>
-          </label>
         </div>
+          <button
+            type="button"
+            class="bottom-action-button orb-button orb-button--gray"
+            *ngIf="!isWidgetEditMode; else doneButton"
+            (click)="startWidgetEdit(state.board, widgets)"
+          >
+          <span class="orb-button__dot" aria-hidden="true"></span>
+          <span class="orb-button__label">Edit</span>
+        </button>
+        <ng-template #doneButton>
+          <button type="button" class="bottom-action-button orb-button orb-button--gray" (click)="doneWidgetEdit(state.board.boardUrl)" [disabled]="isWidgetSaving">
+            <span class="orb-button__dot" aria-hidden="true"></span>
+            <span class="orb-button__label">Done</span>
+          </button>
+        </ng-template>
       </div>
     </div>
   </main>
