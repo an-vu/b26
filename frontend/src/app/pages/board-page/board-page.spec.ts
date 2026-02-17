@@ -12,6 +12,7 @@ describe('BoardPageComponent', () => {
   let boardServiceStub: {
     getBoards: BoardService['getBoards'];
     getBoard: BoardService['getBoard'];
+    getMyProfile: BoardService['getMyProfile'];
     updateBoard: BoardService['updateBoard'];
     updateBoardMeta: BoardService['updateBoardMeta'];
     updateBoardUrl: BoardService['updateBoardUrl'];
@@ -25,6 +26,10 @@ describe('BoardPageComponent', () => {
 
   const routeStub = {
     paramMap: of(convertToParamMap({ boardId: 'default' })),
+    snapshot: {
+      paramMap: convertToParamMap({ boardId: 'default' }),
+      data: {},
+    },
   };
 
   beforeEach(async () => {
@@ -41,6 +46,13 @@ describe('BoardPageComponent', () => {
           boardUrl: 'default',
           name: 'An Vu',
           headline: 'Software Engineer',
+        }),
+      getMyProfile: () =>
+        of({
+          userId: 'anvu',
+          displayName: 'An Vu',
+          username: 'anvu',
+          email: 'anvu@local',
         }),
       updateBoard: () =>
         of({
