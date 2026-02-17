@@ -42,15 +42,15 @@
     </label>
 
     <label class="settings-field">
-      <span class="settings-label-inline">Login board for /login</span>
+      <span class="settings-label-inline">Sign in board for /signin</span>
       <div class="settings-input-status-row">
-        <select [ngModel]="vm.loginBoardId" (ngModelChange)="onRouteSelectionChanged('login', $event)">
+        <select [ngModel]="vm.signinBoardId" (ngModelChange)="onRouteSelectionChanged('signin', $event)">
           <option value="" selected disabled>Select a board</option>
           <option *ngFor="let board of vm.boards" [value]="board.id">
             {{ board.boardName }} (/{{ board.boardUrl }})
           </option>
         </select>
-        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'login'">Saved</em>
+        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'signin'">Saved</em>
       </div>
     </label>
 

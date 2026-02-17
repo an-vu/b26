@@ -39,6 +39,8 @@ export type SystemRoutes = {
   globalInsightsBoardUrl: string;
   globalSettingsBoardId: string;
   globalSettingsBoardUrl: string;
+  globalSigninBoardId?: string;
+  globalSigninBoardUrl?: string;
   globalLoginBoardId?: string;
   globalLoginBoardUrl?: string;
 };
@@ -47,6 +49,7 @@ export type UpdateSystemRoutesRequest = {
   globalHomepageBoardId: string;
   globalInsightsBoardId: string;
   globalSettingsBoardId: string;
+  globalSigninBoardId?: string;
   globalLoginBoardId?: string;
 };
 

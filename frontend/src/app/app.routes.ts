@@ -6,7 +6,7 @@ export const routes: Routes = [
   { path: 'b/:boardId', component: BoardPageComponent },
   { path: 'insights', component: BoardPageComponent, data: { systemRoute: 'insights', readOnly: true } },
   { path: 'settings', component: BoardPageComponent, data: { systemRoute: 'settings', readOnly: true } },
-  { path: 'login', component: BoardPageComponent, data: { systemRoute: 'login', readOnly: true } },
+  { path: 'signin', component: BoardPageComponent, data: { systemRoute: 'signin', readOnly: true } },
   { path: 'u/:boardId', redirectTo: 'b/:boardId' },
   { path: ':username', component: BoardPageComponent, data: { userMainRoute: true, readOnly: true } },
   { path: '**', redirectTo: '' },

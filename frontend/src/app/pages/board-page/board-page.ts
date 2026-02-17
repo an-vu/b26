@@ -21,7 +21,7 @@ type BoardPageState =
   | { status: 'ready'; board: Board }
   | { status: 'missing' };
 
-type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings';
+type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings' | 'signin';
 type WidgetDraft = {
   id?: number;
   type: WidgetType;
@@ -549,7 +549,7 @@ export class BoardPageComponent {
       };
     }
 
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
       return {
         ...base,
         config: {},
@@ -580,7 +580,7 @@ export class BoardPageComponent {
       draft.placesText = '';
       return;
     }
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
       draft.embedUrl = '';
       draft.linkUrl = '';
       draft.placesText = '';
@@ -611,7 +611,7 @@ export class BoardPageComponent {
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
       return of(dataBoardId);
     }
-    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'login') {
+    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'signin') {
       return this.boardService.getSystemRoutes().pipe(
         map((routes) => {
           if (systemRoute === 'main') {
@@ -620,8 +620,8 @@ export class BoardPageComponent {
           if (systemRoute === 'insights') {
             return routes.globalInsightsBoardUrl || 'insights';
           }
-          if (systemRoute === 'login') {
-            return routes.globalLoginBoardUrl || 'login-board';
+          if (systemRoute === 'signin') {
+            return routes.globalSigninBoardUrl || routes.globalLoginBoardUrl || 'signin-board';
           }
           return routes.globalSettingsBoardUrl || 'settings';
         }),
@@ -631,8 +631,8 @@ export class BoardPageComponent {
               ? 'home'
               : systemRoute === 'insights'
                 ? 'insights'
-                : systemRoute === 'login'
-                  ? 'login-board'
+                : systemRoute === 'signin'
+                  ? 'signin-board'
                   : 'settings'
           )
         )
@@ -655,7 +655,7 @@ export class BoardPageComponent {
     if (draft.type === 'embed') {
       return this.normalizeHttpUrl(draft.embedUrl) ? '' : 'Embed URL must be a valid web address.';
     }
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings') {
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
       return '';
     }
     return this.normalizeHttpUrl(draft.linkUrl) ? '' : 'Link URL must be a valid web address.';
@@ -667,7 +667,8 @@ export class BoardPageComponent {
       type === 'map' ||
       type === 'link' ||
       type === 'user-settings' ||
-      type === 'admin-settings'
+      type === 'admin-settings' ||
+      type === 'signin'
     ) {
       return type;
     }
