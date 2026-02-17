@@ -132,7 +132,7 @@
               <input type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
             </label>
             <label>
-              URL Name
+              URL
               <div class="slug-input-wrap">
                 <span>/</span>
                 <input type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
@@ -238,9 +238,10 @@
       >
         <option value="span-1">1c x 1r</option>
         <option value="span-2">2c x 1r</option>
+        <option value="span-3">3c x 1r</option>
+        <option value="span-4">4c x 1r</option>
         <option value="span-1x2">1c x 2r</option>
         <option value="span-2x2">2c x 2r</option>
-        <option value="span-4">4c x 1r</option>
       </select>
     </label>
     <label *ngIf="draft.type === 'embed'">
