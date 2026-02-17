@@ -85,11 +85,11 @@ public class BoardDataSeeder {
                   "Manage your account and app configuration",
                   List.of()),
               buildBoard(
-                  "login",
+                  "signin",
                   "anvu",
-                  "Login",
-                  "login-board",
-                  "Login",
+                  "Sign In",
+                  "signin-board",
+                  "Sign In",
                   "Sign in to manage your board",
                   List.of())));
 
@@ -135,6 +135,18 @@ public class BoardDataSeeder {
                 "span-2",
                 "{\"url\":\"https://example.com/settings/admin\"}",
                 1));
+      }
+
+      BoardEntity signinBoard = byId.get("signin");
+      if (signinBoard != null) {
+        widgets.add(
+            buildWidget(
+                signinBoard,
+                "signin",
+                "Welcome Back!",
+                "span-2",
+                "{}",
+                0));
       }
 
       for (BoardEntity board : boards) {

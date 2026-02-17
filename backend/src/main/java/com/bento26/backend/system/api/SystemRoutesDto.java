@@ -7,5 +7,5 @@ public record SystemRoutesDto(
     String globalInsightsBoardUrl,
     String globalSettingsBoardId,
     String globalSettingsBoardUrl,
-    String globalLoginBoardId,
-    String globalLoginBoardUrl) {}
+    String globalSigninBoardId,
+    String globalSigninBoardUrl) {}

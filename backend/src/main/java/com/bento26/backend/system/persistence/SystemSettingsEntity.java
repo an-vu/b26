@@ -21,8 +21,8 @@ public class SystemSettingsEntity {
   @Column(name = "global_settings_board_id", nullable = false)
   private String globalSettingsBoardId;
 
-  @Column(name = "global_login_board_id", nullable = false)
-  private String globalLoginBoardId;
+  @Column(name = "global_signin_board_id", nullable = false)
+  private String globalSigninBoardId;
 
   @Column(name = "updated_at", nullable = false)
   private OffsetDateTime updatedAt;
@@ -59,12 +59,12 @@ public class SystemSettingsEntity {
     this.globalSettingsBoardId = globalSettingsBoardId;
   }
 
-  public String getGlobalLoginBoardId() {
-    return globalLoginBoardId;
+  public String getGlobalSigninBoardId() {
+    return globalSigninBoardId;
   }
 
-  public void setGlobalLoginBoardId(String globalLoginBoardId) {
-    this.globalLoginBoardId = globalLoginBoardId;
+  public void setGlobalSigninBoardId(String globalSigninBoardId) {
+    this.globalSigninBoardId = globalSigninBoardId;
   }
 
   public OffsetDateTime getUpdatedAt() {
