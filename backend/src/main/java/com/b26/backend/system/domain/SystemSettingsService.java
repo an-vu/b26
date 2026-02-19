@@ -31,7 +31,6 @@ public class SystemSettingsService {
     BoardEntity insightsBoard = findBoardById(settings.getGlobalInsightsBoardId());
     BoardEntity settingsBoard = findBoardById(settings.getGlobalSettingsBoardId());
     BoardEntity signinBoard = findBoardById(settings.getGlobalSigninBoardId());
-    BoardEntity signupBoard = findBoardById(settings.getGlobalSignupBoardId());
     return new SystemRoutesDto(
         homepageBoard.getId(),
         homepageBoard.getBoardUrl(),
@@ -40,9 +39,7 @@ public class SystemSettingsService {
         settingsBoard.getId(),
         settingsBoard.getBoardUrl(),
         signinBoard.getId(),
-        signinBoard.getBoardUrl(),
-        signupBoard.getId(),
-        signupBoard.getBoardUrl());
+        signinBoard.getBoardUrl());
   }
 
   @Transactional
@@ -51,14 +48,13 @@ public class SystemSettingsService {
     BoardEntity insightsBoard = findBoardById(request.globalInsightsBoardId().trim());
     BoardEntity settingsBoard = findBoardById(request.globalSettingsBoardId().trim());
     BoardEntity signinBoard = resolveSigninBoardForUpdate(request);
-    BoardEntity signupBoard = resolveSignupBoardForUpdate(request);
 
     SystemSettingsEntity settings = getOrCreateDefaults();
     settings.setGlobalHomepageBoardId(homepageBoard.getId());
     settings.setGlobalInsightsBoardId(insightsBoard.getId());
     settings.setGlobalSettingsBoardId(settingsBoard.getId());
     settings.setGlobalSigninBoardId(signinBoard.getId());
-    settings.setGlobalSignupBoardId(signupBoard.getId());
+    settings.setGlobalSignupBoardId(signinBoard.getId());
     settings.setUpdatedAt(OffsetDateTime.now());
     systemSettingsRepository.save(settings);
 
@@ -70,9 +66,7 @@ public class SystemSettingsService {
         settingsBoard.getId(),
         settingsBoard.getBoardUrl(),
         signinBoard.getId(),
-        signinBoard.getBoardUrl(),
-        signupBoard.getId(),
-        signupBoard.getBoardUrl());
+        signinBoard.getBoardUrl());
   }
 
   private SystemSettingsEntity getOrCreateDefaults() {
@@ -86,7 +80,7 @@ public class SystemSettingsService {
               settings.setGlobalInsightsBoardId("insights");
               settings.setGlobalSettingsBoardId("settings");
               settings.setGlobalSigninBoardId("signin");
-              settings.setGlobalSignupBoardId("signup");
+              settings.setGlobalSignupBoardId("signin");
               settings.setUpdatedAt(OffsetDateTime.now());
               return systemSettingsRepository.save(settings);
             });
@@ -96,14 +90,6 @@ public class SystemSettingsService {
     String requested = request.globalSigninBoardId();
     if (requested == null || requested.isBlank()) {
       return findBoardById(getOrCreateDefaults().getGlobalSigninBoardId());
-    }
-    return findBoardById(requested.trim());
-  }
-
-  private BoardEntity resolveSignupBoardForUpdate(UpdateSystemRoutesRequest request) {
-    String requested = request.globalSignupBoardId();
-    if (requested == null || requested.isBlank()) {
-      return findBoardById(getOrCreateDefaults().getGlobalSignupBoardId());
     }
     return findBoardById(requested.trim());
   }

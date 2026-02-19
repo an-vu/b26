@@ -706,6 +706,42 @@ class ApiIntegrationTest {
         .andExpect(status().isNotFound());
   }
 
+  @Test
+  void getMyBoards_ordersMainBoardFirst_thenByUpdatedAtDesc() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
+
+    mockMvc
+        .perform(
+            patch("/api/users/me/preferences")
+                .header("Authorization", authHeader)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"mainBoardId\":\"berkshire\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.mainBoardId").value("berkshire"));
+
+    mockMvc
+        .perform(
+            patch("/api/board/default/meta")
+                .header("Authorization", authHeader)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Default Ordered\",\"headline\":\"Ordered\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(
+            patch("/api/board/home/meta")
+                .header("Authorization", authHeader)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"name\":\"Home Ordered\",\"headline\":\"Ordered\"}"))
+        .andExpect(status().isOk());
+
+    mockMvc
+        .perform(get("/api/board/mine").header("Authorization", authHeader))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$[0].id").value("berkshire"))
+        .andExpect(jsonPath("$[1].id").value("home"));
+  }
+
   private long createWidgetAndReturnId() throws Exception {
     String payload =
         """

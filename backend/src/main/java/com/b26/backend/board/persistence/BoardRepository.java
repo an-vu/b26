@@ -15,5 +15,5 @@ public interface BoardRepository extends JpaRepository<BoardEntity, String> {
 
   Optional<BoardEntity> findFirstByOwnerUserIdOrderByBoardNameAsc(String ownerUserId);
 
-  List<BoardEntity> findByOwnerUserIdOrderByBoardNameAsc(String ownerUserId);
+  List<BoardEntity> findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(String ownerUserId);
 }

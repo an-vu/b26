@@ -8,6 +8,7 @@ import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +33,9 @@ public class BoardEntity {
 
   @Column(name = "owner_user_id", nullable = false)
   private String ownerUserId;
+
+  @Column(name = "updated_at", nullable = false)
+  private OffsetDateTime updatedAt;
 
   @Version private Long version;
 
@@ -85,6 +89,14 @@ public class BoardEntity {
 
   public void setOwnerUserId(String ownerUserId) {
     this.ownerUserId = ownerUserId;
+  }
+
+  public OffsetDateTime getUpdatedAt() {
+    return updatedAt;
+  }
+
+  public void setUpdatedAt(OffsetDateTime updatedAt) {
+    this.updatedAt = updatedAt;
   }
 
   public Long getVersion() {

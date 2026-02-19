@@ -22,17 +22,8 @@ export class BoardStoreService {
     this.boardsSubject.next([]);
   }
 
-  updateBoardInStore(updated: Board) {
-    const current = this.boardsSubject.value;
-    const next = [...current];
-    const idx = next.findIndex((board) => board.id === updated.id);
-    const mapped = this.toIdentity(updated);
-    if (idx >= 0) {
-      next[idx] = mapped;
-    } else {
-      next.push(mapped);
-    }
-    this.boardsSubject.next(next);
+  updateBoardInStore(_updated: Board) {
+    this.refreshBoards();
   }
 
   private toIdentity(board: Board): BoardIdentity {

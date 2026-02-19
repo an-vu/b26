@@ -5,6 +5,7 @@ import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.widget.persistence.WidgetEntity;
 import com.b26.backend.widget.persistence.WidgetRepository;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 import org.springframework.boot.CommandLineRunner;
@@ -24,82 +25,74 @@ public class BoardDataSeeder {
       List<BoardEntity> boards =
           boardRepository.saveAll(
               List.of(
-              buildBoard(
-                  "default",
-                  "anvu",
-                  "Default",
-                  "default",
-                  "An Vu",
-                  "Software Engineer - Angular + Java",
-                  List.of(
-                      new CardSeed("github", "GitHub", "https://github.com/"),
-                      new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                      new CardSeed("resume", "Resume", "#"),
-                      new CardSeed("projects", "Projects", "#"))),
-              buildBoard(
-                  "berkshire",
-                  "anvu",
-                  "Berkshire",
-                  "berkshire",
-                  "An Vu",
-                  "Software Engineering - Angular + Spring Boot",
-                  List.of(
-                      new CardSeed("github", "GitHub", "https://github.com/"),
-                      new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                      new CardSeed("resume", "Resume", "#"),
-                      new CardSeed("projects", "Projects", "#"))),
-              buildBoard(
-                  "union-pacific",
-                  "anvu",
-                  "Union Pacific",
-                  "union-pacific",
-                  "An Vu",
-                  "Software Engineering - Angular + Java",
-                  List.of(
-                      new CardSeed("github", "GitHub", "https://github.com/"),
-                      new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                      new CardSeed("resume", "Resume", "#"),
-                      new CardSeed("projects", "Projects", "#"))),
-              buildBoard(
-                  "home",
-                  "anvu",
-                  "Home",
-                  "home",
-                  "B26",
-                  "Angular x Java",
-                  List.of(new CardSeed("home", "Home", "https://anvu.tech/"))),
-              buildBoard(
-                  "insights",
-                  "anvu",
-                  "Insights",
-                  "insights",
-                  "Insights",
-                  "Overview of your profile performance",
-                  List.of()),
-              buildBoard(
-                  "settings",
-                  "anvu",
-                  "Settings",
-                  "settings",
-                  "Settings",
-                  "Manage your account and app configuration",
-                  List.of()),
-              buildBoard(
-                  "signin",
-                  "anvu",
-                  "Sign In",
-                  "signin-board",
-                  "Sign In",
-                  "Sign in to manage your board",
-                  List.of()),
-              buildBoard(
-                  "signup",
-                  "anvu",
-                  "Sign Up",
-                  "signup-board",
-                  "Create Account",
-                  "Create an account to manage your board",
-                  List.of())));
+                  buildBoard(
+                      "default",
+                      "anvu",
+                      "Default",
+                      "default",
+                      "An Vu",
+                      "Software Engineer - Angular + Java",
+                      List.of(
+                          new CardSeed("github", "GitHub", "https://github.com/"),
+                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
+                          new CardSeed("resume", "Resume", "#"),
+                          new CardSeed("projects", "Projects", "#"))),
+                  buildBoard(
+                      "berkshire",
+                      "anvu",
+                      "Berkshire",
+                      "berkshire",
+                      "An Vu",
+                      "Software Engineering - Angular + Spring Boot",
+                      List.of(
+                          new CardSeed("github", "GitHub", "https://github.com/"),
+                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
+                          new CardSeed("resume", "Resume", "#"),
+                          new CardSeed("projects", "Projects", "#"))),
+                  buildBoard(
+                      "union-pacific",
+                      "anvu",
+                      "Union Pacific",
+                      "union-pacific",
+                      "An Vu",
+                      "Software Engineering - Angular + Java",
+                      List.of(
+                          new CardSeed("github", "GitHub", "https://github.com/"),
+                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
+                          new CardSeed("resume", "Resume", "#"),
+                          new CardSeed("projects", "Projects", "#"))),
+                  buildBoard(
+                      "home",
+                      "anvu",
+                      "Home",
+                      "home",
+                      "B26",
+                      "Angular x Java",
+                      List.of(new CardSeed("home", "Home", "https://anvu.tech/"))),
+                  buildBoard(
+                      "insights",
+                      "anvu",
+                      "Insights",
+                      "insights",
+                      "Insights",
+                      "Overview of your profile performance",
+                      List.of()),
+                  buildBoard(
+                      "settings",
+                      "anvu",
+                      "Settings",
+                      "settings",
+                      "Settings",
+                      "Manage your account and app configuration",
+                      List.of()),
+                  buildBoard(
+                      "signin",
+                      "anvu",
+                      "Sign In",
+                      "signin-board",
+                      "Sign In",
+                      "Sign in to manage your board",
+                      List.of())));
 
       Map<String, BoardEntity> byId =
           boards.stream().collect(java.util.stream.Collectors.toMap(BoardEntity::getId, p -> p));
@@ -157,18 +150,6 @@ public class BoardDataSeeder {
                 0));
       }
 
-      BoardEntity signupBoard = byId.get("signup");
-      if (signupBoard != null) {
-        widgets.add(
-            buildWidget(
-                signupBoard,
-                "signup",
-                "Create Your Account",
-                "span-2",
-                "{}",
-                0));
-      }
-
       for (BoardEntity board : boards) {
         int baseOrder = "default".equals(board.getId()) ? 2 : 0;
         int offset = 0;
@@ -204,6 +185,7 @@ public class BoardDataSeeder {
     board.setBoardUrl(boardUrl);
     board.setName(name);
     board.setHeadline(headline);
+    board.setUpdatedAt(OffsetDateTime.now());
 
     for (CardSeed seed : cardSeeds) {
       CardEntity card = new CardEntity();

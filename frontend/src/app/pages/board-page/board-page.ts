@@ -670,7 +670,7 @@ export class BoardPageComponent {
     if (typeof dataBoardId === 'string' && dataBoardId.trim().length > 0) {
       return of(dataBoardId);
     }
-    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'signin' || systemRoute === 'signup') {
+    if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'signin') {
       return this.boardService.getSystemRoutes().pipe(
         map((routes) => {
           if (systemRoute === 'main') {
@@ -682,9 +682,6 @@ export class BoardPageComponent {
           if (systemRoute === 'signin') {
             return routes.globalSigninBoardUrl || routes.globalLoginBoardUrl || 'signin-board';
           }
-          if (systemRoute === 'signup') {
-            return routes.globalSignupBoardUrl || 'signup-board';
-          }
           return routes.globalSettingsBoardUrl || 'settings';
         }),
         catchError(() =>
@@ -695,9 +692,7 @@ export class BoardPageComponent {
                 ? 'insights'
                 : systemRoute === 'signin'
                   ? 'signin-board'
-                  : systemRoute === 'signup'
-                    ? 'signup-board'
-                    : 'settings'
+                  : 'settings'
           )
         )
       );

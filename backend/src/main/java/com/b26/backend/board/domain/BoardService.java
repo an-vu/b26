@@ -10,6 +10,8 @@ import com.b26.backend.board.persistence.CardEntity;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
+import com.b26.backend.user.persistence.UserPreferenceRepository;
+import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -22,9 +24,11 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BoardService {
   private final BoardRepository boardRepository;
+  private final UserPreferenceRepository userPreferenceRepository;
 
-  public BoardService(BoardRepository boardRepository) {
+  public BoardService(BoardRepository boardRepository, UserPreferenceRepository userPreferenceRepository) {
     this.boardRepository = boardRepository;
+    this.userPreferenceRepository = userPreferenceRepository;
   }
 
   @Transactional(readOnly = true)
@@ -44,7 +48,21 @@ public class BoardService {
 
   @Transactional(readOnly = true)
   public List<BoardDto> getBoardsForOwner(String ownerUserId) {
-    return boardRepository.findByOwnerUserIdOrderByBoardNameAsc(ownerUserId).stream()
+    String mainBoardId =
+        userPreferenceRepository
+            .findById(ownerUserId)
+            .map(preference -> preference.getMainBoardId() == null ? "" : preference.getMainBoardId().trim())
+            .orElse("");
+
+    return boardRepository.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(ownerUserId).stream()
+        .sorted((left, right) -> {
+          boolean leftPinned = !mainBoardId.isEmpty() && mainBoardId.equals(left.getId());
+          boolean rightPinned = !mainBoardId.isEmpty() && mainBoardId.equals(right.getId());
+          if (leftPinned == rightPinned) {
+            return 0;
+          }
+          return leftPinned ? -1 : 1;
+        })
         .map(BoardService::toDto)
         .toList();
   }
@@ -123,6 +141,7 @@ public class BoardService {
   }
 
   private BoardDto persist(BoardEntity board) {
+    board.setUpdatedAt(OffsetDateTime.now());
     try {
       return toDto(boardRepository.saveAndFlush(board));
     } catch (DataIntegrityViolationException exception) {

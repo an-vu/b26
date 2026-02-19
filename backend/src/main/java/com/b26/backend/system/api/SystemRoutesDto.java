@@ -8,6 +8,4 @@ public record SystemRoutesDto(
     String globalSettingsBoardId,
     String globalSettingsBoardUrl,
     String globalSigninBoardId,
-    String globalSigninBoardUrl,
-    String globalSignupBoardId,
-    String globalSignupBoardUrl) {}
+    String globalSigninBoardUrl) {}

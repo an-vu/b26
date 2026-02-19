@@ -41,8 +41,6 @@ export type SystemRoutes = {
   globalSettingsBoardUrl: string;
   globalSigninBoardId?: string;
   globalSigninBoardUrl?: string;
-  globalSignupBoardId?: string;
-  globalSignupBoardUrl?: string;
   globalLoginBoardId?: string;
   globalLoginBoardUrl?: string;
 };
@@ -52,7 +50,6 @@ export type UpdateSystemRoutesRequest = {
   globalInsightsBoardId: string;
   globalSettingsBoardId: string;
   globalSigninBoardId?: string;
-  globalSignupBoardId?: string;
   globalLoginBoardId?: string;
 };
 
@@ -86,7 +83,6 @@ export type UpdateUserProfileRequest = {
   username: string;
   email: string | null;
 };
-
 
 export type BoardPermissions = {
   canEdit: boolean;

@@ -9,6 +9,7 @@ import com.b26.backend.widget.persistence.WidgetEntity;
 import com.b26.backend.widget.persistence.WidgetRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import java.time.OffsetDateTime;
 import java.util.List;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -45,6 +46,7 @@ public class WidgetService {
     WidgetEntity widget = new WidgetEntity();
     applyRequest(widget, request);
     widget.setBoard(board);
+    board.setUpdatedAt(OffsetDateTime.now());
     return toDto(widgetRepository.save(widget));
   }
 
@@ -59,6 +61,7 @@ public class WidgetService {
             .findByIdAndBoard_Id(widgetId, board.getId())
             .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     applyRequest(widget, request);
+    board.setUpdatedAt(OffsetDateTime.now());
     return toDto(widgetRepository.save(widget));
   }
 
@@ -70,6 +73,7 @@ public class WidgetService {
             .findByIdAndBoard_Id(widgetId, board.getId())
             .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
     widgetRepository.delete(widget);
+    board.setUpdatedAt(OffsetDateTime.now());
   }
 
   private BoardEntity findBoardByUrl(String boardUrl) {
