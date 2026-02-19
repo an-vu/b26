@@ -1,5 +1,8 @@
 package com.b26.backend.board.api;
 
+import com.b26.backend.auth.domain.AuthService;
+import com.b26.backend.auth.domain.AuthUnauthorizedException;
+import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.board.domain.BoardService;
 import jakarta.validation.Valid;
 import java.util.List;
@@ -8,6 +11,7 @@ import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -15,9 +19,11 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/board")
 public class BoardController {
   private final BoardService boardService;
+  private final AuthService authService;
 
-  public BoardController(BoardService boardService) {
+  public BoardController(BoardService boardService, AuthService authService) {
     this.boardService = boardService;
+    this.authService = authService;
   }
 
   @GetMapping("/{boardId}")
@@ -28,6 +34,30 @@ public class BoardController {
   @GetMapping
   public List<BoardDto> getBoards() {
     return boardService.getBoards();
+  }
+
+
+  @GetMapping("/mine")
+  public List<BoardDto> getMyBoards(
+      @RequestHeader(name = "Authorization", required = false)
+          String authorizationHeader) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+    return boardService.getBoardsForOwner(user.getId());
+  }
+
+
+  @GetMapping("/{boardId}/permissions")
+  public BoardPermissionsResponse getBoardPermissions(
+      @PathVariable String boardId,
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    AppUserEntity user = null;
+    try {
+      user = authService.getAuthenticatedUser(authorizationHeader);
+    } catch (AuthUnauthorizedException ignored) {
+      user = null;
+    }
+
+    return new BoardPermissionsResponse(boardService.canEditBoard(boardId, user));
   }
 
   @PutMapping("/{boardId}")

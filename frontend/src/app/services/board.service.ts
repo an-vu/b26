@@ -14,6 +14,7 @@ import type {
   UpdateUserPreferencesRequest,
   UpdateUserProfileRequest,
   UserPreferences,
+  BoardPermissions,
 } from '../models/board';
 import type { UpsertWidgetRequest, Widget } from '../models/widget';
 import { environment } from '../../environments/environment';
@@ -28,6 +29,10 @@ export class BoardService {
 
   getBoards(): Observable<Board[]> {
     return this.http.get<Board[]>(`${environment.apiBaseUrl}/api/board`);
+  }
+
+  getMyBoards(): Observable<Board[]> {
+    return this.http.get<Board[]>(`${environment.apiBaseUrl}/api/board/mine`);
   }
 
   updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {
@@ -56,6 +61,10 @@ export class BoardService {
       payload,
       this.withAdminHeader()
     );
+  }
+
+  getBoardPermissions(boardId: string): Observable<BoardPermissions> {
+    return this.http.get<BoardPermissions>(`${environment.apiBaseUrl}/api/board/${boardId}/permissions`);
   }
 
   getWidgets(boardId: string): Observable<Widget[]> {

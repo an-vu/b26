@@ -3,32 +3,6 @@
 
   <form class="signup-block" (ngSubmit)="onSignupSubmit()">
     <label class="signup-field">
-      <span>Name</span>
-      <input
-        type="text"
-        name="displayName"
-        [(ngModel)]="displayName"
-        placeholder="Enter your name"
-        autocomplete="name"
-        [disabled]="isSubmitting"
-        required
-      />
-    </label>
-
-    <label class="signup-field">
-      <span>Username</span>
-      <input
-        type="text"
-        name="username"
-        [(ngModel)]="username"
-        placeholder="your-username"
-        autocomplete="username"
-        [disabled]="isSubmitting"
-        required
-      />
-    </label>
-
-    <label class="signup-field">
       <span>Email</span>
       <input
         type="email"
@@ -46,6 +20,8 @@
       <input
         type="password"
         name="password"
+        minlength="8"
+        maxlength="72"
         [(ngModel)]="password"
         placeholder="Create a password"
         autocomplete="new-password"

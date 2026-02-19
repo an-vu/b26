@@ -48,13 +48,19 @@ public class AuthService {
   public AuthSessionResponse signup(SignupRequest request) {
     String normalizedEmail = normalizeEmail(request.email());
     String normalizedUsername = normalizeUsername(request.username());
+    if (normalizedUsername.isEmpty()) {
+      normalizedUsername = ensureUniqueUsername(deriveUsernameSeedFromEmail(normalizedEmail));
+    } else if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
+      throw new AuthConflictException("username already in use");
+    }
+
     String normalizedDisplayName = normalizeDisplayName(request.displayName());
+    if (normalizedDisplayName.isEmpty()) {
+      normalizedDisplayName = defaultDisplayNameFromUsername(normalizedUsername);
+    }
 
     if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
       throw new AuthConflictException("email already in use");
-    }
-    if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
-      throw new AuthConflictException("username already in use");
     }
 
     AppUserEntity user = new AppUserEntity();
@@ -191,6 +197,9 @@ public class AuthService {
 
   private static String normalizeUsername(String username) {
     String normalized = username == null ? "" : username.trim().toLowerCase();
+    if (normalized.isEmpty()) {
+      return "";
+    }
     if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
       throw new InvalidAuthRequestException("username format is invalid");
     }
@@ -198,11 +207,51 @@ public class AuthService {
   }
 
   private static String normalizeDisplayName(String displayName) {
-    String normalized = displayName == null ? "" : displayName.trim();
-    if (normalized.isEmpty()) {
-      throw new InvalidAuthRequestException("displayName is required");
+    return displayName == null ? "" : displayName.trim();
+  }
+
+  private static String deriveUsernameSeedFromEmail(String email) {
+    String localPart = email;
+    int atIndex = email.indexOf('@');
+    if (atIndex > 0) {
+      localPart = email.substring(0, atIndex);
     }
-    return normalized;
+
+    String seed = localPart.toLowerCase().replaceAll("[^a-z0-9]+", "-");
+    seed = seed.replaceAll("^-+|-+$", "");
+    if (seed.isBlank()) {
+      seed = "user";
+    }
+    if (seed.length() > 40) {
+      seed = seed.substring(0, 40).replaceAll("-+$", "");
+      if (seed.isBlank()) {
+        seed = "user";
+      }
+    }
+    return seed;
+  }
+
+  private String ensureUniqueUsername(String baseSeed) {
+    if (!appUserRepository.existsByUsernameIgnoreCase(baseSeed)) {
+      return baseSeed;
+    }
+
+    for (int attempt = 1; attempt <= 9999; attempt++) {
+      String candidate = baseSeed + "-" + attempt;
+      if (!appUserRepository.existsByUsernameIgnoreCase(candidate)) {
+        return candidate;
+      }
+    }
+
+    return baseSeed + "-" + UUID.randomUUID().toString().substring(0, 8);
+  }
+
+  private static String defaultDisplayNameFromUsername(String username) {
+    String words = username.replace('-', ' ').trim();
+    if (words.isBlank()) {
+      return "New User";
+    }
+    return Character.toUpperCase(words.charAt(0)) + words.substring(1);
   }
 
   private static String sha256(String value) {

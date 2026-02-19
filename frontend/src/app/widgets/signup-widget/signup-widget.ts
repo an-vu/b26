@@ -16,8 +16,6 @@ import { AuthService } from '../../services/auth.service';
 export class SignupWidgetComponent {
   @Input({ required: true }) widget!: Widget;
 
-  displayName = '';
-  username = '';
   email = '';
   password = '';
   confirmPassword = '';
@@ -36,13 +34,15 @@ export class SignupWidgetComponent {
 
     this.errorMessage = '';
 
-    const displayName = this.displayName.trim();
-    const username = this.username.trim().toLowerCase();
     const email = this.email.trim().toLowerCase();
     const password = this.password;
 
-    if (!displayName || !username || !email || !password) {
-      this.errorMessage = 'All fields are required.';
+    if (!email || !password) {
+      this.errorMessage = 'Email and password are required.';
+      return;
+    }
+    if (password.length < 8 || password.length > 72) {
+      this.errorMessage = 'Password must be between 8 and 72 characters.';
       return;
     }
     if (password !== this.confirmPassword) {
@@ -54,8 +54,6 @@ export class SignupWidgetComponent {
 
     this.authService
       .signup({
-        displayName,
-        username,
         email,
         password,
       })
@@ -81,12 +79,26 @@ export class SignupWidgetComponent {
 
   private resolveErrorMessage(error: unknown): string {
     if (error instanceof HttpErrorResponse) {
-      const message = (error.error as { message?: string } | null)?.message;
-      if (typeof message === 'string' && message.trim()) {
+      const payload = error.error as
+        | { message?: string; errors?: Array<{ field?: string; message?: string }> }
+        | null;
+
+      if (Array.isArray(payload?.errors) && payload.errors.length > 0) {
+        const firstError = payload.errors[0];
+        const firstField = firstError?.field?.trim();
+        const firstMessage = firstError?.message?.trim();
+        if (firstMessage) {
+          return firstField ? `${firstField}: ${firstMessage}` : firstMessage;
+        }
+      }
+
+      const message = payload?.message?.trim();
+      if (message) {
         return message;
       }
+
       if (error.status === 409) {
-        return 'Email or username already exists.';
+        return 'Email already exists.';
       }
     }
     return 'Unable to sign up right now.';

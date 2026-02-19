@@ -105,9 +105,10 @@
             <span class="orb-button__label">{{ accountUser.username }}</span>
           </button>
           <div class="account-menu" *ngIf="isAccountMenuOpen">
+            <ng-container *ngIf="isSignedIn; else signedOutMenu">
             <section class="account-user">
               <p class="account-user-name">{{ accountUser.name }}</p>
-              <p class="account-user-handle text-muted">{{ accountUser.username }}</p>
+              <p class="account-user-handle text-muted">{{ isSignedIn ? accountUser.username : 'Sign In' }}</p>
             </section>
             <hr />
             <p class="account-menu-label meta-label">Boards</p>
@@ -117,11 +118,15 @@
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
             <button type="button" class="account-link" (click)="signOut()" [disabled]="isSigningOut">{{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}</button>
+            </ng-container>
+            <ng-template #signedOutMenu>
+              <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
+            </ng-template>
           </div>
         </div>
       </div>
 
-      <div class="board-identity-wrap" *ngIf="!isReadOnlyView()">
+      <div class="board-identity-wrap" *ngIf="!isReadOnlyView() && canEditBoard">
         <div class="board-identity-menu-anchor">
           <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()">
             {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
@@ -199,6 +204,44 @@
   <main class="page" *ngIf="state.status === 'missing'">
     <p>Board not found.</p>
   </main>
+
+  <div class="bottom-actions" *ngIf="state.status !== 'ready'">
+    <div class="bottom-actions-left">
+      <button type="button" class="bottom-action-button orb-button orb-button--red" routerLink="/">
+        <span class="orb-button__dot" aria-hidden="true"></span>
+        <span class="orb-button__label">Home</span>
+      </button>
+      <button type="button" class="bottom-action-button orb-button orb-button--yellow">
+        <span class="orb-button__dot" aria-hidden="true"></span>
+        <span class="orb-button__label">Search</span>
+      </button>
+      <div class="account-menu-wrap">
+        <button type="button" class="bottom-action-button orb-button orb-button--blue" (click)="toggleAccountMenu()">
+          <span class="orb-button__dot" aria-hidden="true"></span>
+          <span class="orb-button__label">{{ accountUser.username }}</span>
+        </button>
+        <div class="account-menu" *ngIf="isAccountMenuOpen">
+          <ng-container *ngIf="isSignedIn; else signedOutMenuFallback">
+            <section class="account-user">
+              <p class="account-user-name">{{ accountUser.name }}</p>
+              <p class="account-user-handle text-muted">{{ accountUser.username }}</p>
+            </section>
+            <hr />
+            <p class="account-menu-label meta-label">Boards</p>
+            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
+            <button type="button" class="account-link">Create New Board</button>
+            <hr />
+            <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
+            <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
+            <button type="button" class="account-link" (click)="signOut()" [disabled]="isSigningOut">{{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}</button>
+          </ng-container>
+          <ng-template #signedOutMenuFallback>
+            <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
+          </ng-template>
+        </div>
+      </div>
+    </div>
+  </div>
 </ng-container>
 
 <ng-template #widgetSettingsForm let-draft let-isNew="isNew" let-i="index">

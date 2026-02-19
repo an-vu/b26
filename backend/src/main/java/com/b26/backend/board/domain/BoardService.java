@@ -9,6 +9,7 @@ import com.b26.backend.board.api.UpdateBoardUrlRequest;
 import com.b26.backend.board.persistence.CardEntity;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.user.persistence.AppUserEntity;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -38,6 +39,25 @@ public class BoardService {
         .map(BoardService::toDto)
         .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
         .toList();
+  }
+
+
+  @Transactional(readOnly = true)
+  public List<BoardDto> getBoardsForOwner(String ownerUserId) {
+    return boardRepository.findByOwnerUserIdOrderByBoardNameAsc(ownerUserId).stream()
+        .map(BoardService::toDto)
+        .toList();
+  }
+
+
+  @Transactional(readOnly = true)
+  public boolean canEditBoard(String boardId, AppUserEntity user) {
+    if (user == null) {
+      return false;
+    }
+
+    BoardEntity board = findBoardByUrl(boardId);
+    return isAdmin(user) || user.getId().equals(board.getOwnerUserId());
   }
 
   @Transactional
@@ -121,6 +141,10 @@ public class BoardService {
         throw new InvalidBoardUpdateException("cards contain duplicate id: " + card.id());
       }
     }
+  }
+
+  private static boolean isAdmin(AppUserEntity user) {
+    return user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().trim());
   }
 
   private static String normalizeBoardUrl(String rawBoardUrl) {

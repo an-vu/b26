@@ -59,7 +59,9 @@ export class BoardPageComponent {
   isWidgetSaving = false;
   isAccountMenuOpen = false;
   isSigningOut = false;
+  isSignedIn = false;
   isBoardIdentityMenuOpen = false;
+  canEditBoard = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
   isAddWidgetExpanded = false;
@@ -108,6 +110,13 @@ export class BoardPageComponent {
           if (state.status !== 'loading') {
             this.hasLoadedPageStateOnce = true;
           }
+
+          if (state.status === 'ready') {
+            this.loadBoardPermissions(state.board.boardUrl);
+          } else {
+            this.canEditBoard = false;
+          }
+
           if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
             this.boardIdentitySourceId = state.board.id;
             this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
@@ -144,8 +153,8 @@ export class BoardPageComponent {
 
   accountBoards: Array<{ id: string; label: string; route: string }> = [];
   accountUser = {
-    name: 'An Vu',
-    username: '@anvu',
+    name: 'Account',
+    username: '@account',
   };
 
   constructor() {
@@ -162,8 +171,14 @@ export class BoardPageComponent {
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((profile) => {
         if (!profile) {
+          this.isSignedIn = false;
+          this.accountUser = {
+            name: 'Account',
+            username: '@account',
+          };
           return;
         }
+        this.isSignedIn = true;
         this.accountUser = {
           name: profile.displayName,
           username: `@${profile.username}`,
@@ -241,13 +256,16 @@ export class BoardPageComponent {
     this.authService.signout().subscribe({
       next: () => {
         this.closeAccountMenu();
-        this.userStore.refreshMyProfile();
-        void this.router.navigateByUrl('/signin');
+        this.userStore.clearProfile();
+        this.boardStore.clearBoards();
+        void this.router.navigateByUrl('/');
       },
       error: () => {
         this.authService.clearSession();
+        this.userStore.clearProfile();
+        this.boardStore.clearBoards();
         this.closeAccountMenu();
-        void this.router.navigateByUrl('/signin');
+        void this.router.navigateByUrl('/');
       },
       complete: () => {
         this.isSigningOut = false;
@@ -466,6 +484,18 @@ export class BoardPageComponent {
 
   getDraftValidationError(draft: WidgetDraft) {
     return this.draftValidationErrors.get(draft) ?? '';
+  }
+
+
+  private loadBoardPermissions(boardUrl: string) {
+    this.boardService.getBoardPermissions(boardUrl).subscribe({
+      next: (permissions) => {
+        this.canEditBoard = !!permissions.canEdit;
+      },
+      error: () => {
+        this.canEditBoard = false;
+      },
+    });
   }
 
   private persistBoardUrlDraft() {
