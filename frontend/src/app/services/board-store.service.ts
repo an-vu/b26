@@ -12,10 +12,14 @@ export class BoardStoreService {
   constructor(private boardService: BoardService) {}
 
   refreshBoards() {
-    this.boardService.getBoards().subscribe({
+    this.boardService.getMyBoards().subscribe({
       next: (boards) => this.boardsSubject.next(boards.map((board) => this.toIdentity(board))),
       error: () => this.boardsSubject.next([]),
     });
+  }
+
+  clearBoards() {
+    this.boardsSubject.next([]);
   }
 
   updateBoardInStore(updated: Board) {

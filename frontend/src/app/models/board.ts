@@ -86,3 +86,8 @@ export type UpdateUserProfileRequest = {
   username: string;
   email: string | null;
 };
+
+
+export type BoardPermissions = {
+  canEdit: boolean;
+};

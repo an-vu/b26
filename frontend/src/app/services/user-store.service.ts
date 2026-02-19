@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, throwError } from 'rxjs';
+import { BehaviorSubject, Observable } from 'rxjs';
 import { tap } from 'rxjs/operators';
 import { BoardService } from './board.service';
 import type { UpdateUserProfileRequest, UserProfile } from '../models/board';
@@ -14,7 +14,7 @@ export class UserStoreService {
   refreshMyProfile(): void {
     this.boardService.getMyProfile().subscribe({
       next: (profile) => this.profileSubject.next(profile),
-      error: () => {},
+      error: () => this.profileSubject.next(null),
     });
   }
 
@@ -26,5 +26,9 @@ export class UserStoreService {
 
   getCurrentProfile(): UserProfile | null {
     return this.profileSubject.value;
+  }
+
+  clearProfile(): void {
+    this.profileSubject.next(null);
   }
 }

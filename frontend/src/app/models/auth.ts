@@ -6,8 +6,8 @@ export type SigninRequest = {
 export type SignupRequest = {
   email: string;
   password: string;
-  displayName: string;
-  username: string;
+  displayName?: string;
+  username?: string;
 };
 
 export type AuthUser = {
