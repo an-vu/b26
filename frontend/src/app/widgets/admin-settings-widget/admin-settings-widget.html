@@ -54,6 +54,19 @@
       </div>
     </label>
 
+    <label class="settings-field">
+      <span class="settings-label-inline">Sign up board for /signup</span>
+      <div class="settings-input-status-row">
+        <select [ngModel]="vm.signupBoardId" (ngModelChange)="onRouteSelectionChanged('signup', $event)">
+          <option value="" selected disabled>Select a board</option>
+          <option *ngFor="let board of vm.boards" [value]="board.id">
+            {{ board.boardName }} (/{{ board.boardUrl }})
+          </option>
+        </select>
+        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'signup'">Saved</em>
+      </div>
+    </label>
+
     <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
   </section>
 </article>

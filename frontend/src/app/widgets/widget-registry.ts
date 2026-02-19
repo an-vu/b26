@@ -5,6 +5,7 @@ import { MapWidgetComponent } from './map-widget/map-widget';
 import { UserSettingsWidgetComponent } from './user-settings-widget/user-settings-widget';
 import { AdminSettingsWidgetComponent } from './admin-settings-widget/admin-settings-widget';
 import { SigninWidgetComponent } from './signin-widget/signin-widget';
+import { SignupWidgetComponent } from './signup-widget/signup-widget';
 import { UnknownWidgetComponent } from './unknown-widget/unknown-widget';
 
 export const WIDGET_COMPONENT_REGISTRY: Record<string, Type<unknown>> = {
@@ -14,6 +15,7 @@ export const WIDGET_COMPONENT_REGISTRY: Record<string, Type<unknown>> = {
   'user-settings': UserSettingsWidgetComponent,
   'admin-settings': AdminSettingsWidgetComponent,
   signin: SigninWidgetComponent,
+  signup: SignupWidgetComponent,
 };
 
 export const DEFAULT_WIDGET_COMPONENT = UnknownWidgetComponent;

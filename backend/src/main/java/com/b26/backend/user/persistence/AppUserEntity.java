@@ -21,6 +21,9 @@ public class AppUserEntity {
   @Column(nullable = true)
   private String email;
 
+  @Column(name = "password_hash", nullable = true)
+  private String passwordHash;
+
   @Column(nullable = false)
   private String role;
 
@@ -54,6 +57,14 @@ public class AppUserEntity {
 
   public void setDisplayName(String displayName) {
     this.displayName = displayName;
+  }
+
+  public String getPasswordHash() {
+    return passwordHash;
+  }
+
+  public void setPasswordHash(String passwordHash) {
+    this.passwordHash = passwordHash;
   }
 
   public String getRole() {

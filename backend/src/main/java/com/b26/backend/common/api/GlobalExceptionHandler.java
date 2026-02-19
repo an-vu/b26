@@ -1,9 +1,12 @@
 package com.b26.backend.common.api;
 
+import com.b26.backend.auth.domain.AuthConflictException;
+import com.b26.backend.auth.domain.AuthUnauthorizedException;
+import com.b26.backend.auth.domain.InvalidAuthRequestException;
+import com.b26.backend.board.domain.BoardNotFoundException;
+import com.b26.backend.board.domain.InvalidBoardUpdateException;
 import com.b26.backend.insights.domain.CardNotFoundForBoardException;
 import com.b26.backend.insights.domain.ClickRateLimitedException;
-import com.b26.backend.board.domain.InvalidBoardUpdateException;
-import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.user.domain.InvalidUserPreferencesException;
 import com.b26.backend.user.domain.InvalidUserProfileException;
 import com.b26.backend.user.domain.UserNotFoundException;
@@ -11,11 +14,11 @@ import com.b26.backend.widget.domain.InvalidWidgetConfigException;
 import com.b26.backend.widget.domain.WidgetNotFoundForBoardException;
 import java.util.List;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.http.converter.HttpMessageNotReadableException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -91,5 +94,24 @@ public class GlobalExceptionHandler {
   public ValidationErrorResponse handleInvalidUserProfile(InvalidUserProfileException exception) {
     return new ValidationErrorResponse(
         "Validation failed", List.of(new ValidationFieldError("profile", exception.getMessage())));
+  }
+
+  @ExceptionHandler(InvalidAuthRequestException.class)
+  @ResponseStatus(HttpStatus.BAD_REQUEST)
+  public ValidationErrorResponse handleInvalidAuthRequest(InvalidAuthRequestException exception) {
+    return new ValidationErrorResponse(
+        "Validation failed", List.of(new ValidationFieldError("auth", exception.getMessage())));
+  }
+
+  @ExceptionHandler(AuthUnauthorizedException.class)
+  @ResponseStatus(HttpStatus.UNAUTHORIZED)
+  public ApiError handleAuthUnauthorized(AuthUnauthorizedException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(AuthConflictException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleAuthConflict(AuthConflictException exception) {
+    return new ApiError(exception.getMessage());
   }
 }

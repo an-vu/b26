@@ -91,6 +91,14 @@ public class BoardDataSeeder {
                   "signin-board",
                   "Sign In",
                   "Sign in to manage your board",
+                  List.of()),
+              buildBoard(
+                  "signup",
+                  "anvu",
+                  "Sign Up",
+                  "signup-board",
+                  "Create Account",
+                  "Create an account to manage your board",
                   List.of())));
 
       Map<String, BoardEntity> byId =
@@ -144,6 +152,18 @@ public class BoardDataSeeder {
                 signinBoard,
                 "signin",
                 "Welcome Back!",
+                "span-2",
+                "{}",
+                0));
+      }
+
+      BoardEntity signupBoard = byId.get("signup");
+      if (signupBoard != null) {
+        widgets.add(
+            buildWidget(
+                signupBoard,
+                "signup",
+                "Create Your Account",
                 "span-2",
                 "{}",
                 0));
