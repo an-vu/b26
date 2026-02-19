@@ -8,7 +8,6 @@ import com.b26.backend.auth.persistence.AuthSessionEntity;
 import com.b26.backend.auth.persistence.AuthSessionRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
-import com.b26.backend.user.persistence.UserPreferenceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -25,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -37,7 +37,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
-@SuppressWarnings("null")
 class ApiIntegrationTest {
   @Autowired private MockMvc mockMvc;
   @Autowired private ClickEventRepository clickEventRepository;
@@ -45,9 +44,26 @@ class ApiIntegrationTest {
   @Autowired private ClickAbuseGuard clickAbuseGuard;
   @Autowired private ObjectMapper objectMapper;
   @Autowired private BoardRepository boardRepository;
-  @Autowired private UserPreferenceRepository userPreferenceRepository;
   @Autowired private AppUserRepository appUserRepository;
   @Autowired private AuthSessionRepository authSessionRepository;
+
+  private static final String AUTHORIZATION_HEADER = "Authorization";
+  private static final String API_BOARD = "/api/board";
+  private static final String API_BOARD_DEFAULT = "/api/board/default";
+  private static final String API_BOARD_NOT_HERE = "/api/board/not-here";
+  private static final String API_BOARD_DEFAULT_WIDGETS = "/api/board/default/widgets";
+  private static final String API_SYSTEM_ROUTES = "/api/system/routes";
+  private static final String API_USERS_ME = "/api/users/me";
+  private static final String API_USERS_ME_PREFERENCES = "/api/users/me/preferences";
+  private static final String DEFAULT_CLICK_PAYLOAD =
+      """
+      { "boardId": "default" }
+      """;
+  private static final String DEFAULT_VIEW_PAYLOAD =
+      """
+      { "boardId": "default", "source": "direct" }
+      """;
+
 
   @BeforeEach
   void clearClicks() {
@@ -59,7 +75,7 @@ class ApiIntegrationTest {
   @Test
   void getBoard_returns200() throws Exception {
     mockMvc
-        .perform(get("/api/board/default"))
+        .perform(get(API_BOARD_DEFAULT))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.id").value("default"))
         .andExpect(jsonPath("$.name").isNotEmpty());
@@ -68,7 +84,7 @@ class ApiIntegrationTest {
   @Test
   void getBoards_returns200() throws Exception {
     mockMvc
-        .perform(get("/api/board"))
+        .perform(get(API_BOARD))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$[0].boardName").isNotEmpty())
@@ -77,12 +93,12 @@ class ApiIntegrationTest {
 
   @Test
   void postBoard_createsDefaultBoardForCurrentUser() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
+    String authHeader = authAnvu();
 
     mockMvc
         .perform(
-            post("/api/board")
-                .header("Authorization", authHeader)
+            post(API_BOARD)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{}"))
         .andExpect(status().isOk())
@@ -96,7 +112,7 @@ class ApiIntegrationTest {
   @Test
   void getSystemRoutes_returns200() throws Exception {
     mockMvc
-        .perform(get("/api/system/routes"))
+        .perform(get(API_SYSTEM_ROUTES))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.globalHomepageBoardId").isNotEmpty())
         .andExpect(jsonPath("$.globalHomepageBoardUrl").isNotEmpty())
@@ -121,8 +137,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            patch("/api/system/routes")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            patch(API_SYSTEM_ROUTES)
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -136,7 +152,7 @@ class ApiIntegrationTest {
   @Test
   void getBoard_missing_returns404() throws Exception {
     mockMvc
-        .perform(get("/api/board/not-here"))
+        .perform(get(API_BOARD_NOT_HERE))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Board not found: not-here"));
   }
@@ -157,15 +173,15 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/board/default")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            put(API_BOARD_DEFAULT)
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Updated Name"));
 
     mockMvc
-        .perform(get("/api/board/default"))
+        .perform(get(API_BOARD_DEFAULT))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.name").value("Updated Name"));
   }
@@ -181,8 +197,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            patch("/api/board/default/url")
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -202,8 +218,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default-updated/url")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            patch("/api/board/default-updated/url")
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rollbackPayload))
         .andExpect(status().isOk())
@@ -221,8 +237,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            patch("/api/board/default/url")
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -242,8 +258,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            put("/api/board/default")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+            put(API_BOARD_DEFAULT)
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -253,23 +269,18 @@ class ApiIntegrationTest {
 
   @Test
   void postClick_andGetInsights_work() throws Exception {
-    String clickPayload =
-        """
-        { "boardId": "default" }
-        """;
-
     mockMvc
         .perform(
             post("/api/click/github")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
         .perform(
             post("/api/click/linkedin")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
@@ -282,16 +293,11 @@ class ApiIntegrationTest {
 
   @Test
   void postClick_invalidCard_returns400() throws Exception {
-    String clickPayload =
-        """
-        { "boardId": "default" }
-        """;
-
     mockMvc
         .perform(
             post("/api/click/not-a-card")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isBadRequest())
         .andExpect(
             jsonPath("$.message")
@@ -300,51 +306,37 @@ class ApiIntegrationTest {
 
   @Test
   void postClick_rateLimited_returns429() throws Exception {
-    String clickPayload =
-        """
-        { "boardId": "default" }
-        """;
-
     mockMvc
         .perform(
             post("/api/click/github")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
         .perform(
             post("/api/click/github")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isTooManyRequests())
         .andExpect(jsonPath("$.message").value("Too many click events. Try again shortly."));
   }
 
   @Test
   void postView_andGetSummary_work() throws Exception {
-    String viewPayload =
-        """
-        { "boardId": "default", "source": "direct" }
-        """;
-    String clickPayload =
-        """
-        { "boardId": "default" }
-        """;
-
     mockMvc
         .perform(
             post("/api/insights/view")
                 .contentType(MediaType.APPLICATION_JSON)
                 .header("User-Agent", "Mozilla/5.0 (iPhone)")
-                .content(viewPayload))
+                .content(DEFAULT_VIEW_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
         .perform(
             post("/api/click/github")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(clickPayload))
+                .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
@@ -361,9 +353,8 @@ class ApiIntegrationTest {
 
   @Test
   void getMyUserPreferences_returns200() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
     mockMvc
-        .perform(get("/api/users/me/preferences").header("Authorization", authHeader))
+        .perform(auth(get(API_USERS_ME_PREFERENCES)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.userId").value("anvu"))
         .andExpect(jsonPath("$.username").value("anvu"))
@@ -373,9 +364,8 @@ class ApiIntegrationTest {
 
   @Test
   void getMyUserProfile_returns200() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
     mockMvc
-        .perform(get("/api/users/me").header("Authorization", authHeader))
+        .perform(auth(get(API_USERS_ME)))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.userId").value("anvu"))
         .andExpect(jsonPath("$.displayName").isNotEmpty())
@@ -384,7 +374,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserProfile_valid_returns200() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
+    String authHeader = authAnvu();
     String payload =
         """
         {
@@ -396,8 +386,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            patch("/api/users/me")
-                .header("Authorization", authHeader)
+            patch(API_USERS_ME)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -408,7 +398,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserProfile_invalidUsername_returns400() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
+    String authHeader = authAnvu();
     String payload =
         """
         {
@@ -420,8 +410,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            patch("/api/users/me")
-                .header("Authorization", authHeader)
+            patch(API_USERS_ME)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -430,7 +420,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserPreferences_valid_returns200() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
+    String authHeader = authAnvu();
     String payload =
         """
         {
@@ -440,8 +430,8 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            patch("/api/users/me/preferences")
-                .header("Authorization", authHeader)
+            patch(API_USERS_ME_PREFERENCES)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -478,16 +468,12 @@ class ApiIntegrationTest {
 
   @Test
   void legacyAnalyticsEndpoints_removed() throws Exception {
-    String viewPayload =
-        """
-        { "boardId": "default", "source": "direct" }
-        """;
 
     mockMvc
         .perform(
             post("/api/analytics/view")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(viewPayload))
+                .content(DEFAULT_VIEW_PAYLOAD))
         .andExpect(status().isNotFound());
 
     mockMvc
@@ -498,7 +484,7 @@ class ApiIntegrationTest {
   @Test
   void getWidgets_returns200WithSeededData() throws Exception {
     mockMvc
-        .perform(get("/api/board/default/widgets"))
+        .perform(get(API_BOARD_DEFAULT_WIDGETS))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$").isArray())
         .andExpect(jsonPath("$[0].type").isNotEmpty())
@@ -529,10 +515,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/board/default/widgets")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
+            authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.type").value("embed"))
         .andExpect(jsonPath("$.title").value("Demo Embed"))
@@ -557,7 +540,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/default/widgets/{widgetId}", widgetId)
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -571,11 +554,11 @@ class ApiIntegrationTest {
     long widgetId = createWidgetAndReturnId();
 
     mockMvc
-        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header(AUTHORIZATION_HEADER, authAnvu()))
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header(AUTHORIZATION_HEADER, authAnvu()))
         .andExpect(status().isNotFound());
   }
 
@@ -595,10 +578,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/board/default/widgets")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
+            authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("embed config requires a valid http embedUrl"));
   }
@@ -634,7 +614,7 @@ class ApiIntegrationTest {
           mockMvc
               .perform(
                   post("/api/board/{boardSlug}/widgets", slug)
-                      .header("Authorization", issueAuthTokenForUser("anvu"))
+                      .header(AUTHORIZATION_HEADER, authAnvu())
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(createPayload))
               .andExpect(status().isCreated())
@@ -657,7 +637,7 @@ class ApiIntegrationTest {
       mockMvc
           .perform(
               put("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId)
-                  .header("Authorization", issueAuthTokenForUser("anvu"))
+                  .header(AUTHORIZATION_HEADER, authAnvu())
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(updatePayload))
           .andExpect(status().isOk())
@@ -665,7 +645,7 @@ class ApiIntegrationTest {
           .andExpect(jsonPath("$.title").value("Slug Updated"));
 
       mockMvc
-          .perform(delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
+          .perform(delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId).header(AUTHORIZATION_HEADER, authAnvu()))
           .andExpect(status().isNoContent());
     } finally {
       boardRepository.findById("default").ifPresent(fresh -> {
@@ -691,10 +671,7 @@ class ApiIntegrationTest {
 
     mockMvc
         .perform(
-            post("/api/board/default/widgets")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
+            authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
         .andExpect(status().isCreated())
         .andExpect(jsonPath("$.type").value("link"))
         .andExpect(jsonPath("$.config.url").value("https://github.com/an-vu"));
@@ -718,7 +695,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/berkshire/widgets/{widgetId}", widgetId)
-                .header("Authorization", issueAuthTokenForUser("anvu"))
+                .header(AUTHORIZATION_HEADER, authAnvu())
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isNotFound());
@@ -726,12 +703,12 @@ class ApiIntegrationTest {
 
   @Test
   void getMyBoards_ordersMainBoardFirst_thenByUpdatedAtDesc() throws Exception {
-    String authHeader = issueAuthTokenForUser("anvu");
+    String authHeader = authAnvu();
 
     mockMvc
         .perform(
-            patch("/api/users/me/preferences")
-                .header("Authorization", authHeader)
+            patch(API_USERS_ME_PREFERENCES)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"mainBoardId\":\"berkshire\"}"))
         .andExpect(status().isOk())
@@ -740,7 +717,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/board/default/meta")
-                .header("Authorization", authHeader)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Default Ordered\",\"headline\":\"Ordered\"}"))
         .andExpect(status().isOk());
@@ -748,16 +725,28 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/board/home/meta")
-                .header("Authorization", authHeader)
+                .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("{\"name\":\"Home Ordered\",\"headline\":\"Ordered\"}"))
         .andExpect(status().isOk());
 
     mockMvc
-        .perform(get("/api/board/mine").header("Authorization", authHeader))
+        .perform(auth(get("/api/board/mine")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$[0].id").value("berkshire"))
         .andExpect(jsonPath("$[1].id").value("home"));
+  }
+
+  private String authAnvu() {
+    return issueAuthTokenForUser("anvu");
+  }
+
+  private MockHttpServletRequestBuilder auth(MockHttpServletRequestBuilder builder) {
+    return builder.header(AUTHORIZATION_HEADER, authAnvu());
+  }
+
+  private MockHttpServletRequestBuilder authJson(MockHttpServletRequestBuilder builder, String payload) {
+    return auth(builder).contentType(MediaType.APPLICATION_JSON).content(payload);
   }
 
   private long createWidgetAndReturnId() throws Exception {
@@ -776,10 +765,7 @@ class ApiIntegrationTest {
     MvcResult result =
         mockMvc
             .perform(
-                post("/api/board/default/widgets")
-                .header("Authorization", issueAuthTokenForUser("anvu"))
-                .contentType(MediaType.APPLICATION_JSON)
-                    .content(payload))
+                authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
             .andExpect(status().isCreated())
             .andReturn();
 
@@ -795,7 +781,7 @@ class ApiIntegrationTest {
           user.setId(userId);
           user.setUsername(userId);
           user.setDisplayName(userId);
-          user.setEmail(userId + "");
+          user.setEmail(userId + "@local");
           user.setRole("ADMIN");
           return appUserRepository.save(user);
         });

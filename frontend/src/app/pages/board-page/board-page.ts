@@ -148,7 +148,8 @@ export class BoardPageComponent {
             switchMap((boardId) =>
               this.boardService.getWidgets(boardId).pipe(
                 map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
-                catchError(() => of<Widget[]>([]))
+                catchError(() => of<Widget[]>([])),
+                startWith<Widget[]>([])
               )
             )
           )
