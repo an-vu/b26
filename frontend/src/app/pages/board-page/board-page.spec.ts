@@ -11,6 +11,7 @@ describe('BoardPageComponent', () => {
   let fixture: ComponentFixture<BoardPageComponent>;
   let boardServiceStub: {
     getBoards: BoardService['getBoards'];
+    getMyBoards: BoardService['getMyBoards'];
     getBoard: BoardService['getBoard'];
     getMyProfile: BoardService['getMyProfile'];
     updateBoard: BoardService['updateBoard'];
@@ -36,6 +37,10 @@ describe('BoardPageComponent', () => {
     updateWidgetCalls = [];
     boardServiceStub = {
       getBoards: () =>
+        of([
+          { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' },
+        ]),
+      getMyBoards: () =>
         of([
           { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' },
         ]),
