@@ -116,7 +116,7 @@
             <hr />
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
-            <button type="button" class="account-link">Sign Out</button>
+            <button type="button" class="account-link" (click)="signOut()" [disabled]="isSigningOut">{{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}</button>
           </div>
         </div>
       </div>

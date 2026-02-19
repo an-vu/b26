@@ -6,7 +6,9 @@ function needsAuthHeader(url: string): boolean {
   return (
     url.includes('/api/users/me') ||
     url.includes('/api/auth/me') ||
-    url.includes('/api/auth/signout')
+    url.includes('/api/auth/signout') ||
+    url.includes('/api/board/') ||
+    url.includes('/api/system/')
   );
 }
 
