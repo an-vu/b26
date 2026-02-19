@@ -5,6 +5,8 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import org.hibernate.annotations.JdbcTypeCode;
+import java.sql.Types;
 
 @Entity
 @Table(name = "auth_sessions")
@@ -16,7 +18,8 @@ public class AuthSessionEntity {
   @Column(name = "user_id", nullable = false)
   private String userId;
 
-  @Column(name = "token_hash", nullable = false, unique = true)
+  @JdbcTypeCode(Types.CHAR)
+  @Column(name = "token_hash", nullable = false, unique = true, length = 64)
   private String tokenHash;
 
   @Column(name = "expires_at", nullable = false)
