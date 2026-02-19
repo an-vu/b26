@@ -1,0 +1,28 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+.signup-block {
+  display: grid;
+  gap: 10px;
+}
+
+.signup-field {
+  display: grid;
+  gap: 6px;
+}
+
+.signup-field span {
+  font-size: 14px;
+}
+
+.signup-message {
+  margin: 0;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.signup-message--error {
+  color: #b83232;
+}

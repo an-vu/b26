@@ -4,8 +4,17 @@ import com.b26.backend.insights.domain.ClickAbuseGuard;
 import com.b26.backend.insights.persistence.ClickEventRepository;
 import com.b26.backend.insights.persistence.ViewEventRepository;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.auth.persistence.AuthSessionEntity;
+import com.b26.backend.auth.persistence.AuthSessionRepository;
+import com.b26.backend.user.persistence.AppUserEntity;
+import com.b26.backend.user.persistence.AppUserRepository;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
 import com.fasterxml.jackson.databind.JsonNode;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
+import java.util.UUID;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,6 +46,8 @@ class ApiIntegrationTest {
   @Autowired private ObjectMapper objectMapper;
   @Autowired private BoardRepository boardRepository;
   @Autowired private UserPreferenceRepository userPreferenceRepository;
+  @Autowired private AppUserRepository appUserRepository;
+  @Autowired private AuthSessionRepository authSessionRepository;
 
   @BeforeEach
   void clearClicks() {
@@ -93,6 +104,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/system/routes")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -128,6 +140,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/default")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -151,6 +164,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -171,6 +185,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default-updated/url")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(rollbackPayload))
         .andExpect(status().isOk())
@@ -189,6 +204,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch("/api/board/default/url")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -209,6 +225,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/default")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -326,8 +343,9 @@ class ApiIntegrationTest {
 
   @Test
   void getMyUserPreferences_returns200() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
     mockMvc
-        .perform(get("/api/users/me/preferences"))
+        .perform(get("/api/users/me/preferences").header("Authorization", authHeader))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.userId").value("anvu"))
         .andExpect(jsonPath("$.username").value("anvu"))
@@ -337,8 +355,9 @@ class ApiIntegrationTest {
 
   @Test
   void getMyUserProfile_returns200() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
     mockMvc
-        .perform(get("/api/users/me"))
+        .perform(get("/api/users/me").header("Authorization", authHeader))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.userId").value("anvu"))
         .andExpect(jsonPath("$.displayName").isNotEmpty())
@@ -347,6 +366,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserProfile_valid_returns200() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
     String payload =
         """
         {
@@ -359,6 +379,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/users/me")
+                .header("Authorization", authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -369,6 +390,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserProfile_invalidUsername_returns400() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
     String payload =
         """
         {
@@ -381,6 +403,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/users/me")
+                .header("Authorization", authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -389,6 +412,7 @@ class ApiIntegrationTest {
 
   @Test
   void patchMyUserPreferences_valid_returns200() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
     String payload =
         """
         {
@@ -399,6 +423,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             patch("/api/users/me/preferences")
+                .header("Authorization", authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -487,6 +512,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             post("/api/board/default/widgets")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isCreated())
@@ -513,6 +539,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/default/widgets/{widgetId}", widgetId)
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isOk())
@@ -526,11 +553,11 @@ class ApiIntegrationTest {
     long widgetId = createWidgetAndReturnId();
 
     mockMvc
-        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId))
+        .perform(delete("/api/board/default/widgets/{widgetId}", widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
         .andExpect(status().isNotFound());
   }
 
@@ -551,6 +578,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             post("/api/board/default/widgets")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isBadRequest())
@@ -588,6 +616,7 @@ class ApiIntegrationTest {
           mockMvc
               .perform(
                   post("/api/board/{boardSlug}/widgets", slug)
+                      .header("Authorization", issueAuthTokenForUser("anvu"))
                       .contentType(MediaType.APPLICATION_JSON)
                       .content(createPayload))
               .andExpect(status().isCreated())
@@ -610,6 +639,7 @@ class ApiIntegrationTest {
       mockMvc
           .perform(
               put("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId)
+                  .header("Authorization", issueAuthTokenForUser("anvu"))
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(updatePayload))
           .andExpect(status().isOk())
@@ -617,7 +647,7 @@ class ApiIntegrationTest {
           .andExpect(jsonPath("$.title").value("Slug Updated"));
 
       mockMvc
-          .perform(delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId))
+          .perform(delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId).header("Authorization", issueAuthTokenForUser("anvu")))
           .andExpect(status().isNoContent());
     } finally {
       boardRepository.findById("default").ifPresent(fresh -> {
@@ -644,6 +674,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             post("/api/board/default/widgets")
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isCreated())
@@ -669,6 +700,7 @@ class ApiIntegrationTest {
     mockMvc
         .perform(
             put("/api/board/berkshire/widgets/{widgetId}", widgetId)
+                .header("Authorization", issueAuthTokenForUser("anvu"))
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(payload))
         .andExpect(status().isNotFound());
@@ -691,12 +723,53 @@ class ApiIntegrationTest {
         mockMvc
             .perform(
                 post("/api/board/default/widgets")
-                    .contentType(MediaType.APPLICATION_JSON)
+                .header("Authorization", issueAuthTokenForUser("anvu"))
+                .contentType(MediaType.APPLICATION_JSON)
                     .content(payload))
             .andExpect(status().isCreated())
             .andReturn();
 
     JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
     return body.get("id").asLong();
+  }
+
+  private String issueAuthTokenForUser(String userId) {
+    appUserRepository
+        .findById(userId)
+        .orElseGet(() -> {
+          AppUserEntity user = new AppUserEntity();
+          user.setId(userId);
+          user.setUsername(userId);
+          user.setDisplayName(userId);
+          user.setEmail(userId + "");
+          user.setRole("ADMIN");
+          return appUserRepository.save(user);
+        });
+
+    String token = UUID.randomUUID().toString();
+
+    AuthSessionEntity session = new AuthSessionEntity();
+    session.setId(UUID.randomUUID().toString());
+    session.setUserId(userId);
+    session.setTokenHash(sha256(token));
+    session.setCreatedAt(Instant.now());
+    session.setExpiresAt(Instant.now().plusSeconds(3600));
+
+    authSessionRepository.save(session);
+    return "Bearer " + token;
+  }
+
+  private static String sha256(String value) {
+    try {
+      MessageDigest digest = MessageDigest.getInstance("SHA-256");
+      byte[] hash = digest.digest(value.getBytes(StandardCharsets.UTF_8));
+      StringBuilder builder = new StringBuilder(hash.length * 2);
+      for (byte b : hash) {
+        builder.append(String.format("%02x", b));
+      }
+      return builder.toString();
+    } catch (NoSuchAlgorithmException exception) {
+      throw new IllegalStateException("SHA-256 not available", exception);
+    }
   }
 }

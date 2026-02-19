@@ -1,5 +1,6 @@
 package com.b26.backend.user.domain;
 
+import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
@@ -19,6 +20,7 @@ public class UserPreferencesService {
   private final AppUserRepository appUserRepository;
   private final UserPreferenceRepository userPreferenceRepository;
   private final BoardRepository boardRepository;
+  private final AuthService authService;
 
   @Value("${app.user.default-id:anvu}")
   private String defaultUserId;
@@ -26,23 +28,27 @@ public class UserPreferencesService {
   public UserPreferencesService(
       AppUserRepository appUserRepository,
       UserPreferenceRepository userPreferenceRepository,
-      BoardRepository boardRepository) {
+      BoardRepository boardRepository,
+      AuthService authService) {
     this.appUserRepository = appUserRepository;
     this.userPreferenceRepository = userPreferenceRepository;
     this.boardRepository = boardRepository;
+    this.authService = authService;
   }
 
   @Transactional(readOnly = true)
-  public UserPreferencesDto getMyPreferences() {
-    AppUserEntity user = findOrCreateDefaultUser();
+  public UserPreferencesDto getMyPreferences(String authorizationHeader) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
     return new UserPreferencesDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
   }
 
   @Transactional
-  public UserPreferencesDto updateMyPreferences(UpdateUserPreferencesRequest request) {
-    AppUserEntity user = findOrCreateDefaultUser();
+  public UserPreferencesDto updateMyPreferences(
+      String authorizationHeader,
+      UpdateUserPreferencesRequest request) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     String boardId = request.mainBoardId().trim();
     BoardEntity board = findBoardOwnedByUser(boardId, user.getId());
 
@@ -65,15 +71,13 @@ public class UserPreferencesService {
       user = findOrCreateDefaultUser();
     } else {
       user =
-          appUserRepository.findByUsername(normalized).orElseThrow(() -> new UserNotFoundException(username));
+          appUserRepository
+              .findByUsername(normalized)
+              .orElseThrow(() -> new UserNotFoundException(username));
     }
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
     return new UserMainBoardDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
-  }
-
-  private AppUserEntity findUserById(String userId) {
-    return appUserRepository.findById(userId).orElseThrow(() -> new UserNotFoundException(userId));
   }
 
   private AppUserEntity findOrCreateDefaultUser() {

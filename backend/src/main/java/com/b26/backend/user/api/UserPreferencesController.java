@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -24,24 +25,29 @@ public class UserPreferencesController {
   }
 
   @GetMapping("/me")
-  public UserProfileDto getMyProfile() {
-    return userProfileService.getMyProfile();
+  public UserProfileDto getMyProfile(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    return userProfileService.getMyProfile(authorizationHeader);
   }
 
   @PatchMapping("/me")
-  public UserProfileDto updateMyProfile(@Valid @RequestBody UpdateUserProfileRequest request) {
-    return userProfileService.updateMyProfile(request);
+  public UserProfileDto updateMyProfile(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
+      @Valid @RequestBody UpdateUserProfileRequest request) {
+    return userProfileService.updateMyProfile(authorizationHeader, request);
   }
 
   @GetMapping("/me/preferences")
-  public UserPreferencesDto getMyPreferences() {
-    return userPreferencesService.getMyPreferences();
+  public UserPreferencesDto getMyPreferences(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    return userPreferencesService.getMyPreferences(authorizationHeader);
   }
 
   @PatchMapping("/me/preferences")
   public UserPreferencesDto updateMyPreferences(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
       @Valid @RequestBody UpdateUserPreferencesRequest request) {
-    return userPreferencesService.updateMyPreferences(request);
+    return userPreferencesService.updateMyPreferences(authorizationHeader, request);
   }
 
   @GetMapping("/{username}/main-board")

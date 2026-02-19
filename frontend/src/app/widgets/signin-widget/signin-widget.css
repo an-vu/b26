@@ -27,3 +27,13 @@
 .signin-checkbox input {
   margin: 0;
 }
+
+.signin-message {
+  margin: 0;
+  font-size: 13px;
+  color: #4a5568;
+}
+
+.signin-message--error {
+  color: #b83232;
+}

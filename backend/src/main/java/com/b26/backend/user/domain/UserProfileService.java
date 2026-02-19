@@ -1,32 +1,31 @@
 package com.b26.backend.user.domain;
 
+import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.user.api.UpdateUserProfileRequest;
 import com.b26.backend.user.api.UserProfileDto;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserProfileService {
   private final AppUserRepository appUserRepository;
+  private final AuthService authService;
 
-  @Value("${app.user.default-id:anvu}")
-  private String defaultUserId;
-
-  public UserProfileService(AppUserRepository appUserRepository) {
+  public UserProfileService(AppUserRepository appUserRepository, AuthService authService) {
     this.appUserRepository = appUserRepository;
+    this.authService = authService;
   }
 
   @Transactional(readOnly = true)
-  public UserProfileDto getMyProfile() {
-    return toDto(findOrCreateDefaultUser());
+  public UserProfileDto getMyProfile(String authorizationHeader) {
+    return toDto(authService.getAuthenticatedUser(authorizationHeader));
   }
 
   @Transactional
-  public UserProfileDto updateMyProfile(UpdateUserProfileRequest request) {
-    AppUserEntity user = findOrCreateDefaultUser();
+  public UserProfileDto updateMyProfile(String authorizationHeader, UpdateUserProfileRequest request) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
 
     String normalizedDisplayName = request.displayName().trim();
     if (normalizedDisplayName.isEmpty()) {
@@ -59,26 +58,7 @@ public class UserProfileService {
     return normalized;
   }
 
-  private AppUserEntity findOrCreateDefaultUser() {
-    return appUserRepository
-        .findById(defaultUserId)
-        .orElseGet(
-            () -> {
-              AppUserEntity user = new AppUserEntity();
-              user.setId(defaultUserId);
-              user.setUsername(defaultUserId.toLowerCase());
-              user.setDisplayName("An Vu");
-              user.setEmail(defaultUserId.toLowerCase() + "@local");
-              user.setRole("ADMIN");
-              return appUserRepository.save(user);
-            });
-  }
-
   private static UserProfileDto toDto(AppUserEntity user) {
-    return new UserProfileDto(
-        user.getId(),
-        user.getDisplayName(),
-        user.getUsername(),
-        user.getEmail());
+    return new UserProfileDto(user.getId(), user.getDisplayName(), user.getUsername(), user.getEmail());
   }
 }

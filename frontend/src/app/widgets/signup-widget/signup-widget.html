@@ -1,0 +1,79 @@
+<article class="widget">
+  <h3>{{ widget.title || 'Create Your Account' }}</h3>
+
+  <form class="signup-block" (ngSubmit)="onSignupSubmit()">
+    <label class="signup-field">
+      <span>Name</span>
+      <input
+        type="text"
+        name="displayName"
+        [(ngModel)]="displayName"
+        placeholder="Enter your name"
+        autocomplete="name"
+        [disabled]="isSubmitting"
+        required
+      />
+    </label>
+
+    <label class="signup-field">
+      <span>Username</span>
+      <input
+        type="text"
+        name="username"
+        [(ngModel)]="username"
+        placeholder="your-username"
+        autocomplete="username"
+        [disabled]="isSubmitting"
+        required
+      />
+    </label>
+
+    <label class="signup-field">
+      <span>Email</span>
+      <input
+        type="email"
+        name="email"
+        [(ngModel)]="email"
+        placeholder="Enter your email"
+        autocomplete="email"
+        [disabled]="isSubmitting"
+        required
+      />
+    </label>
+
+    <label class="signup-field">
+      <span>Password</span>
+      <input
+        type="password"
+        name="password"
+        [(ngModel)]="password"
+        placeholder="Create a password"
+        autocomplete="new-password"
+        [disabled]="isSubmitting"
+        required
+      />
+    </label>
+
+    <label class="signup-field">
+      <span>Confirm Password</span>
+      <input
+        type="password"
+        name="confirmPassword"
+        [(ngModel)]="confirmPassword"
+        placeholder="Re-enter password"
+        autocomplete="new-password"
+        [disabled]="isSubmitting"
+        required
+      />
+    </label>
+
+    <button type="submit" [disabled]="isSubmitting">
+      {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
+    </button>
+    <button type="button" [disabled]="isSubmitting" (click)="gotoSignin()">
+      Already Have an Account?
+    </button>
+
+    <p class="signup-message signup-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+  </form>
+</article>
