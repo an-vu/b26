@@ -112,8 +112,12 @@
             </section>
             <hr />
             <p class="account-menu-label meta-label">Boards</p>
-            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
-            <button type="button" class="account-link">Create New Board</button>
+            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">
+              <span>{{ board.label }}</span>
+              <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
+            </a>
+            <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
+            <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
             <hr />
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
@@ -126,7 +130,7 @@
         </div>
       </div>
 
-      <div class="board-identity-wrap" *ngIf="!isReadOnlyView() && canEditBoard">
+      <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
           <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()">
             {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
@@ -154,6 +158,7 @@
                 <input type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
               </label>
             </div>
+            <hr />
             <label>
               Background Color
               <div class="board-color-options">
@@ -228,8 +233,12 @@
             </section>
             <hr />
             <p class="account-menu-label meta-label">Boards</p>
-            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">{{ board.label }}</a>
-            <button type="button" class="account-link">Create New Board</button>
+            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">
+              <span>{{ board.label }}</span>
+              <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
+            </a>
+            <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
+            <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
             <hr />
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
@@ -286,6 +295,7 @@
         <option value="span-4">4c x 1r</option>
         <option value="span-1x2">1c x 2r</option>
         <option value="span-2x2">2c x 2r</option>
+        <option value="span-3x3">3c x 3r</option>
       </select>
     </label>
     <label *ngIf="draft.type === 'embed'">

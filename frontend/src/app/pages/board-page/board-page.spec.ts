@@ -14,10 +14,12 @@ describe('BoardPageComponent', () => {
     getMyBoards: BoardService['getMyBoards'];
     getBoard: BoardService['getBoard'];
     getMyProfile: BoardService['getMyProfile'];
+    getMyPreferences: BoardService['getMyPreferences'];
     updateBoard: BoardService['updateBoard'];
     updateBoardMeta: BoardService['updateBoardMeta'];
     updateBoardUrl: BoardService['updateBoardUrl'];
     updateBoardIdentity: BoardService['updateBoardIdentity'];
+    getBoardPermissions: BoardService['getBoardPermissions'];
     getWidgets: BoardService['getWidgets'];
     createWidget: BoardService['createWidget'];
     updateWidget: BoardService['updateWidget'];
@@ -27,6 +29,7 @@ describe('BoardPageComponent', () => {
 
   const routeStub = {
     paramMap: of(convertToParamMap({ boardId: 'default' })),
+    data: of({}),
     snapshot: {
       paramMap: convertToParamMap({ boardId: 'default' }),
       data: {},
@@ -58,6 +61,13 @@ describe('BoardPageComponent', () => {
           displayName: 'An Vu',
           username: 'anvu',
           email: 'anvu@local',
+        }),
+      getMyPreferences: () =>
+        of({
+          userId: 'anvu',
+          username: 'anvu',
+          mainBoardId: 'default',
+          mainBoardUrl: 'default',
         }),
       updateBoard: () =>
         of({
@@ -91,6 +101,7 @@ describe('BoardPageComponent', () => {
           name: 'An Vu',
           headline: 'Software Engineer',
         }),
+      getBoardPermissions: () => of({ canEdit: true }),
       getWidgets: () => of([]),
       createWidget: () =>
         of({

@@ -2,13 +2,14 @@ package com.b26.backend.board.api;
 
 import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.auth.domain.AuthUnauthorizedException;
-import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.board.domain.BoardService;
+import com.b26.backend.user.persistence.AppUserEntity;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -36,7 +37,6 @@ public class BoardController {
     return boardService.getBoards();
   }
 
-
   @GetMapping("/mine")
   public List<BoardDto> getMyBoards(
       @RequestHeader(name = "Authorization", required = false)
@@ -45,6 +45,12 @@ public class BoardController {
     return boardService.getBoardsForOwner(user.getId());
   }
 
+  @PostMapping
+  public BoardDto createBoard(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+    return boardService.createBoardForOwner(user);
+  }
 
   @GetMapping("/{boardId}/permissions")
   public BoardPermissionsResponse getBoardPermissions(

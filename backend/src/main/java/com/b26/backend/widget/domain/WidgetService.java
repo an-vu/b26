@@ -94,7 +94,10 @@ public class WidgetService {
   private static void validateConfig(String type, JsonNode config) {
     if ("embed".equals(type)) {
       JsonNode embedUrl = config.get("embedUrl");
-      if (embedUrl == null || !embedUrl.isTextual() || !embedUrl.asText().startsWith("http")) {
+      if (embedUrl == null || embedUrl.isNull() || (embedUrl.isTextual() && embedUrl.asText().isBlank())) {
+        return;
+      }
+      if (!embedUrl.isTextual() || !embedUrl.asText().startsWith("http")) {
         throw new InvalidWidgetConfigException("embed config requires a valid http embedUrl");
       }
       return;
@@ -102,12 +105,15 @@ public class WidgetService {
 
     if ("map".equals(type)) {
       JsonNode places = config.get("places");
-      if (places == null || !places.isArray() || places.isEmpty()) {
-        throw new InvalidWidgetConfigException("map config requires a non-empty places array");
+      if (places == null || places.isNull()) {
+        return;
+      }
+      if (!places.isArray()) {
+        throw new InvalidWidgetConfigException("map config places must be an array");
       }
       for (JsonNode place : places) {
-        if (!place.isTextual() || place.asText().isBlank()) {
-          throw new InvalidWidgetConfigException("map config places entries must be non-empty strings");
+        if (!place.isTextual()) {
+          throw new InvalidWidgetConfigException("map config places entries must be strings");
         }
       }
       return;
@@ -115,7 +121,10 @@ public class WidgetService {
 
     if ("link".equals(type)) {
       JsonNode url = config.get("url");
-      if (url == null || !url.isTextual() || !url.asText().startsWith("http")) {
+      if (url == null || url.isNull() || (url.isTextual() && url.asText().isBlank())) {
+        return;
+      }
+      if (!url.isTextual() || !url.asText().startsWith("http")) {
         throw new InvalidWidgetConfigException("link config requires a valid http url");
       }
       return;
@@ -137,6 +146,7 @@ public class WidgetService {
         && !"span-3".equals(layout)
         && !"span-1x2".equals(layout)
         && !"span-2x2".equals(layout)
+        && !"span-3x3".equals(layout)
         && !"span-4".equals(layout)) {
       throw new InvalidWidgetConfigException("unsupported widget layout: " + layout);
     }

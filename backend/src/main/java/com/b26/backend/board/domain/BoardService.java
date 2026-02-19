@@ -11,10 +11,14 @@ import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
+import com.b26.backend.widget.api.UpsertWidgetRequest;
+import com.b26.backend.widget.domain.WidgetService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.orm.jpa.JpaSystemException;
@@ -25,10 +29,18 @@ import org.springframework.transaction.annotation.Transactional;
 public class BoardService {
   private final BoardRepository boardRepository;
   private final UserPreferenceRepository userPreferenceRepository;
+  private final WidgetService widgetService;
+  private final ObjectMapper objectMapper;
 
-  public BoardService(BoardRepository boardRepository, UserPreferenceRepository userPreferenceRepository) {
+  public BoardService(
+      BoardRepository boardRepository,
+      UserPreferenceRepository userPreferenceRepository,
+      WidgetService widgetService,
+      ObjectMapper objectMapper) {
     this.boardRepository = boardRepository;
     this.userPreferenceRepository = userPreferenceRepository;
+    this.widgetService = widgetService;
+    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
@@ -44,7 +56,6 @@ public class BoardService {
         .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
         .toList();
   }
-
 
   @Transactional(readOnly = true)
   public List<BoardDto> getBoardsForOwner(String ownerUserId) {
@@ -67,7 +78,6 @@ public class BoardService {
         .toList();
   }
 
-
   @Transactional(readOnly = true)
   public boolean canEditBoard(String boardId, AppUserEntity user) {
     if (user == null) {
@@ -76,6 +86,41 @@ public class BoardService {
 
     BoardEntity board = findBoardByUrl(boardId);
     return isAdmin(user) || user.getId().equals(board.getOwnerUserId());
+  }
+
+  @Transactional
+  public BoardDto createBoardForOwner(AppUserEntity user) {
+    int nextNumber = boardRepository.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(user.getId()).size() + 1;
+    String boardName;
+    String boardUrl;
+
+    while (true) {
+      boardName = "Board #" + nextNumber;
+      boardUrl = "board-" + nextNumber;
+      if (!boardRepository.existsByBoardUrl(boardUrl)) {
+        break;
+      }
+      nextNumber++;
+    }
+
+    BoardEntity board = new BoardEntity();
+    board.setId(UUID.randomUUID().toString());
+    board.setOwnerUserId(user.getId());
+    board.setBoardName(boardName);
+    board.setBoardUrl(boardUrl);
+    board.setName("Title");
+    board.setHeadline("Description");
+    board.setUpdatedAt(OffsetDateTime.now());
+
+    BoardEntity saved = boardRepository.saveAndFlush(board);
+
+    var config = objectMapper.createObjectNode();
+    config.put("embedUrl", "https://blueberry2026.vercel.app");
+    widgetService.createWidget(
+        saved.getBoardUrl(),
+        new UpsertWidgetRequest("embed", "New Widget", "span-2", config, true, 0));
+
+    return toDto(saved);
   }
 
   @Transactional

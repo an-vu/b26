@@ -91,6 +91,8 @@ export class UserSettingsWidgetComponent implements OnInit {
           isHydrating: false,
         });
 
+        this.userStore.setMainBoardId(result.preferences.mainBoardId);
+        this.boardStore.refreshBoards();
         timer(1200)
           .pipe(takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
@@ -200,6 +202,7 @@ export class UserSettingsWidgetComponent implements OnInit {
             profileSavedField: null,
             isHydrating: false,
           });
+          this.userStore.setMainBoardId(preferences.mainBoardId);
         },
         error: () => {
           const current = this.state$.value;

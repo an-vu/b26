@@ -2,57 +2,153 @@
   <h3>{{ widget.title }}</h3>
 
   <section class="settings-block" *ngIf="vm$ | async as vm">
-    <label class="settings-field">
-      <span class="settings-label-inline">Homepage board for /</span>
-      <div class="settings-input-status-row">
-        <select [ngModel]="vm.homepageBoardId" (ngModelChange)="onRouteSelectionChanged('homepage', $event)">
-          <option value="" selected disabled>Select a board</option>
-          <option *ngFor="let board of vm.boards" [value]="board.id">
-            {{ board.boardName }} (/{{ board.boardUrl }})
-          </option>
-        </select>
-        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'homepage'">Saved</em>
-      </div>
-    </label>
+    <section class="settings-section">
+      <label class="settings-field">
+        <span class="settings-label-inline">Homepage board for /</span>
+        <div class="settings-input-status-row">
+          <select [ngModel]="vm.homepageBoardId" (ngModelChange)="onRouteSelectionChanged('homepage', $event)">
+            <option value="" selected disabled>Select a board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id">
+              {{ board.boardName }} (/{{ board.boardUrl }})
+            </option>
+          </select>
+          <em class="settings-saved-indicator" *ngIf="vm.savedField === 'homepage'">Saved</em>
+        </div>
+      </label>
 
-    <label class="settings-field">
-      <span class="settings-label-inline">Insights board for /insights</span>
-      <div class="settings-input-status-row">
-        <select [ngModel]="vm.insightsBoardId" (ngModelChange)="onRouteSelectionChanged('insights', $event)">
-          <option value="" selected disabled>Select a board</option>
-          <option *ngFor="let board of vm.boards" [value]="board.id">
-            {{ board.boardName }} (/{{ board.boardUrl }})
-          </option>
-        </select>
-        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'insights'">Saved</em>
-      </div>
-    </label>
+      <label class="settings-field">
+        <span class="settings-label-inline">Insights board for /insights</span>
+        <div class="settings-input-status-row">
+          <select [ngModel]="vm.insightsBoardId" (ngModelChange)="onRouteSelectionChanged('insights', $event)">
+            <option value="" selected disabled>Select a board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id">
+              {{ board.boardName }} (/{{ board.boardUrl }})
+            </option>
+          </select>
+          <em class="settings-saved-indicator" *ngIf="vm.savedField === 'insights'">Saved</em>
+        </div>
+      </label>
 
-    <label class="settings-field">
-      <span class="settings-label-inline">Settings board for /settings</span>
-      <div class="settings-input-status-row">
-        <select [ngModel]="vm.settingsBoardId" (ngModelChange)="onRouteSelectionChanged('settings', $event)">
-          <option value="" selected disabled>Select a board</option>
-          <option *ngFor="let board of vm.boards" [value]="board.id">
-            {{ board.boardName }} (/{{ board.boardUrl }})
-          </option>
-        </select>
-        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'settings'">Saved</em>
-      </div>
-    </label>
+      <label class="settings-field">
+        <span class="settings-label-inline">Settings board for /settings</span>
+        <div class="settings-input-status-row">
+          <select [ngModel]="vm.settingsBoardId" (ngModelChange)="onRouteSelectionChanged('settings', $event)">
+            <option value="" selected disabled>Select a board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id">
+              {{ board.boardName }} (/{{ board.boardUrl }})
+            </option>
+          </select>
+          <em class="settings-saved-indicator" *ngIf="vm.savedField === 'settings'">Saved</em>
+        </div>
+      </label>
 
-    <label class="settings-field">
-      <span class="settings-label-inline">Sign in board for /signin</span>
-      <div class="settings-input-status-row">
-        <select [ngModel]="vm.signinBoardId" (ngModelChange)="onRouteSelectionChanged('signin', $event)">
-          <option value="" selected disabled>Select a board</option>
-          <option *ngFor="let board of vm.boards" [value]="board.id">
-            {{ board.boardName }} (/{{ board.boardUrl }})
-          </option>
-        </select>
-        <em class="settings-saved-indicator" *ngIf="vm.savedField === 'signin'">Saved</em>
+      <label class="settings-field">
+        <span class="settings-label-inline">Sign in board for /signin</span>
+        <div class="settings-input-status-row">
+          <select [ngModel]="vm.signinBoardId" (ngModelChange)="onRouteSelectionChanged('signin', $event)">
+            <option value="" selected disabled>Select a board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id">
+              {{ board.boardName }} (/{{ board.boardUrl }})
+            </option>
+          </select>
+          <em class="settings-saved-indicator" *ngIf="vm.savedField === 'signin'">Saved</em>
+        </div>
+      </label>
+    </section>
+
+    <section class="settings-section">
+      <p class="settings-section-title">Page Permission</p>
+      <div class="permission-matrix-wrap">
+        <table class="permission-matrix" aria-label="Page permission matrix placeholder">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Admin</th>
+              <th>User</th>
+              <th>Visitor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">/</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">/insights</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" /></td>
+            </tr>
+            <tr>
+              <th scope="row">/settings</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" /></td>
+            </tr>
+            <tr>
+              <th scope="row">/signin</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+          </tbody>
+        </table>
       </div>
-    </label>
+    </section>
+
+    <section class="settings-section">
+      <p class="settings-section-title">Widget Permission</p>
+      <div class="permission-matrix-wrap">
+        <table class="permission-matrix" aria-label="Widget permission matrix placeholder">
+          <thead>
+            <tr>
+              <th></th>
+              <th>Admin</th>
+              <th>User</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Embed</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">Link</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">Map</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">User Settings</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">Admin Settings</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" /></td>
+            </tr>
+            <tr>
+              <th scope="row">Sign In</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+            <tr>
+              <th scope="row">Sign Up</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
 
     <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
   </section>
