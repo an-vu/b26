@@ -2,6 +2,8 @@ target/
 .mvn/
 mvnw
 mvnw.cmd
+src/test/
 *.iml
 .idea/
+.vscode/
 .DS_Store
