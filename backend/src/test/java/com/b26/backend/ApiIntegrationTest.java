@@ -76,6 +76,24 @@ class ApiIntegrationTest {
   }
 
   @Test
+  void postBoard_createsDefaultBoardForCurrentUser() throws Exception {
+    String authHeader = issueAuthTokenForUser("anvu");
+
+    mockMvc
+        .perform(
+            post("/api/board")
+                .header("Authorization", authHeader)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.id").isNotEmpty())
+        .andExpect(jsonPath("$.boardName").value(org.hamcrest.Matchers.startsWith("Board #")))
+        .andExpect(jsonPath("$.boardUrl").value(org.hamcrest.Matchers.startsWith("board-")))
+        .andExpect(jsonPath("$.name").value("Title"))
+        .andExpect(jsonPath("$.headline").value("Description"));
+  }
+
+  @Test
   void getSystemRoutes_returns200() throws Exception {
     mockMvc
         .perform(get("/api/system/routes"))

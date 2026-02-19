@@ -2,8 +2,9 @@
   <h3>{{ widget.title }}</h3>
 
   <ng-container *ngIf="vm$ | async as vm">
-    <section class="settings-block">
-      <h4>Account Information</h4>
+    <section class="settings-section">
+      <p class="settings-section-title">Account Information</p>
+
       <label class="settings-field">
         <span>Name</span>
         <div class="settings-input-status-row">
@@ -16,6 +17,7 @@
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'displayName'">Saved</em>
         </div>
       </label>
+
       <label class="settings-field">
         <span>Username</span>
         <div class="settings-input-status-row">
@@ -28,6 +30,7 @@
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'username'">Saved</em>
         </div>
       </label>
+
       <label class="settings-field">
         <span>Email</span>
         <div class="settings-input-status-row">
@@ -40,18 +43,21 @@
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'email'">Saved</em>
         </div>
       </label>
+
       <label class="settings-field">
         <span>Password</span>
         <input type="password" placeholder="Enter your password" />
       </label>
+
       <div class="settings-actions">
         <button type="button">Sign Out</button>
         <button type="button">Delete Account</button>
       </div>
     </section>
 
-    <section class="settings-block">
-      <h4>Main Board</h4>
+    <section class="settings-section">
+      <p class="settings-section-title">Main Board</p>
+
       <label class="settings-field">
         <span class="settings-label-inline">Main board for /{{ vm.username }}</span>
         <div class="settings-input-status-row">
@@ -64,6 +70,7 @@
           <em class="settings-saved-indicator" *ngIf="vm.saved">Saved</em>
         </div>
       </label>
+
       <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
     </section>
   </ng-container>

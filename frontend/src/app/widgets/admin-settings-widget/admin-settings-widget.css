@@ -40,3 +40,58 @@
     align-items: stretch;
   }
 }
+
+
+.settings-section {
+  display: grid;
+  gap: 8px;
+}
+
+.settings-section + .settings-section {
+  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  padding-top: 10px;
+  margin-top: 2px;
+}
+
+.settings-section-title {
+  margin: 0;
+  font-size: 12px;
+  line-height: 1.2;
+  color: #666;
+  font-weight: 400;
+}
+
+.settings-placeholder {
+  margin: 0;
+  font-size: 14px;
+  color: #666;
+  font-weight: 400;
+}
+
+
+.permission-matrix-wrap {
+  overflow-x: auto;
+}
+
+.permission-matrix {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+
+.permission-matrix th,
+.permission-matrix td {
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  padding: 6px 8px;
+  text-align: center;
+}
+
+.permission-matrix th:first-child,
+.permission-matrix td:first-child {
+  text-align: left;
+}
+
+
+.permission-matrix th {
+  font-weight: 400;
+}

@@ -1,4 +1,4 @@
-import { Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap, tap } from 'rxjs/operators';
@@ -52,6 +52,7 @@ export class BoardPageComponent {
   private authService = inject(AuthService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private destroyRef = inject(DestroyRef);
+  private cdr = inject(ChangeDetectorRef);
   private reload$ = new Subject<void>();
   private hasLoadedPageStateOnce = false;
 
@@ -60,13 +61,18 @@ export class BoardPageComponent {
   isAccountMenuOpen = false;
   isSigningOut = false;
   isSignedIn = false;
+  isCreatingBoard = false;
+  createBoardError = '';
   isBoardIdentityMenuOpen = false;
   canEditBoard = false;
+  readOnlyView = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
   isAddWidgetExpanded = false;
   boardDraftName = '';
   boardDraftHeadline = '';
+  originalBoardName = '';
+  originalBoardHeadline = '';
   boardIdentityNameDraft = '';
   boardIdentitySlugDraft = '';
   boardThemeToggleDraft = false;
@@ -77,6 +83,7 @@ export class BoardPageComponent {
   activeWidgetSettingsId: number | null = null;
   newWidgetDraft: WidgetDraft = this.createEmptyWidgetDraft();
   deletedWidgetIds: number[] = [];
+  private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
   private boardIdentitySourceId = '';
   private boardIdentityPersistedName = '';
@@ -118,6 +125,9 @@ export class BoardPageComponent {
           }
 
           if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
+            if (this.isWidgetEditMode) {
+              this.cancelWidgetEdit();
+            }
             this.boardIdentitySourceId = state.board.id;
             this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
             this.boardIdentityPersistedName = this.boardIdentityNameDraft;
@@ -156,6 +166,7 @@ export class BoardPageComponent {
     name: 'Account',
     username: '@account',
   };
+  accountMainBoardId = '';
 
   constructor() {
     this.boardStore.boards$
@@ -176,6 +187,7 @@ export class BoardPageComponent {
             name: 'Account',
             username: '@account',
           };
+          this.accountMainBoardId = '';
           return;
         }
         this.isSignedIn = true;
@@ -194,12 +206,30 @@ export class BoardPageComponent {
           this.router.navigate(['/', profile.username], { replaceUrl: true });
         }
       });
+    this.route.data
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((data) => {
+        this.readOnlyView = !!data['readOnly'];
+        this.cdr.markForCheck();
+      });
+
     this.boardStore.refreshBoards();
     this.userStore.refreshMyProfile();
+    this.userStore.refreshMyPreferences();
+
+    this.userStore.mainBoardId$
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe((mainBoardId) => {
+        this.accountMainBoardId = mainBoardId || "";
+      });
   }
 
   boardMenuLabel(boardId: string) {
     return this.accountBoards.find((board) => board.id === boardId)?.label ?? boardId;
+  }
+
+  isMainBoard(boardId: string) {
+    return !!this.accountMainBoardId && this.accountMainBoardId === boardId;
   }
 
   tileLayoutClass(layout: string) {
@@ -215,20 +245,26 @@ export class BoardPageComponent {
     if (layout === 'span-2x2') {
       return 'tile-span-2x2';
     }
+    if (layout === 'span-3x3') {
+      return 'tile-span-3x3';
+    }
     if (layout === 'span-2') {
       return 'tile-span-2';
     }
     return 'tile-span-1';
   }
 
-  isReadOnlyView() {
-    return !!this.route.snapshot?.data?.['readOnly'];
-  }
-
   startWidgetEdit(board: Board, widgets: Widget[]) {
     this.widgetDrafts = widgets.map((widget) => this.toWidgetDraft(widget)).sort((a, b) => a.order - b.order);
+    this.originalWidgetDrafts = new Map(
+      this.widgetDrafts
+        .filter((draft): draft is WidgetDraft & { id: number } => typeof draft.id === 'number')
+        .map((draft) => [draft.id, { ...draft }])
+    );
     this.boardDraftName = board.name;
     this.boardDraftHeadline = board.headline;
+    this.originalBoardName = board.name;
+    this.originalBoardHeadline = board.headline;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
     this.widgetSaveError = '';
@@ -245,6 +281,33 @@ export class BoardPageComponent {
 
   closeAccountMenu() {
     this.isAccountMenuOpen = false;
+  }
+
+  createNewBoard() {
+    if (this.isCreatingBoard) {
+      return;
+    }
+
+    this.createBoardError = '';
+    this.isCreatingBoard = true;
+    this.boardService
+      .createBoard()
+      .pipe(
+        finalize(() => {
+          this.isCreatingBoard = false;
+        })
+      )
+      .subscribe({
+        next: (board) => {
+          this.closeAccountMenu();
+          this.boardStore.refreshBoards();
+          this.userStore.refreshMyPreferences();
+          void this.router.navigate(['/b', board.boardUrl]);
+        },
+        error: (error) => {
+          this.createBoardError = this.extractApiErrorMessage(error);
+        },
+      });
   }
 
   signOut() {
@@ -321,10 +384,13 @@ export class BoardPageComponent {
     this.isAddWidgetExpanded = false;
     this.boardDraftName = '';
     this.boardDraftHeadline = '';
+    this.originalBoardName = '';
+    this.originalBoardHeadline = '';
     this.widgetDrafts = [];
     this.activeWidgetSettingsId = null;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
+    this.originalWidgetDrafts = new Map<number, WidgetDraft>();
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
   }
 
@@ -417,12 +483,10 @@ export class BoardPageComponent {
     this.newWidgetValidationError = '';
     const trimmedName = this.boardDraftName.trim();
     const trimmedHeadline = this.boardDraftHeadline.trim();
-    if (!trimmedName || !trimmedHeadline) {
-      this.widgetSaveError = 'Name and headline are required.';
-      return;
-    }
-
     for (const draft of normalizedDrafts) {
+      if (typeof draft.id === 'number' && !this.hasDraftChanged(draft)) {
+        continue;
+      }
       const validationMessage = this.getWidgetValidationMessage(draft);
       if (validationMessage) {
         this.draftValidationErrors.set(draft, validationMessage);
@@ -432,7 +496,7 @@ export class BoardPageComponent {
     }
 
     const updates = normalizedDrafts
-      .filter((draft): draft is WidgetDraft & { id: number } => !!draft.id)
+      .filter((draft): draft is WidgetDraft & { id: number } => typeof draft.id === 'number' && this.hasDraftChanged(draft))
       .map((draft) => this.boardService.updateWidget(boardUrl, draft.id, this.buildWidgetPayload(draft)!));
 
     const creates = normalizedDrafts
@@ -440,11 +504,23 @@ export class BoardPageComponent {
       .map((draft) => this.boardService.createWidget(boardUrl, this.buildWidgetPayload(draft)!));
 
     const deletes = this.deletedWidgetIds.map((widgetId) => this.boardService.deleteWidget(boardUrl, widgetId));
-    const boardUpdate = this.boardService.updateBoardMeta(boardUrl, {
-      name: trimmedName,
-      headline: trimmedHeadline,
-    });
-    const requests = [boardUpdate, ...deletes, ...updates, ...creates];
+
+    const originalName = this.originalBoardName.trim();
+    const originalHeadline = this.originalBoardHeadline.trim();
+    const boardMetaChanged = trimmedName !== originalName || trimmedHeadline !== originalHeadline;
+    const hasValidMeta = !!trimmedName && !!trimmedHeadline;
+
+    const requests = [...deletes, ...updates, ...creates];
+    if (boardMetaChanged && hasValidMeta) {
+      requests.unshift(
+        this.boardService
+          .updateBoardMeta(boardUrl, {
+            name: trimmedName,
+            headline: trimmedHeadline,
+          })
+          .pipe(map(() => undefined))
+      );
+    }
 
     this.isWidgetSaving = true;
     this.widgetSaveError = '';
@@ -486,14 +562,38 @@ export class BoardPageComponent {
     return this.draftValidationErrors.get(draft) ?? '';
   }
 
+  private hasDraftChanged(draft: WidgetDraft): boolean {
+    if (typeof draft.id !== 'number') {
+      return true;
+    }
+
+    const original = this.originalWidgetDrafts.get(draft.id);
+    if (!original) {
+      return true;
+    }
+
+    return (
+      draft.type !== original.type ||
+      draft.title !== original.title ||
+      draft.layout !== original.layout ||
+      draft.enabled !== original.enabled ||
+      draft.order !== original.order ||
+      draft.embedUrl !== original.embedUrl ||
+      draft.linkUrl !== original.linkUrl ||
+      draft.placesText !== original.placesText
+    );
+  }
+
 
   private loadBoardPermissions(boardUrl: string) {
     this.boardService.getBoardPermissions(boardUrl).subscribe({
       next: (permissions) => {
         this.canEditBoard = !!permissions.canEdit;
+        this.cdr.markForCheck();
       },
       error: () => {
         this.canEditBoard = false;
+        this.cdr.markForCheck();
       },
     });
   }
@@ -588,23 +688,17 @@ export class BoardPageComponent {
 
     if (draft.type === 'embed') {
       const url = this.normalizeHttpUrl(draft.embedUrl);
-      if (!url) {
-        return null;
-      }
       return {
         ...base,
-        config: { embedUrl: url },
+        config: url ? { embedUrl: url } : {},
       };
     }
 
     if (draft.type === 'link') {
       const url = this.normalizeHttpUrl(draft.linkUrl);
-      if (!url) {
-        return null;
-      }
       return {
         ...base,
-        config: { url },
+        config: url ? { url } : {},
       };
     }
 
@@ -619,9 +713,6 @@ export class BoardPageComponent {
       .split('\n')
       .map((line) => line.trim())
       .filter((line) => line.length > 0);
-    if (places.length === 0) {
-      return null;
-    }
     return {
       ...base,
       config: { places },
@@ -701,29 +792,10 @@ export class BoardPageComponent {
   }
 
   private getWidgetValidationMessage(draft: WidgetDraft): string {
-    if (!draft.title.trim()) {
-      return 'Widget name is required.';
-    }
     if (!draft.layout.trim()) {
       return 'Widget layout is required.';
     }
-    if (draft.type === 'map') {
-      const places = draft.placesText
-        .split('\n')
-        .map((line) => line.trim())
-        .filter((line) => line.length > 0);
-      if (places.length === 0) {
-        return 'Map widgets need at least one place.';
-      }
-      return '';
-    }
-    if (draft.type === 'embed') {
-      return this.normalizeHttpUrl(draft.embedUrl) ? '' : 'Embed URL must be a valid web address.';
-    }
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin' || draft.type === 'signup') {
-      return '';
-    }
-    return this.normalizeHttpUrl(draft.linkUrl) ? '' : 'Link URL must be a valid web address.';
+    return '';
   }
 
   private normalizeWidgetType(type: string): WidgetType {

@@ -32,7 +32,11 @@ export class BoardService {
   }
 
   getMyBoards(): Observable<Board[]> {
-    return this.http.get<Board[]>(`${environment.apiBaseUrl}/api/board/mine`);
+    return this.http.get<Board[]>(`/api/board/mine`);
+  }
+
+  createBoard(): Observable<Board> {
+    return this.http.post<Board>(`/api/board`, {}, this.withAdminHeader());
   }
 
   updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {

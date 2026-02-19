@@ -11,6 +11,8 @@ public interface BoardRepository extends JpaRepository<BoardEntity, String> {
 
   boolean existsByBoardUrlAndIdNot(String boardUrl, String id);
 
+
+  boolean existsByBoardUrl(String boardUrl);
   Optional<BoardEntity> findByBoardUrl(String boardUrl);
 
   Optional<BoardEntity> findFirstByOwnerUserIdOrderByBoardNameAsc(String ownerUserId);

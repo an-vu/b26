@@ -9,6 +9,9 @@ export class UserStoreService {
   private readonly profileSubject = new BehaviorSubject<UserProfile | null>(null);
   readonly profile$ = this.profileSubject.asObservable();
 
+  private readonly mainBoardIdSubject = new BehaviorSubject<string>('');
+  readonly mainBoardId$ = this.mainBoardIdSubject.asObservable();
+
   constructor(private boardService: BoardService) {}
 
   refreshMyProfile(): void {
@@ -16,6 +19,17 @@ export class UserStoreService {
       next: (profile) => this.profileSubject.next(profile),
       error: () => this.profileSubject.next(null),
     });
+  }
+
+  refreshMyPreferences(): void {
+    this.boardService.getMyPreferences().subscribe({
+      next: (preferences) => this.mainBoardIdSubject.next(preferences.mainBoardId),
+      error: () => this.mainBoardIdSubject.next(''),
+    });
+  }
+
+  setMainBoardId(mainBoardId: string): void {
+    this.mainBoardIdSubject.next(mainBoardId);
   }
 
   updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
@@ -30,5 +44,6 @@ export class UserStoreService {
 
   clearProfile(): void {
     this.profileSubject.next(null);
+    this.mainBoardIdSubject.next('');
   }
 }
