@@ -31,14 +31,17 @@ public class AuthService {
   private final AuthSessionRepository authSessionRepository;
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
   private final Duration sessionTtl;
+  private final boolean requirePasswordForSignin;
 
   public AuthService(
       AppUserRepository appUserRepository,
       AuthSessionRepository authSessionRepository,
-      @Value("${app.auth.session-ttl-hours:720}") long sessionTtlHours) {
+      @Value("${app.auth.session-ttl-hours:720}") long sessionTtlHours,
+      @Value("${app.auth.require-password:true}") boolean requirePasswordForSignin) {
     this.appUserRepository = appUserRepository;
     this.authSessionRepository = authSessionRepository;
     this.sessionTtl = Duration.ofHours(Math.max(1, sessionTtlHours));
+    this.requirePasswordForSignin = requirePasswordForSignin;
   }
 
   @Transactional
@@ -75,8 +78,18 @@ public class AuthService {
             .findByEmailIgnoreCase(normalizedEmail)
             .orElseThrow(() -> new AuthUnauthorizedException("Invalid email or password"));
 
-    if (user.getPasswordHash() == null || !passwordEncoder.matches(request.password(), user.getPasswordHash())) {
-      throw new AuthUnauthorizedException("Invalid email or password");
+    if (requirePasswordForSignin) {
+      String suppliedPassword = request.password();
+      if (suppliedPassword == null || suppliedPassword.isBlank()) {
+        throw new InvalidAuthRequestException("password is required");
+      }
+      if (suppliedPassword.length() < 8 || suppliedPassword.length() > 72) {
+        throw new InvalidAuthRequestException("password must be between 8 and 72 characters");
+      }
+      if (user.getPasswordHash() == null
+          || !passwordEncoder.matches(suppliedPassword, user.getPasswordHash())) {
+        throw new AuthUnauthorizedException("Invalid email or password");
+      }
     }
 
     return createSession(user);

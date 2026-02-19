@@ -39,8 +39,8 @@ export class SigninWidgetComponent {
     const email = this.email.trim().toLowerCase();
     const password = this.password;
 
-    if (!email || !password) {
-      this.errorMessage = 'Email and password are required.';
+    if (!email) {
+      this.errorMessage = 'Email is required.';
       return;
     }
 

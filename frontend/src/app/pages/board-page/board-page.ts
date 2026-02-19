@@ -10,6 +10,7 @@ import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
 import { InsightsService } from '../../services/insights.service';
 import { UserStoreService } from '../../services/user-store.service';
+import { AuthService } from '../../services/auth.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
@@ -48,6 +49,7 @@ export class BoardPageComponent {
   private boardStore = inject(BoardStoreService);
   private insightsService = inject(InsightsService);
   private userStore = inject(UserStoreService);
+  private authService = inject(AuthService);
   private elementRef = inject(ElementRef<HTMLElement>);
   private destroyRef = inject(DestroyRef);
   private reload$ = new Subject<void>();
@@ -56,6 +58,7 @@ export class BoardPageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   isAccountMenuOpen = false;
+  isSigningOut = false;
   isBoardIdentityMenuOpen = false;
   widgetSaveError = '';
   newWidgetValidationError = '';
@@ -227,6 +230,29 @@ export class BoardPageComponent {
 
   closeAccountMenu() {
     this.isAccountMenuOpen = false;
+  }
+
+  signOut() {
+    if (this.isSigningOut) {
+      return;
+    }
+
+    this.isSigningOut = true;
+    this.authService.signout().subscribe({
+      next: () => {
+        this.closeAccountMenu();
+        this.userStore.refreshMyProfile();
+        void this.router.navigateByUrl('/signin');
+      },
+      error: () => {
+        this.authService.clearSession();
+        this.closeAccountMenu();
+        void this.router.navigateByUrl('/signin');
+      },
+      complete: () => {
+        this.isSigningOut = false;
+      },
+    });
   }
 
   toggleBoardIdentityMenu() {
@@ -412,7 +438,7 @@ export class BoardPageComponent {
           this.reload$.next();
         },
         error: (error) => {
-          this.widgetSaveError = error?.error?.message ?? 'Unable to save widget changes.';
+          this.widgetSaveError = this.extractApiErrorMessage(error);
         },
       });
   }
@@ -650,6 +676,12 @@ export class BoardPageComponent {
   }
 
   private getWidgetValidationMessage(draft: WidgetDraft): string {
+    if (!draft.title.trim()) {
+      return 'Widget name is required.';
+    }
+    if (!draft.layout.trim()) {
+      return 'Widget layout is required.';
+    }
     if (draft.type === 'map') {
       const places = draft.placesText
         .split('\n')
@@ -702,6 +734,19 @@ export class BoardPageComponent {
     } catch {
       return null;
     }
+  }
+
+
+  private extractApiErrorMessage(error: unknown): string {
+    const errorPayload = (error as { error?: { message?: string; errors?: Array<{ message?: string }> } })?.error;
+    if (Array.isArray(errorPayload?.errors) && errorPayload.errors.length > 0) {
+      const firstMessage = errorPayload.errors[0]?.message?.trim();
+      if (firstMessage) {
+        return firstMessage;
+      }
+    }
+    const message = errorPayload?.message?.trim();
+    return message || 'Unable to save widget changes.';
   }
 
 }
