@@ -22,7 +22,7 @@ type BoardPageState =
   | { status: 'ready'; board: Board }
   | { status: 'missing' };
 
-type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings' | 'signin' | 'signup';
+type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings' | 'signin';
 type WidgetDraft = {
   id?: number;
   type: WidgetType;
@@ -719,7 +719,7 @@ export class BoardPageComponent {
       };
     }
 
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin' || draft.type === 'signup') {
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
       return {
         ...base,
         config: {},
@@ -747,7 +747,7 @@ export class BoardPageComponent {
       draft.placesText = '';
       return;
     }
-    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin' || draft.type === 'signup') {
+    if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
       draft.embedUrl = '';
       draft.linkUrl = '';
       draft.placesText = '';
@@ -822,8 +822,7 @@ export class BoardPageComponent {
       type === 'link' ||
       type === 'user-settings' ||
       type === 'admin-settings' ||
-      type === 'signin' ||
-      type === 'signup'
+      type === 'signin'
     ) {
       return type;
     }
