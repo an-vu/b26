@@ -139,7 +139,7 @@ export class BoardPageComponent {
       this.resolveBoardId$(routeParamBoardId, routeParamUsername),
     loadBoard: (boardId) => this.boardService.getBoard(boardId),
     recordBoardView: (boardId) => {
-      this.insightsService.recordView(boardId, 'direct').subscribe({ error: () => {} });
+      this.insightsService.recordView(boardId, 'direct').subscribe({ error: () => { } });
     },
     onState: (state) => {
       if (state.status === 'ready') {
