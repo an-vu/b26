@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "dev:frontend": "npm --prefix frontend start",
-    "dev:backend": "bash -lc 'cd backend && set -a && [ -f .env.dev ] && . ./.env.dev || true; set +a; mvn spring-boot:run'",
+    "dev:backend": "bash -lc 'cd backend && set -a && [ -f .env.dev ] && . ./.env.dev || true; set +a; ./mvnw spring-boot:run'",
     "dev": "concurrently -k -n FRONTEND,BACKEND -c cyan,yellow \"npm run dev:frontend\" \"npm run dev:backend\"",
     "db:backup": "bash scripts/dev-db-backup.sh",
     "db:restore": "bash scripts/dev-db-restore.sh"

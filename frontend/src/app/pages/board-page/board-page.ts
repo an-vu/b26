@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inj
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { switchMap, tap } from 'rxjs/operators';
-import { catchError, finalize, forkJoin, map, of, startWith, Subject } from 'rxjs';
+import { catchError, concat, finalize, map, of, startWith, Subject } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -13,7 +13,7 @@ import { UserStoreService } from '../../services/user-store.service';
 import { AuthService } from '../../services/auth.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
-import type { UpsertWidgetRequest, Widget } from '../../models/widget';
+import type { SyncWidgetsRequest, UpsertWidgetRequest, Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
@@ -88,6 +88,8 @@ export class BoardPageComponent {
   private boardIdentitySourceId = '';
   private boardIdentityPersistedName = '';
   private boardIdentityPersistedUrl = '';
+  private activeBoardUrl = '';
+  private editingBoardUrl = '';
 
   get boardRadiusDraft() {
     return this.boardRadiusStepDraft === 1 ? 6 : this.boardRadiusStepDraft === 3 ? 24 : 12;
@@ -122,6 +124,7 @@ export class BoardPageComponent {
             this.loadBoardPermissions(state.board.boardUrl);
           } else {
             this.canEditBoard = false;
+            this.activeBoardUrl = '';
           }
 
           if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
@@ -145,6 +148,9 @@ export class BoardPageComponent {
       this.route.paramMap.pipe(
         switchMap((params) =>
           this.resolveBoardId$(params.get('boardId'), params.get('username')).pipe(
+            tap((boardId) => {
+              this.activeBoardUrl = boardId;
+            }),
             switchMap((boardId) =>
               this.boardService.getWidgets(boardId).pipe(
                 map((widgets) => [...widgets].sort((a, b) => a.order - b.order)),
@@ -273,6 +279,7 @@ export class BoardPageComponent {
     this.isAddWidgetExpanded = false;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
     this.activeWidgetSettingsId = null;
+    this.editingBoardUrl = this.activeBoardUrl || board.boardUrl;
     this.isWidgetEditMode = true;
   }
 
@@ -391,6 +398,7 @@ export class BoardPageComponent {
     this.activeWidgetSettingsId = null;
     this.newWidgetDraft = this.createEmptyWidgetDraft();
     this.deletedWidgetIds = [];
+    this.editingBoardUrl = '';
     this.originalWidgetDrafts = new Map<number, WidgetDraft>();
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
   }
@@ -477,7 +485,16 @@ export class BoardPageComponent {
     };
   }
 
-  doneWidgetEdit(boardUrl: string) {
+  doneWidgetEdit() {
+    const saveBoardUrl = this.activeBoardUrl.trim();
+    if (!saveBoardUrl) {
+      this.widgetSaveError = 'Board context changed. Reload and try again.';
+      return;
+    }
+    if (this.editingBoardUrl && this.editingBoardUrl !== saveBoardUrl) {
+      this.widgetSaveError = 'Board changed while editing. Re-open edit and try again.';
+      return;
+    }
     const normalizedDrafts = this.withNormalizedOrder([...this.widgetDrafts]);
     this.widgetDrafts = normalizedDrafts;
     this.draftValidationErrors = new WeakMap<WidgetDraft, string>();
@@ -496,26 +513,25 @@ export class BoardPageComponent {
       }
     }
 
-    const updates = normalizedDrafts
-      .filter((draft): draft is WidgetDraft & { id: number } => typeof draft.id === 'number' && this.hasDraftChanged(draft))
-      .map((draft) => this.boardService.updateWidget(boardUrl, draft.id, this.buildWidgetPayload(draft)!));
-
-    const creates = normalizedDrafts
-      .filter((draft) => !draft.id)
-      .map((draft) => this.boardService.createWidget(boardUrl, this.buildWidgetPayload(draft)!));
-
-    const deletes = this.deletedWidgetIds.map((widgetId) => this.boardService.deleteWidget(boardUrl, widgetId));
+    const widgetPayload: SyncWidgetsRequest = {
+      widgets: normalizedDrafts.map((draft) => ({
+        id: typeof draft.id === "number" ? draft.id : undefined,
+        ...this.buildWidgetPayload(draft)!,
+      })),
+    };
 
     const originalName = this.originalBoardName.trim();
     const originalHeadline = this.originalBoardHeadline.trim();
     const boardMetaChanged = trimmedName !== originalName || trimmedHeadline !== originalHeadline;
     const hasValidMeta = !!trimmedName && !!trimmedHeadline;
 
-    const requests = [...deletes, ...updates, ...creates];
+    const requests = [
+      this.boardService.syncWidgets(saveBoardUrl, widgetPayload).pipe(map(() => undefined)),
+    ];
     if (boardMetaChanged && hasValidMeta) {
-      requests.unshift(
+      requests.push(
         this.boardService
-          .updateBoardMeta(boardUrl, {
+          .updateBoardMeta(saveBoardUrl, {
             name: trimmedName,
             headline: trimmedHeadline,
           })
@@ -524,11 +540,11 @@ export class BoardPageComponent {
     }
 
     this.isWidgetSaving = true;
-    this.widgetSaveError = '';
-    forkJoin(requests.length > 0 ? requests : [of(null)])
+    this.widgetSaveError = "";
+    concat(...requests)
       .pipe(finalize(() => (this.isWidgetSaving = false)))
       .subscribe({
-        next: () => {
+        complete: () => {
           this.cancelWidgetEdit();
           this.reload$.next();
         },

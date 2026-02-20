@@ -16,7 +16,7 @@ import type {
   UserPreferences,
   BoardPermissions,
 } from '../models/board';
-import type { UpsertWidgetRequest, Widget } from '../models/widget';
+import type { SyncWidgetsRequest, UpsertWidgetRequest, Widget } from '../models/widget';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -24,11 +24,11 @@ export class BoardService {
   constructor(private http: HttpClient) {}
 
   getBoard(boardId: string): Observable<Board> {
-    return this.http.get<Board>(`${environment.apiBaseUrl}/api/board/${boardId}`);
+    return this.http.get<Board>(`/api/board/${boardId}`);
   }
 
   getBoards(): Observable<Board[]> {
-    return this.http.get<Board[]>(`${environment.apiBaseUrl}/api/board`);
+    return this.http.get<Board[]>(`/api/board`);
   }
 
   getMyBoards(): Observable<Board[]> {
@@ -40,12 +40,12 @@ export class BoardService {
   }
 
   updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {
-    return this.http.put<Board>(`${environment.apiBaseUrl}/api/board/${boardId}`, payload, this.withAdminHeader());
+    return this.http.put<Board>(`/api/board/${boardId}`, payload, this.withAdminHeader());
   }
 
   updateBoardMeta(boardId: string, payload: UpdateBoardMetaRequest): Observable<Board> {
     return this.http.patch<Board>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/meta`,
+      `/api/board/${boardId}/meta`,
       payload,
       this.withAdminHeader()
     );
@@ -53,7 +53,7 @@ export class BoardService {
 
   updateBoardUrl(boardId: string, payload: UpdateBoardUrlRequest): Observable<Board> {
     return this.http.patch<Board>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/url`,
+      `/api/board/${boardId}/url`,
       payload,
       this.withAdminHeader()
     );
@@ -61,23 +61,23 @@ export class BoardService {
 
   updateBoardIdentity(boardId: string, payload: UpdateBoardIdentityRequest): Observable<Board> {
     return this.http.patch<Board>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/identity`,
+      `/api/board/${boardId}/identity`,
       payload,
       this.withAdminHeader()
     );
   }
 
   getBoardPermissions(boardId: string): Observable<BoardPermissions> {
-    return this.http.get<BoardPermissions>(`${environment.apiBaseUrl}/api/board/${boardId}/permissions`);
+    return this.http.get<BoardPermissions>(`/api/board/${boardId}/permissions`);
   }
 
   getWidgets(boardId: string): Observable<Widget[]> {
-    return this.http.get<Widget[]>(`${environment.apiBaseUrl}/api/board/${boardId}/widgets`);
+    return this.http.get<Widget[]>(`/api/board/${boardId}/widgets`);
   }
 
   createWidget(boardId: string, payload: UpsertWidgetRequest): Observable<Widget> {
     return this.http.post<Widget>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/widgets`,
+      `/api/board/${boardId}/widgets`,
       payload,
       this.withAdminHeader()
     );
@@ -85,7 +85,7 @@ export class BoardService {
 
   updateWidget(boardId: string, widgetId: number, payload: UpsertWidgetRequest): Observable<Widget> {
     return this.http.put<Widget>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/widgets/${widgetId}`,
+      `/api/board/${boardId}/widgets/${widgetId}`,
       payload,
       this.withAdminHeader()
     );
@@ -93,46 +93,54 @@ export class BoardService {
 
   deleteWidget(boardId: string, widgetId: number): Observable<void> {
     return this.http.delete<void>(
-      `${environment.apiBaseUrl}/api/board/${boardId}/widgets/${widgetId}`,
+      `/api/board/${boardId}/widgets/${widgetId}`,
+      this.withAdminHeader()
+    );
+  }
+
+  syncWidgets(boardId: string, payload: SyncWidgetsRequest): Observable<Widget[]> {
+    return this.http.put<Widget[]>(
+      `/api/board/${boardId}/widgets/sync`,
+      payload,
       this.withAdminHeader()
     );
   }
 
   getSystemRoutes(): Observable<SystemRoutes> {
-    return this.http.get<SystemRoutes>(`${environment.apiBaseUrl}/api/system/routes`);
+    return this.http.get<SystemRoutes>(`/api/system/routes`);
   }
 
   updateSystemRoutes(payload: UpdateSystemRoutesRequest): Observable<SystemRoutes> {
     return this.http.patch<SystemRoutes>(
-      `${environment.apiBaseUrl}/api/system/routes`,
+      `/api/system/routes`,
       payload,
       this.withAdminHeader()
     );
   }
 
   getMyPreferences(): Observable<UserPreferences> {
-    return this.http.get<UserPreferences>(`${environment.apiBaseUrl}/api/users/me/preferences`);
+    return this.http.get<UserPreferences>(`/api/users/me/preferences`);
   }
 
   updateMyPreferences(payload: UpdateUserPreferencesRequest): Observable<UserPreferences> {
     return this.http.patch<UserPreferences>(
-      `${environment.apiBaseUrl}/api/users/me/preferences`,
+      `/api/users/me/preferences`,
       payload,
       this.withAdminHeader()
     );
   }
 
   getUserMainBoard(username: string): Observable<UserMainBoard> {
-    return this.http.get<UserMainBoard>(`${environment.apiBaseUrl}/api/users/${username}/main-board`);
+    return this.http.get<UserMainBoard>(`/api/users/${username}/main-board`);
   }
 
   getMyProfile(): Observable<UserProfile> {
-    return this.http.get<UserProfile>(`${environment.apiBaseUrl}/api/users/me`);
+    return this.http.get<UserProfile>(`/api/users/me`);
   }
 
   updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
     return this.http.patch<UserProfile>(
-      `${environment.apiBaseUrl}/api/users/me`,
+      `/api/users/me`,
       payload,
       this.withAdminHeader()
     );

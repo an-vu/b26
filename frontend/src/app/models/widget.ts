@@ -18,3 +18,11 @@ export type UpsertWidgetRequest = {
   enabled: boolean;
   order: number;
 };
+
+export type UpsertWidgetWithIdRequest = UpsertWidgetRequest & {
+  id?: number;
+};
+
+export type SyncWidgetsRequest = {
+  widgets: UpsertWidgetWithIdRequest[];
+};

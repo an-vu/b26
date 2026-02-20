@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, tap } from 'rxjs';
-import { environment } from '../../environments/environment';
 import type {
   AuthMeResponse,
   AuthSessionResponse,
@@ -21,24 +20,24 @@ export class AuthService {
 
   signup(payload: SignupRequest): Observable<AuthSessionResponse> {
     return this.http
-      .post<AuthSessionResponse>(`${environment.apiBaseUrl}/api/auth/signup`, payload)
+      .post<AuthSessionResponse>(`/api/auth/signup`, payload)
       .pipe(tap((response) => this.applySession(response)));
   }
 
   signin(payload: SigninRequest): Observable<AuthSessionResponse> {
     return this.http
-      .post<AuthSessionResponse>(`${environment.apiBaseUrl}/api/auth/signin`, payload)
+      .post<AuthSessionResponse>(`/api/auth/signin`, payload)
       .pipe(tap((response) => this.applySession(response)));
   }
 
   me(): Observable<AuthMeResponse> {
     return this.http
-      .get<AuthMeResponse>(`${environment.apiBaseUrl}/api/auth/me`)
+      .get<AuthMeResponse>(`/api/auth/me`)
       .pipe(tap((response) => this.userSubject.next(response.user)));
   }
 
   signout(): Observable<void> {
-    return this.http.post<void>(`${environment.apiBaseUrl}/api/auth/signout`, {}).pipe(
+    return this.http.post<void>(`/api/auth/signout`, {}).pipe(
       tap(() => {
         this.clearSession();
       })
