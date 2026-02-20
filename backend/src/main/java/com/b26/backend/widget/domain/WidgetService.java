@@ -188,7 +188,10 @@ public class WidgetService {
       return;
     }
 
-    if ("user-settings".equals(type) || "admin-settings".equals(type) || "signin".equals(type)) {
+    if ("user-settings".equals(type)
+        || "admin-settings".equals(type)
+        || "signin".equals(type)
+        || "signup".equals(type)) {
       if (!config.isObject()) {
         throw new InvalidWidgetConfigException(type + " config must be a JSON object");
       }
