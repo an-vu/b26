@@ -1,0 +1,31 @@
+.header {
+  margin-bottom: 16px;
+}
+
+.board-header-stack {
+  display: grid;
+  gap: 6px;
+}
+
+.title {
+  margin: 0;
+  font-size: var(--header-title-font-size, 32px);
+  font-weight: 700;
+  line-height: var(--header-title-line-height, 1.2);
+  min-height: calc(
+    var(--header-title-font-size, 32px) * var(--header-title-line-height, 1.2) +
+      var(--inline-edit-underline, 1px)
+  );
+}
+
+.subtitle {
+  margin: 0;
+  font-size: var(--header-subtitle-font-size, 16px);
+  font-weight: 400;
+  line-height: var(--header-subtitle-line-height, 1.4);
+  min-height: calc(
+    var(--header-subtitle-font-size, 16px) * var(--header-subtitle-line-height, 1.4) +
+      var(--inline-edit-underline, 1px)
+  );
+  opacity: 0.75;
+}

@@ -1,0 +1,69 @@
+.board-grid {
+  --board-grid-gap: 12px;
+  --board-grid-cols: 4;
+  display: grid;
+  grid-template-columns: repeat(var(--board-grid-cols), minmax(0, 1fr));
+  gap: var(--board-grid-gap);
+  grid-auto-rows: calc(
+    (100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols)
+  );
+}
+
+.board-tile {
+  cursor: default;
+}
+
+.board-card {
+  border: 1px solid rgba(0, 0, 0, 0.15);
+  border-radius: var(--board-widget-radius, 12px);
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  align-items: start;
+  gap: 8px;
+  height: 100%;
+  box-sizing: border-box;
+}
+
+.board-card--compact {
+  padding: 10px;
+}
+
+.board-card--scroll {
+  overflow: auto;
+}
+
+.tile-span-1 {
+  grid-column: span 1;
+  grid-row: span 1;
+}
+
+.tile-span-2 {
+  grid-column: span 2;
+  grid-row: span 1;
+}
+
+.tile-span-3 {
+  grid-column: span 3;
+  grid-row: span 1;
+}
+
+.tile-span-1x2 {
+  grid-column: span 1;
+  grid-row: span 2;
+}
+
+.tile-span-2x2 {
+  grid-column: span 2;
+  grid-row: span 2;
+}
+
+.tile-span-3x3 {
+  grid-column: span 3;
+  grid-row: span 3;
+}
+
+.tile-span-4 {
+  grid-column: span 4;
+  grid-row: span 1;
+}
