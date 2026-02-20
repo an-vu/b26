@@ -54,7 +54,6 @@ public class SystemSettingsService {
     settings.setGlobalInsightsBoardId(insightsBoard.getId());
     settings.setGlobalSettingsBoardId(settingsBoard.getId());
     settings.setGlobalSigninBoardId(signinBoard.getId());
-    settings.setGlobalSignupBoardId(signinBoard.getId());
     settings.setUpdatedAt(OffsetDateTime.now());
     systemSettingsRepository.save(settings);
 
@@ -80,7 +79,6 @@ public class SystemSettingsService {
               settings.setGlobalInsightsBoardId("insights");
               settings.setGlobalSettingsBoardId("settings");
               settings.setGlobalSigninBoardId("signin");
-              settings.setGlobalSignupBoardId("signin");
               settings.setUpdatedAt(OffsetDateTime.now());
               return systemSettingsRepository.save(settings);
             });

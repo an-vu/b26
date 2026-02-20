@@ -123,18 +123,18 @@ public class BoardDataSeeder {
         widgets.add(
             buildWidget(
                 settingsBoard,
-                "link",
+                "user-settings",
                 "User Settings",
                 "span-2",
-                "{\"url\":\"https://example.com/settings/user\"}",
+                "{}",
                 0));
         widgets.add(
             buildWidget(
                 settingsBoard,
-                "link",
+                "admin-settings",
                 "Admin Settings",
                 "span-2",
-                "{\"url\":\"https://example.com/settings/admin\"}",
+                "{}",
                 1));
       }
 
