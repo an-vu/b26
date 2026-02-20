@@ -96,6 +96,7 @@ export class BoardPageComponent {
   isWidgetEditMode = false;
   isWidgetSaving = false;
   isAccountMenuOpen = false;
+  accountBoardActionsMenuBoardId: string | null = null;
   isSigningOut = false;
   isSignedIn = false;
   isCreatingBoard = false;
@@ -236,10 +237,39 @@ export class BoardPageComponent {
 
   toggleAccountMenu() {
     this.isAccountMenuOpen = !this.isAccountMenuOpen;
+    if (!this.isAccountMenuOpen) {
+      this.accountBoardActionsMenuBoardId = null;
+    }
   }
 
   closeAccountMenu() {
     this.isAccountMenuOpen = false;
+    this.accountBoardActionsMenuBoardId = null;
+  }
+
+  toggleAccountBoardActionsMenu(boardId: string, event: MouseEvent) {
+    event.stopPropagation();
+    event.preventDefault();
+    this.accountBoardActionsMenuBoardId =
+      this.accountBoardActionsMenuBoardId === boardId ? null : boardId;
+  }
+
+  closeAccountBoardActionsMenu() {
+    this.accountBoardActionsMenuBoardId = null;
+  }
+
+  onAccountBoardSetMain(boardId: string, event: MouseEvent) {
+    void boardId;
+    event.stopPropagation();
+    event.preventDefault();
+    this.closeAccountBoardActionsMenu();
+  }
+
+  onAccountBoardDelete(boardId: string, event: MouseEvent) {
+    void boardId;
+    event.stopPropagation();
+    event.preventDefault();
+    this.closeAccountBoardActionsMenu();
   }
 
   createNewBoard() {

@@ -3,6 +3,7 @@
 
   <section class="settings-block" *ngIf="vm$ | async as vm">
     <section class="settings-section">
+      <p class="settings-section-title">Reserved Routes</p>
       <label class="settings-field">
         <span class="settings-label-inline">Homepage board for /</span>
         <div class="settings-input-status-row">
@@ -104,9 +105,18 @@
         <table class="permission-matrix" aria-label="Widget permission matrix placeholder">
           <thead>
             <tr>
-              <th></th>
-              <th>Admin</th>
-              <th>User</th>
+              <th rowspan="2"></th>
+              <th colspan="2">Admin</th>
+              <th colspan="2">User</th>
+              <th colspan="2">Visitor</th>
+            </tr>
+            <tr>
+              <th>View</th>
+              <th>Add/Edit</th>
+              <th>View</th>
+              <th>Add/Edit</th>
+              <th>View</th>
+              <th>Add/Edit</th>
             </tr>
           </thead>
           <tbody>
@@ -114,9 +124,17 @@
               <th scope="row">Embed</th>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
             </tr>
             <tr>
               <th scope="row">Link</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
             </tr>
@@ -124,9 +142,17 @@
               <th scope="row">Map</th>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
             </tr>
             <tr>
               <th scope="row">User Settings</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
             </tr>
@@ -134,14 +160,26 @@
               <th scope="row">Admin Settings</th>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" /></td>
             </tr>
             <tr>
               <th scope="row">Sign In</th>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
             </tr>
             <tr>
               <th scope="row">Sign Up</th>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
+              <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
               <td><input type="checkbox" checked /></td>
             </tr>

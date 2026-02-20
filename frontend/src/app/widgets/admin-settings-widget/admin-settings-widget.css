@@ -86,8 +86,7 @@
   text-align: center;
 }
 
-.permission-matrix th:first-child,
-.permission-matrix td:first-child {
+.permission-matrix tbody th[scope='row'] {
   text-align: left;
 }
 
