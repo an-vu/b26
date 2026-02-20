@@ -3,14 +3,20 @@ package com.b26.backend.widget.domain;
 import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.widget.api.SyncWidgetsRequest;
 import com.b26.backend.widget.api.UpsertWidgetRequest;
+import com.b26.backend.widget.api.UpsertWidgetWithIdRequest;
 import com.b26.backend.widget.api.WidgetDto;
 import com.b26.backend.widget.persistence.WidgetEntity;
 import com.b26.backend.widget.persistence.WidgetRepository;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -76,6 +82,49 @@ public class WidgetService {
     board.setUpdatedAt(OffsetDateTime.now());
   }
 
+  @Transactional
+  public List<WidgetDto> syncWidgets(String boardId, SyncWidgetsRequest request) {
+    BoardEntity board = findBoardByUrl(boardId);
+
+    List<WidgetEntity> existing = widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId());
+    Map<Long, WidgetEntity> byId = new HashMap<>();
+    for (WidgetEntity widget : existing) {
+      byId.put(widget.getId(), widget);
+    }
+
+    Set<Long> keptIds = new HashSet<>();
+    for (UpsertWidgetWithIdRequest item : request.widgets()) {
+      validateLayout(item.layout());
+      validateConfig(item.type(), item.config());
+
+      WidgetEntity widget;
+      if (item.id() != null) {
+        widget = byId.get(item.id());
+        if (widget == null) {
+          throw new WidgetNotFoundForBoardException(boardId, item.id());
+        }
+      } else {
+        widget = new WidgetEntity();
+        widget.setBoard(board);
+      }
+
+      applyRequest(widget, item);
+      WidgetEntity saved = widgetRepository.save(widget);
+      keptIds.add(saved.getId());
+    }
+
+    for (WidgetEntity widget : existing) {
+      if (!keptIds.contains(widget.getId())) {
+        widgetRepository.delete(widget);
+      }
+    }
+
+    board.setUpdatedAt(OffsetDateTime.now());
+    return widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId()).stream()
+        .map(this::toDto)
+        .toList();
+  }
+
   private BoardEntity findBoardByUrl(String boardUrl) {
     return boardRepository
         .findByBoardUrl(boardUrl)
@@ -83,6 +132,15 @@ public class WidgetService {
   }
 
   private void applyRequest(WidgetEntity widget, UpsertWidgetRequest request) {
+    widget.setType(request.type().trim());
+    widget.setTitle(request.title().trim());
+    widget.setLayout(request.layout().trim());
+    widget.setConfigJson(request.config().toString());
+    widget.setEnabled(request.enabled());
+    widget.setSortOrder(request.order());
+  }
+
+  private void applyRequest(WidgetEntity widget, UpsertWidgetWithIdRequest request) {
     widget.setType(request.type().trim());
     widget.setTitle(request.title().trim());
     widget.setLayout(request.layout().trim());

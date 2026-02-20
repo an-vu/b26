@@ -43,6 +43,12 @@ public class WidgetController {
     return widgetService.updateWidget(boardId, widgetId, request);
   }
 
+  @PutMapping("/{boardId}/widgets/sync")
+  public List<WidgetDto> syncWidgets(
+      @PathVariable String boardId, @Valid @RequestBody SyncWidgetsRequest request) {
+    return widgetService.syncWidgets(boardId, request);
+  }
+
   @DeleteMapping("/{boardId}/widgets/{widgetId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteWidget(@PathVariable String boardId, @PathVariable long widgetId) {
