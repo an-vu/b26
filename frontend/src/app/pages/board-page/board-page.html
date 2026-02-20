@@ -112,10 +112,28 @@
             </section>
             <hr />
             <p class="account-menu-label meta-label">Boards</p>
-            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">
-              <span>{{ board.label }}</span>
-              <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
-            </a>
+            <div class="account-board-row" *ngFor="let board of accountBoards">
+              <a class="account-board-link" [routerLink]="board.route" (click)="closeAccountMenu()">
+                <span>{{ board.label }}</span>
+                <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
+              </a>
+              <button
+                type="button"
+                class="account-board-actions-trigger"
+                [attr.aria-expanded]="accountBoardActionsMenuBoardId === board.id"
+                (click)="toggleAccountBoardActionsMenu(board.id, $event)"
+              >
+                ...
+              </button>
+              <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
+                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
+                  Set Main Board
+                </button>
+                <button type="button" class="account-board-delete-action" (click)="onAccountBoardDelete(board.id, $event)">
+                  Delete Board
+                </button>
+              </div>
+            </div>
             <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
             <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
             <hr />
@@ -183,6 +201,8 @@
                 <button type="button" aria-label="Pattern option 7"></button>
               </div>
             </label>
+            <hr />
+            <button type="button">Delete Board</button>
           </div>
         </div>
           <button
@@ -233,10 +253,28 @@
             </section>
             <hr />
             <p class="account-menu-label meta-label">Boards</p>
-            <a *ngFor="let board of accountBoards" [routerLink]="board.route" (click)="closeAccountMenu()">
-              <span>{{ board.label }}</span>
-              <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
-            </a>
+            <div class="account-board-row" *ngFor="let board of accountBoards">
+              <a class="account-board-link" [routerLink]="board.route" (click)="closeAccountMenu()">
+                <span>{{ board.label }}</span>
+                <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
+              </a>
+              <button
+                type="button"
+                class="account-board-actions-trigger"
+                [attr.aria-expanded]="accountBoardActionsMenuBoardId === board.id"
+                (click)="toggleAccountBoardActionsMenu(board.id, $event)"
+              >
+                ...
+              </button>
+              <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
+                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
+                  Set Main Board
+                </button>
+                <button type="button" class="account-board-delete-action" (click)="onAccountBoardDelete(board.id, $event)">
+                  Delete Board
+                </button>
+              </div>
+            </div>
             <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
             <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
             <hr />

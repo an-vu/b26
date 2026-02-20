@@ -37,6 +37,69 @@
   appearance: none;
 }
 
+.account-board-row {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-board-link {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+}
+
+.account-board-actions-trigger {
+  border: 0;
+  background: transparent;
+  font: inherit;
+  line-height: 1;
+  padding: 4px;
+  margin: 0;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.account-board-row:hover .account-board-actions-trigger,
+.account-board-row:focus-within .account-board-actions-trigger {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.account-board-actions-menu {
+  position: absolute;
+  left: calc(100% + 6px);
+  top: 0;
+  min-width: 150px;
+  border: 1px solid rgba(0, 0, 0, 0.2);
+  border-radius: 8px;
+  background: #fff;
+  padding: 6px;
+  display: grid;
+  gap: 4px;
+  z-index: 2;
+}
+
+.account-board-actions-menu button {
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: transparent;
+  border: 0;
+  padding: 4px 6px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.account-board-actions-menu .account-board-delete-action {
+  color: #b42318;
+}
+
 .account-link {
   display: block;
   width: 100%;
