@@ -1,6 +1,13 @@
 import type { UpsertWidgetRequest, Widget } from '../../models/widget';
 
-export type WidgetType = 'embed' | 'map' | 'link' | 'user-settings' | 'admin-settings' | 'signin';
+export type WidgetType =
+  | 'embed'
+  | 'map'
+  | 'link'
+  | 'user-settings'
+  | 'admin-settings'
+  | 'signin'
+  | 'signup';
 
 export type WidgetDraft = {
   id?: number;
@@ -70,7 +77,12 @@ export function buildWidgetPayload(draft: WidgetDraft): UpsertWidgetRequest {
     };
   }
 
-  if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
+  if (
+    draft.type === 'user-settings' ||
+    draft.type === 'admin-settings' ||
+    draft.type === 'signin' ||
+    draft.type === 'signup'
+  ) {
     return {
       ...base,
       config: {},
@@ -101,7 +113,12 @@ export function resetWidgetConfigForType(draft: WidgetDraft): void {
     return;
   }
 
-  if (draft.type === 'user-settings' || draft.type === 'admin-settings' || draft.type === 'signin') {
+  if (
+    draft.type === 'user-settings' ||
+    draft.type === 'admin-settings' ||
+    draft.type === 'signin' ||
+    draft.type === 'signup'
+  ) {
     draft.embedUrl = '';
     draft.linkUrl = '';
     draft.placesText = '';
@@ -130,7 +147,8 @@ export function normalizeWidgetType(type: string): WidgetType {
     type === 'link' ||
     type === 'user-settings' ||
     type === 'admin-settings' ||
-    type === 'signin'
+    type === 'signin' ||
+    type === 'signup'
   ) {
     return type;
   }
