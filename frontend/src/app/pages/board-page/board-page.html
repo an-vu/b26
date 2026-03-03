@@ -129,13 +129,18 @@
                 <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
                   Set Main Board
                 </button>
-                <button type="button" class="account-board-delete-action" (click)="onAccountBoardDelete(board.id, $event)">
-                  Delete Board
+                <button
+                  type="button"
+                  class="account-board-delete-action"
+                  (click)="onAccountBoardDelete(board.boardUrl, $event)"
+                  [disabled]="isDeletingBoard"
+                >
+                  {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
                 </button>
               </div>
             </div>
             <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
-            <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
+            <p class="account-menu-error" *ngIf="accountActionError">{{ accountActionError }}</p>
             <hr />
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
@@ -202,7 +207,13 @@
               </div>
             </label>
             <hr />
-            <button type="button">Delete Board</button>
+            <button
+              type="button"
+              (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
+              [disabled]="isDeletingBoard"
+            >
+              {{ isDeletingBoard && deletingBoardUrl === state.board.boardUrl ? 'Deleting...' : 'Delete Board' }}
+            </button>
           </div>
         </div>
           <button
@@ -270,13 +281,18 @@
                 <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
                   Set Main Board
                 </button>
-                <button type="button" class="account-board-delete-action" (click)="onAccountBoardDelete(board.id, $event)">
-                  Delete Board
+                <button
+                  type="button"
+                  class="account-board-delete-action"
+                  (click)="onAccountBoardDelete(board.boardUrl, $event)"
+                  [disabled]="isDeletingBoard"
+                >
+                  {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
                 </button>
               </div>
             </div>
             <button type="button" class="account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
-            <p class="account-menu-error" *ngIf="createBoardError">{{ createBoardError }}</p>
+            <p class="account-menu-error" *ngIf="accountActionError">{{ accountActionError }}</p>
             <hr />
             <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
             <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>

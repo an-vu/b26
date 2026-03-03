@@ -185,6 +185,15 @@ public class BoardService {
     return persist(board);
   }
 
+  @Transactional
+  public void deleteBoard(String boardId) {
+    BoardEntity board = findBoardByUrl(boardId);
+    if (userPreferenceRepository.existsByMainBoardId(board.getId())) {
+      throw new InvalidBoardUpdateException("cannot delete board set as main board");
+    }
+    boardRepository.delete(board);
+  }
+
   private BoardDto persist(BoardEntity board) {
     board.setUpdatedAt(OffsetDateTime.now());
     try {
