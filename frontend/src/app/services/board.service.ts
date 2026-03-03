@@ -39,6 +39,10 @@ export class BoardService {
     return this.http.post<Board>(`/api/board`, {}, this.withAdminHeader());
   }
 
+  deleteBoard(boardId: string): Observable<void> {
+    return this.http.delete<void>(`/api/board/${boardId}`, this.withAdminHeader());
+  }
+
   updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {
     return this.http.put<Board>(`/api/board/${boardId}`, payload, this.withAdminHeader());
   }

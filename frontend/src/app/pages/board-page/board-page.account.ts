@@ -7,7 +7,7 @@ import type { BoardService } from '../../services/board.service';
 import type { BoardIdentity } from '../../models/board-identity';
 import type { UserProfile } from '../../models/board';
 
-export type AccountMenuBoard = { id: string; label: string; route: string };
+export type AccountMenuBoard = { id: string; boardUrl: string; label: string; route: string };
 export type AccountMenuUser = { name: string; username: string };
 
 const DEFAULT_USER: AccountMenuUser = {
@@ -18,6 +18,7 @@ const DEFAULT_USER: AccountMenuUser = {
 export function mapAccountBoards(boards: BoardIdentity[]): AccountMenuBoard[] {
   return boards.map((board) => ({
     id: board.id,
+    boardUrl: board.boardUrl,
     label: board.boardName,
     route: `/b/${board.boardUrl}`,
   }));
