@@ -9,7 +9,7 @@ import { runCreateBoardFlow, runSignOutFlow } from './board-page.account';
 
 export function runCreateNewBoardAction(params: {
   isCreatingBoard: boolean;
-  setCreateBoardError: (message: string) => void;
+  setAccountActionError: (message: string) => void;
   setCreatingBoard: (isCreating: boolean) => void;
   boardService: BoardService;
   boardStore: BoardStoreService;
@@ -21,7 +21,7 @@ export function runCreateNewBoardAction(params: {
     return;
   }
 
-  params.setCreateBoardError('');
+  params.setAccountActionError('');
   runCreateBoardFlow({
     boardService: params.boardService,
     boardStore: params.boardStore,
@@ -35,7 +35,47 @@ export function runCreateNewBoardAction(params: {
       params.setCreatingBoard(false);
     },
     onError: (error) => {
-      params.setCreateBoardError(getApiErrorMessage(error, 'Unable to create board.'));
+      params.setAccountActionError(getApiErrorMessage(error, 'Unable to create board.'));
+    },
+  });
+}
+
+export function runDeleteBoardAction(params: {
+  boardUrl: string;
+  activeBoardUrl: string;
+  fallbackRoute: string;
+  isDeletingBoard: boolean;
+  setDeletingBoard: (isDeleting: boolean, boardUrl: string) => void;
+  setAccountActionError: (message: string) => void;
+  boardService: BoardService;
+  boardStore: BoardStoreService;
+  userStore: UserStoreService;
+  router: Router;
+  closeAccountBoardActionsMenu: () => void;
+  closeBoardIdentityMenu: () => void;
+}): void {
+  if (params.isDeletingBoard) {
+    return;
+  }
+
+  params.setAccountActionError('');
+  params.setDeletingBoard(true, params.boardUrl);
+
+  params.boardService.deleteBoard(params.boardUrl).subscribe({
+    next: () => {
+      params.setDeletingBoard(false, '');
+      params.closeAccountBoardActionsMenu();
+      params.closeBoardIdentityMenu();
+      params.boardStore.refreshBoards();
+      params.userStore.refreshMyPreferences();
+
+      if (params.activeBoardUrl === params.boardUrl) {
+        void params.router.navigateByUrl(params.fallbackRoute);
+      }
+    },
+    error: (error) => {
+      params.setDeletingBoard(false, '');
+      params.setAccountActionError(getApiErrorMessage(error, 'Unable to delete board.'));
     },
   });
 }
