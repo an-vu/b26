@@ -6,6 +6,8 @@ import com.b26.backend.board.domain.BoardService;
 import com.b26.backend.user.persistence.AppUserEntity;
 import jakarta.validation.Valid;
 import java.util.List;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -88,5 +91,11 @@ public class BoardController {
   public BoardDto updateBoardIdentity(
       @PathVariable String boardId, @Valid @RequestBody UpdateBoardIdentityRequest request) {
     return boardService.updateBoardIdentity(boardId, request);
+  }
+
+  @DeleteMapping("/{boardId}")
+  @ResponseStatus(HttpStatus.NO_CONTENT)
+  public void deleteBoard(@PathVariable String boardId) {
+    boardService.deleteBoard(boardId);
   }
 }

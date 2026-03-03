@@ -59,6 +59,7 @@ import {
 import { initializeBoardPageAccountState } from './board-page.account-state';
 import {
   runCreateNewBoardAction,
+  runDeleteBoardAction,
   runSignOutAction,
 } from './board-page.account-actions';
 import {
@@ -100,7 +101,9 @@ export class BoardPageComponent {
   isSigningOut = false;
   isSignedIn = false;
   isCreatingBoard = false;
-  createBoardError = '';
+  isDeletingBoard = false;
+  deletingBoardUrl = '';
+  accountActionError = '';
   isBoardIdentityMenuOpen = false;
   canEditBoard = false;
   readOnlyView = false;
@@ -265,18 +268,39 @@ export class BoardPageComponent {
     this.closeAccountBoardActionsMenu();
   }
 
-  onAccountBoardDelete(boardId: string, event: MouseEvent) {
-    void boardId;
+  onAccountBoardDelete(boardUrl: string, event: MouseEvent) {
     event.stopPropagation();
     event.preventDefault();
-    this.closeAccountBoardActionsMenu();
+
+    const fallbackRoute =
+      this.accountBoards.find((board) => board.id === this.accountMainBoardId)?.route ?? '/';
+
+    runDeleteBoardAction({
+      boardUrl,
+      activeBoardUrl: this.activeBoardUrl,
+      fallbackRoute,
+      isDeletingBoard: this.isDeletingBoard,
+      setDeletingBoard: (isDeleting, deletingBoardUrl) => {
+        this.isDeletingBoard = isDeleting;
+        this.deletingBoardUrl = deletingBoardUrl;
+      },
+      setAccountActionError: (message) => {
+        this.accountActionError = message;
+      },
+      boardService: this.boardService,
+      boardStore: this.boardStore,
+      userStore: this.userStore,
+      router: this.router,
+      closeAccountBoardActionsMenu: () => this.closeAccountBoardActionsMenu(),
+      closeBoardIdentityMenu: () => this.closeBoardIdentityMenu(),
+    });
   }
 
   createNewBoard() {
     runCreateNewBoardAction({
       isCreatingBoard: this.isCreatingBoard,
-      setCreateBoardError: (message) => {
-        this.createBoardError = message;
+      setAccountActionError: (message) => {
+        this.accountActionError = message;
       },
       setCreatingBoard: (isCreating) => {
         this.isCreatingBoard = isCreating;
