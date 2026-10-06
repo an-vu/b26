@@ -2,6 +2,7 @@
   <h3>{{ widget.title }}</h3>
 
   <ng-container *ngIf="vm$ | async as vm">
+    <ng-container *ngIf="vm.profile; else signedOut">
     <section class="settings-section">
       <p class="settings-section-title">Account Information</p>
 
@@ -50,7 +51,9 @@
       </label>
 
       <div class="settings-actions">
-        <button type="button">Sign Out</button>
+        <button type="button" (click)="signOut()" [disabled]="isSigningOut">
+          {{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}
+        </button>
         <button type="button">Delete Account</button>
       </div>
     </section>
@@ -71,7 +74,12 @@
         </div>
       </label>
 
-      <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
+      <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
     </section>
+    </ng-container>
+    <ng-template #signedOut>
+      <p *ngIf="vm.isHydrating; else signinPrompt">Loading account…</p>
+      <ng-template #signinPrompt><a routerLink="/signin">Sign in to manage your account</a></ng-template>
+    </ng-template>
   </ng-container>
 </article>

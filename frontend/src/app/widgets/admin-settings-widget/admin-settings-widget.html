@@ -4,10 +4,14 @@
   <section class="settings-block" *ngIf="vm$ | async as vm">
     <section class="settings-section">
       <p class="settings-section-title">Reserved Routes</p>
+      <p role="status" *ngIf="vm.isHydrating">Loading boards and route settings…</p>
+      <p role="status" *ngIf="vm.isSaving">Saving route settings…</p>
+      <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
+      <button type="button" *ngIf="vm.loadFailed" (click)="loadSettings()">Retry loading settings</button>
       <label class="settings-field">
         <span class="settings-label-inline">Homepage board for /</span>
         <div class="settings-input-status-row">
-          <select [ngModel]="vm.homepageBoardId" (ngModelChange)="onRouteSelectionChanged('homepage', $event)">
+          <select [disabled]="vm.isHydrating || vm.loadFailed || vm.isSaving" [ngModel]="vm.homepageBoardId" (ngModelChange)="onRouteSelectionChanged('homepage', $event)">
             <option value="" selected disabled>Select a board</option>
             <option *ngFor="let board of vm.boards" [value]="board.id">
               {{ board.boardName }} (/{{ board.boardUrl }})
@@ -20,7 +24,7 @@
       <label class="settings-field">
         <span class="settings-label-inline">Insights board for /insights</span>
         <div class="settings-input-status-row">
-          <select [ngModel]="vm.insightsBoardId" (ngModelChange)="onRouteSelectionChanged('insights', $event)">
+          <select [disabled]="vm.isHydrating || vm.loadFailed || vm.isSaving" [ngModel]="vm.insightsBoardId" (ngModelChange)="onRouteSelectionChanged('insights', $event)">
             <option value="" selected disabled>Select a board</option>
             <option *ngFor="let board of vm.boards" [value]="board.id">
               {{ board.boardName }} (/{{ board.boardUrl }})
@@ -33,7 +37,7 @@
       <label class="settings-field">
         <span class="settings-label-inline">Settings board for /settings</span>
         <div class="settings-input-status-row">
-          <select [ngModel]="vm.settingsBoardId" (ngModelChange)="onRouteSelectionChanged('settings', $event)">
+          <select [disabled]="vm.isHydrating || vm.loadFailed || vm.isSaving" [ngModel]="vm.settingsBoardId" (ngModelChange)="onRouteSelectionChanged('settings', $event)">
             <option value="" selected disabled>Select a board</option>
             <option *ngFor="let board of vm.boards" [value]="board.id">
               {{ board.boardName }} (/{{ board.boardUrl }})
@@ -46,7 +50,7 @@
       <label class="settings-field">
         <span class="settings-label-inline">Sign in board for /signin</span>
         <div class="settings-input-status-row">
-          <select [ngModel]="vm.signinBoardId" (ngModelChange)="onRouteSelectionChanged('signin', $event)">
+          <select [disabled]="vm.isHydrating || vm.loadFailed || vm.isSaving" [ngModel]="vm.signinBoardId" (ngModelChange)="onRouteSelectionChanged('signin', $event)">
             <option value="" selected disabled>Select a board</option>
             <option *ngFor="let board of vm.boards" [value]="board.id">
               {{ board.boardName }} (/{{ board.boardUrl }})
@@ -188,6 +192,5 @@
       </div>
     </section>
 
-    <p class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
   </section>
 </article>

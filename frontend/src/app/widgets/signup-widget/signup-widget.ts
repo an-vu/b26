@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, finalize, map, of, switchMap } from 'rxjs';
@@ -19,6 +19,8 @@ export class SignupWidgetComponent {
   @Input({ required: true }) widget!: Widget;
 
   @Output() signinRequested = new EventEmitter<void>();
+
+  private readonly cdr = inject(ChangeDetectorRef);
 
   email = '';
   password = '';
@@ -73,6 +75,7 @@ export class SignupWidgetComponent {
         }),
         finalize(() => {
           this.isSubmitting = false;
+          this.cdr.markForCheck();
         })
       )
       .subscribe({

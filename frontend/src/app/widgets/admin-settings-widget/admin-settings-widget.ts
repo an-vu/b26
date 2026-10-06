@@ -1,12 +1,11 @@
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatest, of, Subject, timer } from 'rxjs';
+import { BehaviorSubject, combineLatest, forkJoin, of, Subject, timer } from 'rxjs';
 import { catchError, map, switchMap } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Widget } from '../../models/widget';
-import type { UpdateSystemRoutesRequest } from '../../models/board';
-import { BoardStoreService } from '../../services/board-store.service';
+import type { Board, UpdateSystemRoutesRequest } from '../../models/board';
 import { BoardService } from '../../services/board.service';
 import type { SystemRoutes } from '../../models/board';
 
@@ -20,6 +19,8 @@ type AdminSettingsState = {
   savedField: SavedField;
   errorMessage: string;
   isHydrating: boolean;
+  loadFailed: boolean;
+  isSaving: boolean;
 };
 
 @Component({
@@ -33,7 +34,8 @@ export class AdminSettingsWidgetComponent implements OnInit {
   @Input({ required: true }) widget!: Widget;
 
   private readonly destroyRef = inject(DestroyRef);
-  readonly boards$;
+  private readonly boardsSubject = new BehaviorSubject<Board[]>([]);
+  readonly boards$ = this.boardsSubject.asObservable();
   private readonly state$ = new BehaviorSubject<AdminSettingsState>({
     homepageBoardId: '',
     insightsBoardId: '',
@@ -42,6 +44,8 @@ export class AdminSettingsWidgetComponent implements OnInit {
     savedField: null,
     errorMessage: '',
     isHydrating: true,
+    loadFailed: false,
+    isSaving: false,
   });
   private readonly saveRequests$ = new Subject<{
     field: Exclude<SavedField, null>;
@@ -50,10 +54,8 @@ export class AdminSettingsWidgetComponent implements OnInit {
   readonly vm$;
 
   constructor(
-    private boardStore: BoardStoreService,
     private boardService: BoardService
   ) {
-    this.boards$ = this.boardStore.boards$;
     this.vm$ = combineLatest([this.boards$, this.state$]).pipe(
       map(([boards, state]) => ({ boards, ...state }))
     );
@@ -75,13 +77,16 @@ export class AdminSettingsWidgetComponent implements OnInit {
             ...current,
             errorMessage: result.error?.error?.message ?? 'Unable to save route settings',
             savedField: null,
+            isSaving: false,
           });
           return;
         }
 
         this.state$.next({
+          ...this.state$.value,
           ...this.routesToState(result.routes, this.state$.value),
           savedField: result.field,
+          isSaving: false,
           errorMessage: '',
           isHydrating: false,
         });
@@ -98,35 +103,47 @@ export class AdminSettingsWidgetComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.boardStore.refreshBoards();
-    this.boardService
-      .getSystemRoutes()
-      .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (routes) => {
-          this.state$.next({
-            ...this.routesToState(routes, this.state$.value),
-            savedField: null,
-            errorMessage: '',
-            isHydrating: false,
-          });
-        },
-        error: () => {
-          this.state$.next({
-            homepageBoardId: '',
-            insightsBoardId: '',
-            settingsBoardId: '',
-            signinBoardId: '',
-            savedField: null,
-            errorMessage: '',
-            isHydrating: false,
-          });
-        },
-      });
+    this.loadSettings();
+  }
+
+  loadSettings(): void {
+    if (this.state$.value.isSaving) return;
+    this.state$.next({
+      ...this.state$.value,
+      isHydrating: true,
+      loadFailed: false,
+      savedField: null,
+      errorMessage: '',
+    });
+    // Route mappings may point to any board, not just the current admin's boards.
+    forkJoin({
+      boards: this.boardService.getBoards(),
+      routes: this.boardService.getSystemRoutes(),
+    }).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: ({ boards, routes }) => {
+        this.boardsSubject.next(boards);
+        this.state$.next({
+          ...this.state$.value,
+          ...this.routesToState(routes, this.state$.value),
+          isHydrating: false,
+          loadFailed: false,
+          errorMessage: '',
+        });
+      },
+      error: () => {
+        this.state$.next({
+          ...this.state$.value,
+          isHydrating: false,
+          loadFailed: true,
+          errorMessage: 'Unable to load boards and route settings. Please retry.',
+        });
+      },
+    });
   }
 
   onRouteSelectionChanged(field: Exclude<SavedField, null>, boardId: string) {
     const current = this.state$.value;
+    if (current.isHydrating || current.loadFailed || current.isSaving) return;
     const next = this.withFieldChanged(current, field, boardId);
     this.state$.next({ ...next, errorMessage: '', savedField: null });
 
@@ -140,6 +157,7 @@ export class AdminSettingsWidgetComponent implements OnInit {
       return;
     }
 
+    this.state$.next({ ...this.state$.value, isSaving: true });
     this.saveRequests$.next({
       field,
       payload: {

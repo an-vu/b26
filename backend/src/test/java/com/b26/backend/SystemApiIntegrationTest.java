@@ -49,4 +49,31 @@ class SystemApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(jsonPath("$.globalSigninBoardId").isNotEmpty())
         .andExpect(jsonPath("$.globalSigninBoardUrl").isNotEmpty());
   }
+  @Test
+  void patchSystemRoutes_anonymousAndNonAdminCannotChangeMappings() throws Exception {
+    String before = mockMvc.perform(get(API_SYSTEM_ROUTES))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    String payload = """
+        {"globalHomepageBoardId":"default","globalInsightsBoardId":"insights",
+         "globalSettingsBoardId":"settings","globalSigninBoardId":"signin"}
+        """;
+    mockMvc.perform(patch(API_SYSTEM_ROUTES).contentType(MediaType.APPLICATION_JSON).content(payload))
+        .andExpect(status().isUnauthorized());
+
+    String id = "system-user-" + java.util.UUID.randomUUID();
+    var user = new com.b26.backend.user.persistence.AppUserEntity();
+    user.setId(id);
+    user.setUsername(id);
+    user.setDisplayName("Ordinary user");
+    user.setEmail(id + "@example.com");
+    user.setRole("USER");
+    appUserRepository.save(user);
+    mockMvc.perform(patch(API_SYSTEM_ROUTES)
+        .header(AUTHORIZATION_HEADER, issueAuthTokenForUser(id))
+        .contentType(MediaType.APPLICATION_JSON).content(payload))
+        .andExpect(status().isForbidden());
+    String after = mockMvc.perform(get(API_SYSTEM_ROUTES))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+    org.junit.jupiter.api.Assertions.assertEquals(objectMapper.readTree(before), objectMapper.readTree(after));
+  }
 }

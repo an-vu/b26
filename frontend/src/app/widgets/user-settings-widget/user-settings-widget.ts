@@ -1,4 +1,7 @@
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
+import { Router, RouterLink } from '@angular/router';
+import { AuthService } from '../../services/auth.service';
+import { getApiErrorMessage } from '../../utils/api-error.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, of, Subject, timer } from 'rxjs';
@@ -24,7 +27,7 @@ type UserSettingsState = {
 @Component({
   selector: 'app-user-settings-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, RouterLink],
   templateUrl: './user-settings-widget.html',
   styleUrl: './user-settings-widget.css',
 })
@@ -33,6 +36,7 @@ export class UserSettingsWidgetComponent implements OnInit {
 
   private readonly destroyRef = inject(DestroyRef);
   readonly boards$;
+  isSigningOut = false;
   private readonly state$ = new BehaviorSubject<UserSettingsState>({
     displayName: '',
     username: 'username',
@@ -51,11 +55,13 @@ export class UserSettingsWidgetComponent implements OnInit {
   constructor(
     private boardStore: BoardStoreService,
     private boardService: BoardService,
-    private userStore: UserStoreService
+    private userStore: UserStoreService,
+    private authService: AuthService,
+    private router: Router
   ) {
     this.boards$ = this.boardStore.boards$;
-    this.vm$ = combineLatest([this.boards$, this.state$]).pipe(
-      map(([boards, state]) => ({ boards, ...state }))
+    this.vm$ = combineLatest([this.boards$, this.state$, this.userStore.profile$]).pipe(
+      map(([boards, state, profile]) => ({ boards, ...state, profile }))
     );
 
     this.saveRequests$
@@ -212,6 +218,27 @@ export class UserSettingsWidgetComponent implements OnInit {
           });
         },
       });
+  }
+
+  signOut(): void {
+    if (this.isSigningOut) return;
+    this.isSigningOut = true;
+    this.state$.next({ ...this.state$.value, errorMessage: '' });
+    this.authService.signout().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: () => {
+        this.isSigningOut = false;
+        this.userStore.clearProfile();
+        this.boardStore.clearBoards();
+        void this.router.navigateByUrl('/signin');
+      },
+      error: (error) => {
+        this.isSigningOut = false;
+        this.state$.next({
+          ...this.state$.value,
+          errorMessage: getApiErrorMessage(error, 'Unable to sign out. Please try again.'),
+        });
+      },
+    });
   }
 
   onMainBoardChanged(mainBoardId: string) {

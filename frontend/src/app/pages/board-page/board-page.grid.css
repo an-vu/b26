@@ -2,15 +2,20 @@
   --board-grid-gap: 12px;
   --board-grid-cols: 4;
   display: grid;
+  align-content: start;
   grid-template-columns: repeat(var(--board-grid-cols), minmax(0, 1fr));
   gap: var(--board-grid-gap);
-  grid-auto-rows: calc(
-    (100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols)
+  /* Tile dimensions are a minimum: forms and validation messages need room to grow. */
+  grid-auto-rows: minmax(
+    calc((100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols)),
+    auto
   );
 }
 
 .board-tile {
   cursor: default;
+  min-width: 0;
+  grid-column: span min(var(--tile-cols, 1), var(--board-grid-cols));
 }
 
 .board-card {
@@ -34,36 +39,48 @@
 }
 
 .tile-span-1 {
-  grid-column: span 1;
+  --tile-cols: 1;
   grid-row: span 1;
 }
 
 .tile-span-2 {
-  grid-column: span 2;
+  --tile-cols: 2;
   grid-row: span 1;
 }
 
 .tile-span-3 {
-  grid-column: span 3;
+  --tile-cols: 3;
   grid-row: span 1;
 }
 
 .tile-span-1x2 {
-  grid-column: span 1;
+  --tile-cols: 1;
   grid-row: span 2;
 }
 
 .tile-span-2x2 {
-  grid-column: span 2;
+  --tile-cols: 2;
   grid-row: span 2;
 }
 
 .tile-span-3x3 {
-  grid-column: span 3;
+  --tile-cols: 3;
   grid-row: span 3;
 }
 
 .tile-span-4 {
-  grid-column: span 4;
+  --tile-cols: 4;
   grid-row: span 1;
+}
+
+@media (max-width: 1024px) {
+  .board-grid {
+    --board-grid-cols: 2;
+  }
+}
+
+@media (max-width: 640px) {
+  .board-grid {
+    --board-grid-cols: 1;
+  }
 }

@@ -7,6 +7,28 @@ Personal dashboard app where users create customizable pages and manage widgets.
 - Java Spring Boot
 - PostgreSQL
 
+## Quick local setup (Docker only)
+
+Install and open Docker Desktop. From this repo, run:
+
+```bash
+./setup.sh
+```
+
+The script builds the frontend/backend, starts PostgreSQL, applies migrations, and
+waits for health checks. No Node, Java, or `.env` setup is required on your computer.
+Open http://localhost:4200/signin and use `anvu@local` with any placeholder password.
+Open `/b/default` to edit as the seeded admin.
+
+This local-only setup enables password bypass and binds the website to loopback; the API/database stay inside Docker.
+It uses `docker-compose.local.yml` and its own `b26-local` database volume, separate
+from existing Compose workflows and hosted data. It does not load `.env.dev`.
+Stop with `./setup.sh stop` (data is retained), inspect with `./setup.sh logs`, and
+rerun `./setup.sh` to start or rebuild after code changes. Builds do not live-reload.
+If port 4200 is already occupied, stop the other local frontend first.
+
+For code editing with live frontend reload, use the workflow below.
+
 ## Local development
 Requires Node 20.19+ (or a supported newer Node release), Java 21, and PostgreSQL.
 

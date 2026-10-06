@@ -107,6 +107,19 @@ body {
   font-size: 14px;
 }
 
+.widget {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.widget input:not([type='checkbox']),
+.widget select,
+.widget textarea {
+  min-width: 0;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
 app-widget-host.widget-host-preview .widget {
   border: 0;
   border-radius: 0;

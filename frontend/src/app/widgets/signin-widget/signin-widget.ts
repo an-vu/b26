@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Input } from '@angular/core';
+import { ChangeDetectorRef, Component, Input, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { Widget } from '../../models/widget';
@@ -27,6 +27,8 @@ export class SigninWidgetComponent {
     enabled: true,
     order: 0,
   };
+
+  private readonly cdr = inject(ChangeDetectorRef);
 
   email = '';
   password = '';
@@ -67,9 +69,11 @@ export class SigninWidgetComponent {
       error: (error: unknown) => {
         this.errorMessage = this.resolveErrorMessage(error);
         this.isSubmitting = false;
+        this.cdr.markForCheck();
       },
       complete: () => {
         this.isSubmitting = false;
+        this.cdr.markForCheck();
       },
     });
   }
