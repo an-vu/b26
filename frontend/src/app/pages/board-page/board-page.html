@@ -11,8 +11,8 @@
       <aside class="board-rail">
         <ng-container *ngIf="isWidgetEditMode; else boardView">
           <section class="board-header-stack board-meta-editor">
-            <input type="text" name="board-name" class="inline-edit title" [(ngModel)]="boardDraftName" placeholder="Name" />
-            <input type="text" name="board-headline" class="inline-edit subtitle" [(ngModel)]="boardDraftHeadline" placeholder="Description" />
+            <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-name" class="inline-edit title" [(ngModel)]="boardDraftName" placeholder="Name" />
+            <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-headline" class="inline-edit subtitle" [(ngModel)]="boardDraftHeadline" placeholder="Description" />
           </section>
         </ng-container>
         <ng-template #boardView>
@@ -21,7 +21,7 @@
       </aside>
 
       <section class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
-        <p class="error" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
+        <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
         <div class="board-grid" *ngIf="isWidgetEditMode">
           <article
@@ -126,7 +126,7 @@
                 ...
               </button>
               <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
-                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
+                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id) || isSettingMainBoard">
                   Set Main Board
                 </button>
                 <button
@@ -155,30 +155,35 @@
 
       <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
-          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()">
+          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
             {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
           </button>
           <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
             <label>
               Board Name
-              <input type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
+              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
             </label>
             <label>
               URL
               <div class="slug-input-wrap">
                 <span>/</span>
-                <input type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
               </div>
             </label>
+            <p class="error" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
+            <div>
+              <button type="button" (click)="saveIdentity()" [disabled]="isIdentitySaving">{{ isIdentitySaving ? 'Saving...' : 'Save' }}</button>
+              <button type="button" (click)="cancelIdentityEdit()" [disabled]="isIdentitySaving">Cancel</button>
+            </div>
             <hr />
             <div class="board-appearance-row">
               <label>
                 Widget Radius
-                <input type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
               </label>
               <label for="board-theme-toggle">
                 <span>Theme</span>
-                <input type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
               </label>
             </div>
             <hr />
@@ -220,15 +225,17 @@
             type="button"
             class="bottom-action-button orb-button orb-button--gray"
             *ngIf="!isWidgetEditMode; else doneButton"
-            (click)="startWidgetEdit(state.board, widgets)"
+            (click)="requestWidgetEdit(state.board)"
+            [disabled]="isWidgetLoading || isIdentitySaving"
           >
           <span class="orb-button__dot" aria-hidden="true"></span>
-          <span class="orb-button__label">Edit</span>
+          <span class="orb-button__label">{{ isWidgetLoading ? 'Loading...' : 'Edit' }}</span>
         </button>
         <ng-template #doneButton>
+          <button type="button" class="bottom-action-button bottom-action-pill" (click)="discardWidgetEdit()" [disabled]="isWidgetSaving">Cancel</button>
           <button type="button" class="bottom-action-button orb-button orb-button--gray" (click)="doneWidgetEdit()" [disabled]="isWidgetSaving">
             <span class="orb-button__dot" aria-hidden="true"></span>
-            <span class="orb-button__label">Done</span>
+            <span class="orb-button__label">{{ isWidgetSaving ? 'Saving...' : 'Done' }}</span>
           </button>
         </ng-template>
       </div>
@@ -278,7 +285,7 @@
                 ...
               </button>
               <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
-                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id)">
+                <button type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id) || isSettingMainBoard">
                   Set Main Board
                 </button>
                 <button
@@ -310,7 +317,7 @@
 <ng-template #widgetSettingsForm let-draft let-isNew="isNew" let-i="index">
   <div class="widget-settings-panel">
     <div class="widget-editor-head">
-      <input
+      <input [disabled]="isWidgetSaving || isIdentitySaving"
         type="text"
         class="widget-title-inline inline-edit"
         [name]="isNew ? 'new-widget-title' : 'widget-title-' + draft.id"
@@ -322,7 +329,7 @@
 
     <label>
       Type
-      <select
+      <select [disabled]="isWidgetSaving || isIdentitySaving"
         [name]="isNew ? 'new-widget-type' : 'widget-type-' + draft.id"
         [(ngModel)]="draft.type"
         (ngModelChange)="isNew ? onNewWidgetTypeChange() : onWidgetTypeChange(draft)"
@@ -338,7 +345,7 @@
     </label>
     <label>
       Layout
-      <select
+      <select [disabled]="isWidgetSaving || isIdentitySaving"
         [name]="isNew ? 'new-widget-layout' : 'widget-layout-' + draft.id"
         [(ngModel)]="draft.layout"
         (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
@@ -354,7 +361,7 @@
     </label>
     <label *ngIf="draft.type === 'embed'">
       Embed URL
-      <input
+      <input [disabled]="isWidgetSaving || isIdentitySaving"
         type="text"
         [name]="isNew ? 'new-widget-embed-url' : 'widget-embed-url-' + draft.id"
         [(ngModel)]="draft.embedUrl"
@@ -363,7 +370,7 @@
     </label>
     <label *ngIf="draft.type === 'link'">
       Link URL
-      <input
+      <input [disabled]="isWidgetSaving || isIdentitySaving"
         type="text"
         [name]="isNew ? 'new-widget-link-url' : 'widget-link-url-' + draft.id"
         [(ngModel)]="draft.linkUrl"
@@ -372,7 +379,7 @@
     </label>
     <label *ngIf="draft.type === 'map'">
       Places (one per line)
-      <textarea
+      <textarea [disabled]="isWidgetSaving || isIdentitySaving"
         [name]="isNew ? 'new-widget-places' : 'widget-places-' + draft.id"
         [(ngModel)]="draft.placesText"
         (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"

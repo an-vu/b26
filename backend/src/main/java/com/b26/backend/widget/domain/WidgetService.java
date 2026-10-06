@@ -99,6 +99,9 @@ public class WidgetService {
 
       WidgetEntity widget;
       if (item.id() != null) {
+        if (!keptIds.add(item.id())) {
+          throw new InvalidWidgetConfigException("widgets contain duplicate ids");
+        }
         widget = byId.get(item.id());
         if (widget == null) {
           throw new WidgetNotFoundForBoardException(boardId, item.id());
@@ -150,12 +153,15 @@ public class WidgetService {
   }
 
   private static void validateConfig(String type, JsonNode config) {
+    if (!config.isObject() || config.toString().length() > 4000) {
+      throw new InvalidWidgetConfigException("Widget configuration must be an object of at most 4000 characters");
+    }
     if ("embed".equals(type)) {
       JsonNode embedUrl = config.get("embedUrl");
       if (embedUrl == null || embedUrl.isNull() || (embedUrl.isTextual() && embedUrl.asText().isBlank())) {
         return;
       }
-      if (!embedUrl.isTextual() || !embedUrl.asText().startsWith("http")) {
+      if (!embedUrl.isTextual() || !isHttpUrl(embedUrl.asText())) {
         throw new InvalidWidgetConfigException("embed config requires a valid http embedUrl");
       }
       return;
@@ -182,7 +188,7 @@ public class WidgetService {
       if (url == null || url.isNull() || (url.isTextual() && url.asText().isBlank())) {
         return;
       }
-      if (!url.isTextual() || !url.asText().startsWith("http")) {
+      if (!url.isTextual() || !isHttpUrl(url.asText())) {
         throw new InvalidWidgetConfigException("link config requires a valid http url");
       }
       return;
@@ -199,6 +205,16 @@ public class WidgetService {
     }
 
     throw new InvalidWidgetConfigException("unsupported widget type: " + type);
+  }
+
+  private static boolean isHttpUrl(String value) {
+    try {
+      var uri = java.net.URI.create(value);
+      return ("http".equalsIgnoreCase(uri.getScheme()) || "https".equalsIgnoreCase(uri.getScheme()))
+          && uri.getHost() != null && !uri.getHost().isBlank();
+    } catch (IllegalArgumentException exception) {
+      return false;
+    }
   }
 
   private static void validateLayout(String layout) {

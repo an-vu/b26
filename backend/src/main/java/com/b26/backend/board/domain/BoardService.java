@@ -1,6 +1,9 @@
 package com.b26.backend.board.domain;
 
 import com.b26.backend.board.api.BoardDto;
+import com.b26.backend.board.api.BoardEditDto;
+import com.b26.backend.board.api.SaveBoardEditRequest;
+import com.b26.backend.widget.api.SyncWidgetsRequest;
 import com.b26.backend.board.api.UpdateCardRequest;
 import com.b26.backend.board.api.UpdateBoardMetaRequest;
 import com.b26.backend.board.api.UpdateBoardRequest;
@@ -41,6 +44,28 @@ public class BoardService {
     this.userPreferenceRepository = userPreferenceRepository;
     this.widgetService = widgetService;
     this.objectMapper = objectMapper;
+  }
+
+  @Transactional
+  public BoardEditDto getEditor(String slug) {
+    BoardEntity board = boardRepository.findForEditing(slug)
+        .orElseThrow(() -> new BoardNotFoundException(slug));
+    return new BoardEditDto(toDto(board), widgetService.getWidgetsForBoard(slug));
+  }
+
+  @Transactional
+  public BoardEditDto saveEditor(String slug, SaveBoardEditRequest request) {
+    BoardEntity board = boardRepository.findForEditing(slug)
+        .orElseThrow(() -> new BoardNotFoundException(slug));
+    if (!request.version().equals(board.getVersion())) {
+      throw new BoardEditConflictException();
+    }
+    var widgets = widgetService.syncWidgets(slug, new SyncWidgetsRequest(request.widgets()));
+    board.setName(request.name().trim());
+    board.setHeadline(request.headline().trim());
+    board.setUpdatedAt(OffsetDateTime.now());
+    boardRepository.flush();
+    return new BoardEditDto(toDto(board), widgets);
   }
 
   @Transactional(readOnly = true)
@@ -182,7 +207,11 @@ public class BoardService {
 
   @Transactional
   public BoardDto updateBoardIdentity(String boardId, UpdateBoardIdentityRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
+    BoardEntity board = boardRepository.findForEditing(boardId)
+        .orElseThrow(() -> new BoardNotFoundException(boardId));
+    if (request.version() != null && !request.version().equals(board.getVersion())) {
+      throw new BoardEditConflictException();
+    }
 
     String normalizedBoardName = request.boardName().trim();
     if (normalizedBoardName.isEmpty()) {
@@ -251,6 +280,6 @@ public class BoardService {
 
   private static BoardDto toDto(BoardEntity board) {
     return new BoardDto(
-        board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline());
+        board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion());
   }
 }

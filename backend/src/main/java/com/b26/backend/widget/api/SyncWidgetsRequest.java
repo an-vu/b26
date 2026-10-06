@@ -5,4 +5,4 @@ import jakarta.validation.constraints.NotNull;
 import java.util.List;
 
 public record SyncWidgetsRequest(
-    @NotNull(message = "widgets is required") List<@Valid UpsertWidgetWithIdRequest> widgets) {}
+    @NotNull(message = "widgets is required") List<@NotNull @Valid UpsertWidgetWithIdRequest> widgets) {}

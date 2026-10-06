@@ -1,7 +1,10 @@
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { Subject } from 'rxjs';
+import { Subject, finalize } from 'rxjs';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { hasDraftChangedByOriginal } from './board-page.save-flow';
+import { getApiErrorMessage } from '../../utils/api-error.util';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 
@@ -12,7 +15,7 @@ import { UserStoreService } from '../../services/user-store.service';
 import { AuthService } from '../../services/auth.service';
 import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
-import type { SyncWidgetsRequest, Widget } from '../../models/widget';
+import type { Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
 import {
   buildWidgetPayload as buildWidgetPayloadHelper,
@@ -30,11 +33,7 @@ import {
   type AccountMenuUser,
 } from './board-page.account';
 import { resolveBoardId$ as resolveBoardIdHelper$ } from './board-page.routing';
-import {
-  closeBoardIdentityMenuState,
-  toggleBoardIdentityMenuState,
-} from './board-page.identity-menu';
-import { runPersistBoardUrlDraftAction } from './board-page.identity-actions';
+import { prepareBoardIdentityUpdate } from './board-page.routing';
 import {
   buildCancelWidgetEditState,
   buildStartWidgetEditState,
@@ -94,6 +93,12 @@ export class BoardPageComponent {
   private reload$ = new Subject<void>();
   private boardPermissionsRequestId = 0;
 
+  identitySaveError = '';
+  isIdentitySaving = false;
+  private identityVersion: number | undefined;
+  isWidgetLoading = false;
+  isSettingMainBoard = false;
+  private editVersion: number | null = null;
   isWidgetEditMode = false;
   isWidgetSaving = false;
   isAccountMenuOpen = false;
@@ -153,11 +158,13 @@ export class BoardPageComponent {
         this.activeBoardUrl = '';
       }
 
-      if (state.status === 'ready' && state.board.id !== this.boardIdentitySourceId) {
+      if (state.status === 'ready' && (state.board.id !== this.boardIdentitySourceId || !this.hasUnsavedChanges)) {
         if (this.isWidgetEditMode) {
           this.cancelWidgetEdit();
         }
         this.boardIdentitySourceId = state.board.id;
+        this.identityVersion = state.board.version;
+        this.identitySaveError = '';
         this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
         this.boardIdentityPersistedName = this.boardIdentityNameDraft;
         this.boardIdentitySlugDraft = state.board.boardUrl;
@@ -225,7 +232,77 @@ export class BoardPageComponent {
     return getTileLayoutClass(layout);
   }
 
+  requestWidgetEdit(board: Board) {
+    if (this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving) return;
+    if (this.hasUnsavedChanges) {
+      this.widgetSaveError = 'Save or cancel the board name and URL changes before editing widgets.';
+      return;
+    }
+    this.isWidgetLoading = true;
+    this.widgetSaveError = '';
+    const slug = board.boardUrl;
+    this.boardService.getEditor(slug)
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.isWidgetLoading = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (snapshot) => {
+          if (this.activeBoardUrl !== slug) return;
+          this.startWidgetEdit(snapshot.board, snapshot.widgets);
+        },
+        error: (error) => {
+          this.widgetSaveError = getApiErrorMessage(error, 'Unable to load the editor. Please try again.');
+        },
+      });
+  }
+
+  get hasUnsavedChanges(): boolean {
+    const identityChanged = this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
+      this.boardIdentitySlugDraft !== this.boardIdentityPersistedUrl;
+    if (!this.isWidgetEditMode) return identityChanged;
+    return identityChanged || this.boardDraftName.trim() !== this.originalBoardName.trim() ||
+      this.boardDraftHeadline.trim() !== this.originalBoardHeadline.trim() ||
+      this.widgetDrafts.length !== this.originalWidgetDrafts.size ||
+      this.widgetDrafts.some(draft => hasDraftChangedByOriginal(draft, this.originalWidgetDrafts)) ||
+      this.hasPendingNewWidget;
+  }
+
+  get hasPendingNewWidget(): boolean {
+    return this.isAddWidgetExpanded && !!(this.newWidgetDraft.title.trim() ||
+      this.newWidgetDraft.embedUrl.trim() || this.newWidgetDraft.linkUrl.trim() ||
+      this.newWidgetDraft.placesText.trim());
+  }
+
+  canLeaveBoard(): boolean {
+    if (this.isWidgetSaving || this.isIdentitySaving) {
+      this.widgetSaveError = 'Wait for saving to finish before leaving this board.';
+      return false;
+    }
+    return !this.hasUnsavedChanges || window.confirm('Discard unsaved board changes?');
+  }
+
+  @HostListener('window:beforeunload', ['$event'])
+  onBeforeUnload(event: BeforeUnloadEvent) {
+    if (this.hasUnsavedChanges || this.isWidgetSaving || this.isIdentitySaving) {
+      event.preventDefault();
+      event.returnValue = '';
+    }
+  }
+
+  discardWidgetEdit() {
+    if (this.isWidgetSaving) return;
+    if (this.hasUnsavedChanges && !window.confirm('Discard unsaved board changes?')) return;
+    this.cancelWidgetEdit();
+    this.reload$.next();
+  }
+
   startWidgetEdit(board: Board, widgets: Widget[]) {
+    this.editVersion = board.version ?? null;
+    this.identityVersion = board.version;
+    this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
+    this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
+    this.isBoardIdentityMenuOpen = false;
     Object.assign(
       this,
       buildStartWidgetEditState({
@@ -262,16 +339,35 @@ export class BoardPageComponent {
   }
 
   onAccountBoardSetMain(boardId: string, event: MouseEvent) {
-    void boardId;
     event.stopPropagation();
     event.preventDefault();
-    this.closeAccountBoardActionsMenu();
+    if (this.isSettingMainBoard || this.isMainBoard(boardId)) return;
+    this.isSettingMainBoard = true;
+    this.accountActionError = '';
+    this.boardService.updateMyPreferences({ mainBoardId: boardId })
+      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+        this.isSettingMainBoard = false;
+        this.cdr.markForCheck();
+      }))
+      .subscribe({
+        next: (preferences) => {
+          this.userStore.setMainBoardId(preferences.mainBoardId);
+          this.boardStore.refreshBoards();
+          this.closeAccountBoardActionsMenu();
+        },
+        error: (error) => {
+          this.accountActionError = getApiErrorMessage(error, 'Unable to set main board.');
+        },
+      });
   }
 
   onAccountBoardDelete(boardUrl: string, event: MouseEvent) {
     event.stopPropagation();
     event.preventDefault();
 
+    if (boardUrl === this.activeBoardUrl) {
+      if (!this.canLeaveBoard()) return;
+    }
     const fallbackRoute =
       this.accountBoards.find((board) => board.id === this.accountMainBoardId)?.route ?? '/';
 
@@ -292,11 +388,20 @@ export class BoardPageComponent {
       userStore: this.userStore,
       router: this.router,
       closeAccountBoardActionsMenu: () => this.closeAccountBoardActionsMenu(),
-      closeBoardIdentityMenu: () => this.closeBoardIdentityMenu(),
+      closeBoardIdentityMenu: () => {
+        if (boardUrl === this.activeBoardUrl) {
+          this.cancelWidgetEdit();
+          this.resetIdentityDraft();
+          this.isBoardIdentityMenuOpen = false;
+        }
+      },
     });
   }
 
   createNewBoard() {
+    if (!this.canLeaveBoard()) return;
+    this.cancelWidgetEdit();
+    this.resetIdentityDraft();
     runCreateNewBoardAction({
       isCreatingBoard: this.isCreatingBoard,
       setAccountActionError: (message) => {
@@ -314,6 +419,9 @@ export class BoardPageComponent {
   }
 
   signOut() {
+    if (!this.canLeaveBoard()) return;
+    this.cancelWidgetEdit();
+    this.resetIdentityDraft();
     runSignOutAction({
       isSigningOut: this.isSigningOut,
       setSigningOut: (isSigningOut) => {
@@ -328,12 +436,68 @@ export class BoardPageComponent {
   }
 
   toggleBoardIdentityMenu() {
-    this.isBoardIdentityMenuOpen = toggleBoardIdentityMenuState(this.isBoardIdentityMenuOpen);
+    this.isBoardIdentityMenuOpen = !this.isBoardIdentityMenuOpen;
   }
 
   closeBoardIdentityMenu() {
-    this.isBoardIdentityMenuOpen = closeBoardIdentityMenuState({
-      persistBoardUrlDraft: () => this.persistBoardUrlDraft(),
+    this.isBoardIdentityMenuOpen = false;
+  }
+
+  resetIdentityDraft() {
+    this.boardIdentityNameDraft = this.boardIdentityPersistedName;
+    this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
+    this.identitySaveError = '';
+  }
+
+  cancelIdentityEdit() {
+    if (this.isIdentitySaving) return;
+    this.resetIdentityDraft();
+    this.closeBoardIdentityMenu();
+    this.reload$.next();
+  }
+
+  saveIdentity() {
+    if (this.isIdentitySaving || this.isWidgetEditMode) return;
+    const prepared = prepareBoardIdentityUpdate({
+      draftName: this.boardIdentityNameDraft,
+      draftUrl: this.boardIdentitySlugDraft,
+      persistedName: this.boardIdentityPersistedName,
+      persistedUrl: this.boardIdentityPersistedUrl,
+    });
+    if (prepared.kind === 'reset') {
+      this.identitySaveError = 'Enter a board name and a URL using letters, numbers, and single hyphens.';
+      return;
+    }
+    if (prepared.kind === 'noop') {
+      this.cancelIdentityEdit();
+      return;
+    }
+    this.identitySaveError = '';
+    this.isIdentitySaving = true;
+    this.boardService.updateBoardIdentity(this.boardIdentityPersistedUrl, {
+      boardName: prepared.boardName, boardUrl: prepared.boardUrl, version: this.identityVersion,
+    }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      this.isIdentitySaving = false;
+      this.cdr.markForCheck();
+    })).subscribe({
+      next: (board) => {
+        this.identityVersion = board.version;
+        this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
+        this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
+        this.activeBoardUrl = board.boardUrl;
+        this.isIdentitySaving = false;
+        this.closeBoardIdentityMenu();
+        this.boardStore.updateBoardInStore(board);
+        if (this.route.snapshot.paramMap.get('boardId') !== board.boardUrl) {
+          void this.router.navigate(['/b', board.boardUrl]);
+        } else {
+          this.reload$.next();
+        }
+      },
+      error: (error) => {
+        this.isBoardIdentityMenuOpen = true;
+        this.identitySaveError = getApiErrorMessage(error, 'Unable to save board name and URL. Your changes have been kept.');
+      },
     });
   }
 
@@ -370,6 +534,7 @@ export class BoardPageComponent {
   }
 
   cancelWidgetEdit() {
+    this.editVersion = null;
     Object.assign(this, buildCancelWidgetEditState(() => createEmptyWidgetDraftHelper()));
   }
 
@@ -453,7 +618,13 @@ export class BoardPageComponent {
   }
 
   doneWidgetEdit() {
+    if (this.isWidgetSaving) return;
+    if (this.hasPendingNewWidget) {
+      this.widgetSaveError = 'Add the new widget or clear its fields before saving.';
+      return;
+    }
     runDoneWidgetEditAdapter({
+      version: this.editVersion,
       activeBoardUrl: this.activeBoardUrl,
       editingBoardUrl: this.editingBoardUrl,
       widgetDrafts: this.widgetDrafts,
@@ -536,29 +707,6 @@ export class BoardPageComponent {
         }
         this.canEditBoard = canEdit;
         this.cdr.markForCheck();
-      },
-    });
-  }
-
-  private persistBoardUrlDraft() {
-    runPersistBoardUrlDraftAction({
-      boardService: this.boardService,
-      boardStore: this.boardStore,
-      router: this.router,
-      route: this.route,
-      boardIdentityPersistedUrl: this.boardIdentityPersistedUrl,
-      boardIdentityNameDraft: this.boardIdentityNameDraft,
-      boardIdentitySlugDraft: this.boardIdentitySlugDraft,
-      boardIdentityPersistedName: this.boardIdentityPersistedName,
-      setIdentityDraft: (boardName, boardUrl) => {
-        this.boardIdentityNameDraft = boardName;
-        this.boardIdentitySlugDraft = boardUrl;
-      },
-      setIdentityPersistedAndDraft: (boardName, boardUrl) => {
-        this.boardIdentityPersistedName = boardName;
-        this.boardIdentityPersistedUrl = boardUrl;
-        this.boardIdentityNameDraft = boardName;
-        this.boardIdentitySlugDraft = boardUrl;
       },
     });
   }

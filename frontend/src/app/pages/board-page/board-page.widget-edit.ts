@@ -137,6 +137,13 @@ export function getWidgetValidationMessage(draft: WidgetDraft): string {
   if (!draft.layout.trim()) {
     return 'Widget layout is required.';
   }
+  if (draft.title.length > 255) {
+    return 'Widget title must be at most 255 characters.';
+  }
+  const url = draft.type === 'embed' ? draft.embedUrl : draft.type === 'link' ? draft.linkUrl : '';
+  if (url.trim() && !normalizeHttpUrl(url)) {
+    return 'Enter a valid HTTP or HTTPS URL.';
+  }
   return '';
 }
 

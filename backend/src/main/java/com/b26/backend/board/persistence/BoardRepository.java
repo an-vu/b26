@@ -6,6 +6,10 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
 public interface BoardRepository extends JpaRepository<BoardEntity, String> {
+  @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+  @Query("select b from BoardEntity b where b.boardUrl = :slug")
+  Optional<BoardEntity> findForEditing(@org.springframework.data.repository.query.Param("slug") String slug);
+
   @Query("select distinct p from BoardEntity p left join fetch p.cards")
   List<BoardEntity> findAllWithCards();
 

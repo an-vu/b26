@@ -30,6 +30,16 @@ public class BoardController {
     this.authService = authService;
   }
 
+  @GetMapping("/{boardId}/editor")
+  public BoardEditDto getEditor(@PathVariable String boardId) {
+    return boardService.getEditor(boardId);
+  }
+
+  @PutMapping("/{boardId}/editor")
+  public BoardEditDto saveEditor(@PathVariable String boardId, @Valid @RequestBody SaveBoardEditRequest request) {
+    return boardService.saveEditor(boardId, request);
+  }
+
   @GetMapping("/{boardId}")
   public BoardDto getBoard(@PathVariable String boardId) {
     return boardService.getBoard(boardId);

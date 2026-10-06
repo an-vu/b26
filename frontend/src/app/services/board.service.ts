@@ -3,6 +3,8 @@ import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import type {
   Board,
+  BoardEdit,
+  SaveBoardEditRequest,
   SystemRoutes,
   UpdateBoardIdentityRequest,
   UpdateBoardMetaRequest,
@@ -22,6 +24,14 @@ import { environment } from '../../environments/environment';
 @Injectable({ providedIn: 'root' })
 export class BoardService {
   constructor(private http: HttpClient) {}
+
+  getEditor(boardUrl: string): Observable<BoardEdit> {
+    return this.http.get<BoardEdit>(`/api/board/${boardUrl}/editor`);
+  }
+
+  saveEditor(boardUrl: string, payload: SaveBoardEditRequest): Observable<BoardEdit> {
+    return this.http.put<BoardEdit>(`/api/board/${boardUrl}/editor`, payload);
+  }
 
   getBoard(boardId: string): Observable<Board> {
     return this.http.get<Board>(`/api/board/${boardId}`);

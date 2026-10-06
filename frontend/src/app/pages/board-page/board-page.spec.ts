@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
+import { vi } from 'vitest';
 import { defer, of, throwError } from 'rxjs';
 
 import { BoardPageComponent } from './board-page';
@@ -254,4 +255,66 @@ describe('BoardPageComponent', () => {
     expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([11, 10]);
     expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 5]);
   });
+  it('persists the main board and refreshes the account menu only on success', () => {
+    const update = vi.fn(() => of({ userId: 'anvu', username: 'anvu', mainBoardId: 'second', mainBoardUrl: 'second' }));
+    Object.assign(boardServiceStub, { updateMyPreferences: update });
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.onAccountBoardSetMain('second', new MouseEvent('click'));
+    expect(update).toHaveBeenCalledWith({ mainBoardId: 'second' });
+    expect(component.accountMainBoardId).toBe('second');
+    expect(component.isSettingMainBoard).toBe(false);
+  });
+
+  it('keeps the selected main board on failure and shows the error', () => {
+    Object.assign(boardServiceStub, { updateMyPreferences: () => throwError(() => ({ error: { message: 'Unable to save preference' } })) });
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.onAccountBoardSetMain('second', new MouseEvent('click'));
+    expect(component.accountMainBoardId).toBe('default');
+    expect(component.accountActionError).toBe('Unable to save preference');
+  });
+
+  it('keeps identity drafts visible after a failed save', () => {
+    boardServiceStub.updateBoardIdentity = () => throwError(() => ({ error: { message: 'URL already in use' } }));
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.boardIdentitySlugDraft = 'taken-url';
+    component.saveIdentity();
+    expect(component.boardIdentitySlugDraft).toBe('taken-url');
+    expect(component.identitySaveError).toBe('URL already in use');
+    expect(component.hasUnsavedChanges).toBe(true);
+  });
+
+  it('detects changed drafts but leaves an untouched editor clean', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: 'Description', version: 1 }, []);
+    expect(component.hasUnsavedChanges).toBe(false);
+    component.boardDraftName = 'Changed';
+    expect(component.hasUnsavedChanges).toBe(true);
+    component.cancelWidgetEdit();
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
+  it('loads a coherent editor snapshot instead of editing the displayed stale board', () => {
+    Object.assign(boardServiceStub, {
+      getEditor: () => of({
+        board: { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Latest title', headline: 'Latest description', version: 9 },
+        widgets: [],
+      }),
+    });
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.requestWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Stale title', headline: 'Stale description' });
+    expect(component.boardDraftName).toBe('Latest title');
+    expect(component.isWidgetEditMode).toBe(true);
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
 });

@@ -1,4 +1,5 @@
 export type Board = {
+  version?: number;
   id: string;
   boardName: string;
   boardUrl: string;
@@ -28,6 +29,7 @@ export type UpdateBoardUrlRequest = {
 };
 
 export type UpdateBoardIdentityRequest = {
+  version?: number;
   boardName: string;
   boardUrl: string;
 };
@@ -86,4 +88,12 @@ export type UpdateUserProfileRequest = {
 
 export type BoardPermissions = {
   canEdit: boolean;
+};
+
+export type BoardEdit = { board: Board; widgets: import('./widget').Widget[] };
+export type SaveBoardEditRequest = {
+  version: number;
+  name: string;
+  headline: string;
+  widgets: import('./widget').UpsertWidgetWithIdRequest[];
 };

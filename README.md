@@ -35,6 +35,16 @@ They operate on PostgreSQL, not legacy H2 files.
 - Restore: stop the app, back up the target, then run `npm run db:restore -- backups/<file>.dump --confirm`.
 - Restore replaces objects in the configured target database in one transaction. It does not accept old H2 `.tgz` archives.
 
+## Board editing
+Opening Edit loads a consistent board/widget snapshot with its revision. Done submits
+metadata and all widgets to `PUT /api/board/{slug}/editor` in one transaction. A stale
+revision returns HTTP 409 and keeps the local drafts; cancel and reopen the editor to
+load the latest board. Navigation and browser reload warn about unsaved changes.
+
+Board name/URL changes have explicit Save and Cancel controls. Set Main Board in the
+account menu persists the selection only after the server accepts it. Existing API
+endpoints remain available; their writes also advance the board revision.
+
 ## Verification
 - Frontend: `npm --prefix frontend test -- --watch=false` and `npm --prefix frontend run build`.
 - Backend: `cd backend && ./mvnw test` (Java 21).

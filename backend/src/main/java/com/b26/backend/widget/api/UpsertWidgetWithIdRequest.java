@@ -8,7 +8,7 @@ import jakarta.validation.constraints.NotNull;
 public record UpsertWidgetWithIdRequest(
     Long id,
     @NotBlank(message = "type is required") String type,
-    @NotNull(message = "title is required") String title,
+    @jakarta.validation.constraints.Size(max = 255) @NotNull(message = "title is required") String title,
     @NotBlank(message = "layout is required") String layout,
     @NotNull(message = "config is required") JsonNode config,
     @NotNull(message = "enabled is required") Boolean enabled,

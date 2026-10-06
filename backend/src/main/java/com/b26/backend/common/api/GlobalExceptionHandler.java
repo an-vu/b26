@@ -22,6 +22,13 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+  @ExceptionHandler({com.b26.backend.board.domain.BoardEditConflictException.class,
+      org.springframework.orm.ObjectOptimisticLockingFailureException.class})
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleBoardConflict(RuntimeException exception) {
+    return new ApiError(new com.b26.backend.board.domain.BoardEditConflictException().getMessage());
+  }
+
   @ExceptionHandler(BoardNotFoundException.class)
   @ResponseStatus(HttpStatus.NOT_FOUND)
   public ApiError handleBoardNotFound(BoardNotFoundException exception) {

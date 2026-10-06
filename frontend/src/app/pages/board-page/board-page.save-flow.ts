@@ -1,4 +1,4 @@
-import { concat, finalize, map, type Observable } from 'rxjs';
+import { finalize } from 'rxjs';
 import type { BoardService } from '../../services/board.service';
 import type { UpsertWidgetRequest } from '../../models/widget';
 import { getApiErrorMessage } from '../../utils/api-error.util';
@@ -30,6 +30,7 @@ export function hasDraftChangedByOriginal(
 }
 
 export function runDoneWidgetEdit(params: {
+  version: number | null;
   activeBoardUrl: string;
   editingBoardUrl: string;
   widgetDrafts: WidgetDraft[];
@@ -89,33 +90,31 @@ export function runDoneWidgetEdit(params: {
     })),
   };
 
-  const originalName = params.originalBoardName.trim();
-  const originalHeadline = params.originalBoardHeadline.trim();
-  const boardMetaChanged = trimmedName !== originalName || trimmedHeadline !== originalHeadline;
-  const hasValidMeta = !!trimmedName && !!trimmedHeadline;
-
-  const requests: Observable<void>[] = [
-    params.boardService.syncWidgets(saveBoardUrl, widgetPayload).pipe(map(() => undefined)),
-  ];
-
-  if (boardMetaChanged && hasValidMeta) {
-    requests.push(
-      params.boardService
-        .updateBoardMeta(saveBoardUrl, {
-          name: trimmedName,
-          headline: trimmedHeadline,
-        })
-        .pipe(map(() => undefined))
-    );
+  if (!trimmedName || !trimmedHeadline) {
+    params.setWidgetSaveError('Title and description are required.');
+    return;
+  }
+  if (trimmedName.length > 255 || trimmedHeadline.length > 255) {
+    params.setWidgetSaveError('Title and description must be at most 255 characters.');
+    return;
+  }
+  if (params.version === null) {
+    params.setWidgetSaveError('Unable to determine board version. Cancel and reopen the editor.');
+    return;
   }
 
   params.setWidgetSaving(true);
   params.setWidgetSaveError('');
 
-  concat(...requests)
+  params.boardService.saveEditor(saveBoardUrl, {
+    version: params.version,
+    name: trimmedName,
+    headline: trimmedHeadline,
+    widgets: widgetPayload.widgets,
+  })
     .pipe(finalize(() => params.setWidgetSaving(false)))
     .subscribe({
-      complete: () => {
+      next: () => {
         params.onSaved();
       },
       error: (error) => {

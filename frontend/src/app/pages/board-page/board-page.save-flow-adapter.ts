@@ -4,6 +4,7 @@ import type { UpsertWidgetRequest } from '../../models/widget';
 import { runDoneWidgetEdit } from './board-page.save-flow';
 
 export function runDoneWidgetEditAdapter(params: {
+  version: number | null;
   activeBoardUrl: string;
   editingBoardUrl: string;
   widgetDrafts: WidgetDraft[];
@@ -25,6 +26,7 @@ export function runDoneWidgetEditAdapter(params: {
   onSaved: () => void;
 }): void {
   runDoneWidgetEdit({
+    version: params.version,
     activeBoardUrl: params.activeBoardUrl,
     editingBoardUrl: params.editingBoardUrl,
     widgetDrafts: params.widgetDrafts,

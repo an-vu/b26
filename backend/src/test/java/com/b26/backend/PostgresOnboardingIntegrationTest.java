@@ -68,5 +68,25 @@ class PostgresOnboardingIntegrationTest {
         .andExpect(status().isOk()).andExpect(jsonPath("$.canEdit").value(true));
     mockMvc.perform(get("/api/users/first/main-board"))
         .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardUrl").value(slug));
+    var editorResult = mockMvc.perform(get("/api/board/" + slug + "/editor"))
+        .andExpect(status().isOk()).andReturn();
+    long version = objectMapper.readTree(editorResult.getResponse().getContentAsString())
+        .get("board").get("version").asLong();
+    String payload = "{\"version\":" + version + ",\"name\":\"Concurrent edit\",\"headline\":\"Saved once\",\"widgets\":[]}";
+    var start = new java.util.concurrent.CountDownLatch(1);
+    try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+      java.util.concurrent.Callable<Integer> save = () -> {
+        start.await();
+        return mockMvc.perform(put("/api/board/" + slug + "/editor")
+            .header("Authorization", token).contentType(MediaType.APPLICATION_JSON).content(payload))
+            .andReturn().getResponse().getStatus();
+      };
+      var first = executor.submit(save);
+      var second = executor.submit(save);
+      start.countDown();
+      var statuses = java.util.List.of(first.get(15, java.util.concurrent.TimeUnit.SECONDS),
+          second.get(15, java.util.concurrent.TimeUnit.SECONDS)).stream().sorted().toList();
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(200, 409), statuses);
+    }
   }
 }
