@@ -39,19 +39,6 @@ export function initializeBoardPageAccountState(params: {
 
       if (accountState.resetMainBoardId) {
         params.setAccountMainBoardId('');
-        return;
-      }
-
-      const currentUsernameParam = params.route.snapshot.paramMap.get('username');
-      const isUserMainRoute = !!params.route.snapshot.data['userMainRoute'];
-      const profileUsername = profile?.username;
-      if (
-        isUserMainRoute &&
-        currentUsernameParam &&
-        profileUsername &&
-        currentUsernameParam.toLowerCase() !== profileUsername.toLowerCase()
-      ) {
-        params.router.navigate(['/', profileUsername], { replaceUrl: true });
       }
     });
 

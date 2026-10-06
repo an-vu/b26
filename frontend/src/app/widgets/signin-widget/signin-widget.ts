@@ -4,17 +4,29 @@ import { Component, Input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { Widget } from '../../models/widget';
+import { SignupWidgetComponent } from '../signup-widget/signup-widget';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
   selector: 'app-signin-widget',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, SignupWidgetComponent],
   templateUrl: './signin-widget.html',
   styleUrl: './signin-widget.css',
 })
 export class SigninWidgetComponent {
   @Input({ required: true }) widget!: Widget;
+
+  showSignup = false;
+  readonly signupWidget: Widget = {
+    id: 0,
+    type: 'signup',
+    title: 'Create Your Account',
+    layout: 'span-2',
+    config: {},
+    enabled: true,
+    order: 0,
+  };
 
   email = '';
   password = '';
@@ -64,7 +76,7 @@ export class SigninWidgetComponent {
 
   onSignupClick(): void {
     this.errorMessage = '';
-    this.infoMessage = 'Sign up flow comes next.';
+    this.showSignup = true;
   }
 
   private resolveErrorMessage(error: unknown): string {

@@ -24,7 +24,7 @@ public class SystemSettingsService {
     this.boardRepository = boardRepository;
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public SystemRoutesDto getRoutes() {
     SystemSettingsEntity settings = getOrCreateDefaults();
     BoardEntity homepageBoard = findBoardById(settings.getGlobalHomepageBoardId());

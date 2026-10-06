@@ -1,35 +1,12 @@
 #!/usr/bin/env bash
 set -euo pipefail
-
-if [[ -n "${B26_DATA_DIR:-}" ]]; then
-  DB_BASE="$B26_DATA_DIR/b26-dev"
-elif [[ -f "$HOME/.b26/b26-dev.mv.db" ]]; then
-  DB_BASE="$HOME/.b26/b26-dev"
-elif [[ -f "$PWD/backend/data/b26-dev.mv.db" ]]; then
-  DB_BASE="$PWD/backend/data/b26-dev"
-else
-  DB_BASE="$HOME/.b26/b26-dev"
-fi
-TS="$(date +%Y%m%d-%H%M%S)"
-OUT_DIR="${1:-$PWD/backups}"
-OUT_FILE="$OUT_DIR/b26-dev-$TS.tgz"
-
+source "$(dirname "${BASH_SOURCE[0]}")/postgres-env.sh"
+command -v pg_dump >/dev/null || { echo 'Install PostgreSQL client tools (pg_dump).' >&2; exit 1; }
+OUT_DIR="${1:-$B26_REPO_ROOT/backups}"
 mkdir -p "$OUT_DIR"
-
-if [[ ! -f "$DB_BASE.mv.db" ]]; then
-  echo "No dev database found at: $DB_BASE.mv.db"
-  echo "Start backend once to create it, then retry."
-  exit 1
-fi
-
-TMP_DIR="$(mktemp -d)"
-trap 'rm -rf "$TMP_DIR"' EXIT
-
-cp "$DB_BASE.mv.db" "$TMP_DIR/"
-if [[ -f "$DB_BASE.trace.db" ]]; then
-  cp "$DB_BASE.trace.db" "$TMP_DIR/"
-fi
-
-tar -czf "$OUT_FILE" -C "$TMP_DIR" .
-echo "Source DB: $DB_BASE.mv.db"
+OUT_FILE="$OUT_DIR/b26-$(date +%Y%m%d-%H%M%S).dump"
+TEMP_FILE="$(mktemp "$OUT_DIR/.b26-backup.XXXXXX")"
+trap 'rm -f "$TEMP_FILE"' EXIT
+pg_dump --format=custom --no-owner --no-privileges --file="$TEMP_FILE"
+mv "$TEMP_FILE" "$OUT_FILE"
 echo "Backup created: $OUT_FILE"

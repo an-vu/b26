@@ -1,9 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { catchError, finalize, map, of, switchMap } from 'rxjs';
 import type { Widget } from '../../models/widget';
+import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
@@ -16,6 +18,8 @@ import { AuthService } from '../../services/auth.service';
 export class SignupWidgetComponent {
   @Input({ required: true }) widget!: Widget;
 
+  @Output() signinRequested = new EventEmitter<void>();
+
   email = '';
   password = '';
   confirmPassword = '';
@@ -24,6 +28,7 @@ export class SignupWidgetComponent {
 
   constructor(
     private authService: AuthService,
+    private boardService: BoardService,
     private router: Router
   ) {}
 
@@ -57,24 +62,35 @@ export class SignupWidgetComponent {
         email,
         password,
       })
+      .pipe(
+        switchMap((session) => {
+          const username = session.user.username?.trim();
+          const fallback = username ? `/${username}` : '/';
+          return this.boardService.getMyPreferences().pipe(
+            map((preferences) => `/b/${encodeURIComponent(preferences.mainBoardUrl)}`),
+            catchError(() => of(fallback))
+          );
+        }),
+        finalize(() => {
+          this.isSubmitting = false;
+        })
+      )
       .subscribe({
-        next: (session) => {
-          const nextUsername = session.user.username?.trim();
-          const target = nextUsername ? `/${nextUsername}` : '/';
+        next: (target) => {
           void this.router.navigateByUrl(target);
         },
         error: (error: unknown) => {
           this.errorMessage = this.resolveErrorMessage(error);
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
         },
       });
   }
 
   gotoSignin(): void {
-    void this.router.navigateByUrl('/signin');
+    if (this.signinRequested.observed) {
+      this.signinRequested.emit();
+    } else {
+      void this.router.navigateByUrl('/signin');
+    }
   }
 
   private resolveErrorMessage(error: unknown): string {

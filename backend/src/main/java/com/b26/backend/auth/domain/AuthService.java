@@ -1,5 +1,8 @@
 package com.b26.backend.auth.domain;
 
+import com.b26.backend.board.domain.BoardService;
+import com.b26.backend.user.persistence.UserPreferenceEntity;
+import com.b26.backend.user.persistence.UserPreferenceRepository;
 import com.b26.backend.auth.api.AuthMeResponse;
 import com.b26.backend.auth.api.AuthSessionResponse;
 import com.b26.backend.auth.api.AuthUserDto;
@@ -17,6 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
+import java.util.Set;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -25,10 +29,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
+  private static final Set<String> RESERVED_USERNAMES =
+      Set.of("b", "u", "api", "actuator", "insights", "settings", "signin", "signup");
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   private final AppUserRepository appUserRepository;
   private final AuthSessionRepository authSessionRepository;
+  private final BoardService boardService;
+  private final UserPreferenceRepository userPreferenceRepository;
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
   private final Duration sessionTtl;
   private final boolean requirePasswordForSignin;
@@ -36,10 +44,14 @@ public class AuthService {
   public AuthService(
       AppUserRepository appUserRepository,
       AuthSessionRepository authSessionRepository,
+      BoardService boardService,
+      UserPreferenceRepository userPreferenceRepository,
       @Value("${app.auth.session-ttl-hours:720}") long sessionTtlHours,
       @Value("${app.auth.require-password:true}") boolean requirePasswordForSignin) {
     this.appUserRepository = appUserRepository;
     this.authSessionRepository = authSessionRepository;
+    this.boardService = boardService;
+    this.userPreferenceRepository = userPreferenceRepository;
     this.sessionTtl = Duration.ofHours(Math.max(1, sessionTtlHours));
     this.requirePasswordForSignin = requirePasswordForSignin;
   }
@@ -50,6 +62,8 @@ public class AuthService {
     String normalizedUsername = normalizeUsername(request.username());
     if (normalizedUsername.isEmpty()) {
       normalizedUsername = ensureUniqueUsername(deriveUsernameSeedFromEmail(normalizedEmail));
+    } else if (RESERVED_USERNAMES.contains(normalizedUsername)) {
+      throw new InvalidAuthRequestException("username is reserved");
     } else if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
       throw new AuthConflictException("username already in use");
     }
@@ -72,6 +86,11 @@ public class AuthService {
     user.setRole("USER");
 
     AppUserEntity savedUser = appUserRepository.save(user);
+    var board = boardService.createStarterBoardForOwner(savedUser);
+    UserPreferenceEntity preference = new UserPreferenceEntity();
+    preference.setUserId(savedUser.getId());
+    preference.setMainBoardId(board.id());
+    userPreferenceRepository.save(preference);
     return createSession(savedUser);
   }
 
@@ -232,6 +251,9 @@ public class AuthService {
   }
 
   private String ensureUniqueUsername(String baseSeed) {
+    if (RESERVED_USERNAMES.contains(baseSeed)) {
+      baseSeed += "-user";
+    }
     if (!appUserRepository.existsByUsernameIgnoreCase(baseSeed)) {
       return baseSeed;
     }

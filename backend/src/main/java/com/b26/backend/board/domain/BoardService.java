@@ -124,6 +124,20 @@ public class BoardService {
   }
 
   @Transactional
+  public BoardDto createStarterBoardForOwner(AppUserEntity user) {
+    BoardEntity board = new BoardEntity();
+    String id = UUID.randomUUID().toString();
+    board.setId(id);
+    board.setOwnerUserId(user.getId());
+    board.setBoardName("My Board");
+    board.setBoardUrl("board-" + id);
+    board.setName(user.getDisplayName());
+    board.setHeadline("Welcome to my board");
+    board.setUpdatedAt(OffsetDateTime.now());
+    return toDto(boardRepository.saveAndFlush(board));
+  }
+
+  @Transactional
   public BoardDto updateBoard(String boardId, UpdateBoardRequest request) {
     BoardEntity board = findBoardByUrl(boardId);
 

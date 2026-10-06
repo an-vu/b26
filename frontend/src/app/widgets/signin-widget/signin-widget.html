@@ -1,51 +1,58 @@
-<article class="widget">
-  <h3>{{ widget.title || 'Welcome Back!' }}</h3>
+<app-signup-widget
+  *ngIf="showSignup; else signin"
+  [widget]="signupWidget"
+  (signinRequested)="showSignup = false"
+></app-signup-widget>
+<ng-template #signin>
+  <article class="widget">
+    <h3>{{ widget.title || 'Welcome Back!' }}</h3>
 
-  <form class="signin-block" (ngSubmit)="onSigninSubmit()">
-    <label class="signin-field">
-      <span>Email</span>
-      <input
-        type="email"
-        name="email"
-        [(ngModel)]="email"
-        placeholder="Enter your email"
-        autocomplete="email"
-        [disabled]="isSubmitting"
-        required
-      />
-    </label>
+    <form class="signin-block" (ngSubmit)="onSigninSubmit()">
+      <label class="signin-field">
+        <span>Email</span>
+        <input
+          type="email"
+          name="email"
+          [(ngModel)]="email"
+          placeholder="Enter your email"
+          autocomplete="email"
+          [disabled]="isSubmitting"
+          required
+        />
+      </label>
 
-    <label class="signin-field">
-      <span>Password</span>
-      <input
-        type="password"
-        name="password"
-        [(ngModel)]="password"
-        placeholder="Enter your password"
-        autocomplete="current-password"
-        [disabled]="isSubmitting"
-        required
-      />
-    </label>
+      <label class="signin-field">
+        <span>Password</span>
+        <input
+          type="password"
+          name="password"
+          [(ngModel)]="password"
+          placeholder="Enter your password"
+          autocomplete="current-password"
+          [disabled]="isSubmitting"
+          required
+        />
+      </label>
 
-    <label class="signin-checkbox">
-      <input
-        type="checkbox"
-        name="rememberMe"
-        [(ngModel)]="rememberMe"
-        [disabled]="isSubmitting"
-      />
-      <span>Remember me</span>
-    </label>
+      <label class="signin-checkbox">
+        <input
+          type="checkbox"
+          name="rememberMe"
+          [(ngModel)]="rememberMe"
+          [disabled]="isSubmitting"
+        />
+        <span>Remember me</span>
+      </label>
 
-    <button type="submit" [disabled]="isSubmitting">
-      {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
-    </button>
-    <button type="button" [disabled]="isSubmitting" (click)="onSignupClick()">
-      Don't Have an Account?
-    </button>
+      <button type="submit" [disabled]="isSubmitting">
+        {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
+      </button>
+      <button type="button" [disabled]="isSubmitting" (click)="onSignupClick()">
+        Don't Have an Account?
+      </button>
 
-    <p class="signin-message signin-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
-    <p class="signin-message" *ngIf="!errorMessage && infoMessage">{{ infoMessage }}</p>
-  </form>
-</article>
+      <p class="signin-message signin-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="signin-message" *ngIf="!errorMessage && infoMessage">{{ infoMessage }}</p>
+    </form>
+  </article>
+</ng-template>

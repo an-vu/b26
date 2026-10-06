@@ -36,7 +36,7 @@ public class UserPreferencesService {
     this.authService = authService;
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public UserPreferencesDto getMyPreferences(String authorizationHeader) {
     AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
@@ -59,7 +59,7 @@ public class UserPreferencesService {
     return new UserPreferencesDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
   }
 
-  @Transactional(readOnly = true)
+  @Transactional
   public UserMainBoardDto getMainBoardByUsername(String username) {
     String normalized = username.trim().toLowerCase();
     if (normalized.isEmpty()) {
