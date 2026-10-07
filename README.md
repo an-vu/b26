@@ -22,7 +22,7 @@ Install and open Docker Desktop. From this repo, run:
 ./setup.sh
 ```
 
-The script builds the frontend/backend, starts PostgreSQL, applies migrations, and
+The script starts the frontend development server, builds the backend, starts PostgreSQL, applies migrations, and
 waits for health checks. No Node, Java, or `.env` setup is required on your computer.
 Open [local sign-in](http://localhost:4200/signin) and use `anvu@local` with any placeholder password.
 Open `/anvu/default` to edit as the seeded admin (`/b/default` still works).
@@ -32,10 +32,13 @@ It uses `docker-compose.local.yml` and its own `b26-local` database volume, sepa
 from existing Compose workflows and hosted data. It does not load `.env.dev`.
 Check API health through `http://localhost:4200/actuator/health`; port 8080 is not published in this workflow.
 Stop with `./setup.sh stop` (data is retained), inspect with `./setup.sh logs`, and
-rerun `./setup.sh` to start or rebuild after code changes. Builds do not live-reload.
+rerun `./setup.sh` to start or rebuild after backend, dependency, or build-config changes.
+Frontend files under `frontend/src` and `frontend/public` are mounted into Docker;
+Angular watches them with polling and updates the browser automatically after edits.
+Container dependencies stay separate from host `node_modules`.
 If port 4200 is already occupied, stop the other local frontend first.
 
-For code editing with live frontend reload, use the workflow below.
+The workflow below is an alternative for running development tools directly on your computer.
 
 ## Local development
 
@@ -70,6 +73,27 @@ Appearance is visible to visitors. Only the owner or an admin can save it.
 Failed/conflicting saves retain the draft; navigation warns before discarding it.
 Existing boards receive light theme, medium radius, white background, and no pattern
 through migration V23. No new environment variables are needed.
+
+## Board themes (local development)
+
+Open the board-name button in the bottom toolbar, then choose **Default**,
+**Frutiger Aero**, or **Aqua** under Theme. Selection previews immediately; Save persists the
+family with the other board settings, while Cancel restores the saved appearance.
+Visitors see the saved theme.
+
+Aero includes original blue-green aurora artwork, translucent glass cards and menus,
+glossy controls, and a night variant through the existing Night theme checkbox.
+Background colors tint the light wallpaper; patterns overlay it and radius still
+controls widget corners. The existing neutral theme is unchanged.
+
+Aqua adds an original flowing blue wallpaper, pearl panels with pinstriped title bars,
+silver toolbar chrome, blue gel selection controls, and a graphite night variant.
+V25 extends the theme-family constraint to allow Aqua without changing existing selections.
+
+The additive V24 migration stores `appearance_theme_family` separately from
+light/dark mode. Existing boards default to `default`; older clients that omit the
+family preserve the saved value. Deploy the backend before the frontend when
+publishing this feature. No hosted deployment is part of the local theme work.
 
 ## Production deployment checks
 

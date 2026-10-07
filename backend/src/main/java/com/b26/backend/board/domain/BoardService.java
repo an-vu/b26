@@ -250,6 +250,8 @@ public class BoardService {
     if (request.appearance() != null) {
       var appearance = request.appearance();
       board.setTheme(appearance.theme());
+      // Older clients omit this field; preserve their board's selected family.
+      if (appearance.themeFamily() != null) board.setThemeFamily(appearance.themeFamily());
       board.setRadiusStep(appearance.radiusStep());
       board.setBackgroundColor(appearance.backgroundColor().toLowerCase(java.util.Locale.ROOT));
       board.setPattern(appearance.pattern());
@@ -333,6 +335,6 @@ public class BoardService {
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
         appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername(),
         new com.b26.backend.board.api.BoardAppearance(board.getTheme(), board.getRadiusStep(),
-            board.getBackgroundColor(), board.getPattern()));
+            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily()));
   }
 }

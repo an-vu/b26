@@ -43,10 +43,10 @@
       />
     </label>
 
-    <button type="submit" [disabled]="isSubmitting">
+    <button class="app-button" type="submit" [disabled]="isSubmitting">
       {{ isSubmitting ? 'Creating Account...' : 'Create Account' }}
     </button>
-    <button type="button" [disabled]="isSubmitting" (click)="gotoSignin()">
+    <button class="app-button" type="button" [disabled]="isSubmitting" (click)="gotoSignin()">
       Already Have an Account?
     </button>
 

@@ -1,0 +1,78 @@
+/* Default family. Color mode is independent of the visual theme family.
+ * Keep theme styling scoped to the board so previews do not affect other pages.
+ * Pattern and color choices remain board overrides.
+ */
+.page[data-theme="default"][data-pattern] {
+  --board-pattern-ink: color-mix(in srgb, var(--palette-gray) 20%, transparent);
+  --theme-page-background: var(--board-bg-color, var(--palette-white));
+  --theme-text: var(--board-foreground, var(--palette-black));
+  --theme-surface: var(--board-bg-color, var(--palette-white));
+  --theme-muted: var(--board-muted, var(--palette-gray));
+  --theme-border: var(--palette-gray);
+  background-color: var(--theme-page-background);
+  color: var(--theme-text);
+}
+.page[data-theme="default"][data-pattern] .board-content { background: transparent; }
+.page[data-theme="default"][data-pattern='dots'] {
+  background-image: radial-gradient(var(--board-pattern-ink) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.page[data-theme="default"][data-pattern='grid'] {
+  background-image: linear-gradient(90deg, var(--board-pattern-ink) 1px, transparent 1px),
+    linear-gradient(var(--board-pattern-ink) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.page[data-theme="default"][data-pattern='diagonal'] {
+  background-image: repeating-linear-gradient(45deg, var(--board-pattern-ink) 0 1px, transparent 1px 12px);
+}
+.page[data-theme="default"][data-pattern='reverse-diagonal'] {
+  background-image: repeating-linear-gradient(-45deg, var(--board-pattern-ink) 0 1px, transparent 1px 12px);
+}
+.page[data-theme="default"][data-pattern='stripes'] {
+  background-image: repeating-linear-gradient(90deg, var(--board-pattern-ink) 0 6px, transparent 6px 12px);
+}
+.page[data-theme="default"][data-pattern='checkered'] {
+  background-image: conic-gradient(var(--board-pattern-ink) 25%, transparent 0 50%, var(--board-pattern-ink) 0 75%, transparent 0);
+  background-size: 24px 24px;
+}
+.page[data-theme="default"][data-color-mode="dark"] {
+  color-scheme: dark;
+  --board-pattern-ink: color-mix(in srgb, var(--palette-light-gray) 20%, transparent);
+  --theme-text: var(--palette-white);
+  --theme-page-background: var(--palette-black);
+  --theme-surface: var(--palette-black);
+  --theme-border: var(--palette-gray);
+  --theme-muted: var(--palette-light-gray);
+  --theme-error: var(--palette-red);
+}
+.page[data-theme="default"][data-pattern] .widget,
+.page[data-theme="default"][data-pattern] .board-card { background-color: var(--theme-surface); }
+.page[data-theme="default"][data-color-mode="dark"] .widget,
+.page[data-theme="default"][data-color-mode="dark"] .board-card {
+  background-color: var(--theme-surface);
+  border-color: var(--theme-border);
+}
+/* Menus keep a neutral paper surface over any selected board background. */
+.page[data-theme="default"] :is(.board-identity-menu, .account-menu, .account-board-actions-menu) {
+  color-scheme: light;
+  --theme-surface: var(--palette-white);
+  --theme-text: var(--palette-black);
+  --theme-muted: var(--palette-gray);
+  --theme-error: color-mix(in srgb, var(--palette-red) 65%, var(--palette-black));
+  color: var(--theme-text);
+}
+.page[data-theme="default"] a { color: inherit; }
+.page[data-theme="default"] .bottom-action-pill { color: var(--palette-black); }
+.page[data-theme="default"] .orb-button { --orb-label-color: var(--palette-black); }
+.page[data-theme="default"] :is(.text-muted, .meta-label, .subtitle) { color: var(--theme-muted); opacity: 1; }
+.page[data-theme="default"] :is(input:not([type='checkbox']):not([type='range']), textarea, select) {
+  background-color: var(--theme-surface);
+  color: var(--theme-text);
+  border-color: var(--theme-border);
+}
+.page[data-theme="default"] .inline-edit { background: transparent; }
+.page[data-theme="default"] .inline-edit:focus { border-bottom-color: var(--theme-focus); }
+.page[data-theme="default"] :is(button, input, select, textarea, a):focus-visible {
+  outline: 2px solid var(--theme-focus);
+  outline-offset: 2px;
+}

@@ -1,0 +1,52 @@
+/* Shared action button; theme tokens can change its appearance centrally. */
+button.app-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  box-sizing: border-box;
+  min-height: 32px;
+  max-width: 100%;
+  margin: 0;
+  padding: 5px 12px;
+  border: 1px solid var(--theme-border);
+  border-radius: 999px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1.4;
+  text-align: center;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  appearance: none;
+  cursor: pointer;
+  transition: background-color 120ms ease, border-color 120ms ease;
+}
+button.app-button:hover:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-text));
+  border-color: var(--theme-text);
+}
+button.app-button:active:not(:disabled):not([aria-disabled='true']) {
+  background: color-mix(in srgb, var(--theme-surface) 78%, var(--theme-text));
+}
+button.app-button:focus-visible {
+  outline: 2px solid var(--theme-focus);
+  outline-offset: 2px;
+}
+button.app-button:disabled,
+button.app-button[aria-disabled='true'] {
+  opacity: .5;
+  cursor: default;
+}
+@media (prefers-reduced-motion: reduce) {
+  button.app-button { transition: none; }
+}
+
+button.app-button:is(.widget-delete-button, .account-board-actions-trigger) {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  flex: 0 0 32px;
+}

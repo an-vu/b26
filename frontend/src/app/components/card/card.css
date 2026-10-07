@@ -1,9 +1,9 @@
 .card {
   display: block;
   padding: 16px;
-  border: 1px solid rgba(0,0,0,0.15);
+  border: 1px solid var(--theme-border);
   border-radius: 12px;
   text-decoration: none;
   color: inherit;
 }
-.card:hover { border-color: rgba(0,0,0,0.35); }
+.card:hover { border-color: var(--theme-border); }

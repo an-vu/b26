@@ -1,0 +1,23 @@
+:root {
+  --palette-white: #F9F8F6;
+  --palette-black: #30302E;
+  --palette-gray: #62625E;
+  --palette-light-gray: #C7C6C4;
+  --palette-red: #EF3E36;
+  --palette-orange: #FF7F11;
+  --palette-yellow: #F0F66E;
+  --palette-green: #0DAB76;
+  --palette-mint: #00C8A0;
+  --palette-teal: #00CFC1;
+  --palette-cyan: #00B2D7;
+  --palette-blue: #3185FC;
+  --palette-indigo: #5F4BB6;
+  --palette-purple: #A64CE6;
+  --palette-pink: #F0386B;
+  --theme-text: var(--palette-black);
+  --theme-muted: var(--palette-gray);
+  --theme-surface: var(--palette-white);
+  --theme-border: var(--palette-gray);
+  --theme-error: color-mix(in srgb, var(--palette-red) 65%, var(--palette-black));
+  --theme-focus: var(--palette-blue);
+}

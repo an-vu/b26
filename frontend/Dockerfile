@@ -1,10 +1,14 @@
-FROM node:20-alpine AS build
+FROM node:20-alpine AS development
 WORKDIR /app
 
 COPY package*.json ./
 RUN npm ci
 
 COPY . .
+EXPOSE 4200
+CMD ["npm", "run", "dev:docker"]
+
+FROM development AS build
 RUN npm run build
 
 FROM nginx:1.27-alpine

@@ -51,10 +51,10 @@
       </label>
 
       <div class="settings-actions">
-        <button type="button" (click)="signOut()" [disabled]="isSigningOut">
+        <button class="app-button" type="button" (click)="signOut()" [disabled]="isSigningOut">
           {{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}
         </button>
-        <button type="button">Delete Account</button>
+        <button class="app-button" type="button">Delete Account</button>
       </div>
     </section>
 

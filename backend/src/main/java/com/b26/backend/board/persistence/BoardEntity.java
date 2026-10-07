@@ -40,6 +40,12 @@ public class BoardEntity {
   @Column(name = "appearance_theme", nullable = false)
   private String theme = "light";
 
+  @Column(name = "appearance_theme_family", nullable = false)
+  private String themeFamily = "default";
+
+  public String getThemeFamily() { return themeFamily; }
+  public void setThemeFamily(String value) { themeFamily = value; }
+
   public String getTheme() { return theme; }
   public void setTheme(String value) { theme = value; }
 

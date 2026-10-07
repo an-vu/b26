@@ -1,0 +1,138 @@
+/* Early OS X-inspired pearl, pinstripes and gel. Original wallpaper, no Apple assets. */
+[data-theme='aqua'] {
+  --theme-text: #262b34;
+  --theme-muted: #56616e;
+  --theme-border: #969fa9;
+  --theme-surface: #f4f5f7;
+  --theme-focus: #459bf0;
+  --theme-error: #a32c32;
+  --aqua-paper: #f8f9fa;
+  --aqua-stripe: #e9ecf0;
+  --aqua-metal-top: #fff;
+  --aqua-metal-bottom: #c3c8ce;
+  --aqua-rim: #ffffffdc;
+  --aqua-shadow: #14284045;
+  --aqua-pattern: none;
+  color: var(--theme-text);
+  font-family: "Lucida Grande", "Lucida Sans Unicode", "Helvetica Neue", sans-serif;
+}
+.page[data-theme='aqua'] {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  background-color: #6085b4;
+  background-image: linear-gradient(120deg, color-mix(in srgb, var(--board-accent) 8%, transparent), transparent 70%), url('/themes/aqua-tides.svg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+}
+.page[data-theme='aqua']::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-image: var(--aqua-pattern);
+  background-size: 24px 24px;
+  opacity: .12;
+}
+.page[data-theme='aqua'][data-pattern='dots'] { --aqua-pattern: radial-gradient(white 1px, transparent 1px); }
+.page[data-theme='aqua'][data-pattern='grid'] { --aqua-pattern: linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px); }
+.page[data-theme='aqua'][data-pattern='diagonal'] { --aqua-pattern: repeating-linear-gradient(45deg, white 0 1px, transparent 1px 12px); }
+.page[data-theme='aqua'][data-pattern='reverse-diagonal'] { --aqua-pattern: repeating-linear-gradient(-45deg, white 0 1px, transparent 1px 12px); }
+.page[data-theme='aqua'][data-pattern='stripes'] { --aqua-pattern: repeating-linear-gradient(90deg, white 0 6px, transparent 6px 12px); }
+.page[data-theme='aqua'][data-pattern='checkered'] { --aqua-pattern: conic-gradient(white 25%, transparent 0 50%, white 0 75%, transparent 0); }
+.page[data-theme='aqua'] .board-content { background: transparent; }
+.page[data-theme='aqua'] .board-rail { color: #fff; text-shadow: 0 1px 3px #183965; }
+.page[data-theme='aqua'] .board-rail .subtitle { color: #eef5ff; opacity: 1; }
+.page[data-theme='aqua'] :is(.widget, .board-card) {
+  background: linear-gradient(var(--aqua-paper), var(--theme-surface));
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  border-radius: var(--board-widget-radius, 12px);
+  box-shadow: inset 0 1px var(--aqua-rim), 0 6px 16px var(--aqua-shadow), 0 1px 3px var(--aqua-shadow);
+}
+.page[data-theme='aqua'] .widget h3 {
+  margin: -12px -12px 4px;
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--theme-border);
+  background: repeating-linear-gradient(var(--aqua-paper) 0 2px, var(--aqua-stripe) 2px 4px);
+  border-radius: calc(var(--board-widget-radius, 12px) - 1px) calc(var(--board-widget-radius, 12px) - 1px) 0 0;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 600;
+  text-shadow: 0 1px var(--aqua-rim);
+}
+.page[data-theme='aqua'] app-widget-host.widget-host-preview .widget { background: transparent; border: 0; box-shadow: none; }
+.page[data-theme='aqua'] app-widget-host.widget-host-preview .widget h3 { margin: 0; border-radius: 0; }
+.page[data-theme='aqua'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
+[data-theme='aqua'] dialog {
+  --theme-text: #262b34;
+  --theme-muted: #56616e;
+  --theme-surface: #f4f5f7;
+  background: repeating-linear-gradient(var(--aqua-paper) 0 2px, var(--aqua-stripe) 2px 4px);
+  color: var(--theme-text);
+  border: 1px solid var(--theme-border);
+  box-shadow: inset 0 1px var(--aqua-rim), 0 7px 22px var(--aqua-shadow);
+}
+.page[data-theme='aqua'] .bottom-actions {
+  background: linear-gradient(var(--aqua-metal-top), var(--aqua-metal-bottom));
+  box-shadow: inset 0 1px var(--aqua-rim), inset 0 -1px #9da6b150, 0 3px 12px var(--aqua-shadow);
+}
+[data-theme='aqua'] button.app-button {
+  color: var(--theme-text);
+  background: linear-gradient(var(--aqua-metal-top) 0%, var(--aqua-paper) 46%, var(--aqua-metal-bottom) 52%, var(--aqua-paper) 100%);
+  border: 1px solid var(--theme-border);
+  box-shadow: inset 0 1px 1px var(--aqua-rim), inset 0 -1px 1px #9da6b160, 0 1px 2px var(--aqua-shadow);
+  text-shadow: 0 1px var(--aqua-rim);
+}
+[data-theme='aqua'] button.app-button:hover:not(:disabled),
+[data-theme='aqua'] button.app-button[aria-pressed='true'],
+.page[data-theme='aqua'] .board-settings-actions button:first-child {
+  color: #09274b;
+  border-color: #326d9e;
+  background: linear-gradient(#edfaff 0%, #acd9ff 43%, #4997e6 51%, #81c9ff 86%, #d5f4ff 100%);
+  box-shadow: inset 0 1px 1px #fff, inset 0 -1px 2px #2672b680, 0 1px 3px #19416d50;
+  text-shadow: 0 1px #ffffff85;
+}
+[data-theme='aqua'] button.app-button:active:not(:disabled) { background: linear-gradient(#71a6d8, #c0e7ff); box-shadow: inset 0 1px 4px #173d6960; }
+[data-theme='aqua'] :is(input:not([type='checkbox']):not([type='range']), select, textarea) {
+  background: var(--aqua-paper);
+  border: 1px solid var(--theme-border);
+  border-radius: 5px;
+  color: var(--theme-text);
+  box-shadow: inset 0 1px 3px var(--aqua-shadow);
+}
+[data-theme='aqua'] :is(input[type='checkbox'], input[type='range']) { accent-color: #3185fc; }
+[data-theme='aqua'] :is(button, input, select, textarea, a):focus-visible { outline: 3px solid #65aceda0; outline-offset: 2px; }
+.page[data-theme='aqua'] input.inline-edit { background: transparent; color: inherit; border: 0; box-shadow: none; border-radius: 0; }
+.page[data-theme='aqua'] .navigation-orb .orb-button__dot {
+  background: radial-gradient(ellipse at 50% 12%, #fffffff0, #ffffff88 24%, transparent 48%), radial-gradient(ellipse at 50% 90%, #fff9, transparent 65%), var(--orb-dot);
+  border-color: #27303e66;
+  box-shadow: inset 0 -2px 3px #15335460, 0 1px 1px #fff;
+}
+.page[data-theme='aqua'] .toolbar-wordmark { color: #62625e; text-shadow: 0 1px #fff; }
+.page[data-theme='aqua'] .toolbar-wordmark:hover { color: #30302e; }
+.page[data-theme='aqua'] .board-settings-feedback { background: var(--aqua-paper); color: var(--theme-text); text-shadow: none; }
+[data-theme='aqua'] :is(.meta-label, .settings-placeholder, .settings-section-title) { color: var(--theme-muted); }
+[data-theme='aqua'] a { color: inherit; }
+[data-theme='aqua'] .error { color: var(--theme-error); }
+[data-theme='aqua'][data-color-mode='dark'] {
+  color-scheme: dark;
+  --theme-text: #e8edf6;
+  --theme-muted: #bdc9d9;
+  --theme-border: #697384;
+  --theme-surface: #2b3444;
+  --theme-error: #ffb4ba;
+  --aqua-paper: #343f50;
+  --aqua-stripe: #303b4c;
+  --aqua-metal-top: #677487;
+  --aqua-metal-bottom: #293547;
+  --aqua-rim: #ffffff25;
+  --aqua-shadow: #08132570;
+}
+.page[data-theme='aqua'][data-color-mode='dark'] { background-image: linear-gradient(#07193075, #07193075), url('/themes/aqua-tides.svg'); }
+.page[data-theme='aqua'][data-color-mode='dark'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
+[data-theme='aqua'][data-color-mode='dark'] dialog { --theme-text: #e8edf6; --theme-muted: #bdc9d9; --theme-surface: #2b3444; }
+.page[data-theme='aqua'][data-color-mode='dark'] .toolbar-wordmark { color: #c7c6c4; text-shadow: 0 1px #132134; }
+.page[data-theme='aqua'][data-color-mode='dark'] .toolbar-wordmark:hover { color: #f9f8f6; }

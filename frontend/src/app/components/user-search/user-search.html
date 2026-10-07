@@ -2,7 +2,7 @@
   (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); close()" (click)="onBackdrop($event)">
   <div class="search-heading">
     <h2 id="user-search-title">Find a user</h2>
-    <button type="button" (click)="close()" aria-label="Close search">Close</button>
+    <button class="app-button" type="button" (click)="close()" aria-label="Close search">Close</button>
   </div>
   <label for="user-search-input">Username</label>
   <input id="user-search-input" type="search" autofocus autocomplete="off" spellcheck="false"
@@ -14,7 +14,7 @@
     <p *ngIf="state.status === 'loading'">Searching…</p>
     <p *ngIf="state.status === 'ready' && !state.results.length">No users found. Try another username.</p>
     <p *ngIf="state.status === 'ready' && state.results.length">{{ state.results.length }} {{ state.results.length === 1 ? 'result' : 'results' }} · up to 10 shown</p>
-    <p *ngIf="state.status === 'error'">Search is unavailable. <button type="button" (click)="retry()">Try again</button></p>
+    <p *ngIf="state.status === 'error'">Search is unavailable. <button class="app-button" type="button" (click)="retry()">Try again</button></p>
   </div>
   <ul *ngIf="state.status === 'ready' && state.results.length">
     <li *ngFor="let user of state.results">

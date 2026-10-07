@@ -1,3 +1,5 @@
+import { BOARD_PALETTE } from '../../themes/board-palette';
+import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
 import { UserSearchComponent } from '../../components/user-search/user-search';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
@@ -136,9 +138,19 @@ export class BoardPageComponent {
   originalBoardHeadline = '';
   boardIdentityNameDraft = '';
   boardIdentitySlugDraft = '';
+  boardThemeFamilyDraft: BoardThemeId = 'default';
+  get boardTheme() {
+    return BOARD_THEMES.find(theme => theme.id === this.boardThemeFamilyDraft) ?? BOARD_THEMES[0];
+  }
+  selectBoardTheme(id: BoardThemeId) {
+    if (this.isIdentitySaving || BOARD_THEMES.find(theme => theme.id === id)?.status !== 'available') return;
+    this.boardThemeFamilyDraft = id;
+    this.cdr.markForCheck();
+  }
+  readonly boardThemes = BOARD_THEMES;
   boardThemeToggleDraft = false;
   boardRadiusStepDraft: 1 | 2 | 3 = 2;
-  boardBackgroundColorDraft = '#ffffff';
+  boardBackgroundColorDraft = '#f9f8f6';
   boardPatternDraft: BoardAppearance['pattern'] = 'none';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
@@ -146,23 +158,34 @@ export class BoardPageComponent {
   deletedWidgetIds: number[] = [];
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
-  readonly boardColors = [
-    { name: 'White', value: '#ffffff' }, { name: 'Sand', value: '#f6efe3' },
-    { name: 'Blue', value: '#e6f0ff' }, { name: 'Green', value: '#e8f7ee' },
-    { name: 'Purple', value: '#f6e8ff' }, { name: 'Pink', value: '#ffe7e7' },
-    { name: 'Gray', value: '#f0f0f0' },
-  ];
+  readonly boardColors = BOARD_PALETTE;
   readonly boardPatterns: BoardAppearance['pattern'][] = [
     'none', 'dots', 'grid', 'diagonal', 'reverse-diagonal', 'stripes', 'checkered',
   ];
   private persistedAppearance: BoardAppearance = this.defaultAppearance();
 
   defaultAppearance(): BoardAppearance {
-    return { theme: 'light', radiusStep: 2, backgroundColor: '#ffffff', pattern: 'none' };
+    return { themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
+  }
+
+  // Render legacy white boards using the new paper color without rewriting saved data.
+  get boardDisplayBackground(): string {
+    return this.boardBackgroundColorDraft.toLowerCase() === '#ffffff'
+      ? '#f9f8f6' : this.boardBackgroundColorDraft;
+  }
+
+  get boardDisplayText(): string {
+    const hex = this.boardDisplayBackground.slice(1);
+    const channels = [0, 2, 4].map(offset => {
+      const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
+      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
+    });
+    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
+    return luminance < 0.3 ? '#f9f8f6' : '#30302e';
   }
 
   get appearanceDraft(): BoardAppearance {
-    return { theme: this.boardThemeToggleDraft ? 'dark' : 'light',
+    return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
       radiusStep: Number(this.boardRadiusStepDraft) as 1 | 2 | 3,
       backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft };
   }
@@ -170,11 +193,12 @@ export class BoardPageComponent {
   get appearanceChanged(): boolean {
     const draft = this.appearanceDraft;
     const saved = this.persistedAppearance;
-    return draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
+    return draft.themeFamily !== (saved.themeFamily ?? 'default') || draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
       draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern;
   }
 
   applyAppearance(appearance: BoardAppearance) {
+    this.boardThemeFamilyDraft = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
     this.boardThemeToggleDraft = appearance.theme === 'dark';
     this.boardRadiusStepDraft = appearance.radiusStep;
     this.boardBackgroundColorDraft = appearance.backgroundColor;

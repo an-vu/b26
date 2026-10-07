@@ -369,7 +369,29 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
-      version: 8, appearance: { theme: 'dark', radiusStep: 3, backgroundColor: '#ffffff', pattern: 'grid' },
+      version: 8, appearance: { themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid' },
+    }));
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
+  it.each(['frutiger-aero', 'aqua'] as const)('previews %s, restores on Cancel, and saves the selected family', (family) => {
+    const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 4 };
+    boardServiceStub.getBoard = () => of(board);
+    const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 5 }));
+    boardServiceStub.updateBoardIdentity = save;
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.selectBoardTheme(family);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe(family);
+    expect(component.hasUnsavedChanges).toBe(true);
+    component.cancelIdentityEdit();
+    expect(component.boardTheme.id).toBe('default');
+    component.selectBoardTheme(family);
+    component.saveIdentity();
+    expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
+      appearance: expect.objectContaining({ themeFamily: family }), version: 4,
     }));
     expect(component.hasUnsavedChanges).toBe(false);
   });
@@ -381,7 +403,7 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    expect(component.appearanceDraft).toEqual(appearance);
+    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance });
     component.resetAppearance();
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
@@ -389,7 +411,7 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     expect(component.identitySaveError).toContain('another tab');
     component.cancelIdentityEdit();
-    expect(component.appearanceDraft).toEqual(appearance);
+    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance });
     expect(component.hasUnsavedChanges).toBe(false);
   });
 

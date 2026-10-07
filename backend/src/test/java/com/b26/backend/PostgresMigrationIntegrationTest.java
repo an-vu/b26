@@ -69,12 +69,13 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("Preserved title", rows.getString(1));
         }
-        try (var rows = statement.executeQuery("select appearance_theme, appearance_radius_step, appearance_background_color, appearance_pattern from boards where id = 'default'")) {
+        try (var rows = statement.executeQuery("select appearance_theme, appearance_radius_step, appearance_background_color, appearance_pattern, appearance_theme_family from boards where id = 'default'")) {
           rows.next();
           assertEquals("light", rows.getString(1));
           assertEquals(2, rows.getInt(2));
           assertEquals("#ffffff", rows.getString(3));
           assertEquals("none", rows.getString(4));
+          assertEquals("default", rows.getString(5));
         }
         statement.executeUpdate("update boards set appearance_theme = 'dark', appearance_radius_step = 3, appearance_background_color = '#e6f0ff', appearance_pattern = 'grid' where id = 'default'");
         try (var rows = statement.executeQuery("select appearance_theme, appearance_pattern from boards where id = 'default'")) {
@@ -84,6 +85,14 @@ class PostgresMigrationIntegrationTest {
         }
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
             () -> statement.executeUpdate("update boards set appearance_radius_step = 4 where id = 'default'"));
+        statement.executeUpdate("update boards set appearance_theme_family = 'frutiger-aero' where id = 'default'");
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update boards set appearance_theme_family = 'unknown' where id = 'default'"));
+        statement.executeUpdate("update boards set appearance_theme_family = 'aqua' where id = 'default'");
+        try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
+          rows.next();
+          assertEquals("aqua", rows.getString(1));
+        }
         // Matches the current entity: no obsolete required signup-route column.
         statement.executeUpdate("insert into system_settings "
             + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "

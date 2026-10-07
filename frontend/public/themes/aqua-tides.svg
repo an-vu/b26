@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="ocean" x2=".25" y2="1"><stop stop-color="#aec9e7"/><stop offset=".55" stop-color="#527fb1"/><stop offset="1" stop-color="#164e8f"/></linearGradient>
+ <linearGradient id="fold" x1="0" y1="0" x2=".6" y2="1"><stop stop-color="#f4faff" stop-opacity=".7"/><stop offset=".35" stop-color="#aecfea" stop-opacity=".3"/><stop offset=".65" stop-color="#1b5298" stop-opacity=".2"/><stop offset="1" stop-color="#0d397d" stop-opacity=".75"/></linearGradient>
+ <linearGradient id="rim"><stop stop-color="#ffffff" stop-opacity="0"/><stop offset=".5" stop-color="#fff" stop-opacity=".65"/><stop offset="1" stop-color="#bdd9ff" stop-opacity="0"/></linearGradient>
+</defs>
+<path fill="url(#ocean)" d="M0 0h1600v1000H0z"/>
+<path fill="url(#fold)" d="M-300-90C440 640 780-320 1880 80L1800 1050C1040 230 550 1330-300 790Z"/>
+<path fill="url(#fold)" d="M-200 160C380 900 980-280 1820 290L1730 1130C900 240 560 1520-200 860Z" opacity=".75"/>
+<path fill="url(#fold)" d="M-200 370C500 1230 850-40 1830 580L1630 1200H-200Z" opacity=".65"/>
+<path d="M-200 160C380 900 980-280 1820 290" fill="none" stroke="url(#rim)" stroke-width="2"/>
+<path d="M-200 370C500 1230 850-40 1830 580" fill="none" stroke="url(#rim)" stroke-width="1.5"/>
+</svg>

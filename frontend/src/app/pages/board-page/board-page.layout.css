@@ -31,7 +31,7 @@
 .page.page-fixed-scroll .board-content {
   overflow: visible;
   background: transparent;
-  padding-bottom: 84px;
+  padding-bottom: 112px;
   box-sizing: border-box;
 }
 
@@ -64,7 +64,8 @@
 
 .board-shell {
   display: grid;
-  grid-template-columns: 24% 76%;
+  grid-template-columns: minmax(180px, 1fr) minmax(0, 3fr);
+  gap: 24px;
   align-content: start;
   align-items: start;
 }
@@ -95,4 +96,9 @@
 }
 .board-feedback p {
   margin: 0;
+}
+
+@media (max-width: 700px) {
+  .page { padding: 16px; }
+  .page.page-fixed-scroll .board-content { padding-bottom: 160px; }
 }

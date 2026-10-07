@@ -37,7 +37,7 @@
 }
 
 .settings-status--error {
-  color: #b23a3a;
+  color: var(--theme-error);
 }
 
 @media (max-width: 700px) {
@@ -54,7 +54,7 @@
 }
 
 .settings-section + .settings-section {
-  border-top: 1px solid rgba(0, 0, 0, 0.12);
+  border-top: 1px solid var(--theme-border);
   padding-top: 10px;
   margin-top: 2px;
 }
@@ -63,5 +63,5 @@
   margin: 0;
   font-size: 12px;
   line-height: 1.2;
-  color: #666;
+  color: var(--theme-muted);
 }

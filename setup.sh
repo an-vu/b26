@@ -21,7 +21,7 @@ fi
 compose=(docker compose --project-name b26-local --file "$repo_dir/docker-compose.local.yml")
 case "${1:-start}" in
   start)
-    echo "Building and starting B26 locally. The first run downloads dependencies and can take several minutes."
+    echo "Starting B26 with frontend live reload. The first run downloads dependencies and can take several minutes."
     if ! "${compose[@]}" up --build --detach --wait --wait-timeout 240; then
       echo "Setup did not finish. Check that port 4200 is free." >&2
       "${compose[@]}" logs --tail=60 >&2 || true
@@ -37,7 +37,9 @@ Edit the starter board: http://localhost:4200/b/default
 
 Stop: ./setup.sh stop
 Logs: ./setup.sh logs
-Start/rebuild: ./setup.sh
+Start/update dependencies or backend: ./setup.sh
+
+Frontend source edits now update automatically in your browser.
 
 Data persists in the b26-local Docker volume. This is a separate local database;
 your existing .env files and hosted database are not used.

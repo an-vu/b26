@@ -50,6 +50,31 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.theme").value("dark"));
   }
 
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"frutiger-aero", "aqua"})
+  void themeFamilyPersistsAndLegacyClientsPreserveIt(String family) throws Exception {
+    String token = authAnvu();
+    var board = create(token);
+    assertEquals("default", board.at("/appearance/themeFamily").asText());
+    String url = API_BOARD + "/" + board.get("boardUrl").asText();
+    var update = request(board);
+    ((ObjectNode) update.get("appearance")).put("themeFamily", family);
+    mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(update.toString()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.themeFamily").value(family));
+    var saved = (ObjectNode) objectMapper.readTree(mockMvc.perform(get(url))
+        .andExpect(jsonPath("$.appearance.themeFamily").value(family))
+        .andReturn().getResponse().getContentAsString());
+    var legacy = request(saved);
+    mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(legacy.toString()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.themeFamily").value(family));
+    ((ObjectNode) legacy.get("appearance")).put("themeFamily", "unknown");
+    mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(legacy.toString()))
+        .andExpect(status().isBadRequest());
+  }
+
   @Test
   void invalidSettingsAndMissingRevisionDoNotChangeIdentityOrAppearance() throws Exception {
     String token = authAnvu(); var board = create(token);

@@ -7,7 +7,7 @@
       <p role="status" *ngIf="vm.isHydrating">Loading boards and route settings…</p>
       <p role="status" *ngIf="vm.isSaving">Saving route settings…</p>
       <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
-      <button type="button" *ngIf="vm.loadFailed" (click)="loadSettings()">Retry loading settings</button>
+      <button class="app-button" type="button" *ngIf="vm.loadFailed" (click)="loadSettings()">Retry loading settings</button>
       <label class="settings-field">
         <span class="settings-label-inline">Homepage board for /</span>
         <div class="settings-input-status-row">

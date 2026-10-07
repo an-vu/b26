@@ -44,10 +44,10 @@
         <span>Remember me</span>
       </label>
 
-      <button type="submit" [disabled]="isSubmitting">
+      <button class="app-button" type="submit" [disabled]="isSubmitting">
         {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
       </button>
-      <button type="button" [disabled]="isSubmitting" (click)="onSignupClick()">
+      <button class="app-button" type="button" [disabled]="isSubmitting" (click)="onSignupClick()">
         Don't Have an Account?
       </button>
 

@@ -1,5 +1,9 @@
+import type { BoardColorMode, BoardThemeId } from '../themes/board-theme';
+
 export type BoardAppearance = {
-  theme: 'light' | 'dark';
+  themeFamily?: BoardThemeId;
+  // Legacy API field: this stores color mode, not the visual theme family.
+  theme: BoardColorMode;
   radiusStep: 1 | 2 | 3;
   backgroundColor: string;
   pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered';
