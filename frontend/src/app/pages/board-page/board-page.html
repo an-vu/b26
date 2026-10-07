@@ -102,7 +102,7 @@
           <span class="orb-button__dot" aria-hidden="true"></span>
           <span class="orb-button__label">Home</span>
         </button>
-        <button type="button" class="bottom-action-button orb-button orb-button--yellow">
+        <button type="button" class="bottom-action-button orb-button orb-button--yellow" (click)="userSearch.open()" aria-haspopup="dialog">
           <span class="orb-button__dot" aria-hidden="true"></span>
           <span class="orb-button__label">Search</span>
         </button>
@@ -261,7 +261,7 @@
         <span class="orb-button__dot" aria-hidden="true"></span>
         <span class="orb-button__label">Home</span>
       </button>
-      <button type="button" class="bottom-action-button orb-button orb-button--yellow">
+      <button type="button" class="bottom-action-button orb-button orb-button--yellow" (click)="userSearch.open()" aria-haspopup="dialog">
         <span class="orb-button__dot" aria-hidden="true"></span>
         <span class="orb-button__label">Search</span>
       </button>
@@ -404,3 +404,5 @@
     </div>
   </div>
 </ng-template>
+
+<app-user-search #userSearch></app-user-search>

@@ -1,0 +1,14 @@
+:host { display: contents; }
+dialog { box-sizing: border-box; width: min(420px, calc(100vw - 24px)); max-height: min(640px, calc(100dvh - 24px)); padding: 20px; border: 1px solid #ccc; border-radius: 18px; color: #171717; background: #fff; box-shadow: 0 12px 48px #0003; }
+dialog::backdrop { background: #0006; }
+.search-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+h2 { margin: 0; font-size: 1.2rem; }
+label { display: block; margin-bottom: 6px; }
+input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px; border: 1px solid #777; border-radius: 8px; font: inherit; }
+button { min-height: 44px; padding: 8px 12px; border: 1px solid #ccc; border-radius: 8px; background: #f2f2f2; color: #171717; font: inherit; cursor: pointer; }
+p { font-size: .9rem; color: #555; }
+ul { list-style: none; padding: 0; margin: 0; }
+a { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 8px; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
+a:hover { background: #f2f2f2; }
+a span { color: #555; font-size: .9rem; }
+:focus-visible { outline: 3px solid #326cc4; outline-offset: 2px; }

@@ -8,6 +8,9 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, String> 
   @org.springframework.data.jpa.repository.Query("select u from AppUserEntity u where u.id = :id")
   Optional<AppUserEntity> lockById(@org.springframework.data.repository.query.Param("id") String id);
 
+  java.util.List<AppUserEntity> findByUsernameContainingIgnoreCaseOrderByUsernameAsc(
+      String query, org.springframework.data.domain.Pageable pageable);
+
   Optional<AppUserEntity> findByUsername(String username);
 
   Optional<AppUserEntity> findByEmailIgnoreCase(String email);

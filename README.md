@@ -2,7 +2,14 @@
 
 Personal dashboard app where users create customizable pages and manage widgets.
 
+## Current milestone
+
+**1.3.0 username search is implemented and tested locally**, following 1.2.0 URLs and 1.2.1 documentation cleanup. Hosted verification is pending. Next: settings persistence (1.4.0), then advanced controls/release checks (1.5.0).
+
+Appearance persistence and permission matrices remain unfinished. Keep their existing controls visible. Track scope in the [release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap).
+
 ## Tech Stack
+
 - Angular
 - Java Spring Boot
 - PostgreSQL
@@ -17,12 +24,13 @@ Install and open Docker Desktop. From this repo, run:
 
 The script builds the frontend/backend, starts PostgreSQL, applies migrations, and
 waits for health checks. No Node, Java, or `.env` setup is required on your computer.
-Open http://localhost:4200/signin and use `anvu@local` with any placeholder password.
+Open [local sign-in](http://localhost:4200/signin) and use `anvu@local` with any placeholder password.
 Open `/anvu/default` to edit as the seeded admin (`/b/default` still works).
 
 This local-only setup enables password bypass and binds the website to loopback; the API/database stay inside Docker.
 It uses `docker-compose.local.yml` and its own `b26-local` database volume, separate
 from existing Compose workflows and hosted data. It does not load `.env.dev`.
+Check API health through `http://localhost:4200/actuator/health`; port 8080 is not published in this workflow.
 Stop with `./setup.sh stop` (data is retained), inspect with `./setup.sh logs`, and
 rerun `./setup.sh` to start or rebuild after code changes. Builds do not live-reload.
 If port 4200 is already occupied, stop the other local frontend first.
@@ -30,6 +38,7 @@ If port 4200 is already occupied, stop the other local frontend first.
 For code editing with live frontend reload, use the workflow below.
 
 ## Local development
+
 Requires Node 20.19+ (or a supported newer Node release), Java 21, and PostgreSQL.
 
 1. Install dependencies: `npm ci` and `npm --prefix frontend ci`.
@@ -49,6 +58,7 @@ user's main board, and opens `/<username>/<slug>` for editing. Public `/<usernam
 to that main board. Existing accounts and boards are not backfilled by signup.
 
 ## Database backup and restore
+
 Install PostgreSQL client tools compatible with your server. These commands use
 `backend/.env.dev`, or explicit `PGDATABASE`, `PGHOST`, `PGUSER`, and `PGPASSWORD` variables.
 They operate on PostgreSQL, not legacy H2 files.
@@ -56,6 +66,20 @@ They operate on PostgreSQL, not legacy H2 files.
 - Backup: `npm run db:backup` (custom-format archive in `backups/`).
 - Restore: stop the app, back up the target, then run `npm run db:restore -- backups/<file>.dump --confirm`.
 - Restore replaces objects in the configured target database in one transaction. It does not accept old H2 `.tgz` archives.
+
+## Username search and demo accounts
+
+Click the yellow **Search** dot, then type at least two username characters. Search is case-insensitive, accepts a leading `@`, and returns up to 10 users. Select a result to open their main board. Empty results and request failures have separate messages; failed requests can be retried. Escape closes the dialog.
+
+`./setup.sh` adds these local demo users, each with a main board:
+
+`@blueberry` · `@news` · `@feature` · `@daily` · `@emma` · `@victoria` · `@nori`
+
+Try `em`, `ne`, or `@blue`. With local password bypass, you can sign in as `emma@demo.local` (or another demo username at `demo.local`) using any placeholder password. Existing users and their edits are not overwritten on restart.
+
+Demo seeding is opt-in through `APP_DEMO_USERS_ENABLED=true`, enabled in `docker-compose.local.yml` only, and excluded from the `prod` profile. It defaults to false elsewhere. For host development, enable it in your local env file and restart; use the local password bypass to sign into these passwordless fixtures.
+
+The public `GET /api/search/users?q=...` endpoint returns only `username` and `displayName`. Queries are limited to 64 characters after trimming an optional `@`. Debouncing limits browser requests; it is not server-side rate limiting.
 
 ## Board URLs
 
@@ -86,6 +110,7 @@ Vercel/Nginx SPA fallbacks). Roll back the frontend before the backend if necess
 no data rollback is required. Shared canonical links require the new routing code.
 
 ## Board editing
+
 Opening Edit loads a consistent board/widget snapshot with its revision. Done submits
 metadata and all widgets to `PUT /api/board/{slug}/editor` in one transaction. A stale
 revision returns HTTP 409 and keeps the local drafts; cancel and reopen the editor to
@@ -95,7 +120,10 @@ Board name/URL changes have explicit Save and Cancel controls. Set Main Board in
 account menu persists the selection only after the server accepts it. Existing API
 endpoints remain available; their writes also advance the board revision.
 
+Deletion requires owner/admin access and confirmation. The last board, main board, and system-route boards are protected. Choose replacements before deleting a main/system board. Failure keeps drafts; deleting the active board redirects to the main board or home fallback.
+
 ## Verification
+
 - Frontend: `npm --prefix frontend test -- --watch=false` and `npm --prefix frontend run build`.
 - Backend: `cd backend && ./mvnw test` (Java 21).
 - PostgreSQL migrations: additionally set `POSTGRES_TEST_URL` to a JDBC URL, with
@@ -104,10 +132,11 @@ endpoints remain available; their writes also advance the board revision.
   Without that URL, the PostgreSQL test is skipped. CI supplies PostgreSQL and runs it.
 
 ## Security Notes
+
 - Never commit real `.env.dev` credentials
 - Rotate DB password/token immediately if exposed
 - Keep `backend/.env.example` placeholders only
 
 ---
 
-See the wiki for full documentation.
+[Start here](https://github.com/an-vu/b26/wiki) · [Docker setup](https://github.com/an-vu/b26/wiki/Docker) · [Page URLs](https://github.com/an-vu/b26/wiki/Pages-and-Editing) · [Release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap)

@@ -22,6 +22,7 @@ services:
       SPRING_DATASOURCE_USERNAME: b26
       SPRING_DATASOURCE_PASSWORD: b26-local-only
       APP_AUTH_REQUIRE_PASSWORD: "false"
+      APP_DEMO_USERS_ENABLED: "true"
       APP_ADMIN_TOKEN: ""
       APP_CORS_ALLOWED_ORIGINS: http://localhost:4200
     depends_on:

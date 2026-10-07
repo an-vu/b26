@@ -1,3 +1,4 @@
+import { UserSearchComponent } from '../../components/user-search/user-search';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -76,7 +77,7 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
+  imports: [UserSearchComponent, CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrl: './board-page.css',
 })
