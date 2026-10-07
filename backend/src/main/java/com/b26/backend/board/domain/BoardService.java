@@ -13,6 +13,8 @@ import com.b26.backend.board.persistence.CardEntity;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
+import com.b26.backend.user.persistence.AppUserRepository;
+import com.b26.backend.system.persistence.SystemSettingsRepository;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
 import com.b26.backend.widget.api.UpsertWidgetRequest;
 import com.b26.backend.widget.domain.WidgetService;
@@ -34,16 +36,22 @@ public class BoardService {
   private final UserPreferenceRepository userPreferenceRepository;
   private final WidgetService widgetService;
   private final ObjectMapper objectMapper;
+  private final AppUserRepository appUserRepository;
+  private final SystemSettingsRepository systemSettingsRepository;
 
   public BoardService(
       BoardRepository boardRepository,
       UserPreferenceRepository userPreferenceRepository,
       WidgetService widgetService,
-      ObjectMapper objectMapper) {
+      ObjectMapper objectMapper,
+      AppUserRepository appUserRepository,
+      SystemSettingsRepository systemSettingsRepository) {
     this.boardRepository = boardRepository;
     this.userPreferenceRepository = userPreferenceRepository;
     this.widgetService = widgetService;
     this.objectMapper = objectMapper;
+    this.appUserRepository = appUserRepository;
+    this.systemSettingsRepository = systemSettingsRepository;
   }
 
   @Transactional
@@ -230,11 +238,32 @@ public class BoardService {
 
   @Transactional
   public void deleteBoard(String boardId) {
-    BoardEntity board = findBoardByUrl(boardId);
+    // Always lock system settings before the owner; route and preference updates
+    // use these same locks before choosing a board.
+    var settings = systemSettingsRepository.lockSettings();
+    BoardEntity candidate = findBoardByUrl(boardId);
+    appUserRepository.lockById(candidate.getOwnerUserId())
+        .orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = boardRepository.findForEditing(boardId)
+        .orElseThrow(() -> new BoardNotFoundException(boardId));
+    if (settings.filter(value ->
+        board.getId().equals(value.getGlobalHomepageBoardId())
+            || board.getId().equals(value.getGlobalInsightsBoardId())
+            || board.getId().equals(value.getGlobalSettingsBoardId())
+            || board.getId().equals(value.getGlobalSigninBoardId())).isPresent()) {
+      throw new InvalidBoardUpdateException(
+          "This board is used by a system route. Choose a replacement in Admin Settings before deleting it.");
+    }
+    if (boardRepository.countByOwnerUserId(board.getOwnerUserId()) <= 1) {
+      throw new InvalidBoardUpdateException(
+          "Cannot delete the owner's only board. Create another board first.");
+    }
     if (userPreferenceRepository.existsByMainBoardId(board.getId())) {
-      throw new InvalidBoardUpdateException("cannot delete board set as main board");
+      throw new InvalidBoardUpdateException(
+          "Cannot delete the main board. Choose another main board before deleting it.");
     }
     boardRepository.delete(board);
+    boardRepository.flush();
   }
 
   private BoardDto persist(BoardEntity board) {

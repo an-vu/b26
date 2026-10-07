@@ -50,6 +50,43 @@ class PostgresOnboardingIntegrationTest {
     }
   }
 
+  @Autowired com.b26.backend.user.persistence.UserPreferenceRepository preferences;
+  @Autowired com.b26.backend.board.persistence.BoardRepository boards;
+
+  @Test
+  void concurrentDeletesCannotRemoveTheOwnersLastBoard() throws Exception {
+    var signup = mockMvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
+        .content("{\"email\":\"concurrent-delete@example.com\",\"password\":\"test-password-123\"}"))
+        .andExpect(status().isCreated()).andReturn();
+    String token = "Bearer " + objectMapper.readTree(signup.getResponse().getContentAsString()).get("accessToken").asText();
+    var result = mockMvc.perform(get("/api/users/me/preferences").header("Authorization", token)).andReturn();
+    var prefs = objectMapper.readTree(result.getResponse().getContentAsString());
+    String userId = prefs.get("userId").asText();
+    String firstSlug = prefs.get("mainBoardUrl").asText();
+    var extra = mockMvc.perform(post("/api/board").header("Authorization", token)
+        .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk()).andReturn();
+    String secondSlug = objectMapper.readTree(extra.getResponse().getContentAsString()).get("boardUrl").asText();
+    // Exercise the last-board invariant independently of the main-board check.
+    var preference = preferences.findById(userId).orElseThrow();
+    preference.setMainBoardId(null);
+    preferences.saveAndFlush(preference);
+    var start = new java.util.concurrent.CountDownLatch(1);
+    try (var executor = java.util.concurrent.Executors.newFixedThreadPool(2)) {
+      var futures = java.util.stream.Stream.of(firstSlug, secondSlug).map(slug ->
+          executor.submit(() -> {
+            start.await();
+            return mockMvc.perform(delete("/api/board/" + slug).header("Authorization", token))
+                .andReturn().getResponse().getStatus();
+          })).toList();
+      start.countDown();
+      var statuses = new java.util.ArrayList<Integer>();
+      for (var future : futures) statuses.add(future.get(15, java.util.concurrent.TimeUnit.SECONDS));
+      statuses.sort(Integer::compareTo);
+      org.junit.jupiter.api.Assertions.assertEquals(java.util.List.of(204, 400), statuses);
+      org.junit.jupiter.api.Assertions.assertEquals(1, boards.countByOwnerUserId(userId));
+    }
+  }
+
   @Test
   void migratedDatabaseServesSystemRoutesAndFirstBoard() throws Exception {
     // Exercises default creation under PostgreSQL transaction rules and JPA schema validation.

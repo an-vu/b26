@@ -20,6 +20,7 @@ public class WidgetEntity {
 
   @ManyToOne(fetch = FetchType.LAZY, optional = false)
   @JoinColumn(name = "board_id", nullable = false)
+  @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE)
   private BoardEntity board;
 
   @Column(nullable = false)

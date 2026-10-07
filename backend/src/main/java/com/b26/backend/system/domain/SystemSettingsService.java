@@ -44,12 +44,13 @@ public class SystemSettingsService {
 
   @Transactional
   public SystemRoutesDto updateRoutes(UpdateSystemRoutesRequest request) {
+    SystemSettingsEntity settings = systemSettingsRepository.lockSettings()
+        .orElseGet(this::getOrCreateDefaults);
     BoardEntity homepageBoard = findBoardById(request.globalHomepageBoardId().trim());
     BoardEntity insightsBoard = findBoardById(request.globalInsightsBoardId().trim());
     BoardEntity settingsBoard = findBoardById(request.globalSettingsBoardId().trim());
     BoardEntity signinBoard = resolveSigninBoardForUpdate(request);
 
-    SystemSettingsEntity settings = getOrCreateDefaults();
     settings.setGlobalHomepageBoardId(homepageBoard.getId());
     settings.setGlobalInsightsBoardId(insightsBoard.getId());
     settings.setGlobalSettingsBoardId(settingsBoard.getId());

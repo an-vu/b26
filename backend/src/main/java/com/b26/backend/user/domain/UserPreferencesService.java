@@ -49,6 +49,8 @@ public class UserPreferencesService {
       String authorizationHeader,
       UpdateUserPreferencesRequest request) {
     AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+    appUserRepository.lockById(user.getId())
+        .orElseThrow(() -> new UserNotFoundException(user.getId()));
     String boardId = request.mainBoardId().trim();
     BoardEntity board = findBoardOwnedByUser(boardId, user.getId());
 

@@ -6,6 +6,13 @@ import type { BoardIdentity } from '../models/board-identity';
 
 @Injectable({ providedIn: 'root' })
 export class BoardStoreService {
+  private noticeSubject = new BehaviorSubject('');
+  readonly notice$ = this.noticeSubject.asObservable();
+
+  setNotice(message: string) {
+    this.noticeSubject.next(message);
+  }
+
   private boardsSubject = new BehaviorSubject<BoardIdentity[]>([]);
   readonly boards$ = this.boardsSubject.asObservable();
 
@@ -19,6 +26,7 @@ export class BoardStoreService {
   }
 
   clearBoards() {
+    this.setNotice('');
     this.boardsSubject.next([]);
   }
 

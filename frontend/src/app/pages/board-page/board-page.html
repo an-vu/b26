@@ -1,3 +1,10 @@
+<div class="board-feedback" *ngIf="boardDeleteError || isDeletingBoard || (boardNotice$ | async)">
+  <p class="error" role="alert" *ngIf="boardDeleteError">{{ boardDeleteError }}</p>
+  <p role="status" *ngIf="isDeletingBoard">Deleting board…</p>
+  <p role="status" *ngIf="boardNotice$ | async as notice">
+    {{ notice }} <button type="button" (click)="dismissBoardNotice()">Dismiss</button>
+  </p>
+</div>
 <ng-container *ngIf="pageState$ | async as state">
   <main
     class="page page-fixed-scroll"

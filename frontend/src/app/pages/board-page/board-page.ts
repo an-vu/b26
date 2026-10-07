@@ -84,6 +84,12 @@ export class BoardPageComponent {
   private router = inject(Router);
   private boardService = inject(BoardService);
   private boardStore = inject(BoardStoreService);
+  readonly boardNotice$ = this.boardStore.notice$;
+  boardDeleteError = '';
+
+  dismissBoardNotice() {
+    this.boardStore.setNotice('');
+  }
   private insightsService = inject(InsightsService);
   private userStore = inject(UserStoreService);
   private authService = inject(AuthService);
@@ -233,7 +239,7 @@ export class BoardPageComponent {
   }
 
   requestWidgetEdit(board: Board) {
-    if (this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving) return;
+    if (this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) return;
     if (this.hasUnsavedChanges) {
       this.widgetSaveError = 'Save or cancel the board name and URL changes before editing widgets.';
       return;
@@ -275,8 +281,8 @@ export class BoardPageComponent {
   }
 
   canLeaveBoard(): boolean {
-    if (this.isWidgetSaving || this.isIdentitySaving) {
-      this.widgetSaveError = 'Wait for saving to finish before leaving this board.';
+    if (this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) {
+      this.widgetSaveError = 'Wait for the current operation to finish before leaving this board.';
       return false;
     }
     return !this.hasUnsavedChanges || window.confirm('Discard unsaved board changes?');
@@ -284,7 +290,7 @@ export class BoardPageComponent {
 
   @HostListener('window:beforeunload', ['$event'])
   onBeforeUnload(event: BeforeUnloadEvent) {
-    if (this.hasUnsavedChanges || this.isWidgetSaving || this.isIdentitySaving) {
+    if (this.hasUnsavedChanges || this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) {
       event.preventDefault();
       event.returnValue = '';
     }
@@ -365,11 +371,14 @@ export class BoardPageComponent {
     event.stopPropagation();
     event.preventDefault();
 
-    if (boardUrl === this.activeBoardUrl) {
-      if (!this.canLeaveBoard()) return;
-    }
+    if (this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
+    const label = this.accountBoards.find((board) => board.boardUrl === boardUrl)?.label ?? boardUrl;
+    const draftWarning = boardUrl === this.activeBoardUrl && this.hasUnsavedChanges
+      ? ' Unsaved changes will also be lost.' : '';
+    if (!window.confirm('Permanently delete "' + label + '" and all its contents?' + draftWarning)) return;
+    this.boardStore.setNotice('');
     const fallbackRoute =
-      this.accountBoards.find((board) => board.id === this.accountMainBoardId)?.route ?? '/';
+      this.accountBoards.find((board) => board.id === this.accountMainBoardId && board.boardUrl !== boardUrl)?.route ?? '/';
 
     runDeleteBoardAction({
       boardUrl,
@@ -379,10 +388,14 @@ export class BoardPageComponent {
       setDeletingBoard: (isDeleting, deletingBoardUrl) => {
         this.isDeletingBoard = isDeleting;
         this.deletingBoardUrl = deletingBoardUrl;
+        this.cdr.markForCheck();
       },
       setAccountActionError: (message) => {
         this.accountActionError = message;
+        this.boardDeleteError = message;
+        this.cdr.markForCheck();
       },
+      onDeleted: () => this.boardStore.setNotice('Board "' + label + '" deleted.'),
       boardService: this.boardService,
       boardStore: this.boardStore,
       userStore: this.userStore,
@@ -457,7 +470,7 @@ export class BoardPageComponent {
   }
 
   saveIdentity() {
-    if (this.isIdentitySaving || this.isWidgetEditMode) return;
+    if (this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
     const prepared = prepareBoardIdentityUpdate({
       draftName: this.boardIdentityNameDraft,
       draftUrl: this.boardIdentitySlugDraft,
@@ -618,7 +631,7 @@ export class BoardPageComponent {
   }
 
   doneWidgetEdit() {
-    if (this.isWidgetSaving) return;
+    if (this.isWidgetSaving || this.isDeletingBoard) return;
     if (this.hasPendingNewWidget) {
       this.widgetSaveError = 'Add the new widget or clear its fields before saving.';
       return;

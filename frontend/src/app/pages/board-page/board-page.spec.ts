@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { vi } from 'vitest';
-import { defer, of, throwError } from 'rxjs';
+import { defer, of, Subject, throwError } from 'rxjs';
 
 import { BoardPageComponent } from './board-page';
 import { BoardService } from '../../services/board.service';
@@ -25,6 +25,7 @@ describe('BoardPageComponent', () => {
     createWidget: BoardService['createWidget'];
     updateWidget: BoardService['updateWidget'];
     deleteWidget: BoardService['deleteWidget'];
+    deleteBoard: BoardService['deleteBoard'];
   };
   let updateWidgetCalls: Array<{ widgetId: number; order: number }> = [];
 
@@ -127,6 +128,7 @@ describe('BoardPageComponent', () => {
         } as Widget);
       },
       deleteWidget: () => of(undefined),
+      deleteBoard: () => of(undefined),
     };
 
     await TestBed.configureTestingModule({
@@ -136,6 +138,42 @@ describe('BoardPageComponent', () => {
         { provide: ActivatedRoute, useValue: routeStub },
       ],
     }).compileComponents();
+  });
+
+  it('requires confirmation and keeps the board when deletion is cancelled', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const remove = vi.spyOn(boardServiceStub, 'deleteBoard');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    component.onAccountBoardDelete('default', new MouseEvent('click'));
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Permanently delete'));
+    expect(remove).not.toHaveBeenCalled();
+    confirm.mockRestore();
+  });
+
+  it('shows asynchronous delete failures outside the account menu and prevents duplicate requests', async () => {
+    const result = new Subject<void>();
+    const remove = vi.spyOn(boardServiceStub, 'deleteBoard').mockReturnValue(result);
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.isBoardIdentityMenuOpen = true;
+    component.boardIdentityNameDraft = 'Unsaved name';
+    component.onAccountBoardDelete('default', new MouseEvent('click'));
+    component.onAccountBoardDelete('default', new MouseEvent('click'));
+    expect(remove).toHaveBeenCalledTimes(1);
+    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(component.canLeaveBoard()).toBe(false);
+    result.error({ error: { errors: [{ message: 'Choose another main board first.' }] } });
+    await fixture.whenStable();
+    expect(component.isDeletingBoard).toBe(false);
+    expect(component.isBoardIdentityMenuOpen).toBe(true);
+    expect(component.boardIdentityNameDraft).toBe('Unsaved name');
+    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Unsaved changes'));
+    expect(fixture.nativeElement.textContent).toContain('Choose another main board first.');
+    confirm.mockRestore();
   });
 
   it('should create', () => {

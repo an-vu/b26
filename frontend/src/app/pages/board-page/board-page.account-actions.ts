@@ -51,6 +51,7 @@ export function runDeleteBoardAction(params: {
   boardStore: BoardStoreService;
   userStore: UserStoreService;
   router: Router;
+  onDeleted?: () => void;
   closeAccountBoardActionsMenu: () => void;
   closeBoardIdentityMenu: () => void;
 }): void {
@@ -64,6 +65,7 @@ export function runDeleteBoardAction(params: {
   params.boardService.deleteBoard(params.boardUrl).subscribe({
     next: () => {
       params.setDeletingBoard(false, '');
+      params.onDeleted?.();
       params.closeAccountBoardActionsMenu();
       params.closeBoardIdentityMenu();
       params.boardStore.refreshBoards();

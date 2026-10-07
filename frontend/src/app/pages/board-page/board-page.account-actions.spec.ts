@@ -1,4 +1,5 @@
 import { of, throwError } from 'rxjs';
+import { vi } from 'vitest';
 
 import { runDeleteBoardAction } from './board-page.account-actions';
 import type { BoardService } from '../../services/board.service';
@@ -129,6 +130,23 @@ describe('runDeleteBoardAction', () => {
     expect(refreshBoardsCalls).toBe(0);
     expect(refreshPreferencesCalls).toBe(0);
     expect(navigateCalls).toBe(0);
+  });
+
+  it('keeps the current route when deleting another board and reports success', () => {
+    const navigate = vi.fn();
+    const success = vi.fn();
+    runDeleteBoardAction({
+      boardUrl: 'other', activeBoardUrl: 'current', fallbackRoute: '/',
+      isDeletingBoard: false, setDeletingBoard: () => {}, setAccountActionError: () => {},
+      boardService: { deleteBoard: () => of(undefined) } as unknown as BoardService,
+      boardStore: { refreshBoards: () => {} } as unknown as BoardStoreService,
+      userStore: { refreshMyPreferences: () => {} } as unknown as UserStoreService,
+      router: { navigateByUrl: navigate } as any,
+      closeAccountBoardActionsMenu: () => {}, closeBoardIdentityMenu: () => {},
+      onDeleted: success,
+    });
+    expect(navigate).not.toHaveBeenCalled();
+    expect(success).toHaveBeenCalledOnce();
   });
 
   it('does nothing while delete is already in progress', () => {

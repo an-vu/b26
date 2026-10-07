@@ -35,7 +35,7 @@ describe('Unsaved board navigation', () => {
     const page = new GuardedPage();
     page.isWidgetSaving = true;
     expect(page.canLeaveBoard()).toBe(false);
-    expect(page.widgetSaveError).toContain('Wait for saving');
+    expect(page.widgetSaveError).toContain('Wait for the current operation');
     const event = { preventDefault: vi.fn(), returnValue: undefined };
     BoardPageComponent.prototype.onBeforeUnload.call(page as unknown as BoardPageComponent, event as unknown as BeforeUnloadEvent);
     expect(event.preventDefault).toHaveBeenCalledOnce();
