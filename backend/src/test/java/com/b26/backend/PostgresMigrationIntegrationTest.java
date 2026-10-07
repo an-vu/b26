@@ -69,6 +69,21 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("Preserved title", rows.getString(1));
         }
+        try (var rows = statement.executeQuery("select appearance_theme, appearance_radius_step, appearance_background_color, appearance_pattern from boards where id = 'default'")) {
+          rows.next();
+          assertEquals("light", rows.getString(1));
+          assertEquals(2, rows.getInt(2));
+          assertEquals("#ffffff", rows.getString(3));
+          assertEquals("none", rows.getString(4));
+        }
+        statement.executeUpdate("update boards set appearance_theme = 'dark', appearance_radius_step = 3, appearance_background_color = '#e6f0ff', appearance_pattern = 'grid' where id = 'default'");
+        try (var rows = statement.executeQuery("select appearance_theme, appearance_pattern from boards where id = 'default'")) {
+          rows.next();
+          assertEquals("dark", rows.getString(1));
+          assertEquals("grid", rows.getString(2));
+        }
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update boards set appearance_radius_step = 4 where id = 'default'"));
         // Matches the current entity: no obsolete required signup-route column.
         statement.executeUpdate("insert into system_settings "
             + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "

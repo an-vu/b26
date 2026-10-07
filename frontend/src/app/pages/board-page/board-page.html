@@ -9,8 +9,8 @@
   <main
     class="page page-fixed-scroll"
     *ngIf="state.status === 'ready'"
-    [class.board-pattern-dots]="boardPatternDraft === 'dots'"
-    [class.board-pattern-grid]="boardPatternDraft === 'grid'"
+    [attr.data-pattern]="boardPatternDraft"
+    [class.board-dark]="boardThemeToggleDraft"
     [style.--board-widget-radius.px]="boardRadiusDraft"
     [style.--board-bg-color]="boardBackgroundColorDraft"
   >
@@ -140,7 +140,7 @@
                   type="button"
                   class="account-board-delete-action"
                   (click)="onAccountBoardDelete(board.boardUrl, $event)"
-                  [disabled]="isDeletingBoard"
+                  [disabled]="isDeletingBoard || isIdentitySaving"
                 >
                   {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
                 </button>
@@ -162,7 +162,7 @@
 
       <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
-          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
+          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [attr.aria-busy]="isSettingsReloading" [disabled]="isSettingsReloading || isWidgetEditMode || isWidgetLoading || isWidgetSaving">
             {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} ({{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }})
           </button>
           <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
@@ -177,11 +177,6 @@
                 <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
               </div>
             </label>
-            <p class="error" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
-            <div>
-              <button type="button" (click)="saveIdentity()" [disabled]="isIdentitySaving">{{ isIdentitySaving ? 'Saving...' : 'Save' }}</button>
-              <button type="button" (click)="cancelIdentityEdit()" [disabled]="isIdentitySaving">Cancel</button>
-            </div>
             <hr />
             <div class="board-appearance-row">
               <label>
@@ -189,7 +184,7 @@
                 <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
               </label>
               <label for="board-theme-toggle">
-                <span>Theme</span>
+                <span>Night theme</span>
                 <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
               </label>
             </div>
@@ -197,32 +192,32 @@
             <label>
               Background Color
               <div class="board-color-options">
-                <button type="button" aria-label="Background color option 1"></button>
-                <button type="button" aria-label="Background color option 2"></button>
-                <button type="button" aria-label="Background color option 3"></button>
-                <button type="button" aria-label="Background color option 4"></button>
-                <button type="button" aria-label="Background color option 5"></button>
-                <button type="button" aria-label="Background color option 6"></button>
-                <button type="button" aria-label="Background color option 7"></button>
+                <button *ngFor="let color of boardColors" type="button"
+                  [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardBackgroundColorDraft === color.value"
+                  [style.background]="color.value" [disabled]="isIdentitySaving"
+                  (click)="boardBackgroundColorDraft = color.value"></button>
               </div>
             </label>
             <label>
               Pattern
               <div class="board-pattern-options">
-                <button type="button" aria-label="Pattern option 1"></button>
-                <button type="button" aria-label="Pattern option 2"></button>
-                <button type="button" aria-label="Pattern option 3"></button>
-                <button type="button" aria-label="Pattern option 4"></button>
-                <button type="button" aria-label="Pattern option 5"></button>
-                <button type="button" aria-label="Pattern option 6"></button>
-                <button type="button" aria-label="Pattern option 7"></button>
+                <button *ngFor="let pattern of boardPatterns" type="button"
+                  [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
+                  [disabled]="isIdentitySaving" (click)="boardPatternDraft = pattern"></button>
               </div>
             </label>
+            <hr />
+            <button type="button" (click)="resetAppearance()" [disabled]="isIdentitySaving">Reset appearance to defaults</button>
+            <p class="error" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
+            <div>
+              <button type="button" (click)="saveIdentity()" [disabled]="isIdentitySaving">{{ isIdentitySaving ? 'Saving...' : 'Save' }}</button>
+              <button type="button" (click)="cancelIdentityEdit()" [disabled]="isIdentitySaving">Cancel</button>
+            </div>
             <hr />
             <button
               type="button"
               (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
-              [disabled]="isDeletingBoard"
+              [disabled]="isDeletingBoard || isIdentitySaving"
             >
               {{ isDeletingBoard && deletingBoardUrl === state.board.boardUrl ? 'Deleting...' : 'Delete Board' }}
             </button>
@@ -299,7 +294,7 @@
                   type="button"
                   class="account-board-delete-action"
                   (click)="onAccountBoardDelete(board.boardUrl, $event)"
-                  [disabled]="isDeletingBoard"
+                  [disabled]="isDeletingBoard || isIdentitySaving"
                 >
                   {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
                 </button>

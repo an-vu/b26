@@ -236,3 +236,58 @@ app-widget-host.widget-host-preview .widget {
   opacity: 0.6;
   cursor: default;
 }
+
+/* Board appearance is inherited by widget components as well as the page shell. */
+.page[data-pattern] {
+  --board-pattern-ink: rgb(0 0 0 / 12%);
+  background-color: var(--board-bg-color, #fff);
+  color: #202124;
+}
+.page[data-pattern] .board-content { background: transparent; }
+.page[data-pattern='dots'] {
+  background-image: radial-gradient(var(--board-pattern-ink) 1px, transparent 1px);
+  background-size: 12px 12px;
+}
+.page[data-pattern='grid'] {
+  background-image: linear-gradient(90deg, var(--board-pattern-ink) 1px, transparent 1px),
+    linear-gradient(var(--board-pattern-ink) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+.page[data-pattern='diagonal'] {
+  background-image: repeating-linear-gradient(45deg, var(--board-pattern-ink) 0 1px, transparent 1px 12px);
+}
+.page[data-pattern='reverse-diagonal'] {
+  background-image: repeating-linear-gradient(-45deg, var(--board-pattern-ink) 0 1px, transparent 1px 12px);
+}
+.page[data-pattern='stripes'] {
+  background-image: repeating-linear-gradient(90deg, var(--board-pattern-ink) 0 6px, transparent 6px 12px);
+}
+.page[data-pattern='checkered'] {
+  background-image: conic-gradient(var(--board-pattern-ink) 25%, transparent 0 50%, var(--board-pattern-ink) 0 75%, transparent 0);
+  background-size: 24px 24px;
+}
+.page.board-dark {
+  color-scheme: dark;
+  --board-pattern-ink: rgb(255 255 255 / 10%);
+  color: #f2f3f5;
+  background-color: color-mix(in srgb, var(--board-bg-color) 10%, #15171c);
+}
+.page[data-pattern] .widget,
+.page[data-pattern] .board-card { background-color: var(--board-bg-color); }
+.page.board-dark .widget,
+.page.board-dark .board-card {
+  background-color: #24272f;
+  border-color: #686c77;
+}
+.page.board-dark a { color: #a9caff; }
+.page.board-dark .error { color: #ffaaa5; }
+.page.board-dark .widget :is(.signin-message, .signup-message, .settings-section-title, .settings-placeholder, .settings-saved-indicator) { color: #c7ccd6; }
+.page.board-dark :is(.board-identity-menu, .account-menu, .account-board-actions-menu) {
+  color-scheme: light;
+  color: #202124;
+}
+.page.board-dark :is(.board-identity-menu, .account-menu, .account-board-actions-menu) a { color: #174f9e; }
+.page.board-dark .board-identity-menu .error { color: #a11a1a; }
+.page.board-dark .bottom-action-pill { color: #202124; }
+
+.page.board-dark .widget :is(.signin-message--error, .signup-message--error, .settings-status--error, .error) { color: #ffaaa5; }

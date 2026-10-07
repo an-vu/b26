@@ -37,6 +37,30 @@ public class BoardEntity {
   @Column(name = "updated_at", nullable = false)
   private OffsetDateTime updatedAt;
 
+  @Column(name = "appearance_theme", nullable = false)
+  private String theme = "light";
+
+  public String getTheme() { return theme; }
+  public void setTheme(String value) { theme = value; }
+
+  @Column(name = "appearance_radius_step", nullable = false)
+  private Integer radiusStep = 2;
+
+  public Integer getRadiusStep() { return radiusStep; }
+  public void setRadiusStep(Integer value) { radiusStep = value; }
+
+  @Column(name = "appearance_background_color", nullable = false)
+  private String backgroundColor = "#ffffff";
+
+  public String getBackgroundColor() { return backgroundColor; }
+  public void setBackgroundColor(String value) { backgroundColor = value; }
+
+  @Column(name = "appearance_pattern", nullable = false)
+  private String pattern = "none";
+
+  public String getPattern() { return pattern; }
+  public void setPattern(String value) { pattern = value; }
+
   @Version private Long version;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)

@@ -30,7 +30,7 @@
 
 .page.page-fixed-scroll .board-content {
   overflow: visible;
-  background: var(--board-bg-color, transparent);
+  background: transparent;
   padding-bottom: 84px;
   box-sizing: border-box;
 }

@@ -1,4 +1,12 @@
+export type BoardAppearance = {
+  theme: 'light' | 'dark';
+  radiusStep: 1 | 2 | 3;
+  backgroundColor: string;
+  pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered';
+};
+
 export type Board = {
+  appearance?: BoardAppearance;
   version?: number;
   id: string;
   boardName: string;
@@ -30,6 +38,7 @@ export type UpdateBoardUrlRequest = {
 };
 
 export type UpdateBoardIdentityRequest = {
+  appearance?: BoardAppearance;
   version?: number;
   boardName: string;
   boardUrl: string;

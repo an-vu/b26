@@ -355,4 +355,78 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
+  it('saves appearance-only changes with the board revision and clears the dirty state', () => {
+    const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 8 };
+    boardServiceStub.getBoard = () => of(board);
+    const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 9 }));
+    boardServiceStub.updateBoardIdentity = save;
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.boardThemeToggleDraft = true;
+    component.boardPatternDraft = 'grid';
+    component.boardRadiusStepDraft = 3;
+    expect(component.hasUnsavedChanges).toBe(true);
+    component.saveIdentity();
+    expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
+      version: 8, appearance: { theme: 'dark', radiusStep: 3, backgroundColor: '#ffffff', pattern: 'grid' },
+    }));
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
+  it('keeps a failed appearance preview and restores saved values on Cancel', () => {
+    const appearance = { theme: 'dark' as const, radiusStep: 3 as const, backgroundColor: '#e6f0ff', pattern: 'dots' as const };
+    boardServiceStub.getBoard = () => of({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2, appearance });
+    boardServiceStub.updateBoardIdentity = () => throwError(() => ({ status: 409, error: { message: 'Board changed in another tab' } }));
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    expect(component.appearanceDraft).toEqual(appearance);
+    component.resetAppearance();
+    expect(component.hasUnsavedChanges).toBe(true);
+    component.saveIdentity();
+    expect(component.appearanceDraft.theme).toBe('light');
+    expect(component.hasUnsavedChanges).toBe(true);
+    expect(component.identitySaveError).toContain('another tab');
+    component.cancelIdentityEdit();
+    expect(component.appearanceDraft).toEqual(appearance);
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
+  it('keeps appearance drafts when the menu closes and blocks entering the widget editor', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.boardPatternDraft = 'checkered';
+    component.closeBoardIdentityMenu();
+    expect(component.hasUnsavedChanges).toBe(true);
+    component.requestWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '' });
+    expect(component.isWidgetEditMode).toBe(false);
+    expect(component.widgetSaveError).toContain('board settings');
+    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    expect(component.canLeaveBoard()).toBe(false);
+    confirm.mockRestore();
+  });
+
+  it('waits for the latest revision after Cancel before reopening settings', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    const reload = new Subject<import('../../models/board').Board>();
+    boardServiceStub.getBoard = () => reload;
+    component.boardPatternDraft = 'grid';
+    component.cancelIdentityEdit();
+    expect(component.isSettingsReloading).toBe(true);
+    component.toggleBoardIdentityMenu();
+    expect(component.isBoardIdentityMenuOpen).toBe(false);
+    reload.next({ id: 'default', boardName: 'Latest name', boardUrl: 'default', name: 'Title', headline: '', version: 9,
+      appearance: { theme: 'dark', radiusStep: 3, backgroundColor: '#e6f0ff', pattern: 'dots' } });
+    expect(component.isSettingsReloading).toBe(false);
+    component.toggleBoardIdentityMenu();
+    expect(component.isBoardIdentityMenuOpen).toBe(true);
+    expect(component.boardIdentityNameDraft).toBe('Latest name');
+    expect(component.appearanceDraft.pattern).toBe('dots');
+    expect(component.hasUnsavedChanges).toBe(false);
+  });
+
 });

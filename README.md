@@ -4,9 +4,9 @@ Personal dashboard app where users create customizable pages and manage widgets.
 
 ## Current milestone
 
-**1.3.0 username search is implemented and tested locally**, following 1.2.0 URLs and 1.2.1 documentation cleanup. Hosted verification is pending. Next: settings persistence (1.4.0), then advanced controls/release checks (1.5.0).
+**1.4.0 board appearance persistence is implemented and tested locally**, following URLs, documentation cleanup, and username search. Next: finish 1.5.0 control/release checks. Hosted verification is pending.
 
-Appearance persistence and permission matrices remain unfinished. Keep their existing controls visible. Track scope in the [release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap).
+Permission matrices remain visible placeholders, tracked for 1.6.0. Track scope in the [release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap).
 
 ## Tech Stack
 
@@ -56,6 +56,18 @@ The initial system owner has no password. Use **Sign In → Don't Have an Accoun
 create a normal user. Signup atomically creates an empty starter board, pins it as the
 user's main board, and opens `/<username>/<slug>` for editing. Public `/<username>` links resolve
 to that main board. Existing accounts and boards are not backfilled by signup.
+
+## Board appearance
+
+Open your board’s name/URL menu to preview day/night theme, widget radius,
+seven background colors, and seven patterns. **Save** persists name, URL, and
+appearance together; **Cancel** restores saved values. **Reset appearance to defaults**
+changes the preview until saved. Closing the menu keeps the draft.
+
+Appearance is visible to visitors. Only the owner or an admin can save it.
+Failed/conflicting saves retain the draft; navigation warns before discarding it.
+Existing boards receive light theme, medium radius, white background, and no pattern
+through migration V23. No new environment variables are needed.
 
 ## Database backup and restore
 

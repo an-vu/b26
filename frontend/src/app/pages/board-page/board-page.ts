@@ -1,3 +1,4 @@
+import { BoardAppearance } from '../../models/board';
 import { UserSearchComponent } from '../../components/user-search/user-search';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -119,6 +120,7 @@ export class BoardPageComponent {
   deletingBoardUrl = '';
   accountActionError = '';
   isBoardIdentityMenuOpen = false;
+  isSettingsReloading = false;
   canEditBoard = false;
   readOnlyView = false;
   widgetSaveError = '';
@@ -133,13 +135,57 @@ export class BoardPageComponent {
   boardThemeToggleDraft = false;
   boardRadiusStepDraft: 1 | 2 | 3 = 2;
   boardBackgroundColorDraft = '#ffffff';
-  boardPatternDraft: 'none' | 'dots' | 'grid' = 'none';
+  boardPatternDraft: BoardAppearance['pattern'] = 'none';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
   newWidgetDraft: WidgetDraft = createEmptyWidgetDraftHelper();
   deletedWidgetIds: number[] = [];
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
+  readonly boardColors = [
+    { name: 'White', value: '#ffffff' }, { name: 'Sand', value: '#f6efe3' },
+    { name: 'Blue', value: '#e6f0ff' }, { name: 'Green', value: '#e8f7ee' },
+    { name: 'Purple', value: '#f6e8ff' }, { name: 'Pink', value: '#ffe7e7' },
+    { name: 'Gray', value: '#f0f0f0' },
+  ];
+  readonly boardPatterns: BoardAppearance['pattern'][] = [
+    'none', 'dots', 'grid', 'diagonal', 'reverse-diagonal', 'stripes', 'checkered',
+  ];
+  private persistedAppearance: BoardAppearance = this.defaultAppearance();
+
+  defaultAppearance(): BoardAppearance {
+    return { theme: 'light', radiusStep: 2, backgroundColor: '#ffffff', pattern: 'none' };
+  }
+
+  get appearanceDraft(): BoardAppearance {
+    return { theme: this.boardThemeToggleDraft ? 'dark' : 'light',
+      radiusStep: Number(this.boardRadiusStepDraft) as 1 | 2 | 3,
+      backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft };
+  }
+
+  get appearanceChanged(): boolean {
+    const draft = this.appearanceDraft;
+    const saved = this.persistedAppearance;
+    return draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
+      draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern;
+  }
+
+  applyAppearance(appearance: BoardAppearance) {
+    this.boardThemeToggleDraft = appearance.theme === 'dark';
+    this.boardRadiusStepDraft = appearance.radiusStep;
+    this.boardBackgroundColorDraft = appearance.backgroundColor;
+    this.boardPatternDraft = appearance.pattern;
+  }
+
+  hydrateAppearance(board: Board) {
+    this.persistedAppearance = { ...this.defaultAppearance(), ...board.appearance };
+    this.applyAppearance(this.persistedAppearance);
+  }
+
+  resetAppearance() {
+    if (!this.isIdentitySaving) this.applyAppearance(this.defaultAppearance());
+  }
+
   private boardIdentitySourceId = '';
   private boardIdentityPersistedName = '';
   private boardIdentityPersistedUrl = '';
@@ -160,6 +206,7 @@ export class BoardPageComponent {
       this.insightsService.recordView(boardId, 'direct').subscribe({ error: () => { } });
     },
     onState: (state) => {
+      if (state.status !== 'loading') this.isSettingsReloading = false;
       if (state.status === 'ready') {
         this.loadBoardPermissions(state.board.boardUrl);
       } else {
@@ -171,6 +218,7 @@ export class BoardPageComponent {
         if (this.isWidgetEditMode) {
           this.cancelWidgetEdit();
         }
+        this.hydrateAppearance(state.board);
         this.boardIdentitySourceId = state.board.id;
         this.identityVersion = state.board.version;
         this.identitySaveError = '';
@@ -242,9 +290,9 @@ export class BoardPageComponent {
   }
 
   requestWidgetEdit(board: Board) {
-    if (this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) return;
+    if (this.isSettingsReloading || this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) return;
     if (this.hasUnsavedChanges) {
-      this.widgetSaveError = 'Save or cancel the board name and URL changes before editing widgets.';
+      this.widgetSaveError = 'Save or cancel the board settings changes before editing widgets.';
       return;
     }
     this.isWidgetLoading = true;
@@ -267,7 +315,7 @@ export class BoardPageComponent {
   }
 
   get hasUnsavedChanges(): boolean {
-    const identityChanged = this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
+    const identityChanged = this.appearanceChanged || this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
       this.boardIdentitySlugDraft !== this.boardIdentityPersistedUrl;
     if (!this.isWidgetEditMode) return identityChanged;
     return identityChanged || this.boardDraftName.trim() !== this.originalBoardName.trim() ||
@@ -307,6 +355,7 @@ export class BoardPageComponent {
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {
+    this.hydrateAppearance(board);
     this.editVersion = board.version ?? null;
     this.identityVersion = board.version;
     this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
@@ -452,6 +501,7 @@ export class BoardPageComponent {
   }
 
   toggleBoardIdentityMenu() {
+    if (this.isSettingsReloading) return;
     this.isBoardIdentityMenuOpen = !this.isBoardIdentityMenuOpen;
   }
 
@@ -460,6 +510,7 @@ export class BoardPageComponent {
   }
 
   resetIdentityDraft() {
+    this.applyAppearance(this.persistedAppearance);
     this.boardIdentityNameDraft = this.boardIdentityPersistedName;
     this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
     this.identitySaveError = '';
@@ -469,11 +520,12 @@ export class BoardPageComponent {
     if (this.isIdentitySaving) return;
     this.resetIdentityDraft();
     this.closeBoardIdentityMenu();
+    this.isSettingsReloading = true;
     this.reload$.next();
   }
 
   saveIdentity() {
-    if (this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
+    if (this.isSettingsReloading || this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
     const prepared = prepareBoardIdentityUpdate({
       draftName: this.boardIdentityNameDraft,
       draftUrl: this.boardIdentitySlugDraft,
@@ -484,19 +536,22 @@ export class BoardPageComponent {
       this.identitySaveError = 'Enter a board name and a URL using letters, numbers, and single hyphens.';
       return;
     }
-    if (prepared.kind === 'noop') {
+    if (prepared.kind === 'noop' && !this.appearanceChanged) {
       this.cancelIdentityEdit();
       return;
     }
     this.identitySaveError = '';
     this.isIdentitySaving = true;
     this.boardService.updateBoardIdentity(this.boardIdentityPersistedUrl, {
-      boardName: prepared.boardName, boardUrl: prepared.boardUrl, version: this.identityVersion,
+      boardName: prepared.kind === 'update' ? prepared.boardName : this.boardIdentityPersistedName,
+      boardUrl: prepared.kind === 'update' ? prepared.boardUrl : this.boardIdentityPersistedUrl,
+      version: this.identityVersion, appearance: this.appearanceDraft,
     }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
       this.isIdentitySaving = false;
       this.cdr.markForCheck();
     })).subscribe({
       next: (board) => {
+        this.hydrateAppearance(board);
         this.identityVersion = board.version;
         this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
         this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
@@ -513,7 +568,7 @@ export class BoardPageComponent {
       },
       error: (error) => {
         this.isBoardIdentityMenuOpen = true;
-        this.identitySaveError = getApiErrorMessage(error, 'Unable to save board name and URL. Your changes have been kept.');
+        this.identitySaveError = getApiErrorMessage(error, 'Unable to save board settings. Your changes have been kept.');
       },
     });
   }

@@ -232,6 +232,9 @@ public class BoardService {
       throw new BoardEditConflictException();
     }
 
+    if (request.appearance() != null && request.version() == null) {
+      throw new InvalidBoardUpdateException("version is required when saving appearance");
+    }
     String normalizedBoardName = request.boardName().trim();
     if (normalizedBoardName.isEmpty()) {
       throw new InvalidBoardUpdateException("board_name is required");
@@ -244,6 +247,13 @@ public class BoardService {
 
     board.setBoardName(normalizedBoardName);
     board.setBoardUrl(normalizedUrl);
+    if (request.appearance() != null) {
+      var appearance = request.appearance();
+      board.setTheme(appearance.theme());
+      board.setRadiusStep(appearance.radiusStep());
+      board.setBackgroundColor(appearance.backgroundColor().toLowerCase(java.util.Locale.ROOT));
+      board.setPattern(appearance.pattern());
+    }
     return persist(board);
   }
 
@@ -321,6 +331,8 @@ public class BoardService {
   private BoardDto toDto(BoardEntity board) {
     return new BoardDto(
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
-        appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername());
+        appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername(),
+        new com.b26.backend.board.api.BoardAppearance(board.getTheme(), board.getRadiusStep(),
+            board.getBackgroundColor(), board.getPattern()));
   }
 }
