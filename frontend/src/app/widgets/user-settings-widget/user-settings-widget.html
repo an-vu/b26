@@ -67,7 +67,7 @@
           <select [ngModel]="vm.mainBoardId" (ngModelChange)="onMainBoardChanged($event)">
             <option value="" selected disabled>Select a board</option>
             <option *ngFor="let board of vm.boards" [value]="board.id">
-              {{ board.boardName }} (/{{ board.boardUrl }})
+              {{ board.boardName }} ({{ boardRoute(board) }})
             </option>
           </select>
           <em class="settings-saved-indicator" *ngIf="vm.saved">Saved</em>

@@ -28,7 +28,7 @@ describe('Signup onboarding', () => {
   it('opens the starter board in its editable route', () => {
     const { component, router } = setup();
     component.onSignupSubmit();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/b/first-board');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/new-user/first-board');
   });
 
   it('falls back to the public main board when preference loading fails', () => {

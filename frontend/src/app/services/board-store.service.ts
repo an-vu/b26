@@ -39,6 +39,7 @@ export class BoardStoreService {
       id: board.id,
       boardName: board.boardName,
       boardUrl: board.boardUrl,
+      ownerUsername: board.ownerUsername,
     };
   }
 }

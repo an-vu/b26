@@ -32,6 +32,7 @@ import {
   type AccountMenuBoard,
   type AccountMenuUser,
 } from './board-page.account';
+import { boardRoute } from '../../models/board-route';
 import { resolveBoardId$ as resolveBoardIdHelper$ } from './board-page.routing';
 import { prepareBoardIdentityUpdate } from './board-page.routing';
 import {
@@ -80,6 +81,7 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
   styleUrl: './board-page.css',
 })
 export class BoardPageComponent {
+  readonly boardRoute = boardRoute;
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private boardService = inject(BoardService);
@@ -501,8 +503,9 @@ export class BoardPageComponent {
         this.isIdentitySaving = false;
         this.closeBoardIdentityMenu();
         this.boardStore.updateBoardInStore(board);
-        if (this.route.snapshot.paramMap.get('boardId') !== board.boardUrl) {
-          void this.router.navigate(['/b', board.boardUrl]);
+        if (this.route.snapshot.paramMap.get('boardId') !== board.boardUrl
+            || this.route.snapshot.paramMap.get('username') !== board.ownerUsername) {
+          void this.router.navigateByUrl(boardRoute(board));
         } else {
           this.reload$.next();
         }

@@ -30,6 +30,11 @@ public class BoardController {
     this.authService = authService;
   }
 
+  @GetMapping("/by-owner/{username}/{slug}")
+  public BoardDto getBoardForUsername(@PathVariable String username, @PathVariable String slug) {
+    return boardService.getBoardForUsername(username, slug);
+  }
+
   @GetMapping("/{boardId}/editor")
   public BoardEditDto getEditor(@PathVariable String boardId) {
     return boardService.getEditor(boardId);

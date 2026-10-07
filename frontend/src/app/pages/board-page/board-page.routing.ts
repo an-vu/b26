@@ -56,6 +56,13 @@ export function resolveBoardId$(params: {
 }): Observable<string> {
   const { boardService, routeParamBoardId, routeParamUsername, dataBoardId, systemRoute, userMainRoute } = params;
 
+  if (routeParamUsername && routeParamBoardId) {
+    return boardService.getBoardForUsername(routeParamUsername, routeParamBoardId).pipe(
+      map(board => board.boardUrl),
+      catchError(() => of('__missing-owner-board__'))
+    );
+  }
+
   if (routeParamBoardId && routeParamBoardId.trim().length > 0) {
     return of(routeParamBoardId);
   }

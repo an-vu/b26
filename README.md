@@ -1,4 +1,4 @@
-# BlueBerry 2026
+# BlueBerry 26
 
 Personal dashboard app where users create customizable pages and manage widgets.
 
@@ -18,7 +18,7 @@ Install and open Docker Desktop. From this repo, run:
 The script builds the frontend/backend, starts PostgreSQL, applies migrations, and
 waits for health checks. No Node, Java, or `.env` setup is required on your computer.
 Open http://localhost:4200/signin and use `anvu@local` with any placeholder password.
-Open `/b/default` to edit as the seeded admin.
+Open `/anvu/default` to edit as the seeded admin (`/b/default` still works).
 
 This local-only setup enables password bypass and binds the website to loopback; the API/database stay inside Docker.
 It uses `docker-compose.local.yml` and its own `b26-local` database volume, separate
@@ -45,7 +45,7 @@ requires investigation; the fresh-install baseline is not a repair for it.
 
 The initial system owner has no password. Use **Sign In → Don't Have an Account?** to
 create a normal user. Signup atomically creates an empty starter board, pins it as the
-user's main board, and opens `/b/<slug>` for editing. Public `/<username>` links resolve
+user's main board, and opens `/<username>/<slug>` for editing. Public `/<username>` links resolve
 to that main board. Existing accounts and boards are not backfilled by signup.
 
 ## Database backup and restore
@@ -56,6 +56,34 @@ They operate on PostgreSQL, not legacy H2 files.
 - Backup: `npm run db:backup` (custom-format archive in `backups/`).
 - Restore: stop the app, back up the target, then run `npm run db:restore -- backups/<file>.dump --confirm`.
 - Restore replaces objects in the configured target database in one transaction. It does not accept old H2 `.tgz` archives.
+
+## Board URLs
+
+- `/{username}/{boardSlug}` opens a board belonging to that user.
+- `/{username}` opens their main board. System routes (`/`, `/signin`, `/settings`, `/insights`) retain their existing behavior.
+- Existing `/b/{boardSlug}` and `/u/{boardSlug}` links still work. New account, signup, and create-board links use the owner-qualified URL.
+- Slugs remain **globally unique** in 1.2.0, so legacy links and existing widget/write APIs remain unambiguous. Two users cannot claim the same slug.
+- Renaming a username updates generated board links; the old username path returns not found. Legacy links still work if the slug is unchanged.
+- Renaming a board slug changes both URL forms. Old slugs are not retained as aliases. Main-board preferences follow the stable board ID.
+- Username and slug formats use lowercase letters, numbers, and single hyphens. Usernames `b`, `u`, `api`, `actuator`, `insights`, `settings`, `signin`, `signup`, and `assets` are reserved.
+
+The public lookup `GET /api/board/by-owner/{username}/{slug}` validates ownership;
+missing users, missing boards, and mismatched owners return 404. Board responses include
+`ownerUsername`. Existing APIs and write authorization stay in place.
+
+### Rollout and rollback
+
+No schema migration or new index is needed: existing unique username/slug indexes and
+owner references support this lookup. Deploy the backend first, then the frontend.
+Before rollout, check existing usernames against the reserved list; older profile edits
+could have bypassed that rule. Resolve conflicts with the account owner rather than
+silently renaming them.
+
+After deployment, open a canonical link directly and refresh it; check the main-board,
+legacy, signup, edit/save, rename, and delete flows. Watch API 404/5xx responses and
+browser errors. Hosting must serve the Angular app for nested non-API paths (existing
+Vercel/Nginx SPA fallbacks). Roll back the frontend before the backend if necessary;
+no data rollback is required. Shared canonical links require the new routing code.
 
 ## Board editing
 Opening Edit loads a consistent board/widget snapshot with its revision. Done submits

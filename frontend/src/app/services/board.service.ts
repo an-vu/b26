@@ -33,6 +33,10 @@ export class BoardService {
     return this.http.put<BoardEdit>(`/api/board/${boardUrl}/editor`, payload);
   }
 
+  getBoardForUsername(username: string, slug: string): Observable<Board> {
+    return this.http.get<Board>(`/api/board/by-owner/${encodeURIComponent(username)}/${encodeURIComponent(slug)}`);
+  }
+
   getBoard(boardId: string): Observable<Board> {
     return this.http.get<Board>(`/api/board/${boardId}`);
   }

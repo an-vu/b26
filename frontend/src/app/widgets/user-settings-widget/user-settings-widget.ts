@@ -1,3 +1,4 @@
+import { boardRoute } from '../../models/board-route';
 import { Component, DestroyRef, Input, OnInit, inject } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
@@ -32,6 +33,7 @@ type UserSettingsState = {
   styleUrl: './user-settings-widget.css',
 })
 export class UserSettingsWidgetComponent implements OnInit {
+  readonly boardRoute = boardRoute;
   @Input({ required: true }) widget!: Widget;
 
   private readonly destroyRef = inject(DestroyRef);
@@ -140,11 +142,12 @@ export class UserSettingsWidgetComponent implements OnInit {
           this.state$.next({
             ...current,
             profileSavedField: null,
-            errorMessage: result.error?.error?.message ?? 'Unable to save profile',
+            errorMessage: getApiErrorMessage(result.error, 'Unable to save profile'),
           });
           return;
         }
 
+        this.boardStore.refreshBoards();
         this.state$.next({
           ...this.state$.value,
           displayName: result.profile.displayName,

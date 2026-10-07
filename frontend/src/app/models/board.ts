@@ -3,6 +3,7 @@ export type Board = {
   id: string;
   boardName: string;
   boardUrl: string;
+  ownerUsername?: string;
   name: string;
   headline: string;
 };

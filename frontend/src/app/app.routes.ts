@@ -10,6 +10,7 @@ export const routes: Routes = [
   { path: 'settings', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard], data: { systemRoute: 'settings', readOnly: true } },
   { path: 'signin', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard], data: { systemRoute: 'signin', readOnly: true } },
   { path: 'u/:boardId', redirectTo: 'b/:boardId' },
+  { path: ':username/:boardId', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard] },
   { path: ':username', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard], data: { userMainRoute: true, readOnly: true } },
   { path: '**', redirectTo: '' },
 ];

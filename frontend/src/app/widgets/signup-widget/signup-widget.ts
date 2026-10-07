@@ -1,3 +1,4 @@
+import { boardRoute } from '../../models/board-route';
 import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
@@ -69,7 +70,7 @@ export class SignupWidgetComponent {
           const username = session.user.username?.trim();
           const fallback = username ? `/${username}` : '/';
           return this.boardService.getMyPreferences().pipe(
-            map((preferences) => `/b/${encodeURIComponent(preferences.mainBoardUrl)}`),
+            map((preferences) => boardRoute({ boardUrl: preferences.mainBoardUrl, ownerUsername: preferences.username || username })),
             catchError(() => of(fallback))
           );
         }),

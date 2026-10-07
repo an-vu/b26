@@ -163,7 +163,7 @@
       <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
           <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
-            {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} (/{{ boardIdentitySlugDraft || state.board.boardUrl }})
+            {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} ({{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }})
           </button>
           <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
             <label>
@@ -173,7 +173,7 @@
             <label>
               URL
               <div class="slug-input-wrap">
-                <span>/</span>
+                <span>/{{ state.board.ownerUsername || 'b' }}/</span>
                 <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
               </div>
             </label>

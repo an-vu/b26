@@ -33,11 +33,14 @@ public class UserProfileService {
     }
 
     String normalizedUsername = normalizeUsername(request.username());
+    if (UsernameRules.isReserved(normalizedUsername)) {
+      throw new InvalidUserProfileException("username is reserved");
+    }
     if (appUserRepository.existsByUsernameAndIdNot(normalizedUsername, user.getId())) {
       throw new InvalidUserProfileException("username is already used: " + normalizedUsername);
     }
 
-    String normalizedEmail = request.email() == null ? null : request.email().trim().toLowerCase();
+    String normalizedEmail = request.email() == null ? null : request.email().trim().toLowerCase(java.util.Locale.ROOT);
     if (normalizedEmail != null && normalizedEmail.isEmpty()) {
       normalizedEmail = null;
     }
@@ -50,7 +53,7 @@ public class UserProfileService {
   }
 
   private static String normalizeUsername(String rawUsername) {
-    String normalized = rawUsername.trim().toLowerCase();
+    String normalized = rawUsername.trim().toLowerCase(java.util.Locale.ROOT);
     if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
       throw new InvalidUserProfileException(
           "username must use lowercase letters, numbers, and single hyphens");

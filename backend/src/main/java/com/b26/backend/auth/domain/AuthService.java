@@ -20,7 +20,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
 import java.util.UUID;
-import java.util.Set;
+import com.b26.backend.user.domain.UsernameRules;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -29,8 +29,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class AuthService {
-  private static final Set<String> RESERVED_USERNAMES =
-      Set.of("b", "u", "api", "actuator", "insights", "settings", "signin", "signup");
   private static final SecureRandom SECURE_RANDOM = new SecureRandom();
 
   private final AppUserRepository appUserRepository;
@@ -62,7 +60,7 @@ public class AuthService {
     String normalizedUsername = normalizeUsername(request.username());
     if (normalizedUsername.isEmpty()) {
       normalizedUsername = ensureUniqueUsername(deriveUsernameSeedFromEmail(normalizedEmail));
-    } else if (RESERVED_USERNAMES.contains(normalizedUsername)) {
+    } else if (UsernameRules.isReserved(normalizedUsername)) {
       throw new InvalidAuthRequestException("username is reserved");
     } else if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
       throw new AuthConflictException("username already in use");
@@ -207,7 +205,7 @@ public class AuthService {
   }
 
   private static String normalizeEmail(String email) {
-    String normalized = email == null ? "" : email.trim().toLowerCase();
+    String normalized = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
     if (normalized.isEmpty()) {
       throw new InvalidAuthRequestException("email is required");
     }
@@ -215,7 +213,7 @@ public class AuthService {
   }
 
   private static String normalizeUsername(String username) {
-    String normalized = username == null ? "" : username.trim().toLowerCase();
+    String normalized = username == null ? "" : username.trim().toLowerCase(java.util.Locale.ROOT);
     if (normalized.isEmpty()) {
       return "";
     }
@@ -236,7 +234,7 @@ public class AuthService {
       localPart = email.substring(0, atIndex);
     }
 
-    String seed = localPart.toLowerCase().replaceAll("[^a-z0-9]+", "-");
+    String seed = localPart.toLowerCase(java.util.Locale.ROOT).replaceAll("[^a-z0-9]+", "-");
     seed = seed.replaceAll("^-+|-+$", "");
     if (seed.isBlank()) {
       seed = "user";
@@ -251,7 +249,7 @@ public class AuthService {
   }
 
   private String ensureUniqueUsername(String baseSeed) {
-    if (RESERVED_USERNAMES.contains(baseSeed)) {
+    if (UsernameRules.isReserved(baseSeed)) {
       baseSeed += "-user";
     }
     if (!appUserRepository.existsByUsernameIgnoreCase(baseSeed)) {

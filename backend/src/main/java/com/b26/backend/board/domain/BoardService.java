@@ -83,9 +83,20 @@ public class BoardService {
   }
 
   @Transactional(readOnly = true)
+  public BoardDto getBoardForUsername(String username, String slug) {
+    var owner = appUserRepository.findByUsername(username.toLowerCase(java.util.Locale.ROOT))
+        .orElseThrow(() -> new BoardNotFoundException(username + "/" + slug));
+    BoardEntity board = findBoardByUrl(slug);
+    if (!owner.getId().equals(board.getOwnerUserId())) {
+      throw new BoardNotFoundException(username + "/" + slug);
+    }
+    return toDto(board);
+  }
+
+  @Transactional(readOnly = true)
   public List<BoardDto> getBoards() {
     return boardRepository.findAll().stream()
-        .map(BoardService::toDto)
+        .map(this::toDto)
         .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
         .toList();
   }
@@ -107,7 +118,7 @@ public class BoardService {
           }
           return leftPinned ? -1 : 1;
         })
-        .map(BoardService::toDto)
+        .map(this::toDto)
         .toList();
   }
 
@@ -307,8 +318,9 @@ public class BoardService {
         .orElseThrow(() -> new BoardNotFoundException(boardUrl));
   }
 
-  private static BoardDto toDto(BoardEntity board) {
+  private BoardDto toDto(BoardEntity board) {
     return new BoardDto(
-        board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion());
+        board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
+        appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername());
   }
 }

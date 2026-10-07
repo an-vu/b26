@@ -1,3 +1,4 @@
+import { boardRoute } from '../../models/board-route';
 import { finalize } from 'rxjs';
 import type { Router } from '@angular/router';
 import type { BoardStoreService } from '../../services/board-store.service';
@@ -20,7 +21,7 @@ export function mapAccountBoards(boards: BoardIdentity[]): AccountMenuBoard[] {
     id: board.id,
     boardUrl: board.boardUrl,
     label: board.boardName,
-    route: `/b/${board.boardUrl}`,
+    route: boardRoute(board),
   }));
 }
 
@@ -67,7 +68,7 @@ export function runCreateBoardFlow(options: {
         options.closeAccountMenu();
         options.boardStore.refreshBoards();
         options.userStore.refreshMyPreferences();
-        void options.router.navigate(['/b', board.boardUrl]);
+        void options.router.navigateByUrl(boardRoute(board));
       },
       error: (error) => {
         options.onError(error);
