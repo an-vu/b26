@@ -80,7 +80,10 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
   standalone: true,
   imports: [UserSearchComponent, CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
   templateUrl: './board-page.html',
-  styleUrl: './board-page.css',
+  styleUrls: [
+    './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
+    './board-page.identity.css', './board-page.account-menu.css',
+  ],
 })
 export class BoardPageComponent {
   readonly boardRoute = boardRoute;
@@ -97,7 +100,7 @@ export class BoardPageComponent {
   private insightsService = inject(InsightsService);
   private userStore = inject(UserStoreService);
   private authService = inject(AuthService);
-  private elementRef = inject(ElementRef<HTMLElement>);
+  private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private reload$ = new Subject<void>();
@@ -121,6 +124,7 @@ export class BoardPageComponent {
   accountActionError = '';
   isBoardIdentityMenuOpen = false;
   isSettingsReloading = false;
+  settingsNotice = '';
   canEditBoard = false;
   readOnlyView = false;
   widgetSaveError = '';
@@ -218,6 +222,7 @@ export class BoardPageComponent {
         if (this.isWidgetEditMode) {
           this.cancelWidgetEdit();
         }
+        if (state.board.id !== this.boardIdentitySourceId) this.settingsNotice = '';
         this.hydrateAppearance(state.board);
         this.boardIdentitySourceId = state.board.id;
         this.identityVersion = state.board.version;
@@ -314,9 +319,31 @@ export class BoardPageComponent {
       });
   }
 
-  get hasUnsavedChanges(): boolean {
-    const identityChanged = this.appearanceChanged || this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
+  get settingsChanged(): boolean {
+    return this.appearanceChanged || this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
       this.boardIdentitySlugDraft !== this.boardIdentityPersistedUrl;
+  }
+
+  get settingsFeedback(): string {
+    if (this.isIdentitySaving) return 'Saving board settings…';
+    if (this.isSettingsReloading) return 'Loading saved settings…';
+    if (this.identitySaveError) return this.isBoardIdentityMenuOpen
+      ? 'Settings were not saved. Your changes have been kept.'
+      : 'Settings were not saved. Reopen settings to review the error.';
+    if (this.settingsChanged) return 'Unsaved board settings';
+    return this.settingsNotice;
+  }
+
+  get radiusLabel(): string {
+    return this.boardRadiusStepDraft === 1 ? 'Small' : this.boardRadiusStepDraft === 3 ? 'Large' : 'Medium';
+  }
+
+  patternLabel(pattern: string): string {
+    return pattern.charAt(0).toUpperCase() + pattern.slice(1).replace(/-/g, ' ');
+  }
+
+  get hasUnsavedChanges(): boolean {
+    const identityChanged = this.settingsChanged;
     if (!this.isWidgetEditMode) return identityChanged;
     return identityChanged || this.boardDraftName.trim() !== this.originalBoardName.trim() ||
       this.boardDraftHeadline.trim() !== this.originalBoardHeadline.trim() ||
@@ -502,11 +529,21 @@ export class BoardPageComponent {
 
   toggleBoardIdentityMenu() {
     if (this.isSettingsReloading) return;
-    this.isBoardIdentityMenuOpen = !this.isBoardIdentityMenuOpen;
+    if (this.isBoardIdentityMenuOpen) {
+      this.closeBoardIdentityMenu(true);
+      return;
+    }
+    this.settingsNotice = '';
+    this.isBoardIdentityMenuOpen = true;
+    this.cdr.detectChanges();
+    this.elementRef.nativeElement.querySelector<HTMLInputElement>('input[name="board-identity-name"]')?.focus();
   }
 
-  closeBoardIdentityMenu() {
+  closeBoardIdentityMenu(restoreFocus = false) {
     this.isBoardIdentityMenuOpen = false;
+    if (restoreFocus) {
+      this.elementRef.nativeElement.querySelector<HTMLButtonElement>('.board-identity-button')?.focus();
+    }
   }
 
   resetIdentityDraft() {
@@ -519,7 +556,8 @@ export class BoardPageComponent {
   cancelIdentityEdit() {
     if (this.isIdentitySaving) return;
     this.resetIdentityDraft();
-    this.closeBoardIdentityMenu();
+    this.settingsNotice = 'Changes cancelled';
+    this.closeBoardIdentityMenu(true);
     this.isSettingsReloading = true;
     this.reload$.next();
   }
@@ -538,9 +576,11 @@ export class BoardPageComponent {
     }
     if (prepared.kind === 'noop' && !this.appearanceChanged) {
       this.cancelIdentityEdit();
+      this.settingsNotice = 'No changes to save';
       return;
     }
     this.identitySaveError = '';
+    this.settingsNotice = '';
     this.isIdentitySaving = true;
     this.boardService.updateBoardIdentity(this.boardIdentityPersistedUrl, {
       boardName: prepared.kind === 'update' ? prepared.boardName : this.boardIdentityPersistedName,
@@ -557,7 +597,8 @@ export class BoardPageComponent {
         this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
         this.activeBoardUrl = board.boardUrl;
         this.isIdentitySaving = false;
-        this.closeBoardIdentityMenu();
+        this.settingsNotice = 'Board settings saved';
+        this.closeBoardIdentityMenu(true);
         this.boardStore.updateBoardInStore(board);
         if (this.route.snapshot.paramMap.get('boardId') !== board.boardUrl
             || this.route.snapshot.paramMap.get('username') !== board.ownerUsername) {
@@ -569,6 +610,8 @@ export class BoardPageComponent {
       error: (error) => {
         this.isBoardIdentityMenuOpen = true;
         this.identitySaveError = getApiErrorMessage(error, 'Unable to save board settings. Your changes have been kept.');
+        this.cdr.detectChanges();
+        this.elementRef.nativeElement.querySelector<HTMLElement>('#board-settings-error')?.focus();
       },
     });
   }
@@ -601,7 +644,7 @@ export class BoardPageComponent {
       this.closeAccountMenu();
     }
     if (actions.closeBoardIdentityMenu) {
-      this.closeBoardIdentityMenu();
+      this.closeBoardIdentityMenu(true);
     }
   }
 
@@ -723,9 +766,11 @@ export class BoardPageComponent {
       },
       setWidgetSaveError: (message) => {
         this.widgetSaveError = message;
+        this.cdr.markForCheck();
       },
       setWidgetSaving: (saving) => {
         this.isWidgetSaving = saving;
+        this.cdr.markForCheck();
       },
       onSaved: () => {
         this.cancelWidgetEdit();

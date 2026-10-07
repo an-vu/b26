@@ -291,3 +291,6 @@ app-widget-host.widget-host-preview .widget {
 .page.board-dark .bottom-action-pill { color: #202124; }
 
 .page.board-dark .widget :is(.signin-message--error, .signup-message--error, .settings-status--error, .error) { color: #ffaaa5; }
+
+.page.board-dark .board-settings-feedback { background: #24272f; color: #f2f3f5; }
+.page.board-dark .inline-edit:focus { border-bottom-color: #a9caff; }

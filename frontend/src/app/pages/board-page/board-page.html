@@ -25,6 +25,7 @@
         <ng-template #boardView>
           <app-board-header [name]="state.board.name" [headline]="state.board.headline"></app-board-header>
         </ng-template>
+        <p class="board-settings-feedback" role="status" aria-live="polite" *ngIf="canEditBoard && !readOnlyView">{{ settingsFeedback }}</p>
       </aside>
 
       <section class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
@@ -162,10 +163,11 @@
 
       <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
-          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [attr.aria-busy]="isSettingsReloading" [disabled]="isSettingsReloading || isWidgetEditMode || isWidgetLoading || isWidgetSaving">
+          <button type="button" class="bottom-action-button board-identity-button bottom-action-pill" (click)="toggleBoardIdentityMenu()" [attr.aria-busy]="isSettingsReloading" [attr.aria-disabled]="isSettingsReloading" [attr.aria-expanded]="isBoardIdentityMenuOpen" aria-controls="board-settings-panel" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
             {{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }} ({{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }})
           </button>
-          <div class="board-identity-menu" *ngIf="isBoardIdentityMenuOpen">
+          <div class="board-identity-menu" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
+            <p class="board-settings-help">Preview your changes. Save to keep them.</p>
             <label>
               Board Name
               <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
@@ -180,8 +182,8 @@
             <hr />
             <div class="board-appearance-row">
               <label>
-                Widget Radius
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+                Widget Radius · {{ radiusLabel }}
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
               </label>
               <label for="board-theme-toggle">
                 <span>Night theme</span>
@@ -189,27 +191,27 @@
               </label>
             </div>
             <hr />
-            <label>
-              Background Color
+            <fieldset>
+              <legend>Background Color</legend>
               <div class="board-color-options">
                 <button *ngFor="let color of boardColors" type="button"
-                  [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardBackgroundColorDraft === color.value"
+                  [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardBackgroundColorDraft === color.value"
                   [style.background]="color.value" [disabled]="isIdentitySaving"
                   (click)="boardBackgroundColorDraft = color.value"></button>
               </div>
-            </label>
-            <label>
-              Pattern
+            </fieldset>
+            <fieldset>
+              <legend>Pattern</legend>
               <div class="board-pattern-options">
                 <button *ngFor="let pattern of boardPatterns" type="button"
-                  [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
+                  [title]="patternLabel(pattern)" [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
                   [disabled]="isIdentitySaving" (click)="boardPatternDraft = pattern"></button>
               </div>
-            </label>
+            </fieldset>
             <hr />
             <button type="button" (click)="resetAppearance()" [disabled]="isIdentitySaving">Reset appearance to defaults</button>
-            <p class="error" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
-            <div>
+            <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
+            <div class="board-settings-actions">
               <button type="button" (click)="saveIdentity()" [disabled]="isIdentitySaving">{{ isIdentitySaving ? 'Saving...' : 'Save' }}</button>
               <button type="button" (click)="cancelIdentityEdit()" [disabled]="isIdentitySaving">Cancel</button>
             </div>
@@ -228,7 +230,7 @@
             class="bottom-action-button orb-button orb-button--gray"
             *ngIf="!isWidgetEditMode; else doneButton"
             (click)="requestWidgetEdit(state.board)"
-            [disabled]="isWidgetLoading || isIdentitySaving"
+            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
           >
           <span class="orb-button__dot" aria-hidden="true"></span>
           <span class="orb-button__label">{{ isWidgetLoading ? 'Loading...' : 'Edit' }}</span>

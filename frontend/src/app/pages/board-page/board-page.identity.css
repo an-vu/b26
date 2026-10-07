@@ -211,3 +211,36 @@
 .board-pattern-options button { width: 32px; height: 32px; cursor: pointer; }
 .board-color-options button[aria-pressed='true'],
 .board-pattern-options button[aria-pressed='true'] { outline: 2px solid #2459b5; outline-offset: 1px; }
+
+.board-identity-menu {
+  width: 392px;
+  max-width: calc(100vw - 32px);
+  box-sizing: border-box;
+  overscroll-behavior: contain;
+}
+.board-identity-menu fieldset { min-width: 0; padding: 0; margin: 0; border: 0; }
+.board-identity-menu legend { padding: 0; margin-bottom: 8px; }
+.board-settings-help { margin: 0; font-size: 13px; color: #50545b; }
+.board-settings-actions { display: flex; gap: 8px; }
+.board-settings-actions button { flex: 1; }
+.board-identity-menu button,
+.board-identity-menu input:not([type='checkbox']) { min-height: 44px; font: inherit; box-sizing: border-box; }
+.board-identity-menu input[type='checkbox'] { width: 24px; height: 24px; }
+.board-identity-menu label:has(input[type='checkbox']) { min-height: 68px; cursor: pointer; }
+.board-color-options,
+.board-pattern-options { flex-wrap: wrap; gap: 8px; }
+.board-color-options button,
+.board-pattern-options button { width: 44px; flex: 0 0 44px; position: relative; }
+.board-color-options button[aria-pressed='true']::after,
+.board-pattern-options button[aria-pressed='true']::after {
+  content: '✓'; color: #173e82; background: #fff; border-radius: 50%;
+  position: absolute; right: 0; bottom: 0; width: 18px; height: 18px; font-size: 14px;
+}
+.board-identity-menu :is(button, input):focus-visible { outline: 3px solid #2459b5; outline-offset: 2px; }
+.board-identity-menu button:disabled { opacity: .55; cursor: wait; }
+.board-settings-feedback { font-size: 13px; padding: 8px; border-radius: 6px; background: #fff; color: #202124; }
+.board-settings-feedback:empty { display: none; }
+@media (max-width: 700px) {
+  .board-identity-menu { width: auto; }
+  .board-identity-menu input { font-size: 16px; }
+}

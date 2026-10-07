@@ -4,7 +4,7 @@ Personal dashboard app where users create customizable pages and manage widgets.
 
 ## Current milestone
 
-**1.4.0 board appearance persistence is implemented and tested locally**, following URLs, documentation cleanup, and username search. Next: finish 1.5.0 control/release checks. Hosted verification is pending.
+**1.5.0 is prepared for release, not yet published.** Settings feedback, accessibility, failed-save retry, and production safeguards are verified locally. Frontend and backend currently run the 1.4.0 commit (`03c4c29`); V23 is applied. A Neon snapshot was restored and checked in an isolated branch. Production rollout and authenticated hosted smoke tests remain pending.
 
 Permission matrices remain visible placeholders, tracked for 1.6.0. Track scope in the [release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap).
 
@@ -63,11 +63,64 @@ Open your board’s name/URL menu to preview day/night theme, widget radius,
 seven background colors, and seven patterns. **Save** persists name, URL, and
 appearance together; **Cancel** restores saved values. **Reset appearance to defaults**
 changes the preview until saved. Closing the menu keeps the draft.
+Settings show saving, saved, and error feedback. Escape returns focus to the
+board settings button; color/pattern choices support keyboard use and 44px touch targets.
 
 Appearance is visible to visitors. Only the owner or an admin can save it.
 Failed/conflicting saves retain the draft; navigation warns before discarding it.
 Existing boards receive light theme, medium radius, white background, and no pattern
 through migration V23. No new environment variables are needed.
+
+## Production deployment checks
+
+- Frontend: `https://blueberry2026.vercel.app` (the old `b26-frontend.vercel.app` redirects here).
+- Vercel root: `frontend`; build: `npm run build`; output: `dist/b26`.
+- Render build context: `backend`; Dockerfile: `backend/Dockerfile`; health path: `/actuator/health`.
+- Deploy the backend before the frontend. V23 adds appearance defaults without changing older migrations.
+
+Required Render settings (keep connection credentials in the provider dashboard):
+
+```dotenv
+SPRING_PROFILES_ACTIVE=prod
+APP_AUTH_REQUIRE_PASSWORD=true
+APP_DEMO_USERS_ENABLED=false
+APP_CORS_ALLOWED_ORIGINS=https://blueberry2026.vercel.app
+SPRING_DATASOURCE_URL=jdbc:postgresql://<host>:5432/<database>?sslmode=require
+SPRING_DATASOURCE_USERNAME=<database-user>
+SPRING_DATASOURCE_PASSWORD=<database-password>
+```
+
+Use the database provider's supplied TLS settings. Keep Hibernate schema validation enabled;
+Flyway owns migrations. Add any actual custom frontend domains to the CORS list.
+Startup rejects password bypass or demo seeding under `prod` or on Render, using
+[Render's documented runtime marker](https://render.com/docs/environment-variables).
+Local Docker retains its existing dev login.
+
+Before deployment, verify a recent Neon backup and its restore procedure, record the current
+frontend/backend deploy IDs, and confirm CI passes. Roll back the frontend first, then the backend
+if needed; retain V23's additive columns. Do not restore the production database over newer user
+writes without assessing data loss. Confirm the actual deployed versions in the dashboards.
+
+Audit on 2026-10-06: frontend and nested routes respond. After initial API timeouts, the hosted
+health endpoint returned UP, public board lookup returned saved appearance/revision data,
+private account endpoints rejected anonymous requests (401), and env/configprops endpoints
+returned 404. Render logs and Vercel dashboard screenshots confirm both providers run `03c4c29`.
+Vercel uses Node 24.x and the build settings above. Render currently uses the `postgres` profile;
+the user confirmed password enforcement is enabled and demo seeding is unset (defaults to false).
+Plan the switch to `prod` and explicit demo-seeding disablement with the rollout. CORS remains
+unverified. Render automatically deploys backend commits on `main`; coordinate the push with
+release readiness rather than assuming it waits for CI.
+
+Neon snapshot `b26-pre-1.5.0-2026-10-06` was restored into an isolated branch. All 10 tables matched
+production by row count and content checksum; columns, constraints, indexes, and migration history
+also matched. Production data was not restored or modified. This verifies manual snapshot recovery;
+automatic snapshot scheduling remains absent and recovery-history retention is six hours.
+Test-compute suspension was accepted, but its final state could not be confirmed after provider errors.
+
+The live password-based signup/signin/save/delete journey still needs verification after rollout.
+Auth/search endpoints do not currently have application rate limits; the click abuse guard does not
+protect them. Flyway currently uses Neon's pooled connection; use a direct connection for migration
+and export workflows. The new production safety guard is local until deployed.
 
 ## Database backup and restore
 

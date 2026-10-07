@@ -429,4 +429,63 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
+  it('moves focus into settings and restores it on Escape without discarding the draft', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.canEditBoard = true;
+    fixture.detectChanges();
+    component.toggleBoardIdentityMenu();
+    expect(document.activeElement?.getAttribute('name')).toBe('board-identity-name');
+    component.boardPatternDraft = 'grid';
+    component.onEscapeKey();
+    fixture.detectChanges();
+    expect(document.activeElement?.classList.contains('board-identity-button')).toBe(true);
+    expect(component.settingsFeedback).toBe('Unsaved board settings');
+    expect(component.boardPatternDraft).toBe('grid');
+  });
+
+  it('announces pending, saved, and failed settings without clearing failed drafts', () => {
+    const saved = new Subject<import('../../models/board').Board>();
+    boardServiceStub.updateBoardIdentity = () => saved;
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.boardPatternDraft = 'grid';
+    component.saveIdentity();
+    expect(component.settingsFeedback).toBe('Saving board settings…');
+    saved.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2,
+      appearance: component.appearanceDraft });
+    saved.complete();
+    expect(component.settingsFeedback).toBe('Board settings saved');
+    boardServiceStub.updateBoardIdentity = () => throwError(() => ({ error: { message: 'Connection failed' } }));
+    component.boardPatternDraft = 'dots';
+    component.saveIdentity();
+    expect(component.settingsFeedback).toContain('not saved');
+    expect(component.boardPatternDraft).toBe('dots');
+  });
+
+  it('renders an asynchronous editor failure and enables retry without another user action', async () => {
+    const save = new Subject<import('../../models/board').BoardEdit>();
+    Object.assign(boardServiceStub, { saveEditor: () => save });
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.canEditBoard = true;
+    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default',
+      name: 'Original title', headline: 'Description', version: 1 }, []);
+    component.boardDraftName = 'Retained draft';
+    component.doneWidgetEdit();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Saving...');
+    save.error({ error: { message: 'Temporarily unavailable' } });
+    await fixture.whenStable();
+    expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Temporarily unavailable');
+    const done = Array.from(fixture.nativeElement.querySelectorAll('button'))
+      .find(button => (button as HTMLButtonElement).textContent?.trim() === 'Done') as HTMLButtonElement;
+    expect(done.disabled).toBe(false);
+    expect(component.boardDraftName).toBe('Retained draft');
+    expect(component.hasUnsavedChanges).toBe(true);
+  });
+
 });
