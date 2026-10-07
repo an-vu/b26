@@ -10,6 +10,8 @@ export function runDoneWidgetEditAdapter(params: {
   widgetDrafts: WidgetDraft[];
   boardDraftName: string;
   boardDraftHeadline: string;
+  boardDraftWebsite?: string;
+  profileNameDraft?: string;
   originalBoardName: string;
   originalBoardHeadline: string;
   originalWidgetDrafts: Map<number, WidgetDraft>;
@@ -32,6 +34,8 @@ export function runDoneWidgetEditAdapter(params: {
     widgetDrafts: params.widgetDrafts,
     boardDraftName: params.boardDraftName,
     boardDraftHeadline: params.boardDraftHeadline,
+    boardDraftWebsite: params.boardDraftWebsite,
+    profileNameDraft: params.profileNameDraft,
     originalBoardName: params.originalBoardName,
     originalBoardHeadline: params.originalBoardHeadline,
     originalWidgetDrafts: params.originalWidgetDrafts,

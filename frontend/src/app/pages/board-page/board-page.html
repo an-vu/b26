@@ -14,6 +14,7 @@
     [attr.data-theme]="boardTheme.id"
     [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"
     [style.--board-widget-radius.px]="boardRadiusDraft"
+    [style.--widget-spacing.px]="boardSpacingStepDraft * 8"
     [style.--board-bg-color]="boardDisplayBackground"
     [style.--board-night-bg]="boardDarkBackground"
     [style.--board-foreground]="boardDisplayText"
@@ -27,16 +28,7 @@
           [style.--particle-delay]="particle.delay + 's'" [style.--particle-duration]="particle.duration + 's'"
           [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
       </ng-container>
-      <svg *ngIf="boardPatternDraft === 'grid'" class="atmosphere-grid" viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true">
-        <defs><pattern id="board-grid-lines" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="currentColor" stroke-width=".6" /></pattern></defs>
-        <rect width="1600" height="1000" fill="url(#board-grid-lines)" opacity=".14" />
-        <g *ngFor="let trail of gridTrails" [style.--trail-color]="trail.tint" [style.--particle-duration]="trail.duration + 's'" [style.--particle-delay]="trail.delay + 's'">
-          <path class="grid-trail grid-halo" pathLength="1" [attr.d]="trail.route" />
-          <path class="grid-trail" pathLength="1" [attr.d]="trail.route" />
-
-
-        </g>
-      </svg>
+      <app-grid-atmosphere *ngIf="boardPatternDraft === 'grid'" [intensity]="boardPatternIntensityDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'"></app-grid-atmosphere>
       <div *ngIf="boardPatternDraft === 'wave'" class="wave-sheets" aria-hidden="true"><div class="wave-sheet"></div><div class="wave-sheet wave-sheet-back"></div></div>
       <div *ngIf="boardPatternDraft === 'rainfall'" class="screen-droplets" aria-hidden="true">
         <i *ngFor="let drop of screenDroplets" [style.left.%]="drop.x" [style.top.%]="drop.y" [style.--depth]="drop.depth" [style.--particle-duration]="drop.duration + 's'" [style.--particle-delay]="drop.delay + 's'" [style.--particle-size]="drop.size + 'px'"></i>
@@ -44,19 +36,49 @@
     </div>
     <div class="board-shell">
       <aside class="board-rail">
-        <ng-container *ngIf="isWidgetEditMode; else boardView">
-          <section class="board-header-stack board-meta-editor">
-            <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-name" class="inline-edit title" [(ngModel)]="boardDraftName" placeholder="Name" />
-            <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-headline" class="inline-edit subtitle" [(ngModel)]="boardDraftHeadline" placeholder="Description" />
-          </section>
-        </ng-container>
-        <ng-template #boardView>
-          <app-board-header [name]="state.board.name" [headline]="state.board.headline"></app-board-header>
+        <div class="profile-avatar" role="img" aria-label="Profile picture placeholder">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="24" r="10" fill="currentColor"/><path d="M12 57c0-13 8-20 20-20s20 7 20 20" fill="currentColor"/></svg>
+        </div>
+        <div class="profile-field profile-name-field" [class.is-editing]="isWidgetEditMode">
+          <h1 class="profile-name" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? profileNameDraft : state.board.ownerDisplayName || state.board.ownerUsername) || 'Name' }}</h1>
+          <textarea *ngIf="isWidgetEditMode" aria-label="Profile name" name="profile-name" [(ngModel)]="profileNameDraft" [disabled]="isWidgetSaving" maxlength="255" rows="1" placeholder="Name"></textarea>
+        </div>
+        <p class="profile-handle">@{{ state.board.ownerUsername || 'username' }}</p>
+        <div class="profile-stats" aria-label="Profile statistics placeholders">
+          <span><strong>0</strong> Likes</span><span><strong>0</strong> Followers</span><span><strong>0</strong> Following</span>
+        </div>
+        <div class="profile-bio">
+          <div class="profile-field profile-description-field" [class.is-editing]="isWidgetEditMode">
+            <span class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftHeadline : state.board.headline) || 'Welcome to my page' }}</span>
+            <textarea *ngIf="isWidgetEditMode" aria-label="Profile description" name="board-headline" [(ngModel)]="boardDraftHeadline" [disabled]="isWidgetSaving" maxlength="255" placeholder="Welcome to my page" rows="1"></textarea>
+          </div>
+          <div *ngIf="isWidgetEditMode || state.board.website?.trim()" class="profile-field profile-website-field" [class.is-editing]="isWidgetEditMode">
+            <span *ngIf="isWidgetEditMode || !safeWebsite(state.board.website)" class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftWebsite : state.board.website) || 'Link in bio' }}</span>
+            <a *ngIf="!isWidgetEditMode && safeWebsite(state.board.website) as website" [href]="website" target="_blank" rel="noopener noreferrer">{{ state.board.website }}</a>
+            <textarea *ngIf="isWidgetEditMode" aria-label="Website or social URL" name="board-website" [(ngModel)]="boardDraftWebsite" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link in bio" rows="1"></textarea>
+          </div>
+        </div>
+        <div class="profile-edit-actions" *ngIf="!readOnlyView && canEditBoard">
+          <button
+            type="button"
+            class="app-button"
+            *ngIf="!isWidgetEditMode; else doneButton"
+            (click)="requestWidgetEdit(state.board)"
+            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
+          >
+          {{ isWidgetLoading ? 'Loading...' : 'Edit' }}
+        </button>
+        <ng-template #doneButton>
+          <button type="button" class="app-button" (click)="doneWidgetEdit()" [disabled]="isWidgetSaving">
+            {{ isWidgetSaving ? 'Saving...' : 'Save' }}
+          </button>
+          <button type="button" class="app-button" (click)="discardWidgetEdit()" [disabled]="isWidgetSaving">Cancel</button>
         </ng-template>
+        </div>
         <p class="board-settings-feedback" role="status" aria-live="polite" *ngIf="canEditBoard && !readOnlyView">{{ settingsFeedback }}</p>
       </aside>
 
-      <section class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
+      <section appWidgetBounce class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
         <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
         <div class="board-grid" *ngIf="isWidgetEditMode">
@@ -69,10 +91,11 @@
             <button
               type="button"
               class="app-button widget-delete-button"
+              [attr.aria-label]="'Delete widget: ' + (draft.title || 'Untitled')" title="Delete widget"
               (click)="deleteWidget(draft); $event.stopPropagation()"
               [disabled]="isWidgetSaving"
             >
-              Delete
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>
             </button>
 
             <ng-container *ngIf="isWidgetSettingsOpen(draft); else widgetPreview">
@@ -129,58 +152,31 @@
       <div class="bottom-actions-left">
         <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb orb-button--red" routerLink="/">
           <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h5v-7h4v7h5V9"/></svg></span>
-          <span class="orb-button__label" aria-hidden="true">Home</span>
         </button>
-        <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open()" aria-haspopup="dialog">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></span>
-          <span class="orb-button__label" aria-hidden="true">Search</span>
+        <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open($event)" aria-haspopup="dialog">
+          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg></span>
         </button>
         <div class="account-menu-wrap">
           <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb orb-button--blue" (click)="toggleAccountMenu()" [attr.aria-expanded]="isAccountMenuOpen">
             <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
-            <span class="orb-button__label" aria-hidden="true">Account</span>
           </button>
-          <div class="account-menu" *ngIf="isAccountMenuOpen">
+          <div class="account-menu account-panel utility-panel" role="region" aria-label="Account" *ngIf="isAccountMenuOpen">
             <ng-container *ngIf="isSignedIn; else signedOutMenu">
-            <section class="account-user">
-              <p class="account-user-name">{{ accountUser.name }}</p>
-              <p class="account-user-handle text-muted">{{ isSignedIn ? accountUser.username : 'Sign In' }}</p>
+            <h2 class="board-settings-heading account-heading">{{ accountUser.username }}</h2>
+            <section class="account-notifications" aria-label="Notifications">
+              <p>No new notifications</p>
             </section>
             <hr />
-            <p class="account-menu-label meta-label">Boards</p>
-            <div class="account-board-row" *ngFor="let board of accountBoards">
-              <a class="account-board-link" [routerLink]="board.route" (click)="closeAccountMenu()">
-                <span>{{ board.label }}</span>
-                <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
-              </a>
-              <button
-                type="button"
-                class="app-button account-board-actions-trigger"
-                [attr.aria-expanded]="accountBoardActionsMenuBoardId === board.id"
-                (click)="toggleAccountBoardActionsMenu(board.id, $event)"
-              >
-                ...
+            <div class="board-settings-tools account-tools">
+              <button type="button" class="app-button settings-icon-button" aria-label="Insights" routerLink="/insights" (click)="closeAccountMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 18 6-6 4 3 6-9M15 6h5v5"/></svg>
               </button>
-              <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
-                <button class="app-button" type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id) || isSettingMainBoard">
-                  Set Main Board
-                </button>
-                <button
-                  type="button"
-                  class="app-button account-board-delete-action"
-                  (click)="onAccountBoardDelete(board.boardUrl, $event)"
-                  [disabled]="isDeletingBoard || isIdentitySaving"
-                >
-                  {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
-                </button>
-              </div>
+              <button type="button" class="app-button settings-reset" routerLink="/settings" (click)="closeAccountMenu()">Settings</button>
+              <button type="button" class="app-button settings-icon-button settings-delete" aria-label="Sign out" (click)="signOut()" [disabled]="isSigningOut" [attr.aria-busy]="isSigningOut">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4"/></svg>
+              </button>
             </div>
-            <button type="button" class="app-button account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
-            <p class="account-menu-error" *ngIf="accountActionError">{{ accountActionError }}</p>
-            <hr />
-            <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
-            <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
-            <button type="button" class="app-button account-link" (click)="signOut()" [disabled]="isSigningOut">{{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}</button>
+            <p class="account-menu-error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
             </ng-container>
             <ng-template #signedOutMenu>
               <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
@@ -195,26 +191,27 @@
             <span class="toolbar-board-name">{{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }}</span>
             <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }}</span>
           </button>
-          <div class="board-identity-menu" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
+          <div class="board-identity-menu utility-panel" [class.board-switcher-open]="isBoardSwitcherOpen" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
             <h2 class="board-settings-heading">Board Settings</h2>
             <label>
               Board Name
-              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
+              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" (blur)="saveSettingsAutomatically()" (keydown.enter)="saveSettingsAutomatically()" />
             </label>
             <label>
               URL
               <div class="slug-input-wrap">
                 <span>/{{ state.board.ownerUsername || 'b' }}/</span>
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" />
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" (blur)="saveSettingsAutomatically()" (keydown.enter)="saveSettingsAutomatically()" />
               </div>
             </label>
             <hr />
             <fieldset class="board-theme-picker">
-              <legend>Theme · {{ boardTheme.label }}</legend>
+              <legend>Theme · {{ pickerLabel('theme', boardTheme.label) }}</legend>
               <div class="board-theme-options">
                 <button class="board-theme-option" type="button" *ngFor="let theme of boardThemes"
                   [disabled]="isIdentitySaving" [attr.aria-label]="theme.label"
-                  [attr.aria-pressed]="boardTheme.id === theme.id" [attr.data-theme-option]="theme.id"
+                  [attr.aria-pressed]="boardTheme.id === theme.id" [attr.data-theme-option]="theme.id" (mouseenter)="pickerHover['theme'] = theme.label" (mouseleave)="pickerHover['theme'] = null"
+                  (focus)="pickerFocus['theme'] = theme.label" (blur)="pickerFocus['theme'] = null"
                   (click)="selectBoardTheme(theme.id)">
                   <span class="theme-swatch" [attr.data-family]="theme.id" aria-hidden="true"></span>
 
@@ -224,33 +221,31 @@
             <hr />
             <div class="board-appearance-row">
               <label>
-                Widget Radius · {{ radiusLabel }}
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [style.--radius-fill]="(boardRadiusStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+                Widget Radius
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [style.--radius-fill]="(boardRadiusStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" (change)="saveSettingsAutomatically()" />
               </label>
-              <label class="light-switch-label" for="board-theme-toggle">
-                <span>Light switch</span>
-                <span class="light-switch-control">
-                  <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" role="switch" id="board-theme-toggle" name="board-theme-toggle"
-                    [ngModel]="!boardThemeToggleDraft" (ngModelChange)="boardThemeToggleDraft = !$event" />
-                  <span class="light-switch-track" aria-hidden="true"></span>
-                </span>
+              <label>
+                Widget Space
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-spacing" aria-label="Widget space" min="1" max="3" step="1" [style.--radius-fill]="(boardSpacingStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="spacingLabel" [(ngModel)]="boardSpacingStepDraft" (change)="saveSettingsAutomatically()" />
               </label>
             </div>
             <hr />
             <fieldset>
-              <legend>Background Color · {{ backgroundColorLabel }}</legend>
+              <legend>Background Color · {{ pickerLabel('color', backgroundColorLabel) }}</legend>
               <div class="board-color-options">
                 <button *ngFor="let color of boardColors" type="button"
                   [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardDisplayBackground === color.value"
-                  [style.background]="color.value" [disabled]="isIdentitySaving"
-                  (click)="boardBackgroundColorDraft = color.value"></button>
+                  [style.background]="color.value" (mouseenter)="pickerHover['color'] = color.name" (mouseleave)="pickerHover['color'] = null"
+                  (focus)="pickerFocus['color'] = color.name" (blur)="pickerFocus['color'] = null" [disabled]="isIdentitySaving"
+                  (click)="boardBackgroundColorDraft = color.value; saveSettingsAutomatically()"></button>
               </div>
             </fieldset>
             <fieldset>
-              <legend>Pattern · {{ patternLabel(boardPatternDraft) }}</legend>
+              <legend>Pattern · {{ pickerLabel('pattern', patternLabel(boardPatternDraft)) }}</legend>
               <div class="board-pattern-options">
                 <button *ngFor="let pattern of boardPatterns" type="button"
-                  [attr.data-pattern-option]="pattern" [title]="patternLabel(pattern)" [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
+                  [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
+                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
                   [disabled]="isIdentitySaving" (click)="selectBoardPattern(pattern)">
                   <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" [ngSwitch]="pattern">
                     <g *ngSwitchCase="'none'"><circle cx="12" cy="12" r="7.5"/><path d="m7 17 10-10"/></g>
@@ -265,39 +260,43 @@
               </div>
             </fieldset>
             <hr />
-            <button class="app-button" type="button" (click)="resetAppearance()" [disabled]="isIdentitySaving">Reset appearance to defaults</button>
-            <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
-            <div class="board-settings-actions">
-              <button class="app-button" type="button" (click)="saveIdentity()" [disabled]="isIdentitySaving">{{ isIdentitySaving ? 'Saving...' : 'Save' }}</button>
-              <button class="app-button" type="button" (click)="cancelIdentityEdit()" [disabled]="isIdentitySaving">Cancel</button>
+            <div class="board-light-row">
+              <label class="light-switch-label" for="board-theme-toggle">
+                <span>Light switch</span>
+                <span class="light-switch-control">
+                  <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" role="switch" id="board-theme-toggle" name="board-theme-toggle"
+                    [ngModel]="!boardThemeToggleDraft" (ngModelChange)="boardThemeToggleDraft = !$event; saveSettingsAutomatically()" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
+              </label>
             </div>
             <hr />
-            <button class="app-button"
-              type="button"
-              (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
-              [disabled]="isDeletingBoard || isIdentitySaving"
-            >
-              {{ isDeletingBoard && deletingBoardUrl === state.board.boardUrl ? 'Deleting...' : 'Delete Board' }}
-            </button>
+            <div class="board-settings-tools">
+              <button class="app-button settings-reset" type="button" (click)="resetAppearance()" [disabled]="isIdentitySaving">Reset to default</button>
+              <button class="app-button settings-icon-button settings-delete" type="button"
+                aria-label="Delete board" title="Delete board" (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
+                [attr.aria-busy]="isDeletingBoard && deletingBoardUrl === state.board.boardUrl" [disabled]="isDeletingBoard || isIdentitySaving">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></svg>
+              </button>
+              <button class="app-button settings-icon-button settings-coverflow" type="button" aria-label="Board switcher" [attr.aria-expanded]="isBoardSwitcherOpen" aria-controls="board-switcher" (click)="isBoardSwitcherOpen = !isBoardSwitcherOpen" title="Switch boards">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="4" width="10" height="16" rx="1.5"/><path d="M4 6H2v12h2M20 6h2v12h-2"/></svg>
+              </button>
+            </div>
+            <section *ngIf="isBoardSwitcherOpen" class="board-switcher account-menu utility-panel" id="board-switcher" aria-label="Your boards">
+              <div class="board-switcher-heading"><strong>Your boards</strong><button class="app-button" type="button" aria-label="Close board switcher" (click)="isBoardSwitcherOpen = false">×</button></div>
+              <div class="board-switcher-row" *ngFor="let board of accountBoards">
+                <button class="app-button board-switcher-link" type="button" (click)="switchToBoard(board.route)" [attr.aria-current]="board.boardUrl === state.board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ board.label }}</button>
+                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="isMainBoard(board.id)" [disabled]="isMainBoard(board.id) || isSettingMainBoard" (click)="onAccountBoardSetMain(board.id, $event)">{{ isMainBoard(board.id) ? 'Main' : 'Set main' }}</button>
+              </div>
+              <p *ngIf="!accountBoards.length">No boards yet.</p>
+              <p class="error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
+            </section>
+            <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
+            <button *ngIf="identitySaveError" class="app-button" type="button" (click)="saveSettingsAutomatically()" [disabled]="isIdentitySaving">Retry saving</button>
           </div>
         </div>
-          <button
-            type="button"
-            class="app-button"
-            *ngIf="!isWidgetEditMode; else doneButton"
-            (click)="requestWidgetEdit(state.board)"
-            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
-          >
-          {{ isWidgetLoading ? 'Loading...' : 'Edit' }}
-        </button>
-        <ng-template #doneButton>
-          <button type="button" class="app-button" (click)="discardWidgetEdit()" [disabled]="isWidgetSaving">Cancel</button>
-          <button type="button" class="app-button" (click)="doneWidgetEdit()" [disabled]="isWidgetSaving">
-            {{ isWidgetSaving ? 'Saving...' : 'Done' }}
-          </button>
-        </ng-template>
       </div>
-      <span class="toolbar-wordmark">BlueBerry</span>
+      <button class="toolbar-wordmark" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="aboutPanel.open($event)">BlueBerry</button>
     </div>
   </main>
   <main class="page" *ngIf="state.status === 'loading'">
@@ -311,66 +310,39 @@
     <div class="bottom-actions-left">
       <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb orb-button--red" routerLink="/">
         <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h5v-7h4v7h5V9"/></svg></span>
-        <span class="orb-button__label" aria-hidden="true">Home</span>
       </button>
-      <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open()" aria-haspopup="dialog">
-        <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5"/></svg></span>
-        <span class="orb-button__label" aria-hidden="true">Search</span>
+      <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open($event)" aria-haspopup="dialog">
+        <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg></span>
       </button>
       <div class="account-menu-wrap">
         <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb orb-button--blue" (click)="toggleAccountMenu()" [attr.aria-expanded]="isAccountMenuOpen">
           <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
-          <span class="orb-button__label" aria-hidden="true">Account</span>
         </button>
-        <div class="account-menu" *ngIf="isAccountMenuOpen">
+        <div class="account-menu account-panel utility-panel" role="region" aria-label="Account" *ngIf="isAccountMenuOpen">
           <ng-container *ngIf="isSignedIn; else signedOutMenuFallback">
-            <section class="account-user">
-              <p class="account-user-name">{{ accountUser.name }}</p>
-              <p class="account-user-handle text-muted">{{ accountUser.username }}</p>
+            <h2 class="board-settings-heading account-heading">{{ accountUser.username }}</h2>
+            <section class="account-notifications" aria-label="Notifications">
+              <p>No new notifications</p>
             </section>
             <hr />
-            <p class="account-menu-label meta-label">Boards</p>
-            <div class="account-board-row" *ngFor="let board of accountBoards">
-              <a class="account-board-link" [routerLink]="board.route" (click)="closeAccountMenu()">
-                <span>{{ board.label }}</span>
-                <span class="meta-label account-menu-item-tag" *ngIf="isMainBoard(board.id)">Main Board</span>
-              </a>
-              <button
-                type="button"
-                class="app-button account-board-actions-trigger"
-                [attr.aria-expanded]="accountBoardActionsMenuBoardId === board.id"
-                (click)="toggleAccountBoardActionsMenu(board.id, $event)"
-              >
-                ...
+            <div class="board-settings-tools account-tools">
+              <button type="button" class="app-button settings-icon-button" aria-label="Insights" routerLink="/insights" (click)="closeAccountMenu()">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 18 6-6 4 3 6-9M15 6h5v5"/></svg>
               </button>
-              <div class="account-board-actions-menu" *ngIf="accountBoardActionsMenuBoardId === board.id">
-                <button class="app-button" type="button" (click)="onAccountBoardSetMain(board.id, $event)" [disabled]="isMainBoard(board.id) || isSettingMainBoard">
-                  Set Main Board
-                </button>
-                <button
-                  type="button"
-                  class="app-button account-board-delete-action"
-                  (click)="onAccountBoardDelete(board.boardUrl, $event)"
-                  [disabled]="isDeletingBoard || isIdentitySaving"
-                >
-                  {{ isDeletingBoard && deletingBoardUrl === board.boardUrl ? 'Deleting...' : 'Delete Board' }}
-                </button>
-              </div>
+              <button type="button" class="app-button settings-reset" routerLink="/settings" (click)="closeAccountMenu()">Settings</button>
+              <button type="button" class="app-button settings-icon-button settings-delete" aria-label="Sign out" (click)="signOut()" [disabled]="isSigningOut" [attr.aria-busy]="isSigningOut">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4"/></svg>
+              </button>
             </div>
-            <button type="button" class="app-button account-link" (click)="createNewBoard()" [disabled]="isCreatingBoard">{{ isCreatingBoard ? 'Creating... ' : 'Create a New Board' }}</button>
-            <p class="account-menu-error" *ngIf="accountActionError">{{ accountActionError }}</p>
-            <hr />
-            <a class="account-link" routerLink="/insights" (click)="closeAccountMenu()">Insights</a>
-            <a class="account-link" routerLink="/settings" (click)="closeAccountMenu()">Settings</a>
-            <button type="button" class="app-button account-link" (click)="signOut()" [disabled]="isSigningOut">{{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}</button>
-          </ng-container>
+            <p class="account-menu-error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
+            </ng-container>
           <ng-template #signedOutMenuFallback>
             <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
           </ng-template>
         </div>
       </div>
     </div>
-    <span class="toolbar-wordmark">BlueBerry</span>
+    <button class="toolbar-wordmark" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="aboutPanel.open($event)">BlueBerry</button>
   </div>
 </ng-container>
 
@@ -459,3 +431,5 @@
 </ng-template>
 
 <app-user-search #userSearch [attr.data-theme]="boardTheme.id" [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"></app-user-search>
+
+<app-about-panel #aboutPanel [attr.data-theme]="boardTheme.id" [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"></app-about-panel>

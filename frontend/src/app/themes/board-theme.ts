@@ -22,7 +22,7 @@ export const BOARD_THEMES = [
   },
   {
     id: 'frutiger-aero',
-    label: 'Frutiger Aero',
+    label: 'Aero',
     status: 'available',
     direction: 'Luminous glass, sky and water colors, glossy surfaces, and nature-inspired imagery.',
   },

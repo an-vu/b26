@@ -1,6 +1,7 @@
 import type { BoardColorMode, BoardThemeId } from '../themes/board-theme';
 
 export type BoardAppearance = {
+  spacingStep?: 1 | 2 | 3;
   themeFamily?: BoardThemeId;
   patternIntensity?: 'light' | 'medium' | 'heavy';
   // Legacy API field: this stores color mode, not the visual theme family.
@@ -17,6 +18,8 @@ export type Board = {
   boardName: string;
   boardUrl: string;
   ownerUsername?: string;
+  ownerDisplayName?: string;
+  website?: string;
   name: string;
   headline: string;
 };
@@ -107,6 +110,8 @@ export type BoardPermissions = {
 
 export type BoardEdit = { board: Board; widgets: import('./widget').Widget[] };
 export type SaveBoardEditRequest = {
+  ownerDisplayName?: string;
+  website?: string;
   version: number;
   name: string;
   headline: string;

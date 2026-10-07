@@ -108,3 +108,23 @@
   justify-content: center;
   align-content: center;
 }
+
+/* iOS-style remove controls, with each theme's surface treatment. */
+.page[data-theme] { --remove-fill: var(--palette-red); --remove-edge: #b52c27; --remove-shadow: 0 2px 4px #0002; }
+.page[data-theme='frutiger-aero'] { --remove-fill: linear-gradient(#ffb2a5, #ed554c 48%, #c92d2b 51%, #f76c5b); --remove-shadow: inset 0 1px #ffe4d4, 0 2px 5px #173c4f40; }
+.page[data-theme='aqua'] { --remove-fill: linear-gradient(#ff9995, #e64c4b 45%, #bb242c 52%, #ec575a); --remove-shadow: inset 0 1px #ffdbd9, inset 0 -1px #85233180, 0 2px 4px #15223d55; }
+.page[data-theme='omahakase'] { --remove-fill: linear-gradient(145deg, #d95861, #902d43); --remove-edge: #e78c9255; --remove-shadow: inset 0 1px #ffd5cb70, 0 0 7px #eb617a30; }
+.page[data-theme='kiwi'] { --remove-fill: radial-gradient(ellipse at 35% 15%, #ffe0cb, transparent 48%), linear-gradient(#ef7064, #b72b36); --remove-edge: #ffd5cb90; --remove-shadow: inset 0 0 0 2px #ffffff25, 0 2px 5px #09292170; }
+:host .page[data-theme] button.app-button.widget-delete-button {
+  width: 28px; height: 28px; min-height: 28px; padding: 0; border-radius: 50%;
+  color: #fff; background: var(--remove-fill); border: 1px solid var(--remove-edge);
+  box-shadow: var(--remove-shadow); text-shadow: none;
+  transition: transform 160ms ease, box-shadow 180ms ease;
+}
+.widget-delete-button svg { width: 18px; height: 18px; }
+:host .page[data-theme] button.app-button.widget-delete-button:hover:not(:disabled) { transform: scale(1.08); box-shadow: var(--remove-shadow), 0 0 8px #ef3e3640; }
+:host .page[data-theme] button.app-button.widget-delete-button:active:not(:disabled) { transform: scale(.94); }
+@media (pointer: coarse) {
+  :host .page[data-theme] button.app-button.widget-delete-button { width: 32px; height: 32px; min-height: 32px; }
+}
+@media (prefers-reduced-motion: reduce) { :host .page[data-theme] button.app-button.widget-delete-button { transition: none; } }

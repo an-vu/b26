@@ -71,6 +71,12 @@ public class BoardService {
     var widgets = widgetService.syncWidgets(slug, new SyncWidgetsRequest(request.widgets()));
     board.setName(request.name().trim());
     board.setHeadline(request.headline().trim());
+    if (request.website() != null) board.setWebsite(request.website().trim());
+    if (request.ownerDisplayName() != null) {
+      var owner = appUserRepository.findById(board.getOwnerUserId()).orElseThrow();
+      owner.setDisplayName(request.ownerDisplayName().trim());
+      appUserRepository.saveAndFlush(owner);
+    }
     board.setUpdatedAt(OffsetDateTime.now());
     boardRepository.flush();
     return new BoardEditDto(toDto(board), widgets);
@@ -253,6 +259,7 @@ public class BoardService {
       // Older clients omit this field; preserve their board's selected family.
       if (appearance.themeFamily() != null) board.setThemeFamily(appearance.themeFamily());
       board.setRadiusStep(appearance.radiusStep());
+      if (appearance.spacingStep() != null) board.setSpacingStep(appearance.spacingStep());
       board.setBackgroundColor(appearance.backgroundColor().toLowerCase(java.util.Locale.ROOT));
       board.setPattern(appearance.pattern());
       if (appearance.patternIntensity() != null) board.setPatternIntensity(appearance.patternIntensity());
@@ -332,10 +339,11 @@ public class BoardService {
   }
 
   private BoardDto toDto(BoardEntity board) {
+    var owner = appUserRepository.findById(board.getOwnerUserId()).orElseThrow();
     return new BoardDto(
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
-        appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername(),
+        owner.getUsername(),
         new com.b26.backend.board.api.BoardAppearance(board.getTheme(), board.getRadiusStep(),
-            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily(), board.getPatternIntensity()));
+            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily(), board.getPatternIntensity(), board.getSpacingStep()), owner.getDisplayName(), board.getWebsite());
   }
 }

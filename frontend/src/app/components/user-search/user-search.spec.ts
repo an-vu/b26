@@ -14,6 +14,22 @@ describe('Username search', () => {
   }
   afterEach(() => { vi.useRealTimers(); });
 
+  it('shows only the search field initially, with results before it and likes on the right', async () => {
+    vi.useFakeTimers();
+    const { fixture, component, http } = setup();
+    expect(fixture.nativeElement.querySelector('h2, label, button')).toBeNull();
+    expect(fixture.nativeElement.textContent).not.toContain('Enter at least');
+    component.setQuery('emma'); await vi.advanceTimersByTimeAsync(300);
+    http.expectOne('/api/search/users?q=emma').flush([{ username: 'emma', displayName: 'Emma' }]);
+    fixture.detectChanges();
+    const list = fixture.nativeElement.querySelector('ul');
+    const input = fixture.nativeElement.querySelector('input');
+    expect(list.compareDocumentPosition(input) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(fixture.nativeElement.querySelector('.search-user').textContent).toContain('Emma@emma');
+    expect(fixture.nativeElement.querySelector('.search-likes').textContent).toBe('0Likes');
+    http.verify();
+  });
+
   it('waits for two characters and debounces typing', async () => {
     vi.useFakeTimers();
     const { component, http } = setup();

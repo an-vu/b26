@@ -369,12 +369,12 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
-      version: 8, appearance: { themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid', patternIntensity: 'light' },
+      version: 8, appearance: { spacingStep: 2, themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid', patternIntensity: 'light' },
     }));
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
-  it.each(['frutiger-aero', 'aqua', 'omahakase', 'kiwi'] as const)('previews %s, restores on Cancel, and saves the selected family', (family) => {
+  it.each(['frutiger-aero', 'aqua', 'omahakase', 'kiwi'] as const)('automatically saves the selected %s family', (family) => {
     const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 4 };
     boardServiceStub.getBoard = () => of(board);
     const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 5 }));
@@ -385,11 +385,8 @@ describe('BoardPageComponent', () => {
     component.selectBoardTheme(family);
     fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe(family);
-    expect(component.hasUnsavedChanges).toBe(true);
-    component.cancelIdentityEdit();
-    expect(component.boardTheme.id).toBe('default');
-    component.selectBoardTheme(family);
-    component.saveIdentity();
+    expect(component.hasUnsavedChanges).toBe(false);
+    expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
       appearance: expect.objectContaining({ themeFamily: family }), version: 4,
     }));
@@ -425,7 +422,7 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
+    expect(component.appearanceDraft).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     component.resetAppearance();
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
@@ -433,7 +430,7 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     expect(component.identitySaveError).toContain('another tab');
     component.cancelIdentityEdit();
-    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
+    expect(component.appearanceDraft).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
@@ -509,6 +506,42 @@ describe('BoardPageComponent', () => {
     expect(component.boardPatternDraft).toBe('dots');
   });
 
+  it('autosaves settings without closing the panel and reuses the returned version', () => {
+    const pending = new Subject<import('../../models/board').Board>();
+    const update = vi.fn((_url: string, _request: import('../../models/board').UpdateBoardIdentityRequest) => pending);
+    boardServiceStub.updateBoardIdentity = update;
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.canEditBoard = true;
+    component.isBoardIdentityMenuOpen = true;
+    component.selectBoardPattern('snow');
+    expect(update).toHaveBeenCalledTimes(1);
+    component.saveSettingsAutomatically();
+    expect(update).toHaveBeenCalledTimes(1);
+    pending.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: '', version: 7, appearance: component.appearanceDraft });
+    pending.complete();
+    expect(component.isBoardIdentityMenuOpen).toBe(true);
+    expect(component.settingsChanged).toBe(false);
+    component.boardBackgroundColorDraft = '#a64ce6';
+    component.saveSettingsAutomatically();
+    expect(update.mock.calls[1]?.[1]).toMatchObject({ version: 7, appearance: { backgroundColor: '#a64ce6' } });
+  });
+
+  it('retains failed automatic settings and lets the user retry', () => {
+    boardServiceStub.updateBoardIdentity = () => throwError(() => new Error('offline'));
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.canEditBoard = true;
+    component.selectBoardPattern('rainfall');
+    expect(component.identitySaveError).toBeTruthy();
+    expect(component.boardPatternDraft).toBe('rainfall');
+    expect(component.settingsChanged).toBe(true);
+    fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Retry saving');
+  });
+
   it('renders an asynchronous editor failure and enables retry without another user action', async () => {
     const save = new Subject<import('../../models/board').BoardEdit>();
     Object.assign(boardServiceStub, { saveEditor: () => save });
@@ -526,7 +559,7 @@ describe('BoardPageComponent', () => {
     await fixture.whenStable();
     expect(fixture.nativeElement.querySelector('[role="alert"]').textContent).toContain('Temporarily unavailable');
     const done = Array.from(fixture.nativeElement.querySelectorAll('button'))
-      .find(button => (button as HTMLButtonElement).textContent?.trim() === 'Done') as HTMLButtonElement;
+      .find(button => (button as HTMLButtonElement).textContent?.trim() === 'Save') as HTMLButtonElement;
     expect(done.disabled).toBe(false);
     expect(component.boardDraftName).toBe('Retained draft');
     expect(component.hasUnsavedChanges).toBe(true);

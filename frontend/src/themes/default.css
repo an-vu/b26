@@ -53,8 +53,11 @@
   border-color: var(--theme-border);
 }
 /* Menus keep a neutral paper surface over any selected board background. */
-.page[data-theme="default"] :is(.board-identity-menu, .account-menu, .account-board-actions-menu) {
+[data-theme="default"] .utility-panel {
   color-scheme: light;
+  font-family: Georgia, "Times New Roman", serif;
+  border-color: color-mix(in srgb, var(--theme-text) 25%, transparent);
+  box-shadow: 0 5px 20px #30302e0d;
   --theme-surface: var(--palette-white);
   --theme-text: var(--palette-black);
   --theme-muted: var(--palette-gray);
@@ -94,12 +97,6 @@
   border-color: color-mix(in srgb, var(--theme-text) 30%, transparent);
   background: var(--theme-surface);
   box-shadow: none;
-}
-.page[data-theme='default'] :is(.board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='default'] dialog {
-  font-family: Georgia, "Times New Roman", serif;
-  border-color: color-mix(in srgb, var(--theme-text) 25%, transparent);
-  box-shadow: 0 5px 20px #30302e0d;
 }
 .page[data-theme='default'] .bottom-actions { background: var(--palette-white); border-color: var(--palette-light-gray); box-shadow: none; }
 .page[data-theme='default'] .toolbar-wordmark { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.04em; }

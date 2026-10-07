@@ -36,6 +36,8 @@ export function runDoneWidgetEdit(params: {
   widgetDrafts: WidgetDraft[];
   boardDraftName: string;
   boardDraftHeadline: string;
+  boardDraftWebsite?: string;
+  profileNameDraft?: string;
   originalBoardName: string;
   originalBoardHeadline: string;
   originalWidgetDrafts: Map<number, WidgetDraft>;
@@ -103,6 +105,15 @@ export function runDoneWidgetEdit(params: {
     return;
   }
 
+  const profileName = params.profileNameDraft?.trim();
+  if (profileName !== undefined && (!profileName || profileName.length > 255)) {
+    params.setWidgetSaveError('Enter a name of 1–255 characters.'); return;
+  }
+  const website = params.boardDraftWebsite?.trim();
+  if (website) {
+    try { const url = new URL(website); if (!['http:', 'https:'].includes(url.protocol) || website.length > 2048) throw new Error(); }
+    catch { params.setWidgetSaveError('Enter a complete website URL starting with https:// or http://.'); return; }
+  }
   params.setWidgetSaving(true);
   params.setWidgetSaveError('');
 
@@ -110,6 +121,8 @@ export function runDoneWidgetEdit(params: {
     version: params.version,
     name: trimmedName,
     headline: trimmedHeadline,
+    ...(profileName !== undefined ? { ownerDisplayName: profileName } : {}),
+    ...(website !== undefined ? { website } : {}),
     widgets: widgetPayload.widgets,
   })
     .pipe(finalize(() => params.setWidgetSaving(false)))

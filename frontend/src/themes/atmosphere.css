@@ -115,12 +115,6 @@
 .page[data-pattern='wave'] .board-atmosphere span { animation-duration: calc(var(--particle-duration) * var(--spark-speed)); }
 @keyframes board-wave-glow { 0%, 100% { opacity: .06; transform: translate3d(0, 8px, 0) scale(.65); } 42% { opacity: calc(.3 + var(--depth) * .7); transform: translate3d(calc(var(--drift) * .25), -8px, 0) scale(1.25); } 65% { opacity: .15; } }
 
-/* One perspective plane keeps the light paths registered to the lattice. */
-.page[data-pattern='grid'] .atmosphere-grid { transform: perspective(1600px) rotateX(9deg) scale(1.12); transform-origin: 50% 50%; }
-.grid-trail { fill: none; stroke: var(--trail-color); stroke-width: 1.2; stroke-linecap: round; stroke-linejoin: round; stroke-dasharray: .2 .8; animation: grid-circuit calc(6s + var(--particle-duration) * .4) linear var(--particle-delay) infinite; }
-.grid-halo { stroke-width: 5; stroke-opacity: .23; }
-@keyframes grid-circuit { 0% { stroke-dashoffset: .2; opacity: 0; } 12% { opacity: .85; } 72% { opacity: .8; } 88%, 100% { stroke-dashoffset: -1; opacity: 0; } }
-.page[data-theme='default'][data-color-mode='light'] .grid-trail { stroke: #7b8eab; }
 .page[data-theme] .board-pattern-options button { background: var(--theme-surface); color: var(--theme-muted); display: grid; place-items: center; }
 .page[data-theme] .board-pattern-options button svg { width: 19px; height: 19px; }
 .page[data-theme] .board-pattern-options button[aria-pressed='true'] { color: var(--theme-text); }
@@ -154,6 +148,14 @@
   background: radial-gradient(ellipse at 18% 25%, color-mix(in srgb, var(--wallpaper-tint, transparent) 65%, transparent), transparent 72%), linear-gradient(145deg, #00000030, color-mix(in srgb, var(--wallpaper-tint, transparent) 35%, #070b16));
   mix-blend-mode: multiply; opacity: .55;
 }
-/* Isolate each animated circuit's paint from the full wallpaper plane. */
-.atmosphere-grid > g { will-change: transform; }
-@media (prefers-reduced-motion: reduce) { .atmosphere-grid > g { will-change: auto; } }
+
+.page[data-pattern='stars'] .board-atmosphere { --star-size: 1.6; }
+.page[data-pattern='stars'][data-intensity='medium'] .board-atmosphere { --star-size: 2.1; }
+.page[data-pattern='stars'][data-intensity='heavy'] .board-atmosphere { --star-size: 2.8; }
+.page[data-pattern='stars'] .board-atmosphere span { width: calc(var(--particle-size) * var(--star-size)); height: calc(var(--particle-size) * var(--star-size)); }
+.page[data-pattern='snow'] .board-atmosphere { --snow-size: 1; }
+.page[data-pattern='snow'][data-intensity='medium'] .board-atmosphere { --snow-size: 1.35; }
+.page[data-pattern='snow'][data-intensity='heavy'] .board-atmosphere { --snow-size: 1.8; }
+.page[data-pattern='snow'] .board-atmosphere span { width: calc(var(--particle-size) * 2.2 * var(--snow-size)); height: calc(var(--particle-size) * 2.2 * var(--snow-size)); }
+.page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { width: calc((12px + var(--particle-size)) * var(--snow-size)); height: calc((12px + var(--particle-size)) * var(--snow-size)); }
+.page[data-pattern='snow'] .board-atmosphere span:nth-child(4n) { opacity: .45; }

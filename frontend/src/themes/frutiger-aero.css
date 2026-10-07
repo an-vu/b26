@@ -63,8 +63,8 @@
   box-shadow: none;
   backdrop-filter: none;
 }
-.page[data-theme='frutiger-aero'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='frutiger-aero'] dialog {
+.page[data-theme='frutiger-aero'] .bottom-actions,
+[data-theme='frutiger-aero'] .utility-panel {
   --theme-text: #16374b;
   --theme-surface: #edf8fd;
   --theme-muted: #3e6073;
@@ -75,8 +75,7 @@
   backdrop-filter: blur(22px) saturate(150%);
   -webkit-backdrop-filter: blur(22px) saturate(150%);
 }
-.page[data-theme='frutiger-aero'] :is(.board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='frutiger-aero'] dialog { background-color: var(--aero-paper); }
+[data-theme='frutiger-aero'] .utility-panel { background-color: var(--aero-paper); }
 [data-theme='frutiger-aero'] button.app-button {
   background: linear-gradient(to bottom, var(--aero-button-top) 0%, var(--aero-button-mid) 48%, var(--aero-button-bottom) 49%, var(--aero-button-mid) 100%);
   border: 1px solid var(--theme-border);
@@ -129,8 +128,8 @@
 .page[data-theme='frutiger-aero'][data-color-mode='dark'] {
   background-image: linear-gradient(rgb(0 15 40 / 48%), rgb(0 15 40 / 48%)), url('/themes/aero-aurora.svg');
 }
-.page[data-theme='frutiger-aero'][data-color-mode='dark'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='frutiger-aero'][data-color-mode='dark'] dialog {
+.page[data-theme='frutiger-aero'][data-color-mode='dark'] .bottom-actions,
+[data-theme='frutiger-aero'][data-color-mode='dark'] .utility-panel {
   --theme-text: #e6f6ff;
   --theme-muted: #b4d6e8;
   --theme-surface: #14354e;
@@ -142,8 +141,8 @@
 .theme-swatch[data-family='frutiger-aero'] { background: linear-gradient(150deg, #ecffff99, transparent 55%), linear-gradient(130deg, #12518a, #33cbcf 65%, #83cc74); }
 .theme-swatch[data-family='aqua'] { background: repeating-linear-gradient(#f9f8f6 0 2px, #c7c6c4 2px 3px); }
 @media (prefers-reduced-transparency: reduce) {
-  .page[data-theme='frutiger-aero'] :is(.widget, .board-card, .bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
-  [data-theme='frutiger-aero'] dialog { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--theme-surface); }
+  .page[data-theme='frutiger-aero'] :is(.widget, .board-card, .bottom-actions),
+[data-theme='frutiger-aero'] .utility-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--theme-surface); }
 }
 
 [data-theme='frutiger-aero'] .light-switch-track {
@@ -161,8 +160,8 @@
 .page[data-theme='frutiger-aero'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .page[data-theme='frutiger-aero'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #6198b8; border-radius: 99px; background: linear-gradient(90deg, #22b9e9 var(--radius-fill, 50%), #c5e3ed var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #12557866, 0 1px #fff9; }
 .page[data-theme='frutiger-aero'] input[type='range']::-moz-range-track { height: 5px; border: 1px solid #6198b8; border-radius: 99px; background: linear-gradient(90deg, #22b9e9 var(--radius-fill, 50%), #c5e3ed var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #12557866; }
-.page[data-theme='frutiger-aero'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; margin-top: -6px; border: 1px solid #4789ae; border-radius: 50%; background: radial-gradient(ellipse at 40% 20%, #fff 15%, #d9f5ff 48%, #7fc7e7 65%, #bceafa); box-shadow: inset 0 1px #fff, 0 1px 3px #14587966; }
-.page[data-theme='frutiger-aero'] input[type='range']::-moz-range-thumb { width: 15px; height: 15px; border: 1px solid #4789ae; border-radius: 50%; background: radial-gradient(ellipse at 40% 20%, #fff 15%, #d9f5ff 48%, #7fc7e7 65%, #bceafa); box-shadow: 0 1px 3px #14587966; }
+.page[data-theme='frutiger-aero'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 16px; height: 16px; margin-top: -5.5px; border: 1px solid #6f97b6; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 2px #30302e40; }
+.page[data-theme='frutiger-aero'] input[type='range']::-moz-range-thumb { box-sizing: border-box; width: 16px; height: 16px; border: 1px solid #6f97b6; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 2px #30302e40; }
 
 [data-theme='frutiger-aero'] button.app-button { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
 @media (prefers-reduced-motion: reduce) { [data-theme='frutiger-aero'] button.app-button { transition: none; } }

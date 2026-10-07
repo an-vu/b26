@@ -1,3 +1,6 @@
+import { AboutPanelComponent } from '../../components/about-panel/about-panel';
+import { WidgetBounceDirective } from '../../directives/widget-bounce';
+import { GridAtmosphereComponent } from '../../components/grid-atmosphere/grid-atmosphere';
 import { BOARD_PALETTE } from '../../themes/board-palette';
 import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
@@ -17,7 +20,6 @@ import { BoardStoreService } from '../../services/board-store.service';
 import { InsightsService } from '../../services/insights.service';
 import { UserStoreService } from '../../services/user-store.service';
 import { AuthService } from '../../services/auth.service';
-import { BoardHeaderComponent } from '../../components/board-header/board-header';
 import type { Board } from '../../models/board';
 import type { Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
@@ -80,7 +82,7 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [UserSearchComponent, CommonModule, FormsModule, RouterLink, BoardHeaderComponent, WidgetHostComponent],
+  imports: [AboutPanelComponent, WidgetBounceDirective, GridAtmosphereComponent, UserSearchComponent, CommonModule, FormsModule, RouterLink, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrls: [
     './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
@@ -126,7 +128,21 @@ export class BoardPageComponent {
   accountActionError = '';
   isBoardIdentityMenuOpen = false;
   isSettingsReloading = false;
-  settingsNotice = '';
+  private noticeTimer?: ReturnType<typeof setTimeout>;
+  private noticeText = '';
+  get settingsNotice() { return this.noticeText; }
+  set settingsNotice(value: string) {
+    clearTimeout(this.noticeTimer);
+    this.noticeText = value;
+    if (value) this.noticeTimer = setTimeout(() => { this.noticeText = ''; this.cdr.markForCheck(); }, 3000);
+  }
+  isBoardSwitcherOpen = false;
+  switchToBoard(route: string) {
+    if (!this.canLeaveBoard()) return;
+    this.closeBoardIdentityMenu();
+    void this.router.navigateByUrl(route);
+  }
+
   canEditBoard = false;
   readOnlyView = false;
   widgetSaveError = '';
@@ -134,6 +150,13 @@ export class BoardPageComponent {
   isAddWidgetExpanded = false;
   boardDraftName = '';
   boardDraftHeadline = '';
+  profileNameDraft = '';
+  private originalProfileName = '';
+  boardDraftWebsite = '';
+  private originalBoardWebsite = '';
+  safeWebsite(value?: string): string | null {
+    try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : null; } catch { return null; }
+  }
   originalBoardName = '';
   originalBoardHeadline = '';
   boardIdentityNameDraft = '';
@@ -148,16 +171,23 @@ export class BoardPageComponent {
     if (this.isIdentitySaving || id === (this.requestedTheme ?? this.boardThemeFamilyDraft) || BOARD_THEMES.find(theme => theme.id === id)?.status !== 'available') return;
     this.requestedTheme = id;
     this.themeTransition?.skipTransition();
-    const update = () => { if (this.destroyRef.destroyed || this.requestedTheme !== id) return; this.boardThemeFamilyDraft = id; this.requestedTheme = undefined; this.cdr.detectChanges(); };
+    const update = () => { if (this.destroyRef.destroyed || this.requestedTheme !== id) return; this.boardThemeFamilyDraft = id; this.requestedTheme = undefined; this.cdr.detectChanges(); this.saveSettingsAutomatically(); };
     if (typeof document.startViewTransition === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
       const transition = document.startViewTransition(update);
       transition.ready.catch(() => { /* A newer selection may skip this snapshot. */ });
       this.themeTransition = transition;
     } else { update(); }
   }
+  readonly pickerHover: Record<string, string | null> = {};
+  readonly pickerFocus: Record<string, string | null> = {};
+  pickerLabel(section: string, selected: string): string {
+    return this.pickerHover[section] || this.pickerFocus[section] || selected;
+  }
   readonly boardThemes = BOARD_THEMES;
   boardThemeToggleDraft = false;
   boardRadiusStepDraft: 1 | 2 | 3 = 2;
+  boardSpacingStepDraft: 1 | 2 | 3 = 2;
+  get spacingLabel(): string { return this.boardSpacingStepDraft === 1 ? 'Small' : this.boardSpacingStepDraft === 3 ? 'Large' : 'Medium'; }
   boardBackgroundColorDraft = '#f9f8f6';
   boardPatternDraft: BoardAppearance['pattern'] = 'none';
   boardPatternIntensityDraft: NonNullable<BoardAppearance['patternIntensity']> = 'light';
@@ -196,12 +226,10 @@ export class BoardPageComponent {
   private readonly rainLevels = { light: this.allAtmosphereParticles.slice(0, 144), medium: this.allAtmosphereParticles.slice(0, 200), heavy: this.allAtmosphereParticles };
   private readonly dropletLevels = { light: this.allAtmosphereParticles.slice(0, 12), medium: this.allAtmosphereParticles.slice(0, 20), heavy: this.allAtmosphereParticles.slice(0, 30) };
   private readonly waveParticleLevels = { light: this.waveParticles.slice(0, 40), medium: this.waveParticles.slice(0, 72), heavy: this.waveParticles.slice(0, 112) };
-  private readonly trailLevels = { light: this.allAtmosphereParticles.slice(0, 8), medium: this.allAtmosphereParticles.slice(0, 11), heavy: this.allAtmosphereParticles.slice(0, 14) };
   get screenDroplets() { return this.dropletLevels[this.boardPatternIntensityDraft]; }
   get atmosphereParticles() {
     return (this.boardPatternDraft === 'wave' ? this.waveParticleLevels : this.boardPatternDraft === 'rainfall' ? this.rainLevels : this.particleLevels)[this.boardPatternIntensityDraft];
   }
-  get gridTrails() { return this.trailLevels[this.boardPatternIntensityDraft]; }
   selectBoardPattern(pattern: BoardAppearance['pattern']) {
     if (this.isIdentitySaving) return;
     if (pattern === this.boardPatternDraft && pattern !== 'none') {
@@ -211,11 +239,12 @@ export class BoardPageComponent {
       this.boardPatternIntensityDraft = 'light';
     }
     this.cdr.markForCheck();
+    this.saveSettingsAutomatically();
   }
   private persistedAppearance: BoardAppearance = this.defaultAppearance();
 
   defaultAppearance(): BoardAppearance {
-    return { patternIntensity: 'light', themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
+    return { spacingStep: 2, patternIntensity: 'light', themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
   }
 
   // Render legacy white boards using the new paper color without rewriting saved data.
@@ -240,6 +269,7 @@ export class BoardPageComponent {
 
   get appearanceDraft(): BoardAppearance {
     return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
+      spacingStep: Number(this.boardSpacingStepDraft) as 1 | 2 | 3,
       radiusStep: Number(this.boardRadiusStepDraft) as 1 | 2 | 3,
       backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft, patternIntensity: this.boardPatternIntensityDraft };
   }
@@ -247,7 +277,7 @@ export class BoardPageComponent {
   get appearanceChanged(): boolean {
     const draft = this.appearanceDraft;
     const saved = this.persistedAppearance;
-    return draft.themeFamily !== (saved.themeFamily ?? 'default') || draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
+    return draft.spacingStep !== (saved.spacingStep ?? 2) || draft.themeFamily !== (saved.themeFamily ?? 'default') || draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
       draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern ||
       draft.patternIntensity !== (saved.patternIntensity ?? 'light');
   }
@@ -258,6 +288,7 @@ export class BoardPageComponent {
     this.boardThemeFamilyDraft = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
     this.boardThemeToggleDraft = appearance.theme === 'dark';
     this.boardRadiusStepDraft = appearance.radiusStep;
+    this.boardSpacingStepDraft = appearance.spacingStep ?? 2;
     this.boardBackgroundColorDraft = appearance.backgroundColor;
     this.boardPatternDraft = appearance.pattern;
     this.boardPatternIntensityDraft = appearance.patternIntensity ?? 'light';
@@ -270,7 +301,7 @@ export class BoardPageComponent {
   }
 
   resetAppearance() {
-    if (!this.isIdentitySaving) this.applyAppearance(this.defaultAppearance());
+    if (!this.isIdentitySaving) { this.applyAppearance(this.defaultAppearance()); this.saveSettingsAutomatically(); }
   }
 
   private boardIdentitySourceId = '';
@@ -341,6 +372,7 @@ export class BoardPageComponent {
   accountMainBoardId = '';
 
   constructor() {
+    this.destroyRef.onDestroy(() => clearTimeout(this.noticeTimer));
     initializeBoardPageAccountState({
       destroyRef: this.destroyRef,
       boardStore: this.boardStore,
@@ -426,6 +458,7 @@ export class BoardPageComponent {
   }
 
   patternLabel(pattern: string): string {
+    if (pattern === 'grid') return 'Meteor';
     return pattern.charAt(0).toUpperCase() + pattern.slice(1).replace(/-/g, ' ');
   }
 
@@ -434,6 +467,8 @@ export class BoardPageComponent {
     if (!this.isWidgetEditMode) return identityChanged;
     return identityChanged || this.boardDraftName.trim() !== this.originalBoardName.trim() ||
       this.boardDraftHeadline.trim() !== this.originalBoardHeadline.trim() ||
+      this.boardDraftWebsite.trim() !== this.originalBoardWebsite ||
+      this.profileNameDraft.trim() !== this.originalProfileName ||
       this.widgetDrafts.length !== this.originalWidgetDrafts.size ||
       this.widgetDrafts.some(draft => hasDraftChangedByOriginal(draft, this.originalWidgetDrafts)) ||
       this.hasPendingNewWidget;
@@ -469,6 +504,8 @@ export class BoardPageComponent {
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {
+    this.profileNameDraft = this.originalProfileName = board.ownerDisplayName || board.ownerUsername || board.name;
+    this.boardDraftWebsite = this.originalBoardWebsite = board.website || '';
     this.hydrateAppearance(board);
     this.editVersion = board.version ?? null;
     this.identityVersion = board.version;
@@ -621,12 +658,14 @@ export class BoardPageComponent {
       return;
     }
     this.settingsNotice = '';
+    for (const section of ['theme', 'color', 'pattern']) { this.pickerHover[section] = null; this.pickerFocus[section] = null; }
     this.isBoardIdentityMenuOpen = true;
     this.cdr.detectChanges();
     this.elementRef.nativeElement.querySelector<HTMLInputElement>('input[name="board-identity-name"]')?.focus();
   }
 
   closeBoardIdentityMenu(restoreFocus = false) {
+    this.isBoardSwitcherOpen = false;
     this.isBoardIdentityMenuOpen = false;
     if (restoreFocus) {
       this.elementRef.nativeElement.querySelector<HTMLButtonElement>('.board-identity-button')?.focus();
@@ -650,7 +689,12 @@ export class BoardPageComponent {
     this.reload$.next();
   }
 
-  saveIdentity() {
+  saveSettingsAutomatically() {
+    if (!this.canEditBoard || this.readOnlyView || !this.settingsChanged) return;
+    this.saveIdentity(true);
+  }
+
+  saveIdentity(automatic = false) {
     if (this.isSettingsReloading || this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
     const prepared = prepareBoardIdentityUpdate({
       draftName: this.boardIdentityNameDraft,
@@ -663,7 +707,7 @@ export class BoardPageComponent {
       return;
     }
     if (prepared.kind === 'noop' && !this.appearanceChanged) {
-      this.cancelIdentityEdit();
+      if (!automatic) this.cancelIdentityEdit();
       this.settingsNotice = 'No changes to save';
       return;
     }
@@ -679,19 +723,20 @@ export class BoardPageComponent {
       this.cdr.markForCheck();
     })).subscribe({
       next: (board) => {
-        this.hydrateAppearance(board);
+        if (automatic) this.persistedAppearance = { ...this.defaultAppearance(), ...board.appearance };
+        else this.hydrateAppearance(board);
         this.identityVersion = board.version;
         this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
         this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
         this.activeBoardUrl = board.boardUrl;
         this.isIdentitySaving = false;
         this.settingsNotice = 'Board settings saved';
-        this.closeBoardIdentityMenu(true);
+        if (!automatic) this.closeBoardIdentityMenu(true);
         this.boardStore.updateBoardInStore(board);
         if (this.route.snapshot.paramMap.get('boardId') !== board.boardUrl
             || this.route.snapshot.paramMap.get('username') !== board.ownerUsername) {
           void this.router.navigateByUrl(boardRoute(board));
-        } else {
+        } else if (!automatic) {
           this.reload$.next();
         }
       },
@@ -723,6 +768,7 @@ export class BoardPageComponent {
 
   @HostListener('document:keydown.escape')
   onEscapeKey() {
+    if (this.isBoardSwitcherOpen) { this.isBoardSwitcherOpen = false; return; }
     const actions = getEscapeMenuCloseActions({
       isAccountMenuOpen: this.isAccountMenuOpen,
       isBoardIdentityMenuOpen: this.isBoardIdentityMenuOpen,
@@ -833,6 +879,8 @@ export class BoardPageComponent {
       widgetDrafts: this.widgetDrafts,
       boardDraftName: this.boardDraftName,
       boardDraftHeadline: this.boardDraftHeadline,
+      boardDraftWebsite: this.boardDraftWebsite,
+      profileNameDraft: this.profileNameDraft,
       originalBoardName: this.originalBoardName,
       originalBoardHeadline: this.originalBoardHeadline,
       originalWidgetDrafts: this.originalWidgetDrafts,
@@ -861,6 +909,7 @@ export class BoardPageComponent {
         this.cdr.markForCheck();
       },
       onSaved: () => {
+        if (this.profileNameDraft.trim() !== this.originalProfileName) this.userStore.refreshMyProfile();
         this.cancelWidgetEdit();
         this.reload$.next();
       },

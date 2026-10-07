@@ -57,8 +57,7 @@
 .page[data-theme='aqua'] .navigation-orb:hover .orb-button__dot,
 .page[data-theme='aqua'] .navigation-orb:focus-visible .orb-button__dot { box-shadow: inset 0 1px #fff, 0 0 6px #d8edff70; transform: translateY(-1px) scale(1.08); }
 /* Utility panels combine linen backing with inset grouped controls. */
-.page[data-theme='aqua'] :is(.board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='aqua'] dialog {
+[data-theme='aqua'] .utility-panel {
   --theme-text: #283341; --theme-muted: #586777; --theme-surface: #edf0f3; --theme-border: #929ca8;
   color: var(--theme-text); background: url('/themes/aqua-linen.svg'), var(--aqua-linen);
   border: 1px solid #47586e; border-radius: 9px;
@@ -70,7 +69,6 @@
   color: #fff; background: var(--aqua-blue); border-bottom: 1px solid #365371;
   box-shadow: inset 0 1px #fff8, 0 2px 4px #253a5140; font-size: 16px; font-weight: 600; text-shadow: 0 -1px #354f70;
 }
-[data-theme='aqua'] dialog .search-heading { margin: -20px -20px 16px; padding: 12px 16px; background: var(--aqua-blue); color: #fff; border-radius: 8px 8px 0 0; box-shadow: inset 0 1px #ffffff80, 0 2px 4px #253a5140; text-shadow: 0 -1px #354f70; }
 .page[data-theme='aqua'] .board-identity-menu fieldset { padding: 8px; border-radius: 7px; border: 1px solid #aab3bf; background: var(--aqua-paper); box-shadow: inset 0 1px 2px #1b30451a, 0 1px #fff; }
 .page[data-theme='aqua'] .board-identity-menu legend { padding: 0 5px; color: var(--theme-muted); font-size: 11px; font-weight: 600; }
 .page[data-theme='aqua'] .board-identity-menu hr { border-color: #a2adba; box-shadow: 0 1px #fff9; }
@@ -128,8 +126,8 @@
   --aqua-rim: #ffffff35; --aqua-shadow: #02061980;
 }
 .page[data-theme='aqua'][data-color-mode='dark'] { background-image: linear-gradient(#040a2455, #040a2455), url('/themes/aqua-galaxy.svg'); }
-.page[data-theme='aqua'][data-color-mode='dark'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
-[data-theme='aqua'][data-color-mode='dark'] dialog { --theme-text: #e5ebf4; --theme-muted: #b2bed0; --theme-surface: #354152; --theme-border: #66758b; }
+.page[data-theme='aqua'][data-color-mode='dark'] .bottom-actions,
+[data-theme='aqua'][data-color-mode='dark'] .utility-panel { --theme-text: #e5ebf4; --theme-muted: #b2bed0; --theme-surface: #354152; --theme-border: #66758b; }
 [data-theme='aqua'][data-color-mode='dark'] button.app-button,
 .page[data-theme='aqua'][data-color-mode='dark'] .widget a.link { background: var(--aqua-metal); text-shadow: 0 -1px #162033; box-shadow: inset 0 1px #ffffff30, 0 1px 3px #0005; }
 .page[data-theme='aqua'][data-color-mode='dark'] .bottom-actions { background: linear-gradient(#6a7b98b3, #35455cc9 49%, #18263bcc 51%, #52647fd9); }
@@ -144,3 +142,7 @@
 
 /* Color and pattern swatches sit directly on the panel's linen. */
 .page[data-theme='aqua'] .board-identity-menu fieldset { background: transparent; border: 0; box-shadow: none; padding: 0; }
+
+.page[data-theme='aqua'] .board-identity-menu :is(label, .slug-input-wrap > span) { font-family: inherit; font-size: 11px; font-weight: 600; color: var(--theme-muted); }
+.page[data-theme='aqua'] input[type='range']::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; border-radius: 4px; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
+.page[data-theme='aqua'] input[type='range']::-moz-range-thumb { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }

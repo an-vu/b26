@@ -22,7 +22,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     request.set("boardUrl", board.get("boardUrl"));
     request.put("boardName", "Appearance test");
     request.putObject("appearance").put("theme", "dark").put("radiusStep", 3)
-        .put("backgroundColor", "#E6F0FF").put("pattern", "sakura").put("patternIntensity", "heavy");
+        .put("backgroundColor", "#E6F0FF").put("pattern", "sakura").put("patternIntensity", "heavy").put("spacingStep", 3);
     return request;
   }
 
@@ -41,6 +41,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.backgroundColor").value("#e6f0ff"));
     mockMvc.perform(get(url)).andExpect(jsonPath("$.appearance.theme").value("dark"))
         .andExpect(jsonPath("$.appearance.patternIntensity").value("heavy"))
+        .andExpect(jsonPath("$.appearance.spacingStep").value(3))
         .andExpect(jsonPath("$.appearance.radiusStep").value(3)).andExpect(jsonPath("$.appearance.pattern").value("sakura"));
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(request.toString())).andExpect(status().isConflict());
@@ -108,4 +109,25 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
         .content(payload)).andExpect(status().isForbidden());
     mockMvc.perform(authJson(patch(url), payload)).andExpect(status().isOk());
   }
+  @Test
+  void editorSavesOwnerNameAndWebsiteAndRejectsBlankName() throws Exception {
+    String token = issueAuthTokenForUser("profile-editor");
+    var board = create(token);
+    String url = API_BOARD + "/" + board.get("boardUrl").asText();
+    var request = objectMapper.createObjectNode();
+    request.set("version", board.get("version"));
+    request.put("name", "Board title").put("headline", "Description").put("ownerDisplayName", "New Profile Name").put("website", "https://example.com/social");
+    request.putArray("widgets");
+    var saved = objectMapper.readTree(mockMvc.perform(put(url + "/editor").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(request.toString())).andExpect(status().isOk())
+        .andReturn().getResponse().getContentAsString());
+    mockMvc.perform(get(url)).andExpect(jsonPath("$.ownerDisplayName").value("New Profile Name"))
+        .andExpect(jsonPath("$.website").value("https://example.com/social"));
+    assertEquals("New Profile Name", appUserRepository.findById("profile-editor").orElseThrow().getDisplayName());
+    request.set("version", saved.at("/board/version"));
+    request.put("ownerDisplayName", "   ");
+    mockMvc.perform(put(url + "/editor").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(request.toString())).andExpect(status().isBadRequest());
+  }
+
 }

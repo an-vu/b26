@@ -1,0 +1,12 @@
+<dialog class="utility-panel" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()"
+  (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); close()">
+  <img class="about-icon" src="/brand/blueberry-about.png?v=5" width="132" height="132" alt="BlueBerry" draggable="false" />
+  <h2 class="about-name">BlueBerry</h2>
+  <p class="about-version">Version {{ release.version }}</p>
+  <div class="about-actions">
+    <a *ngIf="release.contactUrl; else contactPlaceholder" class="app-button" [href]="release.contactUrl">Contact</a>
+    <ng-template #contactPlaceholder><button class="app-button" type="button" disabled title="Contact details coming soon">Contact</button></ng-template>
+    <a *ngIf="release.legalUrl; else legalPlaceholder" class="app-button" [href]="release.legalUrl">Legal</a>
+    <ng-template #legalPlaceholder><button class="app-button" type="button" disabled title="Legal information coming soon">Legal</button></ng-template>
+  </div>
+</dialog>

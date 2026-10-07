@@ -1,0 +1,7 @@
+/* Shared surface for toolbar panels; components own only layout and content. */
+.utility-panel {
+  border: 1px solid var(--theme-border);
+  border-radius: 10px;
+  background: var(--theme-surface);
+  color: var(--theme-text);
+}

@@ -1,5 +1,5 @@
 .board-grid {
-  --board-grid-gap: 12px;
+  --board-grid-gap: var(--widget-spacing, 16px);
   --board-grid-cols: 4;
   display: grid;
   align-content: start;

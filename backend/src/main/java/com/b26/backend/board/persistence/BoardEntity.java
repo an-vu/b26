@@ -25,6 +25,12 @@ public class BoardEntity {
   @Column(nullable = false)
   private String headline;
 
+  @Column(nullable = false, length = 2048)
+  private String website = "";
+
+  public String getWebsite() { return website; }
+  public void setWebsite(String value) { website = value; }
+
   @Column(name = "board_name", nullable = false)
   private String boardName;
 
@@ -57,6 +63,11 @@ public class BoardEntity {
 
   @Column(name = "appearance_radius_step", nullable = false)
   private Integer radiusStep = 2;
+
+  @Column(name = "appearance_spacing_step", nullable = false)
+  private Integer spacingStep = 2;
+  public Integer getSpacingStep() { return spacingStep; }
+  public void setSpacingStep(Integer value) { spacingStep = value; }
 
   public Integer getRadiusStep() { return radiusStep; }
   public void setRadiusStep(Integer value) { radiusStep = value; }

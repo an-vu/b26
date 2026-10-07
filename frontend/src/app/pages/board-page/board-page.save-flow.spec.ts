@@ -54,4 +54,15 @@ describe('Atomic board saving', () => {
     expect(saveEditor).not.toHaveBeenCalled();
     expect(params.setDraftValidationError).toHaveBeenCalled();
   });
+  it('saves a website and rejects unsafe protocols', () => {
+    const { params, saveEditor } = setup();
+    params.boardDraftWebsite = 'https://example.com/me';
+    runDoneWidgetEdit(params);
+    expect(saveEditor).toHaveBeenLastCalledWith('my-board', expect.objectContaining({ website: 'https://example.com/me' }));
+    saveEditor.mockClear();
+    params.boardDraftWebsite = 'javascript:alert(1)';
+    runDoneWidgetEdit(params);
+    expect(saveEditor).not.toHaveBeenCalled();
+  });
+
 });

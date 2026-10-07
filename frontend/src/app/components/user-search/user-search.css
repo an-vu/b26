@@ -1,13 +1,16 @@
 :host { display: contents; }
-dialog { box-sizing: border-box; width: min(420px, calc(100vw - 24px)); max-height: min(640px, calc(100dvh - 24px)); padding: 20px; border: 1px solid var(--theme-border); border-radius: 18px; color: var(--theme-text); background: var(--theme-surface); box-shadow: 0 12px 48px #0003; }
-dialog::backdrop { background: #0006; }
-.search-heading { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
-h2 { margin: 0; font-size: 1.2rem; }
-label { display: block; margin-bottom: 6px; }
-input { box-sizing: border-box; width: 100%; min-height: 44px; padding: 10px; border: 1px solid var(--theme-border); border-radius: 8px; font: inherit; }
-p { font-size: .9rem; color: var(--theme-muted); }
-ul { list-style: none; padding: 0; margin: 0; }
-a { display: flex; flex-direction: column; gap: 4px; padding: 12px; border-radius: 8px; color: inherit; text-decoration: none; overflow-wrap: anywhere; }
-a:hover { background: var(--palette-light-gray); }
-a span { color: var(--theme-muted); font-size: .9rem; }
-:focus-visible { outline: 3px solid var(--theme-focus); outline-offset: 2px; }
+dialog { position: fixed; inset: auto; margin: 0; z-index: 40; box-sizing: border-box; width: min(340px, calc(100vw - 32px)); padding: 10px; overflow: hidden; }
+dialog[open] { display: flex; flex-direction: column; gap: 0; }
+input { flex: 0 0 auto; box-sizing: border-box; width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px; font: inherit; font-size: 13px; }
+p { margin: 0 0 10px; font-size: 12px; color: var(--theme-muted); }
+ul { flex: 1 1 auto; min-height: 0; overflow-y: auto; overscroll-behavior: contain; list-style: none; padding: 0 0 8px; margin: 0; }
+a { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding: 9px 8px; border-radius: 6px; color: inherit; text-decoration: none; transition: background 160ms ease; }
+a:hover { background: color-mix(in srgb, var(--theme-text) 8%, transparent); }
+.search-user { display: grid; gap: 3px; min-width: 0; }
+.search-user strong { font-size: 13px; overflow-wrap: anywhere; }
+.search-user > span { color: var(--theme-muted); font-size: 11px; overflow-wrap: anywhere; }
+:focus-visible { outline: 1px solid color-mix(in srgb, var(--theme-focus) 40%, transparent); outline-offset: 1px; }
+@media (prefers-reduced-motion: reduce) { a { transition: none; } }
+
+.search-likes { display: grid; gap: 3px; justify-items: end; flex: 0 0 auto; font-size: 12px; font-variant-numeric: tabular-nums; }
+.search-likes > span { font-size: 10px; color: var(--theme-muted); }
