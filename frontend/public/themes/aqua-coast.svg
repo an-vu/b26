@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice">
+<defs>
+ <linearGradient id="sea" x1="0" y1="0" x2=".8" y2="1"><stop stop-color="#18344b"/><stop offset=".45" stop-color="#287788"/><stop offset="1" stop-color="#092b45"/></linearGradient>
+ <linearGradient id="swell" x1="0" y1="0" x2=".3" y2="1"><stop stop-color="#d4efdf" stop-opacity=".8"/><stop offset=".12" stop-color="#62bfb1" stop-opacity=".65"/><stop offset=".55" stop-color="#146679" stop-opacity=".2"/><stop offset="1" stop-color="#052c47" stop-opacity=".8"/></linearGradient>
+ <linearGradient id="foam"><stop stop-color="#b8ddd3" stop-opacity="0"/><stop offset=".6" stop-color="#d6e8dc" stop-opacity=".6"/><stop offset="1" stop-color="#b8ddd3" stop-opacity=".1"/></linearGradient>
+ <filter id="soft"><feGaussianBlur stdDeviation="12"/></filter>
+</defs>
+<path fill="url(#sea)" d="M0 0h1600v1000H0z"/>
+<path fill="url(#swell)" d="M-200 800C300 940 740 180 1140 120S1630 290 1840 150V1100H-200Z"/>
+<path fill="none" stroke="url(#foam)" stroke-width="32" filter="url(#soft)" d="M-200 800C300 940 740 180 1140 120S1630 290 1840 150"/>
+<g fill="none" stroke="url(#foam)">
+<path stroke-width="2" d="M-200 814C300 954 745 192 1140 137S1630 307 1840 170"/>
+<path opacity=".4" d="M-200 855C300 980 780 225 1160 180S1630 350 1840 215"/>
+<path opacity=".2" d="M-200 915C300 1000 800 310 1200 250S1650 440 1840 300"/>
+</g>
+</svg>

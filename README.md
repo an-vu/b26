@@ -76,18 +76,19 @@ through migration V23. No new environment variables are needed.
 
 ## Board themes (local development)
 
-Open the board-name button in the bottom toolbar, then choose **Default**,
-**Frutiger Aero**, or **Aqua** under Theme. Selection previews immediately; Save persists the
+Open the board-name button in the bottom toolbar, then choose **Berry**,
+**Frutiger Aero**, **Aqua**, **Omakase**, or **Kiwi** under Theme. Selection previews immediately; Save persists the
 family with the other board settings, while Cancel restores the saved appearance.
 Visitors see the saved theme.
 
 Aero includes original blue-green aurora artwork, translucent glass cards and menus,
-glossy controls, and a night variant through the existing Night theme checkbox.
-Background colors tint the light wallpaper; patterns overlay it and radius still
-controls widget corners. The existing neutral theme is unchanged.
+glossy controls, and a night variant through the Light switch (on for light, off for night).
+Background colors tint the wallpaper while retaining its detail. Stars, Snow, Grid, Rainfall, Sakura, and Wave
+add subtle animation (static under reduced motion); radius still
+controls widget corners. Berry retains the existing default theme ID for saved boards.
 
-Aqua adds an original flowing blue wallpaper, pearl panels with pinstriped title bars,
-silver toolbar chrome, blue gel selection controls, and a graphite night variant.
+Aqua follows the Mountain Lion/Mavericks era: an original galaxy wallpaper, smooth silver title bars, neutral panels, restrained blue gloss, and a graphite night variant.
+V26 adds the Rainfall pattern; older stored patterns remain compatible.
 V25 extends the theme-family constraint to allow Aqua without changing existing selections.
 
 The additive V24 migration stores `appearance_theme_family` separately from
@@ -229,3 +230,17 @@ Deletion requires owner/admin access and confirmation. The last board, main boar
 ---
 
 [Start here](https://github.com/an-vu/b26/wiki) · [Docker setup](https://github.com/an-vu/b26/wiki/Docker) · [Page URLs](https://github.com/an-vu/b26/wiki/Pages-and-Editing) · [Release roadmap](https://github.com/an-vu/b26/wiki/Release-Roadmap)
+
+Berry uses warm paper, charcoal serif typography, and restrained controls inspired by vHuman Studios. Aero and Aqua have matching glass and gel light switches. Select a pattern to start at Light; click it again to cycle Medium, Heavy, and Light. Intensity is saved with the board (migration V27), and reduced-motion preferences stop decorative animation. Older Dots selections display as Stars.
+
+Atmosphere effects use a seeded random field. Stars glow softly, snow has layered focus, grid lights trace fixed paths, and stronger rain/petal settings increase wind and speed. Wave combines gradient ribbons, soft glow, and drifting light particles. Large widget corners are 24px. Pattern intensity still cycles on repeated selection without visible instructions.
+
+Omakase draws from Shanghai’s Omakase restaurant: near-black surroundings, illuminated rose glass, subtle blossom etching, and amber controls. The Light switch adjusts the illumination while preserving the black setting. V28 enables the fourth theme without changing existing selections.
+
+Wave uses two cached SVG image layers and at most 112 light particles, with transform/opacity animation and no live blur filters. Omakase retains the internal `omahakase` ID so existing boards remain compatible.
+
+Aqua’s blue gradient is confined to its theme-picker preview. Rain uses 144/200/280 particles and 12/20/30 varied glass droplets. Wave intensity increases ribbon speed and concentrates 40/72/112 sparkles near the ribbon, with a faint reversed layer. Grid trails follow a shared perspective lattice with rounded turns, pale randomized neon hues, layered glow, and short fading tails.
+
+Aqua was rebuilt around 2010–2014 Apple interfaces: original galaxy artwork, silver window frames, linen utility panels, iOS 6 blue gradient headers, reflective Dock styling, inset fields, custom range controls, and a mechanical light switch. The graphite lights-off variant is an adaptation. References: Apple’s archived iOS 7 Transition Guide (which compares iOS 6 bars and controls), and contemporary Mountain Lion reviews.
+
+Kiwi blends lime-tinted translucent console plastic with soft chrome edges and luminous ribbons. V29 adds its saved theme ID. Theme selection crossfades in 420ms where View Transitions are supported, with immediate updates for reduced motion or unsupported browsers. Berry dark mode preserves the selected wallpaper hue at a darker value.

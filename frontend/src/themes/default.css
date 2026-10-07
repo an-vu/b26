@@ -39,7 +39,7 @@
   color-scheme: dark;
   --board-pattern-ink: color-mix(in srgb, var(--palette-light-gray) 20%, transparent);
   --theme-text: var(--palette-white);
-  --theme-page-background: var(--palette-black);
+  --theme-page-background: var(--board-night-bg, var(--palette-black));
   --theme-surface: var(--palette-black);
   --theme-border: var(--palette-gray);
   --theme-muted: var(--palette-light-gray);
@@ -76,3 +76,34 @@
   outline: 2px solid var(--theme-focus);
   outline-offset: 2px;
 }
+
+/* Berry: vHuman's warm paper, Georgia typography, and quiet editorial spacing. */
+[data-theme='default'] { font-family: Georgia, "Times New Roman", serif; }
+.page.page-fixed-scroll[data-theme='default'] { --header-title-font-size: clamp(30px, 3.5vw, 48px); --header-title-line-height: 1.08; }
+.page[data-theme='default'] :is(.title, .board-header-stack h1) { font-weight: 400; letter-spacing: -.035em; }
+.page[data-theme='default'] .subtitle { line-height: 1.6; }
+.page[data-theme='default'] :is(.widget, .board-card) {
+  border-color: color-mix(in srgb, var(--theme-text) 23%, transparent);
+  box-shadow: none;
+}
+.page[data-theme='default'] .widget h3 { font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; letter-spacing: -.02em; }
+.page[data-theme='default'] button.app-button,
+[data-theme='default'] dialog button.app-button {
+  font-family: Georgia, "Times New Roman", serif;
+  font-weight: 400;
+  border-color: color-mix(in srgb, var(--theme-text) 30%, transparent);
+  background: var(--theme-surface);
+  box-shadow: none;
+}
+.page[data-theme='default'] :is(.board-identity-menu, .account-menu, .account-board-actions-menu),
+[data-theme='default'] dialog {
+  font-family: Georgia, "Times New Roman", serif;
+  border-color: color-mix(in srgb, var(--theme-text) 25%, transparent);
+  box-shadow: 0 5px 20px #30302e0d;
+}
+.page[data-theme='default'] .bottom-actions { background: var(--palette-white); border-color: var(--palette-light-gray); box-shadow: none; }
+.page[data-theme='default'] .toolbar-wordmark { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.04em; }
+.page[data-theme='default'] .account-menu a { color: var(--palette-gray); transition: color 150ms ease; }
+.page[data-theme='default'] .account-menu a:hover { color: var(--palette-black); }
+
+.page[data-theme="default"] .board-identity-menu input:not([type="checkbox"]):not([type="range"]) { border: 1px solid var(--palette-light-gray); border-radius: 6px; padding: 6px 8px; }

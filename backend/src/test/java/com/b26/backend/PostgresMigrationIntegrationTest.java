@@ -69,13 +69,14 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("Preserved title", rows.getString(1));
         }
-        try (var rows = statement.executeQuery("select appearance_theme, appearance_radius_step, appearance_background_color, appearance_pattern, appearance_theme_family from boards where id = 'default'")) {
+        try (var rows = statement.executeQuery("select appearance_theme, appearance_radius_step, appearance_background_color, appearance_pattern, appearance_theme_family, appearance_pattern_intensity from boards where id = 'default'")) {
           rows.next();
           assertEquals("light", rows.getString(1));
           assertEquals(2, rows.getInt(2));
           assertEquals("#ffffff", rows.getString(3));
           assertEquals("none", rows.getString(4));
           assertEquals("default", rows.getString(5));
+          assertEquals("light", rows.getString(6));
         }
         statement.executeUpdate("update boards set appearance_theme = 'dark', appearance_radius_step = 3, appearance_background_color = '#e6f0ff', appearance_pattern = 'grid' where id = 'default'");
         try (var rows = statement.executeQuery("select appearance_theme, appearance_pattern from boards where id = 'default'")) {
@@ -92,6 +93,21 @@ class PostgresMigrationIntegrationTest {
         try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
           rows.next();
           assertEquals("aqua", rows.getString(1));
+        }
+        statement.executeUpdate("update boards set appearance_pattern = 'rainfall' where id = 'default'");
+        try (var rows = statement.executeQuery("select appearance_pattern from boards where id = 'default'")) {
+          rows.next();
+          assertEquals("rainfall", rows.getString(1));
+        }
+        for (String pattern : new String[]{"stars", "snow", "sakura", "wave"}) {
+          statement.executeUpdate("update boards set appearance_pattern = '" + pattern + "', appearance_pattern_intensity = 'heavy' where id = 'default'");
+        }
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update boards set appearance_pattern_intensity = 'unknown' where id = 'default'"));
+        statement.executeUpdate("update boards set appearance_theme_family = 'kiwi' where id = 'default'");
+        try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
+          rows.next();
+          assertEquals("kiwi", rows.getString(1));
         }
         // Matches the current entity: no obsolete required signup-route column.
         statement.executeUpdate("insert into system_settings "

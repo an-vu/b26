@@ -255,6 +255,7 @@ public class BoardService {
       board.setRadiusStep(appearance.radiusStep());
       board.setBackgroundColor(appearance.backgroundColor().toLowerCase(java.util.Locale.ROOT));
       board.setPattern(appearance.pattern());
+      if (appearance.patternIntensity() != null) board.setPatternIntensity(appearance.patternIntensity());
     }
     return persist(board);
   }
@@ -335,6 +336,6 @@ public class BoardService {
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
         appUserRepository.findById(board.getOwnerUserId()).orElseThrow().getUsername(),
         new com.b26.backend.board.api.BoardAppearance(board.getTheme(), board.getRadiusStep(),
-            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily()));
+            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily(), board.getPatternIntensity()));
   }
 }

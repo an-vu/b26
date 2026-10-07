@@ -1,0 +1,72 @@
+/* Rose glass set into black lacquer, with the warmth of an amber-lit counter. */
+[data-theme='omahakase'] {
+  color-scheme: dark;
+  --theme-text: #fff1eb; --theme-muted: #d4aebc; --theme-border: #835060;
+  --theme-surface: #24131e; --theme-focus: #ffc17b; --theme-error: #ffaaa9;
+  --om-glass: #6c344b; --om-edge: #f8a6ca; --om-amber: #efae61;
+  --switch-off: linear-gradient(#150d12, #412335);
+  --switch-on: linear-gradient(#ffd498, #be7130);
+  --switch-knob: linear-gradient(#fff2de, #ddb88d);
+  --switch-shadow: inset 0 1px 4px #0009, 0 0 8px #eaa05025;
+  color: var(--theme-text); font-family: 'Helvetica Neue', Arial, sans-serif;
+}
+.page[data-theme='omahakase'] {
+  background: radial-gradient(ellipse at 85% 0, #79361020, transparent 45%), radial-gradient(ellipse at 10% 85%, #983d6826, transparent 55%), #090709;
+  color: var(--theme-text);
+}
+.page[data-theme='omahakase']::after {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background: var(--wallpaper-tint, transparent); mix-blend-mode: color; opacity: .3;
+}
+.page[data-theme='omahakase'] .board-rail { color: #fff1eb; }
+.page[data-theme='omahakase'] .board-rail .title { font-family: Georgia, serif; font-weight: 400; letter-spacing: -.035em; }
+.page[data-theme='omahakase'] .subtitle { color: #d4aebc; }
+.page[data-theme='omahakase'] :is(.widget, .board-card) {
+  color: var(--theme-text);
+  background: url('/themes/omahakase-blossoms.svg'), linear-gradient(135deg, #ffdae512, transparent 45%), radial-gradient(ellipse at 50% 120%, #d76d9b48, transparent 70%), var(--om-glass);
+  border: 1px solid #150b11; border-radius: var(--board-widget-radius, 12px);
+  box-shadow: inset 0 0 0 1px #f5b2ce6b, inset 0 -2px 14px #ffb6d26b, inset 0 1px 5px #ffe9f04d, 0 0 0 2px #070507, 0 8px 24px #0008, 0 0 14px #e1699e18;
+}
+.page[data-theme='omahakase'] .widget h3 { font-size: 14px; font-weight: 500; letter-spacing: .015em; border-bottom: 1px solid #ffcede26; padding-bottom: 9px; }
+.page[data-theme='omahakase'] .widget:has(img) { background-color: #321d28; }
+.page[data-theme='omahakase'] app-widget-host.widget-host-preview .widget { background: transparent; border: 0; box-shadow: none; }
+.page[data-theme='omahakase'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu),
+[data-theme='omahakase'] dialog {
+  --theme-text: #fff1eb; --theme-muted: #d4aebc; --theme-surface: #24131e; --theme-border: #835060;
+  background: linear-gradient(135deg, #45263360, transparent 65%), #160f15;
+  color: var(--theme-text); border: 1px solid #75505e;
+  box-shadow: inset 0 1px #ffdfed25, 0 12px 35px #0009, 0 0 15px #ed9abc10;
+}
+.page[data-theme='omahakase'] .bottom-actions { border-top-color: #bd8654; box-shadow: inset 0 1px #ffbc6b30, 0 -3px 18px #d8802312; }
+.page[data-theme='omahakase'] .board-settings-heading { color: #f3c394; font-family: Georgia, serif; font-size: 16px; font-weight: 400; }
+[data-theme='omahakase'] button.app-button {
+  color: #f9e9ee; border: 1px solid #986479; background: linear-gradient(#563344, #321e2a);
+  box-shadow: inset 0 1px #ffe2ed25, 0 2px 5px #0005; text-shadow: none;
+}
+[data-theme='omahakase'] button.app-button:hover:not(:disabled) { background: linear-gradient(#77425a, #4b283b); border-color: #e0a0bb; }
+.page[data-theme='omahakase'] .board-settings-actions button:first-child {
+  color: #29170c; background: linear-gradient(#f8d4a1, #d99a53); border-color: #ffce8b; box-shadow: inset 0 1px #fff4d9, 0 0 12px #e5a44726;
+}
+[data-theme='omahakase'] :is(input:not([type='checkbox']):not([type='range']), textarea, select) { background: #0e0a0d; color: #fff1eb; border: 1px solid #795363; border-radius: 6px; box-shadow: inset 0 2px 5px #0005; }
+[data-theme='omahakase'] input[type='range'] { accent-color: #efae61; }
+[data-theme='omahakase'] :is(button, input, select, textarea, a):focus-visible { outline: 2px solid #efae61; outline-offset: 3px; }
+[data-theme='omahakase'] a { color: inherit; }
+[data-theme='omahakase'] .error { color: var(--theme-error); }
+.page[data-theme='omahakase'] .inline-edit { background: transparent; color: inherit; box-shadow: none; }
+.page[data-theme='omahakase'] .toolbar-wordmark { color: #c59eac; }
+.page[data-theme='omahakase'] .toolbar-wordmark:hover { color: #ffddb7; }
+.page[data-theme='omahakase'] .orb-button { --orb-label-color: #fff1eb; }
+.page[data-theme='omahakase'] .navigation-orb .orb-button__dot { box-shadow: inset 0 1px 3px #ffffff80, 0 0 7px color-mix(in srgb, var(--orb-dot) 35%, transparent); border-color: #f5d6e540; }
+.page[data-theme='omahakase'] .board-atmosphere { color: #f4b3cf; }
+.page[data-theme='omahakase'][data-color-mode='dark'] { --om-glass: #341b29; background-color: #040304; }
+.page[data-theme='omahakase'][data-color-mode='dark'] :is(.widget, .board-card) { box-shadow: inset 0 0 0 1px #af6c8955, inset 0 -2px 12px #df82ad35, 0 0 0 2px #030203, 0 8px 24px #0009; }
+.theme-swatch[data-family='omahakase'] { background: linear-gradient(115deg, #0b080a 15%, #a6597c 55%, #f4b2cf 70%, #d59342); }
+
+/* A faint architectural glow over the existing plum-black backdrop. */
+.page[data-theme='omahakase'] { background-image: linear-gradient(115deg, transparent 38%, #d3906b05 38.1%, transparent 38.4%), radial-gradient(ellipse at 80% 18%, #ad75451c, transparent 45%), radial-gradient(ellipse at 12% 80%, #a5537929, transparent 55%), linear-gradient(165deg, #090709, #130b12 65%, #080708); }
+.page[data-theme='omahakase'][data-color-mode='dark'] { background-image: radial-gradient(ellipse at 85% 15%, #a6683212, transparent 50%), radial-gradient(ellipse at 10% 85%, #a553791c, transparent 55%), linear-gradient(165deg, #040304, #0e070d); }
+.page[data-theme='omahakase'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
+.page[data-theme='omahakase'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #b47a89; border-radius: 99px; background: linear-gradient(#9d627a, #543245); box-shadow: inset 0 1px 2px #17091180, 0 1px #ffc5dc25; }
+.page[data-theme='omahakase'] input[type='range']::-moz-range-track { height: 5px; border: 1px solid #b47a89; border-radius: 99px; background: linear-gradient(#9d627a, #543245); }
+.page[data-theme='omahakase'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; margin-top: -6px; border: 1px solid #dfac70; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 3px #0008, 0 0 5px #efb56b35; }
+.page[data-theme='omahakase'] input[type='range']::-moz-range-thumb { width: 15px; height: 15px; border: 1px solid #dfac70; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 3px #0008; }

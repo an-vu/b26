@@ -43,6 +43,12 @@ public class BoardEntity {
   @Column(name = "appearance_theme_family", nullable = false)
   private String themeFamily = "default";
 
+  @Column(name = "appearance_pattern_intensity", nullable = false)
+  private String patternIntensity = "light";
+
+  public String getPatternIntensity() { return patternIntensity; }
+  public void setPatternIntensity(String value) { patternIntensity = value; }
+
   public String getThemeFamily() { return themeFamily; }
   public void setThemeFamily(String value) { themeFamily = value; }
 

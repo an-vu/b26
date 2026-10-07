@@ -1,0 +1,54 @@
+/* Clear console-shell plastic, liquid lime, and quiet silver-blue light. */
+[data-theme='kiwi'] {
+  color-scheme: dark; font-family: 'Trebuchet MS', 'Segoe UI', sans-serif;
+  --theme-text: #f0f8ed; --theme-muted: #bfceca; --theme-border: #b8e4ba66;
+  --theme-surface: #1a3934; --theme-focus: #c0f862; --theme-error: #ffb6b6;
+  --kiwi-panel: #173d32b8; --kiwi-menu: #15332ef5;
+  --switch-on: linear-gradient(#eaffc7, #98d341 45%, #4b9229 52%, #b4ed65);
+  --switch-off: linear-gradient(#183935, #54766b); --switch-knob: linear-gradient(#fff, #d8e5e0 48%, #91ada3);
+  --switch-shadow: inset 0 1px 4px #001e1880, 0 1px #efffe950;
+  color: var(--theme-text);
+}
+.page[data-theme='kiwi'] { background: #16372f url('/themes/kiwi-fluid.svg') center / cover fixed; }
+.page[data-theme='kiwi']::after { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--wallpaper-tint, transparent); mix-blend-mode: color; opacity: .55; }
+.page[data-theme='kiwi'] .board-rail { color: #f2ffe6; text-shadow: 0 2px 8px #041e19; }
+.page[data-theme='kiwi'] .board-rail .title { font-weight: 400; letter-spacing: -.04em; }
+.page[data-theme='kiwi'] .subtitle { color: #d3e9d8; opacity: 1; }
+.page[data-theme='kiwi'] :is(.widget, .board-card) {
+  background: linear-gradient(140deg, #edffcf26, transparent 45%), linear-gradient(#f3fff30d, transparent 60%), var(--kiwi-panel);
+  color: var(--theme-text); border: 1px solid #c7f6bd80; border-radius: var(--board-widget-radius, 12px);
+  box-shadow: inset 0 1px #f3ffde80, inset 1px 0 #ffffff26, inset 0 -1px #d9ffe430, 0 0 0 1px #0b302b80, 0 10px 24px #001c2250;
+}
+.page[data-theme='kiwi'] .widget h3 { font-size: 15px; font-weight: 400; letter-spacing: .02em; padding-bottom: 10px; border-bottom: 1px solid #dbffc02b; text-shadow: 0 1px 3px #051c17; }
+.page[data-theme='kiwi'] app-widget-host.widget-host-preview .widget { background: transparent; border: 0; box-shadow: none; }
+.page[data-theme='kiwi'] :is(.bottom-actions, .board-identity-menu, .account-menu, .account-board-actions-menu), [data-theme='kiwi'] dialog {
+  --theme-text: #f0f8ed; --theme-muted: #bfceca; --theme-surface: #1a3934; --theme-border: #b8e4ba66;
+  color: var(--theme-text); background: linear-gradient(135deg, #e8ffc518, transparent 60%), var(--kiwi-menu);
+  border: 1px solid #d9ffc780; box-shadow: inset 0 1px #ecffcd66, inset 0 -1px #061e22, 0 8px 28px #061a2370;
+}
+.page[data-theme='kiwi'] .bottom-actions { background: linear-gradient(#c6e2d64d, #537b694d 48%, #132f32df 51%, #20443bdc); }
+.page[data-theme='kiwi'] .board-settings-heading { color: #ddffa8; font-weight: 400; font-size: 17px; letter-spacing: .02em; }
+[data-theme='kiwi'] button.app-button, .page[data-theme='kiwi'] .widget a.link {
+  color: #e9f9e9; border: 1px solid #b6dace80; background: linear-gradient(#adcbb340, #47786945 48%, #173d33a6 51%, #4d806466);
+  box-shadow: inset 0 1px #f2ffec66, 0 2px 4px #031e2650; text-shadow: 0 1px #0a2d29;
+}
+.page[data-theme='kiwi'] .widget a.link { display: inline-flex; padding: 6px 14px; border-radius: 999px; text-decoration: none; }
+[data-theme='kiwi'] button.app-button:hover:not(:disabled):not([aria-disabled='true']), .page[data-theme='kiwi'] .widget a.link:hover { color: #edffda; background: linear-gradient(#c1ee784d, #488e424d); border-color: #d4ff86; box-shadow: inset 0 1px #f5ffe6, 0 0 9px #a8f33626; }
+.page[data-theme='kiwi'] .board-settings-actions button:first-child { color: #203c1e; background: var(--switch-on); text-shadow: 0 1px #efffd0; border-color: #ddffa8; }
+[data-theme='kiwi'] :is(input:not([type='range']):not([type='checkbox']), select, textarea) { color: #f0f8ed; background: #0b2525c9; border: 1px solid #91bbaa; border-radius: 7px; box-shadow: inset 0 2px 4px #00151470; }
+[data-theme='kiwi'] input[type='range'], [data-theme='kiwi'] input[type='checkbox'] { accent-color: #b5ed57; }
+[data-theme='kiwi'] :is(button, input, select, textarea, a):focus-visible { outline: 2px solid #c7f88b; outline-offset: 3px; }
+.page[data-theme='kiwi'] .navigation-orb .orb-button__dot { background: linear-gradient(#ffffff55, transparent 50%, #09293b35), var(--orb-dot); border-color: #d5f7df80; box-shadow: inset 0 1px #fff9, 0 1px 3px #001b26; }
+.page[data-theme='kiwi'] .toolbar-wordmark { color: #d9efc3; text-shadow: 0 1px 5px #15391e; }
+.page[data-theme='kiwi'] .toolbar-wordmark:hover { color: #f2ffdf; }
+.page[data-theme='kiwi'] .board-atmosphere { color: #d9f8cf; }
+[data-theme='kiwi'] a { color: inherit; }
+[data-theme='kiwi'] .error { color: var(--theme-error); }
+[data-theme='kiwi'][data-color-mode='dark'] { --kiwi-panel: #092523cf; --kiwi-menu: #102623f7; }
+.page[data-theme='kiwi'][data-color-mode='dark'] { background-image: linear-gradient(#04131b66, #04131b66), url('/themes/kiwi-fluid.svg'); }
+.theme-swatch[data-family='kiwi'] { background: radial-gradient(ellipse at 75% 15%, #edffb7, transparent 55%), linear-gradient(125deg, #173d47, #8dd638 50%, #75cbbb 80%, #2c456d); border-color: #a9c48c; box-shadow: inset 0 1px #f3ffd7; }
+.page[data-theme='kiwi'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
+.page[data-theme='kiwi'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #92b998; border-radius: 99px; background: linear-gradient(90deg, #b9ef5d var(--radius-fill, 50%), #315b4c var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #001d19; }
+.page[data-theme='kiwi'] input[type='range']::-moz-range-track { height: 5px; border: 1px solid #92b998; border-radius: 99px; background: linear-gradient(90deg, #b9ef5d var(--radius-fill, 50%), #315b4c var(--radius-fill, 50%)); }
+.page[data-theme='kiwi'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; margin-top: -6px; border: 1px solid #c0e0a0; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 4px #072e24; }
+.page[data-theme='kiwi'] input[type='range']::-moz-range-thumb { width: 15px; height: 15px; border: 1px solid #c0e0a0; border-radius: 50%; background: var(--switch-knob); }

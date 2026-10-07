@@ -10,14 +10,38 @@
     class="page page-fixed-scroll"
     *ngIf="state.status === 'ready'"
     [attr.data-pattern]="boardPatternDraft"
+    [attr.data-intensity]="boardPatternIntensityDraft"
     [attr.data-theme]="boardTheme.id"
     [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"
     [style.--board-widget-radius.px]="boardRadiusDraft"
     [style.--board-bg-color]="boardDisplayBackground"
+    [style.--board-night-bg]="boardDarkBackground"
     [style.--board-foreground]="boardDisplayText"
+    [style.--wallpaper-tint]="boardDisplayBackground === '#f9f8f6' ? 'transparent' : boardDisplayBackground"
     [style.--board-accent]="boardDisplayBackground === '#f9f8f6' ? '#00b2d7' : boardDisplayBackground"
     [style.--board-muted]="boardDisplayBackground === '#f9f8f6' ? '#62625e' : boardDisplayText"
   >
+    <div class="board-atmosphere" aria-hidden="true" *ngIf="boardPatternDraft !== 'none'">
+      <ng-container *ngIf="boardPatternDraft !== 'grid'">
+        <span *ngFor="let particle of atmosphereParticles" [style.left.%]="particle.x" [style.top.%]="particle.y"
+          [style.--particle-delay]="particle.delay + 's'" [style.--particle-duration]="particle.duration + 's'"
+          [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
+      </ng-container>
+      <svg *ngIf="boardPatternDraft === 'grid'" class="atmosphere-grid" viewBox="0 0 1600 1000" preserveAspectRatio="none" aria-hidden="true">
+        <defs><pattern id="board-grid-lines" width="48" height="48" patternUnits="userSpaceOnUse"><path d="M48 0H0V48" fill="none" stroke="currentColor" stroke-width=".6" /></pattern></defs>
+        <rect width="1600" height="1000" fill="url(#board-grid-lines)" opacity=".14" />
+        <g *ngFor="let trail of gridTrails" [style.--trail-color]="trail.tint" [style.--particle-duration]="trail.duration + 's'" [style.--particle-delay]="trail.delay + 's'">
+          <path class="grid-trail grid-halo" pathLength="1" [attr.d]="trail.route" />
+          <path class="grid-trail" pathLength="1" [attr.d]="trail.route" />
+
+
+        </g>
+      </svg>
+      <div *ngIf="boardPatternDraft === 'wave'" class="wave-sheets" aria-hidden="true"><div class="wave-sheet"></div><div class="wave-sheet wave-sheet-back"></div></div>
+      <div *ngIf="boardPatternDraft === 'rainfall'" class="screen-droplets" aria-hidden="true">
+        <i *ngFor="let drop of screenDroplets" [style.left.%]="drop.x" [style.top.%]="drop.y" [style.--depth]="drop.depth" [style.--particle-duration]="drop.duration + 's'" [style.--particle-delay]="drop.delay + 's'" [style.--particle-size]="drop.size + 'px'"></i>
+      </div>
+    </div>
     <div class="board-shell">
       <aside class="board-rail">
         <ng-container *ngIf="isWidgetEditMode; else boardView">
@@ -172,7 +196,7 @@
             <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }}</span>
           </button>
           <div class="board-identity-menu" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
-            <p class="board-settings-help">Preview your changes. Save to keep them.</p>
+            <h2 class="board-settings-heading">Board Settings</h2>
             <label>
               Board Name
               <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" />
@@ -186,14 +210,14 @@
             </label>
             <hr />
             <fieldset class="board-theme-picker">
-              <legend>Theme</legend>
+              <legend>Theme · {{ boardTheme.label }}</legend>
               <div class="board-theme-options">
-                <button class="app-button board-theme-option" type="button" *ngFor="let theme of boardThemes"
-                  [disabled]="isIdentitySaving"
+                <button class="board-theme-option" type="button" *ngFor="let theme of boardThemes"
+                  [disabled]="isIdentitySaving" [attr.aria-label]="theme.label"
                   [attr.aria-pressed]="boardTheme.id === theme.id" [attr.data-theme-option]="theme.id"
                   (click)="selectBoardTheme(theme.id)">
                   <span class="theme-swatch" [attr.data-family]="theme.id" aria-hidden="true"></span>
-                  <span>{{ theme.label }}</span>
+
                 </button>
               </div>
             </fieldset>
@@ -201,16 +225,20 @@
             <div class="board-appearance-row">
               <label>
                 Widget Radius · {{ radiusLabel }}
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [style.--radius-fill]="(boardRadiusStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" />
               </label>
-              <label for="board-theme-toggle">
-                <span>Night theme</span>
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" id="board-theme-toggle" name="board-theme-toggle" [(ngModel)]="boardThemeToggleDraft" />
+              <label class="light-switch-label" for="board-theme-toggle">
+                <span>Light switch</span>
+                <span class="light-switch-control">
+                  <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" role="switch" id="board-theme-toggle" name="board-theme-toggle"
+                    [ngModel]="!boardThemeToggleDraft" (ngModelChange)="boardThemeToggleDraft = !$event" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
               </label>
             </div>
             <hr />
             <fieldset>
-              <legend>Background Color</legend>
+              <legend>Background Color · {{ backgroundColorLabel }}</legend>
               <div class="board-color-options">
                 <button *ngFor="let color of boardColors" type="button"
                   [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardDisplayBackground === color.value"
@@ -219,11 +247,21 @@
               </div>
             </fieldset>
             <fieldset>
-              <legend>Pattern</legend>
+              <legend>Pattern · {{ patternLabel(boardPatternDraft) }}</legend>
               <div class="board-pattern-options">
                 <button *ngFor="let pattern of boardPatterns" type="button"
-                  [title]="patternLabel(pattern)" [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
-                  [disabled]="isIdentitySaving" (click)="boardPatternDraft = pattern"></button>
+                  [attr.data-pattern-option]="pattern" [title]="patternLabel(pattern)" [attr.aria-label]="pattern + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
+                  [disabled]="isIdentitySaving" (click)="selectBoardPattern(pattern)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" [ngSwitch]="pattern">
+                    <g *ngSwitchCase="'none'"><circle cx="12" cy="12" r="7.5"/><path d="m7 17 10-10"/></g>
+                    <g *ngSwitchCase="'stars'"><circle cx="7" cy="8" r="1.3"/><circle cx="16" cy="5" r=".6"/><circle cx="15" cy="15" r="2"/><path d="M5 17h.01M20 10h.01"/></g>
+                    <path *ngSwitchCase="'snow'" d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9 5l3 3 3-3M9 19l3-3 3 3M4.5 11l4-1-1-4M16.5 18l-1-4 4-1M4.5 13l4 1-1 4M16.5 6l-1 4 4 1"/>
+                    <g *ngSwitchCase="'grid'"><path opacity=".4" d="M8 3v18M16 3v18M3 8h18M3 16h18"/><path d="M3 8h5v8h8V3"/></g>
+                    <path *ngSwitchCase="'rainfall'" d="m6 4-2 6m9-7-2 6m9-5-2 6M9 13l-2 7m9-7-2 7"/>
+                    <g *ngSwitchCase="'sakura'"><path d="M12 12C5 14 3 8 7 5c4 0 7 3 5 7ZM12 12c1-6 6-7 8-3-1 4-4 5-8 3ZM12 12c5 2 5 7 1 9-4-2-5-6-1-9Z"/><path opacity=".5" d="m6 19 2-2"/></g>
+                    <path *ngSwitchCase="'wave'" d="M3 8c6-8 12 8 18 0M3 12c6-8 12 8 18 0M3 16c6-8 12 8 18 0"/>
+                  </svg>
+                </button>
               </div>
             </fieldset>
             <hr />

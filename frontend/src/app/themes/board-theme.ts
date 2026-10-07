@@ -1,5 +1,5 @@
 /** Visual families are independent of light/dark color mode. */
-export type BoardThemeId = 'default' | 'frutiger-aero' | 'aqua';
+export type BoardThemeId = 'default' | 'frutiger-aero' | 'aqua' | 'omahakase' | 'kiwi';
 export type BoardColorMode = 'light' | 'dark';
 
 type BoardThemeDefinition = {
@@ -16,9 +16,9 @@ type BoardThemeDefinition = {
 export const BOARD_THEMES = [
   {
     id: 'default',
-    label: 'Default',
+    label: 'Berry',
     status: 'available',
-    direction: 'The existing BlueBerry design, with its board color and pattern controls.',
+    direction: 'Warm paper, editorial serif typography, and quiet monochrome controls.',
   },
   {
     id: 'frutiger-aero',
@@ -30,8 +30,10 @@ export const BOARD_THEMES = [
     id: 'aqua',
     label: 'Aqua',
     status: 'available',
-    direction: 'Early Mac OS X: gel controls, soft pinstripes, metallic chrome, and dimensional shadows.',
+    direction: '2010–2014 Apple: silver windows, iOS 6 blue chrome, linen, tactile controls, and a galaxy desktop.',
   },
+  { id: 'omahakase', label: 'Omakase', status: 'available', direction: 'Black lacquer, illuminated rose glass, cherry blossoms, and amber light.' },
+  { id: 'kiwi', label: 'Kiwi', status: 'available', direction: 'Liquid lime, clear console plastic, chrome edges, and luminous dreamlike ribbons.' },
 ] as const satisfies readonly BoardThemeDefinition[];
 
 export const DEFAULT_BOARD_THEME = BOARD_THEMES[0];

@@ -369,12 +369,12 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
-      version: 8, appearance: { themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid' },
+      version: 8, appearance: { themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid', patternIntensity: 'light' },
     }));
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
-  it.each(['frutiger-aero', 'aqua'] as const)('previews %s, restores on Cancel, and saves the selected family', (family) => {
+  it.each(['frutiger-aero', 'aqua', 'omahakase', 'kiwi'] as const)('previews %s, restores on Cancel, and saves the selected family', (family) => {
     const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 4 };
     boardServiceStub.getBoard = () => of(board);
     const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 5 }));
@@ -396,6 +396,28 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
+  it('cycles intensity and resets a newly selected pattern to light', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    fixture.detectChanges();
+    component.selectBoardPattern('stars');
+    expect(component.atmosphereParticles.length).toBe(96);
+    component.selectBoardPattern('stars');
+    expect(component.boardPatternIntensityDraft).toBe('medium');
+    expect(component.atmosphereParticles.length).toBe(160);
+    component.selectBoardPattern('stars');
+    expect(component.appearanceDraft.patternIntensity).toBe('heavy');
+    expect(component.atmosphereParticles.length).toBe(240);
+    component.selectBoardPattern('stars');
+    expect(component.boardPatternIntensityDraft).toBe('light');
+    component.selectBoardPattern('stars');
+    component.selectBoardPattern('sakura');
+    expect(component.boardPatternIntensityDraft).toBe('light');
+    component.selectBoardPattern('none');
+    component.selectBoardPattern('none');
+    expect(component.boardPatternIntensityDraft).toBe('light');
+  });
+
   it('keeps a failed appearance preview and restores saved values on Cancel', () => {
     const appearance = { theme: 'dark' as const, radiusStep: 3 as const, backgroundColor: '#e6f0ff', pattern: 'dots' as const };
     boardServiceStub.getBoard = () => of({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2, appearance });
@@ -403,7 +425,7 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance });
+    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     component.resetAppearance();
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
@@ -411,7 +433,7 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(true);
     expect(component.identitySaveError).toContain('another tab');
     component.cancelIdentityEdit();
-    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance });
+    expect(component.appearanceDraft).toEqual({ themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
@@ -447,7 +469,7 @@ describe('BoardPageComponent', () => {
     component.toggleBoardIdentityMenu();
     expect(component.isBoardIdentityMenuOpen).toBe(true);
     expect(component.boardIdentityNameDraft).toBe('Latest name');
-    expect(component.appearanceDraft.pattern).toBe('dots');
+    expect(component.appearanceDraft.pattern).toBe('stars');
     expect(component.hasUnsavedChanges).toBe(false);
   });
 

@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice"><defs>
+<radialGradient id="ground" cx=".7" cy=".2" r=".9"><stop stop-color="#57815a"/><stop offset=".5" stop-color="#1b403a"/><stop offset="1" stop-color="#091b26"/></radialGradient>
+<radialGradient id="jelly" cx=".35" cy=".2"><stop stop-color="#eeffc8" stop-opacity=".8"/><stop offset=".2" stop-color="#b7ef3f" stop-opacity=".5"/><stop offset=".6" stop-color="#56b562" stop-opacity=".18"/><stop offset=".9" stop-color="#86d887" stop-opacity=".45"/><stop offset="1" stop-color="#d4fdbb" stop-opacity=".7"/></radialGradient>
+<linearGradient id="silk" x2="0" y2="1"><stop stop-color="#edffe6" stop-opacity="0"/><stop offset=".5" stop-color="#e3ffd5" stop-opacity=".3"/><stop offset=".6" stop-color="#b7d0ff" stop-opacity=".1"/><stop offset="1" stop-color="#9cecae" stop-opacity="0"/></linearGradient>
+</defs><path fill="url(#ground)" d="M0 0h1600v1000H0z"/><path fill="url(#jelly)" d="M1060-90C720-50 765 180 1010 260S1570 120 1730 390V-90Z"/><path fill="url(#jelly)" opacity=".65" d="M-200 640C160 410 445 660 300 855S20 1030-200 1120Z"/>
+<g fill="url(#silk)"><path d="M-200 540C240 150 520 920 1050 550S1500 380 1800 450V650C1400 440 1320 500 1040 640S220 300-200 690Z"/><path opacity=".65" d="M-200 610C400 340 610 850 1040 510S1610 560 1820 320V510C1500 680 1200 590 1020 600S340 490-200 740Z"/></g><path d="M-200 540C240 150 520 920 1050 550S1500 380 1800 450" fill="none" stroke="#e8ffd0" stroke-opacity=".3"/>
+</svg>

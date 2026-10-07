@@ -142,16 +142,25 @@ export class BoardPageComponent {
   get boardTheme() {
     return BOARD_THEMES.find(theme => theme.id === this.boardThemeFamilyDraft) ?? BOARD_THEMES[0];
   }
+  private requestedTheme?: BoardThemeId;
+  private themeTransition?: { skipTransition(): void };
   selectBoardTheme(id: BoardThemeId) {
-    if (this.isIdentitySaving || BOARD_THEMES.find(theme => theme.id === id)?.status !== 'available') return;
-    this.boardThemeFamilyDraft = id;
-    this.cdr.markForCheck();
+    if (this.isIdentitySaving || id === (this.requestedTheme ?? this.boardThemeFamilyDraft) || BOARD_THEMES.find(theme => theme.id === id)?.status !== 'available') return;
+    this.requestedTheme = id;
+    this.themeTransition?.skipTransition();
+    const update = () => { if (this.destroyRef.destroyed || this.requestedTheme !== id) return; this.boardThemeFamilyDraft = id; this.requestedTheme = undefined; this.cdr.detectChanges(); };
+    if (typeof document.startViewTransition === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      const transition = document.startViewTransition(update);
+      transition.ready.catch(() => { /* A newer selection may skip this snapshot. */ });
+      this.themeTransition = transition;
+    } else { update(); }
   }
   readonly boardThemes = BOARD_THEMES;
   boardThemeToggleDraft = false;
   boardRadiusStepDraft: 1 | 2 | 3 = 2;
   boardBackgroundColorDraft = '#f9f8f6';
   boardPatternDraft: BoardAppearance['pattern'] = 'none';
+  boardPatternIntensityDraft: NonNullable<BoardAppearance['patternIntensity']> = 'light';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
   newWidgetDraft: WidgetDraft = createEmptyWidgetDraftHelper();
@@ -159,19 +168,64 @@ export class BoardPageComponent {
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
   readonly boardColors = BOARD_PALETTE;
+  // Stable, uneven positions and timing avoid re-randomizing on every change detection.
+  private readonly allAtmosphereParticles = (() => {
+    // Independent seeded draws keep the field stable without diagonal lattice artifacts.
+    let seed = 0x72a9b14f;
+    const random = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; };
+    return Array.from({ length: 280 }, () => ({
+      x: random() * 100, y: random() * 100, delay: -random() * 60,
+      duration: 5 + random() * 10, size: 1.5 + random() * 5,
+      drift: -70 + random() * 140, depth: .3 + random() * .7,
+      turn: -240 + random() * 480,
+      tint: ['#f4f5ff', '#deecff', '#ede1ff', '#ffe9d6'][Math.floor(random() * 4)],
+      route: (() => {
+        const x = Math.floor(random() * 30) * 48, y = Math.floor(random() * 18) * 48;
+        return `M${x} ${y} h132 q12 0 12 12 v72 q0 12 -12 12 h-24 q-12 0 -12 12 v120 q0 12 12 12 h180`;
+      })(),
+    }));
+  })();
   readonly boardPatterns: BoardAppearance['pattern'][] = [
-    'none', 'dots', 'grid', 'diagonal', 'reverse-diagonal', 'stripes', 'checkered',
+    'none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave',
   ];
+  private readonly particleLevels = { light: this.allAtmosphereParticles.slice(0, 96), medium: this.allAtmosphereParticles.slice(0, 160), heavy: this.allAtmosphereParticles.slice(0, 240) };
+  private readonly waveParticles = this.allAtmosphereParticles.map(p => ({ ...p,
+    // Follow the ribbon's broad crest rather than filling the entire viewport.
+    y: 52 - 10 * Math.sin(p.x / 100 * Math.PI * 2) + (p.y / 100 - .5) * 13,
+  }));
+  private readonly rainLevels = { light: this.allAtmosphereParticles.slice(0, 144), medium: this.allAtmosphereParticles.slice(0, 200), heavy: this.allAtmosphereParticles };
+  private readonly dropletLevels = { light: this.allAtmosphereParticles.slice(0, 12), medium: this.allAtmosphereParticles.slice(0, 20), heavy: this.allAtmosphereParticles.slice(0, 30) };
+  private readonly waveParticleLevels = { light: this.waveParticles.slice(0, 40), medium: this.waveParticles.slice(0, 72), heavy: this.waveParticles.slice(0, 112) };
+  private readonly trailLevels = { light: this.allAtmosphereParticles.slice(0, 8), medium: this.allAtmosphereParticles.slice(0, 11), heavy: this.allAtmosphereParticles.slice(0, 14) };
+  get screenDroplets() { return this.dropletLevels[this.boardPatternIntensityDraft]; }
+  get atmosphereParticles() {
+    return (this.boardPatternDraft === 'wave' ? this.waveParticleLevels : this.boardPatternDraft === 'rainfall' ? this.rainLevels : this.particleLevels)[this.boardPatternIntensityDraft];
+  }
+  get gridTrails() { return this.trailLevels[this.boardPatternIntensityDraft]; }
+  selectBoardPattern(pattern: BoardAppearance['pattern']) {
+    if (this.isIdentitySaving) return;
+    if (pattern === this.boardPatternDraft && pattern !== 'none') {
+      this.boardPatternIntensityDraft = this.boardPatternIntensityDraft === 'light' ? 'medium' : this.boardPatternIntensityDraft === 'medium' ? 'heavy' : 'light';
+    } else {
+      this.boardPatternDraft = pattern;
+      this.boardPatternIntensityDraft = 'light';
+    }
+    this.cdr.markForCheck();
+  }
   private persistedAppearance: BoardAppearance = this.defaultAppearance();
 
   defaultAppearance(): BoardAppearance {
-    return { themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
+    return { patternIntensity: 'light', themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
   }
 
   // Render legacy white boards using the new paper color without rewriting saved data.
   get boardDisplayBackground(): string {
     return this.boardBackgroundColorDraft.toLowerCase() === '#ffffff'
       ? '#f9f8f6' : this.boardBackgroundColorDraft;
+  }
+
+  get boardDarkBackground(): string {
+    return this.boardDisplayBackground === '#f9f8f6' ? '#30302e' : `color-mix(in srgb, ${this.boardDisplayBackground} 38%, #181a19)`;
   }
 
   get boardDisplayText(): string {
@@ -187,26 +241,31 @@ export class BoardPageComponent {
   get appearanceDraft(): BoardAppearance {
     return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
       radiusStep: Number(this.boardRadiusStepDraft) as 1 | 2 | 3,
-      backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft };
+      backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft, patternIntensity: this.boardPatternIntensityDraft };
   }
 
   get appearanceChanged(): boolean {
     const draft = this.appearanceDraft;
     const saved = this.persistedAppearance;
     return draft.themeFamily !== (saved.themeFamily ?? 'default') || draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
-      draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern;
+      draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern ||
+      draft.patternIntensity !== (saved.patternIntensity ?? 'light');
   }
 
   applyAppearance(appearance: BoardAppearance) {
+    this.requestedTheme = undefined;
+    this.themeTransition?.skipTransition();
     this.boardThemeFamilyDraft = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
     this.boardThemeToggleDraft = appearance.theme === 'dark';
     this.boardRadiusStepDraft = appearance.radiusStep;
     this.boardBackgroundColorDraft = appearance.backgroundColor;
     this.boardPatternDraft = appearance.pattern;
+    this.boardPatternIntensityDraft = appearance.patternIntensity ?? 'light';
   }
 
   hydrateAppearance(board: Board) {
     this.persistedAppearance = { ...this.defaultAppearance(), ...board.appearance };
+    if (this.persistedAppearance.pattern === 'dots') this.persistedAppearance.pattern = 'stars';
     this.applyAppearance(this.persistedAppearance);
   }
 
@@ -356,6 +415,10 @@ export class BoardPageComponent {
       : 'Settings were not saved. Reopen settings to review the error.';
     if (this.settingsChanged) return 'Unsaved board settings';
     return this.settingsNotice;
+  }
+
+  get backgroundColorLabel(): string {
+    return this.boardColors.find(color => color.value === this.boardDisplayBackground)?.name ?? this.boardDisplayBackground.toUpperCase();
   }
 
   get radiusLabel(): string {
@@ -571,6 +634,7 @@ export class BoardPageComponent {
   }
 
   resetIdentityDraft() {
+    if (this.persistedAppearance.pattern === 'dots') this.persistedAppearance.pattern = 'stars';
     this.applyAppearance(this.persistedAppearance);
     this.boardIdentityNameDraft = this.boardIdentityPersistedName;
     this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;

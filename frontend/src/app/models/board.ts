@@ -2,11 +2,12 @@ import type { BoardColorMode, BoardThemeId } from '../themes/board-theme';
 
 export type BoardAppearance = {
   themeFamily?: BoardThemeId;
+  patternIntensity?: 'light' | 'medium' | 'heavy';
   // Legacy API field: this stores color mode, not the visual theme family.
   theme: BoardColorMode;
   radiusStep: 1 | 2 | 3;
   backgroundColor: string;
-  pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered';
+  pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered' | 'rainfall' | 'stars' | 'snow' | 'sakura' | 'wave';
 };
 
 export type Board = {

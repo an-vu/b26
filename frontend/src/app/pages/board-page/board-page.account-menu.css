@@ -7,7 +7,7 @@
 .account-menu {
   position: absolute;
   left: 0;
-  bottom: calc(100% + 8px);
+  bottom: calc(100% + 20px);
   min-width: 220px;
   border: 1px solid var(--theme-border);
   border-radius: 10px;
