@@ -1,6 +1,6 @@
             <fieldset class="board-theme-picker">
               <legend>Theme · {{ pickerLabel('theme', selectedTheme.label) }}</legend>
-              <div class="board-theme-options">
+              <div class="board-theme-options" [style.--theme-count]="themes.length">
                 <button class="board-theme-option" type="button" *ngFor="let theme of themes"
                   [disabled]="disabled()" [attr.aria-label]="theme.label"
                   [attr.aria-pressed]="selectedTheme.id === theme.id" [attr.data-theme-option]="theme.id" (mouseenter)="pickerHover['theme'] = theme.label" (mouseleave)="pickerHover['theme'] = null"
@@ -40,7 +40,14 @@
                   [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
                   (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="appearance().pattern === pattern"
                   [disabled]="disabled()" (click)="selectPattern(pattern)">
-                  <app-icon [name]="pattern" [strokeWidth]="1.35" />
+                  <app-icon *ngIf="pattern !== 'none'" [name]="pattern" />
+                </button>
+                <button *ngFor="let pattern of placeholderPatterns" type="button" class="pattern-placeholder"
+                  [attr.data-pattern-option]="pattern" [attr.aria-label]="patternLabel(pattern) + ' pattern, coming soon'"
+                  aria-disabled="true" aria-pressed="false" [disabled]="disabled()" [title]="patternLabel(pattern) + ' · Coming soon'"
+                  (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
+                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null">
+                  <app-icon [name]="pattern" />
                 </button>
               </div>
             </fieldset>

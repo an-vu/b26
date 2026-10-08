@@ -1,0 +1,103 @@
+/* Mustache: 2012 Instagram enamel, silver photo panels and charcoal controls.
+   Keep the persisted lofi ID compatible with existing saved appearances. */
+[data-theme='lofi'] {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color-scheme: light;
+  --theme-text: #333536; --theme-muted: #85888a; --theme-border: #bfc2c3;
+  --theme-surface: #eeeeec; --theme-focus: #688eae; --theme-error: #af4036;
+  --mustache-paper: #eeeeec; --mustache-bg: #d4d5d3; --mustache-field: #fafafa;
+  --mustache-chrome: linear-gradient(#6d9bb8, #39769d 48%, #285577);
+  --mustache-silver: linear-gradient(#fafbfb, #e9ebeb 48%, #d3d6d6);
+  --mustache-shadow: #242a3029; --mustache-glint: #ffffffa6;
+  --switch-width: 44px; --switch-height: 26px; --switch-knob-size: 20px; --switch-inset: 3px; --switch-travel: 18px;
+  --switch-on: linear-gradient(#7b9ebb, #3c678d); --switch-off: linear-gradient(#898f93, #bbc0c3);
+  --switch-knob: linear-gradient(#fafbfb, #dce0e2); --switch-shadow: inset 0 1px 3px #29282566, 0 1px #ffffffb3;
+  --picker-glow: #668db740; --picker-shine: #fff9; --danger-ink: #a63c32;
+  --focus-width: 1px; --focus-offset: 2px; --focus-color: #678baa80;
+  color: var(--theme-text);
+}
+.page[data-theme='lofi'] {
+  background: radial-gradient(ellipse at 50% 0, #ffffff30, transparent 70%), url('/themes/mustache-paper.svg'), var(--mustache-bg);
+  background-attachment: fixed;
+}
+.page[data-theme='lofi']::after {
+  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: var(--wallpaper-tint, transparent); mix-blend-mode: color; opacity: .35;
+}
+.page[data-theme='lofi'] :is(.widget, .board-card), [data-theme='lofi'] .utility-panel {
+  background: url('/themes/mustache-paper.svg'), var(--mustache-paper);
+  border: 1px solid var(--theme-border); color: var(--theme-text);
+  box-shadow: inset 0 1px var(--mustache-glint), 0 2px 5px var(--mustache-shadow);
+}
+.page[data-theme='lofi'] .widget h3 { font-weight: 600; letter-spacing: -.02em; }
+.page[data-theme='lofi'] app-widget-host.widget-host-preview .widget { border: 0; background: transparent; box-shadow: none; }
+.page[data-theme='lofi'] .board-rail { color: var(--theme-text); }
+.page[data-theme='lofi'] .board-settings-heading {
+  margin: calc(-1 * var(--panel-padding)) calc(-1 * var(--panel-padding)) 8px;
+  padding: var(--panel-padding); color: #fff; background: var(--mustache-chrome);
+  border-bottom: 1px solid #294d6c; border-radius: 9px 9px 0 0;
+  text-align: center; text-shadow: 0 -1px #1a395880;
+}
+.page[data-theme='lofi'] .home-header { background: transparent; color: var(--theme-text); box-shadow: none; }
+.page[data-theme='lofi'] .home-header-brand {
+  background: var(--mustache-chrome); background-clip: text; -webkit-background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent; text-shadow: none;
+  filter: drop-shadow(0 1px 0 var(--mustache-glint));
+}
+.page[data-theme='lofi'][data-color-mode='dark'] .home-header-brand {
+  background-image: linear-gradient(#b2d6e8, #80b4d3 48%, #5293bf);
+}
+.page[data-theme='lofi'] .bottom-actions {
+  background: linear-gradient(#555451, #343431 48%, #222320 51%, #363631);
+  border: 1px solid #22211f; color: #f3eee4;
+  --theme-text: #f3eee4; --theme-muted: #c4bcae; --theme-surface: #343431; --theme-border: #181b1e;
+  box-shadow: inset 0 1px #ffffff40, 0 3px 10px #1c1b1833;
+}
+/* Restore paper tokens inside panels anchored to the dark camera toolbar. */
+[data-theme='lofi'] .utility-panel {
+  --theme-text: #333536; --theme-muted: #85888a; --theme-border: #bfc2c3; --theme-surface: #eeeeec;
+}
+[data-theme='lofi'] :is(button, a).app-button {
+  background: var(--mustache-silver); border-color: var(--theme-border); color: var(--theme-text);
+  --button-rest-shadow: inset 0 1px var(--mustache-glint), 0 1px 2px var(--mustache-shadow);
+  box-shadow: var(--button-rest-shadow); text-shadow: 0 1px #ffffff50;
+  --button-hover-background: var(--mustache-silver); --button-hover-border: #8499ab;
+  --button-hover-shadow: inset 0 1px var(--mustache-glint), 0 0 7px #537aa330;
+  --button-active-background: linear-gradient(#cbd1d4, #eef1f2); --button-active-shadow: inset 0 1px 3px #443c3333;
+}
+.page[data-theme='lofi'] .bottom-actions :is(.board-identity-button, .home-settings-button) {
+  background: var(--mustache-chrome); border-color: #1c3f60; color: #fff; text-shadow: 0 -1px #24405d;
+  --button-hover-background: var(--mustache-chrome);
+}
+[data-theme='lofi'] :is(input:not([type='range']):not([type='checkbox']), select, textarea) {
+  background: var(--mustache-field); color: var(--theme-text); border: 1px solid var(--theme-border);
+  border-radius: 6px; box-shadow: inset 0 1px 3px #4f473b20;
+}
+[data-theme='lofi'] .inline-edit { background: transparent; }
+.page[data-theme='lofi'] .navigation-orb .orb-button__dot {
+  background: linear-gradient(#ffffff65, transparent 48%, #0002), var(--orb-dot);
+  border-color: #121d29b3; box-shadow: inset 0 1px #ffffffa0, 0 1px #ffffff30;
+}
+.page[data-theme='lofi'] .navigation-orb { --nav-material-halo: #b9d4eb55; }
+.page[data-theme='lofi'] .bottom-actions .toolbar-wordmark { color: #d0d6d9; text-shadow: 0 -1px #101311; }
+.page[data-theme='lofi'] .bottom-actions .toolbar-wordmark:hover { color: #f7fbff; text-shadow: 0 0 7px #c8d9e54d; }
+.page[data-theme='lofi'] .board-atmosphere { color: #879ca9; }
+[data-theme='lofi'][data-color-mode='dark'] {
+  color-scheme: dark; --theme-text: #e9edf0; --theme-muted: #a8b2b9; --theme-border: #56616a;
+  --theme-surface: #30363b; --mustache-paper: #30363b; --mustache-bg: #20262b; --mustache-field: #242b30;
+  --mustache-silver: linear-gradient(#515d66, #39444d 48%, #2b343c);
+  --mustache-glint: #ffffff20; --mustache-shadow: #0005; --danger-ink: #ffaaa0;
+}
+[data-theme='lofi'][data-color-mode='dark'] .utility-panel {
+  --theme-text: #e9edf0; --theme-muted: #a8b2b9; --theme-border: #56616a; --theme-surface: #30363b;
+}
+[data-theme='lofi'] a { color: inherit; }
+[data-theme='lofi'] .error { color: var(--theme-error); }
+[data-theme='lofi'] input[type='range'] {
+  --range-track-border: 1px solid var(--theme-border); --range-track-radius: 99px;
+  --range-track-background: linear-gradient(90deg, #4f789b var(--radius-fill, 50%), var(--mustache-bg) var(--radius-fill, 50%));
+  --range-track-shadow: inset 0 1px 2px #2b2a2855; --range-track-firefox-shadow: inset 0 1px 2px #2b2a2855;
+  --range-thumb-box: border-box; --range-thumb-size: 20px; --range-thumb-offset: -7px;
+  --range-thumb-border: 1px solid #8b887e; --range-thumb-shadow: inset 0 1px #fff8, 0 1px 2px #0003;
+  --range-thumb-firefox-size: 20px; --range-thumb-firefox-shadow: 0 1px 2px #0003;
+}

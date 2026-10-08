@@ -18,3 +18,8 @@
     --preview-border-color: #a9c48c;
     --preview-box-shadow: inset 0 1px #f3ffd7
 }
+[data-family='lofi'] {
+    --preview-background: radial-gradient(circle at 74% 50%, #182630 0 12%, #6489a0 13% 16%, #131c23 17% 22%, #b7ad99 23% 25%, transparent 26%), linear-gradient(90deg, #bd6e52 0 5%, #d6b467 5% 10%, #7d9171 10% 15%, #658ba3 15% 20%, transparent 20%), linear-gradient(#d9cbb5 0 45%, #654936 46%, #392b23);
+    --preview-border-color: #74634d;
+    --preview-box-shadow: inset 0 1px #fff9
+}

@@ -55,3 +55,7 @@ Use the TLS requirements supplied by the database provider. Keep Hibernate's def
 5. Verify API health, sign-in, public board loading, and an owned-board save.
 
 Repository sources: [frontend deployment config](https://github.com/an-vu/b26/blob/main/frontend/vercel.json), [Angular build config](https://github.com/an-vu/b26/blob/main/frontend/angular.json), [backend image](https://github.com/an-vu/b26/blob/main/backend/Dockerfile).
+
+## Production sample profiles — 1.5.7
+
+Added @vhuman, @vi, @moka, @sol, and @pixel to Neon production on October 8, 2026. Each has a public main board and five widgets. These sample profiles have no email or password and cannot sign in. The reviewed, repeatable SQL is in `scripts/seed-production-samples-1.5.7.sql`; it refuses username/URL conflicts and preserves existing accounts and edits. It is an explicit data operation, not an automatic migration or local database upload. Find the profiles through Search or `/vhuman/sample-vhuman` (and equivalent username/slug pairs). Home still uses its fixed preview collection.

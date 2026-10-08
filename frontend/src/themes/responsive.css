@@ -23,8 +23,8 @@
     justify-content: center;
   }
   .toolbar-wordmark { min-height: 44px; }
-  .page .utility-panel .app-button { min-height: 44px; }
-  .page .utility-panel .app-button--icon { width: 44px; min-width: 44px; }
+  .page .utility-panel :is(button, a).app-button { min-height: 44px; }
+  .page .utility-panel .app-button--icon { --icon-button-size: 44px; min-width: 44px; }
   .page .utility-panel :is(input:not([type='range']):not([type='checkbox']), textarea, select) {
     font-size: 16px; min-height: 44px;
   }

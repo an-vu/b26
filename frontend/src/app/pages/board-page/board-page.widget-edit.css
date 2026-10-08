@@ -62,7 +62,7 @@
   box-shadow: var(--remove-shadow); text-shadow: none;
   transition: transform 160ms ease, box-shadow 180ms ease;
 }
-.widget-delete-button svg { width: 18px; height: 18px; }
+.widget-delete-button { --icon-size: 18px; }
 :host .page[data-theme] button.app-button.widget-delete-button:hover:not(:disabled) { transform: scale(1.08); box-shadow: var(--remove-shadow), 0 0 8px #ef3e3640; }
 :host .page[data-theme] button.app-button.widget-delete-button:active:not(:disabled) { transform: scale(.94); }
 @media (pointer: coarse) {

@@ -21,6 +21,7 @@ export class AppearanceSettingsComponent {
   readonly themes = BOARD_THEMES;
   readonly colors = BOARD_PALETTE;
   readonly patterns: (BoardAppearance['pattern'] & IconName)[] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];
+  readonly placeholderPatterns = ['lava', 'bokeh'] as const;
   readonly pickerHover: Record<string, string | null> = {};
   readonly pickerFocus: Record<string, string | null> = {};
   get selectedTheme() { return this.themes.find(theme => theme.id === this.appearance().themeFamily) ?? this.themes[0]; }

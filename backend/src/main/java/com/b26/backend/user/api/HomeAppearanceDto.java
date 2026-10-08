@@ -9,7 +9,7 @@ import jakarta.validation.constraints.Pattern;
 public record HomeAppearanceDto(
     @NotNull @Min(1) @Max(3) Integer radiusStep,
     @NotNull @Min(1) @Max(3) Integer spacingStep,
-    @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi") String themeFamily,
+    @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi|lofi") String themeFamily,
     @Pattern(regexp = "light|dark") String theme,
     @Pattern(regexp = "#[0-9a-fA-F]{6}") String backgroundColor,
     @Pattern(regexp = "none|dots|grid|diagonal|reverse-diagonal|stripes|checkered|rainfall|stars|snow|sakura|wave") String pattern,

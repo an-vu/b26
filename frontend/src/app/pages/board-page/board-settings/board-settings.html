@@ -49,10 +49,10 @@
               <button class="app-button settings-icon-button app-button--icon settings-delete app-button--danger" type="button"
                 aria-label="Delete board" title="Delete board" (click)="deleteBoard.emit($event)"
                 [attr.aria-busy]="isDeletingBoard && deletingBoardUrl === board.boardUrl" [disabled]="isDeletingBoard || isIdentitySaving">
-                <app-icon name="trash" [strokeWidth]="1.7" />
+                <app-icon name="trash" />
               </button>
               <button class="app-button settings-icon-button app-button--icon settings-coverflow" type="button" aria-label="Board switcher" [disabled]="isDeletingBoard" [attr.aria-expanded]="isBoardSwitcherOpen" aria-controls="board-switcher" (click)="toggleSwitcher.emit()" title="Switch boards">
-                <app-icon name="boards" [strokeWidth]="1.5" />
+                <app-icon name="boards" />
               </button>
             </div>
             <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>

@@ -116,6 +116,14 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("kiwi", rows.getString(1));
         }
+        statement.executeUpdate("update boards set appearance_theme_family = 'lofi' where id = 'default'");
+        statement.executeUpdate("update user_preferences set home_theme_family = 'lofi'");
+        try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
+          rows.next(); assertEquals("lofi", rows.getString(1));
+        }
+        try (var rows = statement.executeQuery("select home_theme_family from user_preferences")) {
+          rows.next(); assertEquals("lofi", rows.getString(1));
+        }
         try (var rows = statement.executeQuery("select visibility from boards where id = 'default'")) {
           rows.next(); assertEquals("public", rows.getString(1));
         }

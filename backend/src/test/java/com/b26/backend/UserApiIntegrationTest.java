@@ -11,15 +11,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class UserApiIntegrationTest extends ApiIntegrationTestSupport {
 
-  @Test
-  void homeAppearance_isPersistedForViewerWithoutChangingMainBoard() throws Exception {
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"kiwi", "lofi"})
+  void homeAppearance_isPersistedForViewerWithoutChangingMainBoard(String family) throws Exception {
     selectDefault();
-    mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"), "{\"radiusStep\":3,\"spacingStep\":1,\"themeFamily\":\"kiwi\",\"theme\":\"dark\",\"backgroundColor\":\"#3185fc\",\"pattern\":\"snow\",\"patternIntensity\":\"heavy\"}"))
+    mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"), "{\"radiusStep\":3,\"spacingStep\":1,\"themeFamily\":\"%s\",\"theme\":\"dark\",\"backgroundColor\":\"#3185fc\",\"pattern\":\"snow\",\"patternIntensity\":\"heavy\"}".formatted(family)))
         .andExpect(status().isOk());
     mockMvc.perform(auth(get(API_USERS_ME_PREFERENCES + "/home")))
         .andExpect(status().isOk()).andExpect(jsonPath("$.radiusStep").value(3))
         .andExpect(jsonPath("$.spacingStep").value(1))
-        .andExpect(jsonPath("$.themeFamily").value("kiwi"))
+        .andExpect(jsonPath("$.themeFamily").value(family))
         .andExpect(jsonPath("$.theme").value("dark"))
         .andExpect(jsonPath("$.backgroundColor").value("#3185fc"))
         .andExpect(jsonPath("$.pattern").value("snow"))

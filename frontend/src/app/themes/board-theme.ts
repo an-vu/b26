@@ -1,5 +1,5 @@
 /** Visual families are independent of light/dark color mode. */
-export type BoardThemeId = 'default' | 'frutiger-aero' | 'aqua' | 'omahakase' | 'kiwi';
+export type BoardThemeId = 'default' | 'frutiger-aero' | 'aqua' | 'omahakase' | 'kiwi' | 'lofi';
 export type BoardColorMode = 'light' | 'dark';
 
 type BoardThemeDefinition = {
@@ -34,6 +34,7 @@ export const BOARD_THEMES = [
   },
   { id: 'omahakase', label: 'Omakase', status: 'available', direction: 'Black lacquer, illuminated rose glass, cherry blossoms, and amber light.' },
   { id: 'kiwi', label: 'Kiwi', status: 'available', direction: 'Liquid lime, clear console plastic, chrome edges, and luminous dreamlike ribbons.' },
+  { id: 'lofi', label: 'Mustache', status: 'available', direction: 'Instagram in 2012: blue enamel, silver photo panels, subtle grain, and charcoal camera controls.' },
 ] as const satisfies readonly BoardThemeDefinition[];
 
 export const DEFAULT_BOARD_THEME = BOARD_THEMES[0];

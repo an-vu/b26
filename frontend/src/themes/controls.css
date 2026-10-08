@@ -11,24 +11,24 @@
 }
 
 /* Separate pseudo-elements are necessary for WebKit and Firefox. */
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi']) input[type='range'] {
+.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range'] {
   appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi']) input[type='range']::-webkit-slider-runnable-track {
+.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-webkit-slider-runnable-track {
   height: 7px; border: var(--range-track-border); border-radius: var(--range-track-radius);
   background: var(--range-track-background); box-shadow: var(--range-track-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi']) input[type='range']::-moz-range-track {
+.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-moz-range-track {
   height: 5px; border: var(--range-track-border); border-radius: var(--range-track-radius);
   background: var(--range-track-background); box-shadow: var(--range-track-firefox-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi']) input[type='range']::-webkit-slider-thumb {
+.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-webkit-slider-thumb {
   appearance: none; -webkit-appearance: none; box-sizing: var(--range-thumb-box);
   width: var(--range-thumb-size); height: var(--range-thumb-size); margin-top: var(--range-thumb-offset);
   border: var(--range-thumb-border); border-radius: 50%; background: var(--switch-knob);
   box-shadow: var(--range-thumb-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi']) input[type='range']::-moz-range-thumb {
+.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-moz-range-thumb {
   box-sizing: var(--range-thumb-box); width: var(--range-thumb-firefox-size); height: var(--range-thumb-firefox-size);
   border: var(--range-thumb-border); border-radius: 50%; background: var(--switch-knob);
   box-shadow: var(--range-thumb-firefox-shadow);

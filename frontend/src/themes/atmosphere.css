@@ -111,7 +111,6 @@
 @keyframes board-wave-glow { 0%, 100% { opacity: .06; transform: translate3d(0, 8px, 0) scale(.65); } 42% { opacity: calc(.3 + var(--depth) * .7); transform: translate3d(calc(var(--drift) * .25), -8px, 0) scale(1.25); } 65% { opacity: .15; } }
 
 .page[data-theme] .board-pattern-options button { background: var(--theme-surface); color: var(--theme-muted); display: grid; place-items: center; }
-.page[data-theme] .board-pattern-options button svg { width: 19px; height: 19px; }
 .page[data-theme] .board-pattern-options button[aria-pressed='true'] { color: var(--theme-text); }
 /* Asymmetric surface-tension beads: broken highlights instead of outlined rings.
    Most beads cling; a few gather weight and slip. No per-drop backdrop filters. */

@@ -53,7 +53,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @org.junit.jupiter.params.ParameterizedTest
-  @org.junit.jupiter.params.provider.ValueSource(strings = {"frutiger-aero", "aqua", "omahakase", "kiwi"})
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"frutiger-aero", "aqua", "omahakase", "kiwi", "lofi"})
   void themeFamilyPersistsAndLegacyClientsPreserveIt(String family) throws Exception {
     String token = authAnvu();
     var board = create(token);

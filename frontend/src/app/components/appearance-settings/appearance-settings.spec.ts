@@ -24,3 +24,23 @@ it('cycles the selected pattern intensity, resets all appearance fields, and ign
   fixture.componentInstance.selectPattern('stars');
   expect(changes).toHaveLength(count);
 });
+
+it('shows six theme previews and keeps Lava and Bokeh placeholders from changing appearance', () => {
+  const fixture = TestBed.createComponent(AppearanceSettingsComponent);
+  fixture.componentRef.setInput('appearance', { ...BERRY_APPEARANCE, themeFamily: 'lofi' });
+  fixture.detectChanges();
+  const changes: BoardAppearance[] = [];
+  fixture.componentInstance.appearanceChange.subscribe(value => changes.push(value));
+  expect(fixture.nativeElement.querySelectorAll('.board-theme-option')).toHaveLength(6);
+  expect(fixture.componentInstance.selectedTheme.label).toBe('Mustache');
+  for (const pattern of ['lava', 'bokeh']) {
+    const button = fixture.nativeElement.querySelector(`[data-pattern-option="${pattern}"]`);
+    expect(button.getAttribute('aria-disabled')).toBe('true');
+    expect(button.querySelector('svg')).not.toBeNull();
+    button.click();
+    button.dispatchEvent(new MouseEvent('mouseenter'));
+    fixture.detectChanges();
+    expect(fixture.componentInstance.pickerLabel('pattern', 'None')).toBe(pattern === 'lava' ? 'Lava' : 'Bokeh');
+  }
+  expect(changes).toHaveLength(0);
+});

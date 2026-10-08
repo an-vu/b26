@@ -14,14 +14,14 @@
 <nav class="bottom-actions" [class.has-top-brand]="brandAtTop()" aria-label="Main navigation">
       <div class="bottom-actions-left">
         <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb" routerLink="/">
-          <span class="orb-button__dot" aria-hidden="true"><app-icon name="home" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
+          <span class="orb-button__dot" aria-hidden="true"><app-icon name="home" svgClass="navigation-orb__icon" /></span>
         </button>
         <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb" (click)="closeAccount(); userSearch.open($event)" aria-haspopup="dialog">
-          <span class="orb-button__dot" aria-hidden="true"><app-icon name="search" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
+          <span class="orb-button__dot" aria-hidden="true"><app-icon name="search" svgClass="navigation-orb__icon" /></span>
         </button>
         <div class="account-menu-wrap" appPanelBehavior [panelOpen]="accountOpen()" [panelInternalView]="accountSettingsOpen()" (panelDismiss)="dismissAccount($event)">
           <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb" (click)="toggleAccount()" [attr.aria-expanded]="accountOpen()">
-            <span class="orb-button__dot" aria-hidden="true"><app-icon name="account" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
+            <span class="orb-button__dot" aria-hidden="true"><app-icon name="account" svgClass="navigation-orb__icon" /></span>
           </button>
           <div class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
             <ng-container *ngIf="user$ | async as user; else signedOutMenu">
@@ -39,11 +39,11 @@
             <hr />
             <div class="board-settings-tools account-tools panel-actions">
               <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="Insights" routerLink="/insights" (click)="closeAccount()">
-                <app-icon name="insights" [strokeWidth]="1.7" />
+                <app-icon name="insights" />
               </button>
               <button type="button" class="app-button my-board-button panel-action-main" [routerLink]="['/', user.username]" (click)="closeAccount()">My Board</button>
-              <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="Settings" [attr.aria-expanded]="accountSettingsOpen()" (click)="toggleAccountSettings()">
-                <app-icon name="settings" [strokeWidth]="1.7" />
+              <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="More" [attr.aria-expanded]="accountSettingsOpen()" (click)="toggleAccountSettings()">
+                <app-icon name="more" />
               </button>
             </div>
             <p class="account-menu-error" role="alert" *ngIf="error()">{{ error() }}</p>

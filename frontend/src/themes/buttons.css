@@ -35,10 +35,11 @@
 }
 
 :is(button, a).app-button:is(.widget-delete-button, .app-button--icon) {
-  width: 32px;
-  height: 32px;
+  width: var(--icon-button-size, 32px);
+  height: var(--icon-button-size, 32px);
+  min-height: var(--icon-button-size, 32px);
   padding: 0;
-  flex: 0 0 32px;
+  flex: 0 0 var(--icon-button-size, 32px);
 }
 
 .app-button--icon svg { width: var(--button-icon-size, 17px); height: var(--button-icon-size, 17px); display: block; flex: none; }
