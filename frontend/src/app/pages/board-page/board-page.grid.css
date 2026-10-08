@@ -1,13 +1,4 @@
-.board-grid {
-  --board-grid-gap: var(--widget-spacing, 16px);
-  --board-grid-cols: 4;
-  display: grid;
-  align-content: start;
-  grid-template-columns: repeat(var(--board-grid-cols), minmax(0, 1fr));
-  gap: var(--board-grid-gap);
-  /* A grid unit is square. Content never grows its row. */
-  grid-auto-rows: calc((100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols));
-}
+.board-grid { --square-grid-gap: var(--widget-spacing, 16px); align-content: start; }
 
 .board-tile {
   cursor: default;
@@ -16,26 +7,10 @@
   grid-column: span var(--tile-cols, 1);
 }
 
-.board-card {
-  border: 1px solid var(--theme-border);
-  border-radius: var(--board-widget-radius, 12px);
-  padding: 12px;
-  display: grid;
-  align-content: start;
-  align-items: start;
-  gap: 8px;
-  height: 100%;
-  min-height: 0;
-  overflow: auto;
-  box-sizing: border-box;
-}
+.board-card { min-height: 0; overflow: auto; }
 
 .board-card--compact {
   padding: 10px;
-}
-
-.board-card--scroll {
-  overflow: auto;
 }
 
 .tile-span-1 {

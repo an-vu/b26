@@ -1,4 +1,7 @@
-import { Component, DestroyRef, ElementRef, HostListener, inject, input, signal } from '@angular/core';
+import { PanelBehaviorDirective, PanelDismissReason } from '../../directives/panel-behavior';
+import { IconComponent } from '../icon/icon';
+import { ChromeBlurService } from '../../services/chrome-blur.service';
+import { Component, DestroyRef, inject, input, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -13,11 +16,12 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 
 @Component({
   selector: 'app-site-navigation', standalone: true,
-  imports: [CommonModule, RouterLink, UserSearchComponent, AboutPanelComponent],
+  imports: [PanelBehaviorDirective, IconComponent, CommonModule, RouterLink, UserSearchComponent, AboutPanelComponent],
   templateUrl: './site-navigation.html',
-  styleUrls: ['../../pages/board-page/board-page.account-menu.css', './site-navigation.css']
+  styleUrls: ['./account-panel.css', './site-navigation.css']
 })
 export class SiteNavigationComponent {
+  readonly blur = inject(ChromeBlurService);
   readonly theme = inject(SiteThemeService);
   readonly brandAtTop = input(false);
   readonly beforeSignOut = input<() => boolean>(() => true);
@@ -25,22 +29,23 @@ export class SiteNavigationComponent {
   private readonly users = inject(UserStoreService);
   private readonly boards = inject(BoardStoreService);
   private readonly router = inject(Router);
-  private readonly host = inject(ElementRef<HTMLElement>);
   private readonly destroyRef = inject(DestroyRef);
   readonly user$ = combineLatest([this.auth.user$, this.users.profile$]).pipe(map(([user, profile]) => user ? profile ?? user : null));
   readonly accountOpen = signal(false);
+  readonly accountSettingsOpen = signal(false);
+  toggleAccountSettings() { this.accountSettingsOpen.update(open => !open); }
+  dismissAccount(reason: PanelDismissReason) {
+    if (reason === 'back') this.accountSettingsOpen.set(false);
+    else this.closeAccount();
+  }
   readonly signingOut = signal(false);
   readonly error = signal('');
   constructor() {
     this.router.events.pipe(filter(event => event instanceof NavigationEnd), takeUntilDestroyed(this.destroyRef))
-      .subscribe(() => this.accountOpen.set(false));
+      .subscribe(() => this.closeAccount());
   }
-  toggleAccount() { this.accountOpen.update(open => !open); }
-  closeAccount() { this.accountOpen.set(false); }
-  @HostListener('document:keydown.escape') onEscape() { this.closeAccount(); }
-  @HostListener('document:click', ['$event']) onOutsideClick(event: MouseEvent) {
-    if (event.target instanceof Node && !this.host.nativeElement.querySelector('.account-menu-wrap')?.contains(event.target)) this.closeAccount();
-  }
+  toggleAccount() { if (this.accountOpen()) this.closeAccount(); else { this.accountSettingsOpen.set(false); this.accountOpen.set(true); } }
+  closeAccount() { this.accountOpen.set(false); this.accountSettingsOpen.set(false); }
   signOut() {
     if (this.signingOut() || !this.beforeSignOut()()) return;
     this.signingOut.set(true); this.error.set('');

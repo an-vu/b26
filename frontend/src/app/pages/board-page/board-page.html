@@ -24,53 +24,25 @@
   >
     <app-board-atmosphere [appearance]="appearanceDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'" />
     <div class="board-shell">
-      <aside class="board-rail">
-        <div class="profile-avatar" role="img" aria-label="Profile picture placeholder">
-          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="24" r="10" fill="currentColor"/><path d="M12 57c0-13 8-20 20-20s20 7 20 20" fill="currentColor"/></svg>
-        </div>
-        <div class="profile-field profile-name-field" [class.is-editing]="isWidgetEditMode">
-          <h1 class="profile-name" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? profileNameDraft : state.board.ownerDisplayName || state.board.ownerUsername) || 'Name' }}</h1>
-          <textarea *ngIf="isWidgetEditMode" aria-label="Profile name" name="profile-name" [(ngModel)]="profileNameDraft" [disabled]="isWidgetSaving" maxlength="255" rows="1" placeholder="Name"></textarea>
-        </div>
-        <p class="profile-handle">@{{ state.board.ownerUsername || 'username' }}</p>
-        <div class="profile-stats" aria-label="Profile statistics placeholders">
-          <span><strong>0</strong> Likes</span><span><strong>0</strong> Followers</span><span><strong>0</strong> Following</span>
-        </div>
-        <div class="profile-bio">
-          <div class="profile-field profile-description-field" [class.is-editing]="isWidgetEditMode">
-            <span class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftHeadline : state.board.headline) || 'Welcome to my page' }}</span>
-            <textarea *ngIf="isWidgetEditMode" aria-label="Profile description" name="board-headline" [(ngModel)]="boardDraftHeadline" [disabled]="isWidgetSaving" maxlength="255" placeholder="Welcome to my page" rows="1"></textarea>
-          </div>
-          <div *ngIf="isWidgetEditMode || state.board.website?.trim()" class="profile-field profile-website-field" [class.is-editing]="isWidgetEditMode">
-            <span *ngIf="isWidgetEditMode || !safeWebsite(state.board.website)" class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftWebsite : state.board.website) || 'Link in bio' }}</span>
-            <a *ngIf="!isWidgetEditMode && safeWebsite(state.board.website) as website" [href]="website" target="_blank" rel="noopener noreferrer">{{ state.board.website }}</a>
-            <textarea *ngIf="isWidgetEditMode" aria-label="Website or social URL" name="board-website" [(ngModel)]="boardDraftWebsite" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link in bio" rows="1"></textarea>
-          </div>
-        </div>
-        <div class="profile-edit-actions" *ngIf="!readOnlyView && canEditBoard">
-          <button
-            type="button"
-            class="app-button"
-            *ngIf="!isWidgetEditMode; else doneButton"
-            (click)="requestWidgetEdit(state.board)"
-            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
-          >
-          {{ isWidgetLoading ? 'Loading...' : 'Edit' }}
-        </button>
-        <ng-template #doneButton>
-          <button type="button" class="app-button" (click)="doneWidgetEdit()" [disabled]="isWidgetSaving">
-            {{ isWidgetSaving ? 'Saving...' : 'Save' }}
-          </button>
-          <button type="button" class="app-button" (click)="discardWidgetEdit()" [disabled]="isWidgetSaving">Cancel</button>
-        </ng-template>
-        </div>
-        <p class="board-settings-feedback" role="status" aria-live="polite" *ngIf="canEditBoard && !readOnlyView">{{ settingsFeedback }}</p>
-      </aside>
+      <app-board-profile
+        [board]="state.board"
+        [isWidgetEditMode]="isWidgetEditMode"
+        [(profileNameDraft)]="profileNameDraft"
+        [(boardDraftHeadline)]="boardDraftHeadline"
+        [(boardDraftWebsite)]="boardDraftWebsite"
+        [isWidgetSaving]="isWidgetSaving"
+        [readOnlyView]="readOnlyView"
+        [canEditBoard]="canEditBoard"
+        [isSettingsReloading]="isSettingsReloading"
+        [isWidgetLoading]="isWidgetLoading"
+        [isIdentitySaving]="isIdentitySaving"
+        [settingsFeedback]="settingsFeedback"
+        (edit)="requestWidgetEdit(state.board)" (save)="doneWidgetEdit()" (cancel)="discardWidgetEdit()" />
 
       <section appWidgetBounce class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
         <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-        <div class="board-grid" *ngIf="isWidgetEditMode">
+        <div class="board-grid square-grid" *ngIf="isWidgetEditMode">
           <article
             *ngFor="let draft of widgetDrafts; let i = index"
             [class]="'board-tile board-card widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
@@ -84,16 +56,12 @@
               (click)="deleteWidget(draft); $event.stopPropagation()"
               [disabled]="isWidgetSaving"
             >
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" aria-hidden="true"><path d="M6 12h12" /></svg>
+              <app-icon name="minus" [strokeWidth]="3" />
             </button>
 
             <ng-container *ngIf="isWidgetSettingsOpen(draft); else widgetPreview">
-              <ng-container
-                *ngTemplateOutlet="
-                  widgetSettingsForm;
-                  context: { $implicit: draft, isNew: false, index: i }
-                "
-              ></ng-container>
+              <app-widget-editor [draft]="draft" [i]="i" [total]="widgetDrafts.length" [disabled]="isWidgetSaving || isIdentitySaving" [saving]="isWidgetSaving" [error]="getDraftValidationError(draft)"
+                (fieldChange)="onWidgetDraftFieldChange(draft)" (typeChange)="onWidgetTypeChange(draft)" (move)="moveWidget(draft, $event)" />
             </ng-container>
 
             <ng-template #widgetPreview>
@@ -105,16 +73,11 @@
 
           <article
             [class]="'board-tile board-card board-card--compact widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
-            [class.board-card--scroll]="isAddWidgetExpanded"
             [class.add-widget-tile--collapsed]="!isAddWidgetExpanded"
           >
             <ng-container *ngIf="isAddWidgetExpanded; else addWidgetCollapsed">
-              <ng-container
-                *ngTemplateOutlet="
-                  widgetSettingsForm;
-                  context: { $implicit: newWidgetDraft, isNew: true, index: -1 }
-                "
-              ></ng-container>
+              <app-widget-editor [draft]="newWidgetDraft" [isNew]="true" [disabled]="isWidgetSaving || isIdentitySaving" [saving]="isWidgetSaving" [error]="newWidgetValidationError"
+                (fieldChange)="onNewWidgetFieldChange()" (typeChange)="onNewWidgetTypeChange()" (add)="addNewWidget()" />
             </ng-container>
             <ng-template #addWidgetCollapsed>
               <button class="app-button" type="button" (click)="openAddWidgetForm()" [disabled]="isWidgetSaving">Add Widget</button>
@@ -124,7 +87,7 @@
 
         <ng-container *ngIf="!isWidgetEditMode">
           <p class="widgets-empty text-muted" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-          <div class="board-grid" *ngIf="widgets.length > 0">
+          <div class="board-grid square-grid" *ngIf="widgets.length > 0">
             <div
               class="board-tile widget-tile"
               *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
@@ -138,51 +101,34 @@
     </div>
 
     <app-site-navigation [beforeSignOut]="prepareSignOut">
-      <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
-        <div class="board-identity-menu-anchor">
-          <button type="button" class="app-button board-identity-button" (click)="toggleBoardIdentityMenu()" [attr.aria-busy]="isSettingsReloading" [attr.aria-disabled]="isSettingsReloading" [attr.aria-expanded]="isBoardIdentityMenuOpen" aria-controls="board-settings-panel" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
-            <span class="toolbar-board-name">{{ boardIdentityNameDraft || boardMenuLabel(state.board.id) }}</span>
-            <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || state.board.boardUrl, ownerUsername: state.board.ownerUsername }) }}</span>
-          </button>
-          <div class="board-identity-menu utility-panel" [class.board-switcher-open]="isBoardSwitcherOpen" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
-            <h2 class="board-settings-heading">Board Settings</h2>
-            <label>
-              Board Name
-              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [(ngModel)]="boardIdentityNameDraft" (blur)="saveSettingsAutomatically()" (keydown.enter)="saveSettingsAutomatically()" />
-            </label>
-            <label>
-              URL
-              <div class="slug-input-wrap">
-                <span>/{{ state.board.ownerUsername || 'b' }}/</span>
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [(ngModel)]="boardIdentitySlugDraft" (blur)="saveSettingsAutomatically()" (keydown.enter)="saveSettingsAutomatically()" />
-              </div>
-            </label>
-            <hr />
-            <app-appearance-settings [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearanceChange)="onAppearanceChange($event)" />
-            <div class="board-settings-tools">
-              <button class="app-button settings-icon-button settings-delete" type="button"
-                aria-label="Delete board" title="Delete board" (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
-                [attr.aria-busy]="isDeletingBoard && deletingBoardUrl === state.board.boardUrl" [disabled]="isDeletingBoard || isIdentitySaving">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7m4-7v7"/></svg>
-              </button>
-              <button class="app-button settings-icon-button settings-coverflow" type="button" aria-label="Board switcher" [attr.aria-expanded]="isBoardSwitcherOpen" aria-controls="board-switcher" (click)="isBoardSwitcherOpen = !isBoardSwitcherOpen" title="Switch boards">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round" aria-hidden="true"><rect x="7" y="4" width="10" height="16" rx="1.5"/><path d="M4 6H2v12h2M20 6h2v12h-2"/></svg>
-              </button>
-            </div>
-            <section *ngIf="isBoardSwitcherOpen" class="board-switcher account-menu utility-panel" id="board-switcher" aria-label="Your boards">
-              <div class="board-switcher-heading"><strong>Your boards</strong><button class="app-button" type="button" aria-label="Close board switcher" (click)="isBoardSwitcherOpen = false">×</button></div>
-              <div class="board-switcher-row" *ngFor="let board of accountBoards">
-                <button class="app-button board-switcher-link" type="button" (click)="switchToBoard(board.route)" [attr.aria-current]="board.boardUrl === state.board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ board.label }}</button>
-                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="isMainBoard(board.id)" [disabled]="isMainBoard(board.id) || isSettingMainBoard || board.visibility === 'private'" (click)="onAccountBoardSetMain(board.id, $event)">{{ isMainBoard(board.id) ? 'Main' : 'Set main' }}</button>
-              </div>
-              <p *ngIf="!accountBoards.length">No boards yet.</p>
-              <p class="error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
-            </section>
-            <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
-            <button *ngIf="identitySaveError" class="app-button" type="button" (click)="saveSettingsAutomatically()" [disabled]="isIdentitySaving">Retry saving</button>
-          </div>
-        </div>
-      </div>
+      <app-board-settings *ngIf="!readOnlyView && canEditBoard"
+        [board]="state.board"
+        [menuLabel]="boardMenuLabel(state.board.id)"
+        [(boardIdentityNameDraft)]="boardIdentityNameDraft"
+        [(boardIdentitySlugDraft)]="boardIdentitySlugDraft"
+        [appearanceDraft]="appearanceDraft"
+        [accountBoards]="accountBoards"
+        [accountMainBoardId]="accountMainBoardId"
+        [pendingDeleteBoardUrl]="pendingDeleteBoardUrl"
+        [pendingDeleteBoardLabel]="pendingDeleteBoardLabel"
+        [accountActionError]="accountActionError"
+        [boardDeleteError]="boardDeleteError"
+        [deletingBoardUrl]="deletingBoardUrl"
+        [identitySaveError]="identitySaveError"
+        [isSettingsReloading]="isSettingsReloading"
+        [isBoardIdentityMenuOpen]="isBoardIdentityMenuOpen"
+        [isWidgetEditMode]="isWidgetEditMode"
+        [isWidgetLoading]="isWidgetLoading"
+        [isWidgetSaving]="isWidgetSaving"
+        [isIdentitySaving]="isIdentitySaving"
+        [isBoardSwitcherOpen]="isBoardSwitcherOpen"
+        [isSettingMainBoard]="isSettingMainBoard"
+        [hasUnsavedChanges]="hasUnsavedChanges"
+        [isDeletingBoard]="isDeletingBoard"
+        (toggle)="toggleBoardIdentityMenu()" (save)="saveSettingsAutomatically()" (reset)="resetAppearance()"
+        (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
+        (deleteBoard)="onAccountBoardDelete(state.board.boardUrl, $event)" (setMain)="onAccountBoardSetMain($event.id, $event.event)"
+        (toggleSwitcher)="toggleBoardSwitcher()" (confirmDelete)="confirmBoardDelete()" (dismiss)="dismissBoardSettings($event)" />
     </app-site-navigation>
   </main>
   <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none" *ngIf="state.status === 'loading'">
@@ -194,83 +140,3 @@
 
   <app-site-navigation *ngIf="state.status !== 'ready'" />
 </ng-container>
-
-<ng-template #widgetSettingsForm let-draft let-isNew="isNew" let-i="index">
-  <div class="widget-settings-panel">
-    <div class="widget-editor-head">
-      <input [disabled]="isWidgetSaving || isIdentitySaving"
-        type="text"
-        class="widget-title-inline inline-edit"
-        [name]="isNew ? 'new-widget-title' : 'widget-title-' + draft.id"
-        [(ngModel)]="draft.title"
-        (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
-        placeholder="Widget Name"
-      />
-    </div>
-
-    <label>
-      Type
-      <select [disabled]="isWidgetSaving || isIdentitySaving"
-        [name]="isNew ? 'new-widget-type' : 'widget-type-' + draft.id"
-        [(ngModel)]="draft.type"
-        (ngModelChange)="isNew ? onNewWidgetTypeChange() : onWidgetTypeChange(draft)"
-      >
-        <option value="embed">Embed</option>
-        <option value="link">Link</option>
-        <option value="map">Map</option>
-      </select>
-    </label>
-    <label>
-      Layout
-      <select [disabled]="isWidgetSaving || isIdentitySaving"
-        [name]="isNew ? 'new-widget-layout' : 'widget-layout-' + draft.id"
-        [(ngModel)]="draft.layout"
-        (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
-      >
-        <option value="span-1">1c x 1r</option>
-        <option value="span-2">2c x 1r</option>
-        <option value="span-3">3c x 1r</option>
-        <option value="span-4">4c x 1r</option>
-        <option value="span-1x2">1c x 2r</option>
-        <option value="span-2x2">2c x 2r</option>
-        <option value="span-3x3">3c x 3r</option>
-      </select>
-    </label>
-    <label *ngIf="draft.type === 'embed'">
-      Embed URL
-      <input [disabled]="isWidgetSaving || isIdentitySaving"
-        type="text"
-        [name]="isNew ? 'new-widget-embed-url' : 'widget-embed-url-' + draft.id"
-        [(ngModel)]="draft.embedUrl"
-        (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
-      />
-    </label>
-    <label *ngIf="draft.type === 'link'">
-      Link URL
-      <input [disabled]="isWidgetSaving || isIdentitySaving"
-        type="text"
-        [name]="isNew ? 'new-widget-link-url' : 'widget-link-url-' + draft.id"
-        [(ngModel)]="draft.linkUrl"
-        (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
-      />
-    </label>
-    <label *ngIf="draft.type === 'map'">
-      Places (one per line)
-      <textarea [disabled]="isWidgetSaving || isIdentitySaving"
-        [name]="isNew ? 'new-widget-places' : 'widget-places-' + draft.id"
-        [(ngModel)]="draft.placesText"
-        (ngModelChange)="isNew ? onNewWidgetFieldChange() : onWidgetDraftFieldChange(draft)"
-        rows="4"
-      ></textarea>
-    </label>
-    <p class="field-error" *ngIf="!isNew && getDraftValidationError(draft) as error">{{ error }}</p>
-    <p class="field-error" *ngIf="isNew && newWidgetValidationError">{{ newWidgetValidationError }}</p>
-    <div class="widget-editor-actions" *ngIf="!isNew">
-      <button class="app-button" type="button" (click)="moveWidget(draft, -1); $event.stopPropagation()" [disabled]="isWidgetSaving || i === 0">Up</button>
-      <button class="app-button" type="button" (click)="moveWidget(draft, 1); $event.stopPropagation()" [disabled]="isWidgetSaving || i === widgetDrafts.length - 1">Down</button>
-    </div>
-    <div class="widget-editor-actions" *ngIf="isNew">
-      <button class="app-button" type="button" (click)="addNewWidget()" [disabled]="isWidgetSaving">Add</button>
-    </div>
-  </div>
-</ng-template>

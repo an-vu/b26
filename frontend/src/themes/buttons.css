@@ -1,5 +1,5 @@
 /* Shared action button; theme tokens can change its appearance centrally. */
-button.app-button {
+:is(button, a).app-button {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -20,33 +20,40 @@ button.app-button {
   text-align: center;
   white-space: normal;
   overflow-wrap: anywhere;
+  text-decoration: none;
   appearance: none;
   cursor: pointer;
   transition: background-color 120ms ease, border-color 120ms ease;
 }
-button.app-button:hover:not(:disabled):not([aria-disabled='true']) {
-  background: color-mix(in srgb, var(--theme-surface) 88%, var(--theme-text));
-  border-color: var(--theme-text);
-}
-button.app-button:active:not(:disabled):not([aria-disabled='true']) {
-  background: color-mix(in srgb, var(--theme-surface) 78%, var(--theme-text));
-}
-button.app-button:focus-visible {
-  outline: 2px solid var(--theme-focus);
-  outline-offset: 2px;
-}
-button.app-button:disabled,
-button.app-button[aria-disabled='true'] {
+:is(button, a).app-button:disabled,
+:is(button, a).app-button[aria-disabled='true'] {
   opacity: .5;
   cursor: default;
 }
 @media (prefers-reduced-motion: reduce) {
-  button.app-button { transition: none; }
+  :is(button, a).app-button { transition: none; }
 }
 
-button.app-button:is(.widget-delete-button, .account-board-actions-trigger) {
+:is(button, a).app-button:is(.widget-delete-button, .app-button--icon) {
   width: 32px;
   height: 32px;
   padding: 0;
   flex: 0 0 32px;
+}
+
+.app-button--icon svg { width: var(--button-icon-size, 17px); height: var(--button-icon-size, 17px); display: block; flex: none; }
+
+:is(button, a).app-button:hover:not(:disabled):not([aria-disabled='true']) {
+  background: var(--button-hover-background, color-mix(in srgb, var(--theme-surface) 88%, var(--theme-text)));
+  border-color: var(--button-hover-border, var(--theme-text));
+  box-shadow: var(--button-hover-shadow, var(--button-rest-shadow, none));
+  color: var(--button-hover-color, var(--button-rest-color, var(--theme-text)));
+  text-shadow: var(--button-hover-text-shadow, var(--button-rest-text-shadow, none));
+  transform: var(--button-hover-transform, none);
+}
+
+:is(button, a).app-button:active:not(:disabled):not([aria-disabled='true']) {
+  background: var(--button-active-background, color-mix(in srgb, var(--theme-surface) 78%, var(--theme-text)));
+  box-shadow: var(--button-active-shadow, var(--button-hover-shadow, var(--button-rest-shadow, none)));
+  transform: var(--button-active-transform, var(--button-hover-transform, none));
 }

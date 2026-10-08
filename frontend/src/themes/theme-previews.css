@@ -1,0 +1,20 @@
+/* Picker previews are independent of the currently selected theme. */
+[data-family='default'] {
+    --preview-background: #f9f8f6
+}
+[data-family='frutiger-aero'] {
+    --preview-background: linear-gradient(150deg, #ecffff99, transparent 55%), linear-gradient(130deg, #12518a, #33cbcf 65%, #83cc74)
+}
+[data-family='aqua'] {
+    --preview-background: url('/themes/aqua-galaxy.svg') center / cover;
+    --preview-border-color: #9684b6;
+    --preview-box-shadow: inset 0 1px #eee2ff99
+}
+[data-family='omahakase'] {
+    --preview-background: radial-gradient(ellipse at 68% 120%, #f9c3de 0%, #bd648e 28%, transparent 65%), linear-gradient(160deg, #100b14 12%, #382037 52%, #773c62 100%)
+}
+[data-family='kiwi'] {
+    --preview-background: radial-gradient(ellipse at 75% 15%, #edffb7, transparent 55%), linear-gradient(125deg, #173d47, #8dd638 50%, #75cbbb 80%, #2c456d);
+    --preview-border-color: #a9c48c;
+    --preview-box-shadow: inset 0 1px #f3ffd7
+}

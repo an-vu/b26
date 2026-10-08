@@ -33,7 +33,7 @@ describe('Unsaved board navigation', () => {
 
   it('matches canonical, legacy, main-board, and system routes without collisions', async () => {
     TestBed.configureTestingModule({ providers: [provideRouter(routes.map(route =>
-      route.component ? { ...route, component: GuardedPage, canDeactivate: [] } : route
+      route.component || route.loadComponent ? { ...route, loadComponent: undefined, component: GuardedPage, canDeactivate: [] } : route
     ))] });
     const harness = await RouterTestingHarness.create();
     for (const [url, params, data] of [

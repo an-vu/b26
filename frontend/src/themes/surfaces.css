@@ -1,0 +1,8 @@
+/* Shared square units, independent of feed packing and Board edit controls. */
+.square-grid {
+  --square-grid-columns: 4;
+  display: grid;
+  grid-template-columns: repeat(var(--square-grid-columns), minmax(0, 1fr));
+  grid-auto-rows: calc((100cqw - (var(--square-grid-columns) - 1) * var(--square-grid-gap, 16px)) / var(--square-grid-columns));
+  gap: var(--square-grid-gap, 16px);
+}

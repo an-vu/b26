@@ -16,7 +16,9 @@ Home, settings, insights, and sign-in are also boards. `system_settings` maps th
 
 ## Frontend responsibilities
 
-- `BoardPageComponent` loads pages and coordinates editing, account menus, and board identity.
+- `BoardPageComponent` coordinates board loading, draft state, permissions, and saves; profile, settings, and widget-editor components own their feature views.
+- `SiteNavigationComponent` owns shared navigation and Account. Panel dismissal and internal-view height preservation use one shared directive.
+- Page routes load their components on demand, with board navigation guards retained.
 - A widget registry selects the component for each widget type.
 - Services call APIs; board/user stores provide account and navigation state.
 - Edit mode loads a consistent snapshot. Save sends the revision, metadata, and complete widget collection together.

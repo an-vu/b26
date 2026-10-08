@@ -1,0 +1,15 @@
+/* Shared auth and settings form layouts. Component styles own special content. */
+.auth-form { display: grid; gap: 10px; }
+.auth-field { display: grid; gap: 6px; }
+.auth-field span { font-size: 14px; }
+.auth-message { margin: 0; font-size: 13px; color: var(--theme-muted); }
+.auth-message--error, .settings-status--error { color: var(--theme-error); }
+.settings-field { display: grid; grid-template-columns: 190px minmax(0, 1fr); align-items: center; column-gap: 0; row-gap: 8px; }
+.settings-field span { font-size: 14px; }
+.settings-field :is(input, select) { width: 320px; max-width: 100%; }
+.settings-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.settings-status { margin: 0; font-size: 12px; }
+.settings-section { display: grid; gap: 8px; }
+.settings-section + .settings-section { border-top: 1px solid var(--theme-border); padding-top: 10px; margin-top: 2px; }
+.settings-section-title { margin: 0; font-size: 12px; line-height: 1.2; color: var(--theme-muted); }
+@media (max-width: 700px) { .settings-field { grid-template-columns: 1fr; align-items: stretch; } }

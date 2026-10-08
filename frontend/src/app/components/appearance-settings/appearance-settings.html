@@ -40,28 +40,28 @@
                   [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
                   (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="appearance().pattern === pattern"
                   [disabled]="disabled()" (click)="selectPattern(pattern)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" [ngSwitch]="pattern">
-                    <g *ngSwitchCase="'none'"><circle cx="12" cy="12" r="7.5"/><path d="m7 17 10-10"/></g>
-                    <g *ngSwitchCase="'stars'"><circle cx="7" cy="8" r="1.3"/><circle cx="16" cy="5" r=".6"/><circle cx="15" cy="15" r="2"/><path d="M5 17h.01M20 10h.01"/></g>
-                    <path *ngSwitchCase="'snow'" d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9 5l3 3 3-3M9 19l3-3 3 3M4.5 11l4-1-1-4M16.5 18l-1-4 4-1M4.5 13l4 1-1 4M16.5 6l-1 4 4 1"/>
-                    <g *ngSwitchCase="'grid'"><path opacity=".4" d="M8 3v18M16 3v18M3 8h18M3 16h18"/><path d="M3 8h5v8h8V3"/></g>
-                    <path *ngSwitchCase="'rainfall'" d="m6 4-2 6m9-7-2 6m9-5-2 6M9 13l-2 7m9-7-2 7"/>
-                    <g *ngSwitchCase="'sakura'"><path d="M12 12C5 14 3 8 7 5c4 0 7 3 5 7ZM12 12c1-6 6-7 8-3-1 4-4 5-8 3ZM12 12c5 2 5 7 1 9-4-2-5-6-1-9Z"/><path opacity=".5" d="m6 19 2-2"/></g>
-                    <path *ngSwitchCase="'wave'" d="M3 8c6-8 12 8 18 0M3 12c6-8 12 8 18 0M3 16c6-8 12 8 18 0"/>
-                  </svg>
+                  <app-icon [name]="pattern" [strokeWidth]="1.35" />
                 </button>
               </div>
             </fieldset>
             <hr />
-            <div class="board-light-row">
+            <div class="board-appearance-row board-light-row">
               <label class="light-switch-label">
-                <span>Light switch</span>
+                <span>Light</span>
                 <span class="light-switch-control">
                   <input [disabled]="disabled()" type="checkbox" role="switch" name="appearance-light-switch"
                     [ngModel]="appearance().theme !== 'dark'" (ngModelChange)="set('theme', $event ? 'light' : 'dark')" />
                   <span class="light-switch-track" aria-hidden="true"></span>
                 </span>
               </label>
+              <label class="light-switch-label">
+                <span>Blur</span>
+                <span class="light-switch-control">
+                  <input type="checkbox" role="switch" name="chrome-blur-switch"
+                    [ngModel]="blur.enabled()" (ngModelChange)="blur.setEnabled($event)" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
+              </label>
             </div>
             <hr />
-<div class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>
+<div *ngIf="showReset()" class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>

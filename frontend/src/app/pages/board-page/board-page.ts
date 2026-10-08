@@ -1,10 +1,13 @@
-import { AtmosphereParticles } from '../../themes/atmosphere-particles';
-import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
+import { paperColor, foregroundColor } from '../../themes/appearance-values';
+import { BoardProfileComponent } from './board-profile/board-profile';
+import { BoardSettingsComponent } from './board-settings/board-settings';
+import { WidgetEditorComponent } from './widget-editor/widget-editor';
+import type { PanelDismissReason } from '../../directives/panel-behavior';
+import { IconComponent } from '../../components/icon/icon';
 import { SiteNavigationComponent } from '../../components/site-navigation/site-navigation';
 import { SiteThemeService } from '../../services/site-theme.service';
 import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
-import { BOARD_PALETTE } from '../../themes/board-palette';
 import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
@@ -14,7 +17,6 @@ import { Subject, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { hasDraftChangedByOriginal } from './board-page.save-flow';
 import { getApiErrorMessage } from '../../utils/api-error.util';
-import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
@@ -70,10 +72,6 @@ import {
   runDeleteBoardAction,
 } from './board-page.account-actions';
 import {
-  getDocumentClickMenuCloseActions,
-  getEscapeMenuCloseActions,
-} from './board-page.overlay-menus';
-import {
   createPageStateStream,
   createWidgetsStream,
   type BoardPageState,
@@ -83,11 +81,10 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [AppearanceSettingsComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, FormsModule, WidgetHostComponent],
+  imports: [BoardProfileComponent, BoardSettingsComponent, WidgetEditorComponent, IconComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrls: [
     './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
-    './board-page.identity.css', './board-page.account-menu.css',
   ],
 })
 export class BoardPageComponent {
@@ -142,6 +139,17 @@ export class BoardPageComponent {
     if (value) this.noticeTimer = setTimeout(() => { this.noticeText = ''; this.cdr.markForCheck(); }, 3000);
   }
   isBoardSwitcherOpen = false;
+  pendingDeleteBoardUrl: string | null = null;
+  pendingDeleteBoardLabel = '';
+  toggleBoardSwitcher() {
+    this.pendingDeleteBoardUrl = null;
+    this.isBoardSwitcherOpen = !this.isBoardSwitcherOpen;
+  }
+
+  cancelBoardDelete() {
+    if (!this.isDeletingBoard) this.pendingDeleteBoardUrl = null;
+  }
+
   switchToBoard(route: string) {
     if (!this.canLeaveBoard()) return;
     this.closeBoardIdentityMenu();
@@ -159,9 +167,6 @@ export class BoardPageComponent {
   private originalProfileName = '';
   boardDraftWebsite = '';
   private originalBoardWebsite = '';
-  safeWebsite(value?: string): string | null {
-    try { const url = new URL(value || ''); return ['http:', 'https:'].includes(url.protocol) ? url.href : null; } catch { return null; }
-  }
   originalBoardName = '';
   originalBoardHeadline = '';
   boardIdentityNameDraft = '';
@@ -170,29 +175,9 @@ export class BoardPageComponent {
   get boardTheme() {
     return BOARD_THEMES.find(theme => theme.id === this.boardThemeFamilyDraft) ?? BOARD_THEMES[0];
   }
-  private requestedTheme?: BoardThemeId;
-  private themeTransition?: { skipTransition(): void };
-  selectBoardTheme(id: BoardThemeId) {
-    if (this.isIdentitySaving || id === (this.requestedTheme ?? this.boardThemeFamilyDraft) || BOARD_THEMES.find(theme => theme.id === id)?.status !== 'available') return;
-    this.requestedTheme = id;
-    this.themeTransition?.skipTransition();
-    const update = () => { if (this.destroyRef.destroyed || this.requestedTheme !== id) return; this.boardThemeFamilyDraft = id; this.requestedTheme = undefined; this.cdr.detectChanges(); this.saveSettingsAutomatically(); };
-    if (typeof document.startViewTransition === 'function' && !window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
-      const transition = document.startViewTransition(update);
-      transition.ready.catch(() => { /* A newer selection may skip this snapshot. */ });
-      this.themeTransition = transition;
-    } else { update(); }
-  }
-  readonly pickerHover: Record<string, string | null> = {};
-  readonly pickerFocus: Record<string, string | null> = {};
-  pickerLabel(section: string, selected: string): string {
-    return this.pickerHover[section] || this.pickerFocus[section] || selected;
-  }
-  readonly boardThemes = BOARD_THEMES;
   boardThemeToggleDraft = false;
   boardRadiusStepDraft: 1 | 2 | 3 = 2;
   boardSpacingStepDraft: 1 | 2 | 3 = 2;
-  get spacingLabel(): string { return this.boardSpacingStepDraft === 1 ? 'Small' : this.boardSpacingStepDraft === 3 ? 'Large' : 'Medium'; }
   boardBackgroundColorDraft = '#f9f8f6';
   boardPatternDraft: BoardAppearance['pattern'] = 'none';
   boardPatternIntensityDraft: NonNullable<BoardAppearance['patternIntensity']> = 'light';
@@ -202,47 +187,14 @@ export class BoardPageComponent {
   deletedWidgetIds: number[] = [];
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
-  readonly boardColors = BOARD_PALETTE;
-  private readonly atmosphere = new AtmosphereParticles();
-  readonly boardPatterns: BoardAppearance['pattern'][] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];
-  get screenDroplets() { return this.atmosphere.screenDroplets(this.boardPatternIntensityDraft); }
-  get atmosphereParticles() { return this.atmosphere.particles(this.boardPatternDraft, this.boardPatternIntensityDraft); }
-  selectBoardPattern(pattern: BoardAppearance['pattern']) {
-    if (this.isIdentitySaving) return;
-    if (pattern === this.boardPatternDraft && pattern !== 'none') {
-      this.boardPatternIntensityDraft = this.boardPatternIntensityDraft === 'light' ? 'medium' : this.boardPatternIntensityDraft === 'medium' ? 'heavy' : 'light';
-    } else {
-      this.boardPatternDraft = pattern;
-      this.boardPatternIntensityDraft = 'light';
-    }
-    this.cdr.markForCheck();
-    this.saveSettingsAutomatically();
-  }
   private persistedAppearance: BoardAppearance = this.defaultAppearance();
 
   defaultAppearance(): BoardAppearance {
     return { spacingStep: 2, patternIntensity: 'light', themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
   }
 
-  // Render legacy white boards using the new paper color without rewriting saved data.
-  get boardDisplayBackground(): string {
-    return this.boardBackgroundColorDraft.toLowerCase() === '#ffffff'
-      ? '#f9f8f6' : this.boardBackgroundColorDraft;
-  }
-
-  get boardDarkBackground(): string {
-    return this.boardDisplayBackground === '#f9f8f6' ? '#30302e' : `color-mix(in srgb, ${this.boardDisplayBackground} 38%, #181a19)`;
-  }
-
-  get boardDisplayText(): string {
-    const hex = this.boardDisplayBackground.slice(1);
-    const channels = [0, 2, 4].map(offset => {
-      const value = parseInt(hex.slice(offset, offset + 2), 16) / 255;
-      return value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4;
-    });
-    const luminance = channels[0] * 0.2126 + channels[1] * 0.7152 + channels[2] * 0.0722;
-    return luminance < 0.3 ? '#f9f8f6' : '#30302e';
-  }
+  get boardDisplayBackground(): string { return paperColor(this.boardBackgroundColorDraft); }
+  get boardDisplayText(): string { return foregroundColor(this.boardBackgroundColorDraft); }
 
   get appearanceDraft(): BoardAppearance {
     return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
@@ -260,8 +212,6 @@ export class BoardPageComponent {
   }
 
   applyAppearance(appearance: BoardAppearance) {
-    this.requestedTheme = undefined;
-    this.themeTransition?.skipTransition();
     this.boardThemeFamilyDraft = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
     this.boardThemeToggleDraft = appearance.theme === 'dark';
     this.boardRadiusStepDraft = appearance.radiusStep;
@@ -426,19 +376,6 @@ export class BoardPageComponent {
     return this.settingsNotice;
   }
 
-  get backgroundColorLabel(): string {
-    return this.boardColors.find(color => color.value === this.boardDisplayBackground)?.name ?? this.boardDisplayBackground.toUpperCase();
-  }
-
-  get radiusLabel(): string {
-    return this.boardRadiusStepDraft === 1 ? 'Small' : this.boardRadiusStepDraft === 3 ? 'Large' : 'Medium';
-  }
-
-  patternLabel(pattern: string): string {
-    if (pattern === 'grid') return 'Meteor';
-    return pattern.charAt(0).toUpperCase() + pattern.slice(1).replace(/-/g, ' ');
-  }
-
   get hasUnsavedChanges(): boolean {
     const identityChanged = this.settingsChanged;
     if (!this.isWidgetEditMode) return identityChanged;
@@ -552,10 +489,17 @@ export class BoardPageComponent {
     event.preventDefault();
 
     if (this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
-    const label = this.accountBoards.find((board) => board.boardUrl === boardUrl)?.label ?? boardUrl;
-    const draftWarning = boardUrl === this.activeBoardUrl && this.hasUnsavedChanges
-      ? ' Unsaved changes will also be lost.' : '';
-    if (!window.confirm('Permanently delete "' + label + '" and all its contents?' + draftWarning)) return;
+    this.pendingDeleteBoardUrl = boardUrl;
+    this.pendingDeleteBoardLabel = this.accountBoards.find(board => board.boardUrl === boardUrl)?.label ?? this.boardIdentityPersistedName ?? boardUrl;
+    this.isBoardSwitcherOpen = false;
+    this.isBoardIdentityMenuOpen = true;
+    this.boardDeleteError = '';
+  }
+
+  confirmBoardDelete() {
+    const boardUrl = this.pendingDeleteBoardUrl;
+    if (!boardUrl || this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
+    const label = this.pendingDeleteBoardLabel;
     this.boardStore.setNotice('');
     const fallbackRoute =
       this.accountBoards.find((board) => board.id === this.accountMainBoardId && board.boardUrl !== boardUrl)?.route ?? '/';
@@ -625,13 +569,13 @@ export class BoardPageComponent {
       return;
     }
     this.settingsNotice = '';
-    for (const section of ['theme', 'color', 'pattern']) { this.pickerHover[section] = null; this.pickerFocus[section] = null; }
     this.isBoardIdentityMenuOpen = true;
     this.cdr.detectChanges();
     this.elementRef.nativeElement.querySelector<HTMLInputElement>('input[name="board-identity-name"]')?.focus();
   }
 
   closeBoardIdentityMenu(restoreFocus = false) {
+    this.pendingDeleteBoardUrl = null;
     this.isBoardSwitcherOpen = false;
     this.isBoardIdentityMenuOpen = false;
     if (restoreFocus) {
@@ -716,37 +660,11 @@ export class BoardPageComponent {
     });
   }
 
-  @HostListener('document:click', ['$event'])
-  onDocumentClick(event: MouseEvent) {
-    const actions = getDocumentClickMenuCloseActions({
-      eventTarget: event.target,
-      hostElement: this.elementRef.nativeElement,
-      isAccountMenuOpen: this.isAccountMenuOpen,
-      isBoardIdentityMenuOpen: this.isBoardIdentityMenuOpen,
-    });
-
-    if (actions.closeAccountMenu) {
-      this.closeAccountMenu();
-    }
-    if (actions.closeBoardIdentityMenu) {
-      this.closeBoardIdentityMenu();
-    }
-  }
-
-  @HostListener('document:keydown.escape')
-  onEscapeKey() {
-    if (this.isBoardSwitcherOpen) { this.isBoardSwitcherOpen = false; return; }
-    const actions = getEscapeMenuCloseActions({
-      isAccountMenuOpen: this.isAccountMenuOpen,
-      isBoardIdentityMenuOpen: this.isBoardIdentityMenuOpen,
-    });
-
-    if (actions.closeAccountMenu) {
-      this.closeAccountMenu();
-    }
-    if (actions.closeBoardIdentityMenu) {
-      this.closeBoardIdentityMenu(true);
-    }
+  dismissBoardSettings(reason: PanelDismissReason) {
+    if (reason === 'back') {
+      if (this.pendingDeleteBoardUrl) this.cancelBoardDelete();
+      else this.isBoardSwitcherOpen = false;
+    } else this.closeBoardIdentityMenu(reason === 'close');
   }
 
   cancelWidgetEdit() {

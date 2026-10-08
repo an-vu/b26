@@ -1,0 +1,161 @@
+/* Shared toolbar, signature navigation dots, and wordmark interactions. */
+.bottom-actions {
+  position: fixed;
+  left: 16px;
+  right: 16px;
+  bottom: 16px;
+  display: grid;
+  grid-template-columns: minmax(80px, 1fr) minmax(0, auto) minmax(80px, 1fr);
+  align-items: center;
+  gap: 16px;
+  min-height: 52px;
+  box-sizing: border-box;
+  padding: 8px 14px;
+  border: 1px solid var(--palette-light-gray);
+  border-radius: 12px;
+  background: var(--palette-white);
+  --theme-surface: var(--palette-white);
+  --theme-text: var(--palette-black);
+  --theme-muted: var(--palette-gray);
+  color: var(--palette-black);
+  z-index: 30;
+}
+
+.bottom-actions-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-self: start;
+}
+
+.bottom-action-button {
+  --bottom-action-height: 24px;
+  font: inherit;
+  font-size: 13px;
+  line-height: 1;
+  color: inherit;
+  border: 0;
+  border-radius: 999px;
+  margin: 0;
+  display: inline-flex;
+  align-items: center;
+  height: var(--bottom-action-height);
+  white-space: nowrap;
+  appearance: none;
+  padding: 0;
+}
+
+.orb-button {
+  --orb-size: var(--bottom-action-height);
+  --orb-dot: var(--palette-gray);
+  --orb-label-color: var(--theme-muted);
+  justify-content: flex-start;
+  gap: 0;
+  max-width: var(--orb-size);
+  background: transparent;
+  color: var(--orb-label-color);
+  overflow: hidden;
+  cursor: pointer;
+
+}
+
+.orb-button__dot {
+  flex: 0 0 auto;
+  width: var(--orb-size);
+  height: var(--orb-size);
+  border-radius: 50%;
+  background: var(--orb-dot);
+  margin: 0;
+}
+
+.orb-button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/* Navigation traffic lights: fixed circles, group icon reveal, signature colors. */
+.bottom-actions-left .orb-button.navigation-orb {
+  position: relative;
+  width: var(--orb-size);
+  min-width: var(--orb-size);
+  max-width: var(--orb-size);
+  padding: 0;
+  overflow: visible;
+  background: transparent;
+  transition: none;
+}
+.navigation-orb .orb-button__dot {
+  display: grid;
+  place-items: center;
+  color: var(--palette-black);
+  box-sizing: border-box;
+  border: 1px solid color-mix(in srgb, var(--palette-black) 28%, transparent);
+}
+.navigation-orb__icon {
+  width: 12px;
+  height: 12px;
+  opacity: 0;
+  transition: opacity 220ms ease;
+}
+.bottom-actions-left:hover .navigation-orb__icon,
+.bottom-actions-left:focus-within .navigation-orb__icon {
+  opacity: 1;
+}
+.navigation-orb:active .orb-button__dot { transform: scale(.9); }
+@media (hover: none) {
+  .navigation-orb__icon { opacity: 1; }
+}
+
+/* Navigation colors from the shared palette. */
+.navigation-orb[aria-label='Home'] { --orb-dot: var(--palette-cyan); }
+.navigation-orb[aria-label='Search'] { --orb-dot: var(--palette-blue); }
+.navigation-orb[aria-label='Account'] { --orb-dot: var(--palette-purple); }
+
+.toolbar-wordmark {
+  appearance: none; border: 0; padding: 0; background: transparent; cursor: pointer; user-select: none; -webkit-user-select: none;
+  grid-column: 3;
+  justify-self: end;
+  font-family: "Apple Garamond", "Baskerville", "Garamond", "Times New Roman", serif;
+  font-size: 30px;
+  font-weight: 400;
+  font-style: normal;
+  color: var(--palette-gray);
+  transition: color 250ms ease, text-shadow 250ms ease;
+  line-height: 1;
+  letter-spacing: -.6px;
+  white-space: nowrap;
+}
+@media (max-width: 700px) {
+  .bottom-actions {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    padding: 10px;
+    gap: 10px;
+  }
+  .toolbar-wordmark { font-size: 24px; }
+}
+
+.toolbar-wordmark:hover { color: var(--palette-black); }
+
+.navigation-orb .orb-button__dot { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
+
+/* Short, compositor-driven crossfade when changing theme families. */
+::view-transition-old(root), ::view-transition-new(root) { animation-duration: 420ms; animation-timing-function: cubic-bezier(.22, .61, .36, 1); }
+::view-transition-group(root) { animation-duration: 420ms; }
+@media (prefers-reduced-motion: reduce) { ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(root) { animation: none; } }
+
+/* Signature dots share a small lift, with material-specific light. */
+.page[data-theme] .navigation-orb { --nav-halo: var(--nav-material-halo, color-mix(in srgb, var(--orb-dot) 24%, transparent)); }
+.page[data-theme] .navigation-orb:hover .orb-button__dot,
+.page[data-theme] .navigation-orb:focus-visible .orb-button__dot {
+  transform: translateY(-1px) scale(1.08);
+  box-shadow: var(--nav-hover-shadow, inset 0 1px 2px #ffffff80, 0 2px 5px #00000020, 0 0 9px var(--nav-halo, #c4ddff50));
+}
+.page[data-theme] .navigation-orb:active .orb-button__dot { transform: scale(.94); }
+
+.bottom-actions { --toolbar-panel-gap: 12px; --toolbar-panel-width: var(--panel-width); }
+
+@media (prefers-reduced-motion: reduce) {
+  .toolbar-wordmark, .navigation-orb .orb-button__dot, .navigation-orb__icon { transition: none; }
+}

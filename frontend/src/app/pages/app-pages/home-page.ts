@@ -1,6 +1,7 @@
+import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { HomeFeedPreviewComponent } from './home-feed-preview';
 import { environment } from '../../../environments/environment';
-import { Component, DestroyRef, HostListener, inject, signal, effect } from '@angular/core';
+import { Component, DestroyRef, inject, signal, effect } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
@@ -14,7 +15,7 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 import { AppPageShellComponent } from './app-page-shell';
 
 @Component({
-  standalone: true, imports: [CommonModule, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
+  standalone: true, imports: [PanelBehaviorDirective, CommonModule, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
   templateUrl: './home-page.html', styleUrl: './home-page.css'
 })
 export class HomePageComponent {
@@ -63,8 +64,5 @@ export class HomePageComponent {
       },
     });
   }
-  @HostListener('document:keydown.escape') closeSettings() { this.settingsOpen.set(false); }
-  @HostListener('document:click', ['$event']) outsideSettings(event: MouseEvent) {
-    if (event.target instanceof Element && !event.target.closest('.home-settings-anchor')) this.closeSettings();
-  }
+  closeSettings() { this.settingsOpen.set(false); }
 }

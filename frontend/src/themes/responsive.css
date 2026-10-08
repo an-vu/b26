@@ -1,0 +1,35 @@
+/* Shared viewport rhythm; material and saved appearance remain theme-owned. */
+:root {
+  --page-gutter: clamp(16px, 3vw, 32px);
+  --panel-width: min(320px, calc(100vw - 2 * var(--page-gutter)));
+  --panel-padding: clamp(12px, 2vw, 16px);
+  --toolbar-panel-width: var(--panel-width);
+}
+.toolbar-panel { padding: var(--panel-padding); max-width: var(--panel-width); }
+.page.app-page { padding-inline: var(--page-gutter); }
+.page.page-fixed-scroll .board-grid {
+  /* Scale the user's chosen spacing with the canvas, keeping four square units. */
+  --square-grid-gap: min(var(--widget-spacing, 16px), 2.4cqw);
+}
+@media (max-width: 700px) {
+  .bottom-actions { gap: 6px; padding-inline: 8px; }
+  .bottom-actions-left { gap: 6px; }
+  .toolbar-wordmark { font-size: clamp(20px, 5.5vw, 24px); }
+}
+@media (pointer: coarse) {
+  /* Larger targets without enlarging the three signature dots. */
+  .bottom-actions-left .orb-button.navigation-orb {
+    width: 36px; min-width: 36px; max-width: 36px; height: 44px;
+    justify-content: center;
+  }
+  .toolbar-wordmark { min-height: 44px; }
+  .page .utility-panel .app-button { min-height: 44px; }
+  .page .utility-panel .app-button--icon { width: 44px; min-width: 44px; }
+  .page .utility-panel :is(input:not([type='range']):not([type='checkbox']), textarea, select) {
+    font-size: 16px; min-height: 44px;
+  }
+}
+@media (max-width: 380px) and (pointer: coarse) {
+  .bottom-actions-left { gap: 0; }
+  .toolbar-wordmark { font-size: 20px; }
+}

@@ -1,73 +1,12 @@
-:host {
-  display: block;
-  height: 100%;
-}
-
-.settings-block {
-  display: grid;
-  gap: 8px;
-}
-
-.settings-field {
-  display: grid;
-  grid-template-columns: 190px minmax(0, 1fr);
-  align-items: center;
-  column-gap: 0;
-  row-gap: 8px;
-}
-
-.settings-field span {
-  font-size: 14px;
-}
-
-.settings-field select {
-  width: 320px;
-  max-width: 100%;
-}
-
-.settings-status {
-  margin: 0;
-  font-size: 12px;
-}
-
-.settings-status--error {
-  color: var(--theme-error);
-}
-
-@media (max-width: 700px) {
-  .settings-field {
-    grid-template-columns: 1fr;
-    align-items: stretch;
-  }
-}
-
-
-.settings-section {
-  display: grid;
-  gap: 8px;
-}
-
-.settings-section + .settings-section {
-  border-top: 1px solid var(--theme-border);
-  padding-top: 10px;
-  margin-top: 2px;
-}
-
-.settings-section-title {
-  margin: 0;
-  font-size: 12px;
-  line-height: 1.2;
-  color: var(--theme-muted);
-  font-weight: 400;
-}
-
+:host { display: block; height: 100%; }
+.settings-block { display: grid; gap: 8px; }
+.settings-section-title { font-weight: 400; }
 .settings-placeholder {
   margin: 0;
   font-size: 14px;
   color: var(--theme-muted);
   font-weight: 400;
 }
-
 
 .permission-matrix-wrap {
   overflow-x: auto;
@@ -89,7 +28,6 @@
 .permission-matrix tbody th[scope='row'] {
   text-align: left;
 }
-
 
 .permission-matrix th {
   font-weight: 400;

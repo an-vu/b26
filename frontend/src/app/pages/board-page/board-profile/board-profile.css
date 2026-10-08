@@ -1,0 +1,76 @@
+:host { display: contents; }
+
+
+:host-context(.page.page-fixed-scroll) .board-rail {
+  position: sticky;
+  top: 24px;
+  align-self: start;
+}
+
+.board-rail {
+  min-width: 0;
+}
+
+.profile-avatar { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; margin-bottom: 18px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: linear-gradient(145deg, color-mix(in srgb, currentColor 12%, transparent), transparent); }
+
+.profile-avatar svg { width: 72%; height: 72%; opacity: .55; }
+
+.profile-name { margin: 0; font: inherit; font-size: 26px; font-weight: 600; line-height: 1.2; overflow-wrap: anywhere; }
+
+.profile-handle { margin: 6px 0 18px; font-size: 13px; opacity: .7; }
+
+.profile-stats { display: flex; flex-wrap: wrap; gap: 8px 14px; font-size: 12px; }
+
+.profile-stats strong { font-weight: 600; }
+
+.profile-bio { margin: 22px 0; }
+
+.profile-bio p { margin: 0 0 7px; font-size: 14px; }
+
+.profile-bio .profile-description { font-size: 12px; line-height: 1.6; opacity: .7; overflow-wrap: anywhere; }
+
+.profile-edit-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+
+@media (max-width: 1024px) {
+  :host-context(.page.page-fixed-scroll) .board-rail { position: static; padding-bottom: 16px; }
+  .profile-avatar { width: 72px; height: 72px; margin-bottom: 12px; }
+  .profile-bio { margin: 16px 0; }
+}
+
+.profile-field { display: grid; position: relative; margin: 0 0 7px; font-size: 14px; line-height: 1.6; }
+
+.profile-field > * { grid-area: 1 / 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+.profile-field-mirror { visibility: hidden; }
+
+.profile-website-field { font-size: 12px; opacity: .75; }
+
+.profile-field a { color: inherit; text-underline-offset: 3px; }
+
+:host-context(.page[data-theme]) .profile-field textarea {
+  width: 100%; height: 100%; min-height: 0; box-sizing: border-box; resize: none; overflow: hidden;
+  padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none;
+  color: inherit; font: inherit; line-height: inherit; letter-spacing: inherit; text-shadow: inherit;
+}
+
+.profile-field.is-editing { box-shadow: 0 1px color-mix(in srgb, currentColor 25%, transparent); }
+
+:host-context(.page[data-theme]) .profile-field textarea:focus-visible { outline-offset: 3px; }
+
+.profile-name-field { margin: 0; font-size: 26px; font-weight: 600; line-height: 1.2; }
+
+.profile-name-field .profile-name { font: inherit; }
+
+.board-rail { text-align: center; }
+
+.profile-avatar { margin-inline: auto; }
+
+.profile-stats, .profile-edit-actions { justify-content: center; }
+
+:host-context(.page[data-theme]) .profile-field textarea { text-align: center; }
+
+@media (min-width: 1025px) {
+  :host-context(.page.page-fixed-scroll) .board-rail { top: 48px; margin-top: 40px; }
+}
+.board-settings-feedback { font-size: 13px; padding: 8px; border-radius: 6px; background: var(--theme-surface); color: var(--theme-text); }
+.board-settings-feedback:empty { display: none; }

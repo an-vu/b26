@@ -1,0 +1,61 @@
+:host { display: contents; }
+
+
+.field-error {
+  margin: 0;
+  color: var(--theme-error);
+  font-size: 12px;
+}
+
+:host-context(.widget-edit-tile) label {
+  display: grid;
+  gap: 4px;
+}
+
+:host-context(.widget-edit-tile) input,
+:host-context(.widget-edit-tile) select,
+:host-context(.widget-edit-tile) textarea {
+  min-width: 0;
+}
+
+:host-context(.widget-edit-tile) textarea {
+  resize: vertical;
+}
+
+:host-context(.widget-edit-tile) .checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+:host-context(.widget-edit-tile) .checkbox input {
+  margin: 0;
+}
+
+.widget-editor-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.widget-title-inline {
+  font-size: 14px;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.widget-editor-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.widget-settings-panel {
+  min-height: 0;
+  height: 100%;
+  overflow: auto;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+}

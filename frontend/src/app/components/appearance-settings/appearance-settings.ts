@@ -1,4 +1,6 @@
-import { Component, input, output } from '@angular/core';
+import { IconComponent, IconName } from '../icon/icon';
+import { ChromeBlurService } from '../../services/chrome-blur.service';
+import { Component, inject, input, output } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { BoardAppearance } from '../../models/board';
@@ -7,16 +9,18 @@ import { BOARD_PALETTE } from '../../themes/board-palette';
 import { BERRY_APPEARANCE } from '../../services/site-theme.service';
 
 @Component({
-  selector: 'app-appearance-settings', standalone: true, imports: [CommonModule, FormsModule],
+  selector: 'app-appearance-settings', standalone: true, imports: [IconComponent, CommonModule, FormsModule],
   templateUrl: './appearance-settings.html', styleUrl: './appearance-settings.css',
 })
 export class AppearanceSettingsComponent {
+  readonly blur = inject(ChromeBlurService);
   readonly appearance = input.required<BoardAppearance>();
   readonly disabled = input(false);
+  readonly showReset = input(true);
   readonly appearanceChange = output<BoardAppearance>();
   readonly themes = BOARD_THEMES;
   readonly colors = BOARD_PALETTE;
-  readonly patterns: BoardAppearance['pattern'][] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];
+  readonly patterns: (BoardAppearance['pattern'] & IconName)[] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];
   readonly pickerHover: Record<string, string | null> = {};
   readonly pickerFocus: Record<string, string | null> = {};
   get selectedTheme() { return this.themes.find(theme => theme.id === this.appearance().themeFamily) ?? this.themes[0]; }

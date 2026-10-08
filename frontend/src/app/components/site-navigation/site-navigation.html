@@ -1,38 +1,49 @@
 @if (brandAtTop()) {
   <header class="home-header" aria-label="BlueBerry">
-    <div class="header-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+    @if (blur.enabled()) {
+      <div class="header-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+    }
     <div class="header-inner">
       <button class="toolbar-wordmark home-header-brand" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="closeAccount(); aboutPanel.open($event)">BlueBerry</button>
     </div>
   </header>
 }
+@if (blur.enabled()) {
+  <div class="footer-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+}
 <nav class="bottom-actions" [class.has-top-brand]="brandAtTop()" aria-label="Main navigation">
       <div class="bottom-actions-left">
-        <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb orb-button--red" routerLink="/">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h5v-7h4v7h5V9"/></svg></span>
+        <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb" routerLink="/">
+          <span class="orb-button__dot" aria-hidden="true"><app-icon name="home" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
         </button>
-        <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="closeAccount(); userSearch.open($event)" aria-haspopup="dialog">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg></span>
+        <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb" (click)="closeAccount(); userSearch.open($event)" aria-haspopup="dialog">
+          <span class="orb-button__dot" aria-hidden="true"><app-icon name="search" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
         </button>
-        <div class="account-menu-wrap">
-          <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb orb-button--blue" (click)="toggleAccount()" [attr.aria-expanded]="accountOpen()">
-            <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
+        <div class="account-menu-wrap" appPanelBehavior [panelOpen]="accountOpen()" [panelInternalView]="accountSettingsOpen()" (panelDismiss)="dismissAccount($event)">
+          <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb" (click)="toggleAccount()" [attr.aria-expanded]="accountOpen()">
+            <span class="orb-button__dot" aria-hidden="true"><app-icon name="account" [strokeWidth]="2.2" svgClass="navigation-orb__icon" /></span>
           </button>
-          <div class="account-menu account-panel utility-panel" role="region" aria-label="Account" *ngIf="accountOpen()">
+          <div class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
             <ng-container *ngIf="user$ | async as user; else signedOutMenu">
             <h2 class="board-settings-heading account-heading">@{{ user.username }}</h2>
-            <a class="account-link" [routerLink]="['/', user.username]" (click)="closeAccount()">Visit your profile</a>
-            <section class="account-notifications" aria-label="Notifications">
-              <p>No new notifications</p>
+            <section class="account-notifications panel-content-centered" aria-label="Notifications">
+              @if (accountSettingsOpen()) {
+                <div class="account-settings-list panel-content-group" aria-label="Account settings">
+                  <button type="button" class="app-button" routerLink="/settings" (click)="closeAccount()">Settings</button>
+                  <button type="button" class="app-button settings-delete app-button--danger" (click)="signOut()" [disabled]="signingOut()">{{ signingOut() ? 'Signing out…' : 'Sign Out' }}</button>
+                </div>
+              } @else {
+                <div class="panel-content-group"><p>No new notifications</p></div>
+              }
             </section>
             <hr />
-            <div class="board-settings-tools account-tools">
-              <button type="button" class="app-button nav-icon-button" aria-label="Insights" routerLink="/insights" (click)="closeAccount()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 18 6-6 4 3 6-9M15 6h5v5"/></svg>
+            <div class="board-settings-tools account-tools panel-actions">
+              <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="Insights" routerLink="/insights" (click)="closeAccount()">
+                <app-icon name="insights" [strokeWidth]="1.7" />
               </button>
-              <button type="button" class="app-button settings-reset" routerLink="/settings" (click)="closeAccount()">Settings</button>
-              <button type="button" class="app-button nav-icon-button settings-delete" aria-label="Sign out" (click)="signOut()" [disabled]="signingOut()" [attr.aria-busy]="signingOut()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4"/></svg>
+              <button type="button" class="app-button my-board-button panel-action-main" [routerLink]="['/', user.username]" (click)="closeAccount()">My Board</button>
+              <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="Settings" [attr.aria-expanded]="accountSettingsOpen()" (click)="toggleAccountSettings()">
+                <app-icon name="settings" [strokeWidth]="1.7" />
               </button>
             </div>
             <p class="account-menu-error" role="alert" *ngIf="error()">{{ error() }}</p>

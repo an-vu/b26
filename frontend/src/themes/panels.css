@@ -1,7 +1,41 @@
-/* Shared surface for toolbar panels; components own only layout and content. */
+/* Shared panel surface. Themes supply materials; components supply content. */
 .utility-panel {
   border: 1px solid var(--theme-border);
   border-radius: 10px;
   background: var(--theme-surface);
   color: var(--theme-text);
+  box-sizing: border-box;
 }
+.toolbar-panel {
+  position: absolute;
+  bottom: calc(100% + var(--toolbar-panel-gap, 12px) + 1px);
+  width: var(--toolbar-panel-width, min(320px, calc(100vw - 32px)));
+  max-width: calc(100vw - 32px);
+  max-height: calc(100dvh - 110px);
+  padding: 12px;
+  display: grid;
+  align-content: start;
+  gap: 8px;
+  font-size: 12px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.toolbar-panel--center { left: 50%; transform: translateX(-50%); }
+.toolbar-panel--left { left: 0; }
+.toolbar-panel hr {
+  width: 100%; border: 0; border-top: 1px solid var(--theme-border); margin: 4px 0;
+}
+.board-settings-heading { margin: 0 0 4px; font-size: 14px; font-weight: 600; }
+.panel-content-centered { display: flex; flex-direction: column; overflow-y: auto; min-height: 0; }
+.panel-content-centered > * { width: 100%; margin-block: auto; flex: 0 0 auto; }
+.panel-content-group { display: grid; gap: 10px; }
+.panel-actions { display: flex; align-items: center; gap: 8px; }
+.panel-actions > .panel-action-main { flex: 1; min-width: 0; }
+.toolbar-panel .panel-actions > .app-button { --button-hover-transform: none; --button-active-transform: none; display: flex; align-items: center; justify-content: center; line-height: 1; font-size: 12px; }
+.panel-actions > button:is(:hover, :active) { transform: none; }
+.panel-actions svg { display: block; flex: none; margin: auto; }
+.panel-back { justify-self: start; }
+.confirmation-actions { display: flex; gap: 8px; margin-top: 8px; }
+.confirmation-actions button { flex: 1; }
+
+.utility-panel:where(dialog) { position: fixed; inset: auto; margin: 0; z-index: 40; }

@@ -1,3 +1,5 @@
+import { By } from '@angular/platform-browser';
+import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { vi } from 'vitest';
@@ -145,9 +147,13 @@ describe('BoardPageComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     const remove = vi.spyOn(boardServiceStub, 'deleteBoard');
-    const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+    const confirm = vi.spyOn(window, 'confirm');
     component.onAccountBoardDelete('default', new MouseEvent('click'));
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Permanently delete'));
+    expect(component.pendingDeleteBoardUrl).toBe('default');
+    expect(confirm).not.toHaveBeenCalled();
+    component.cancelBoardDelete();
+    component.confirmBoardDelete();
+    expect(component.pendingDeleteBoardUrl).toBeNull();
     expect(remove).not.toHaveBeenCalled();
     confirm.mockRestore();
   });
@@ -162,16 +168,18 @@ describe('BoardPageComponent', () => {
     component.isBoardIdentityMenuOpen = true;
     component.boardIdentityNameDraft = 'Unsaved name';
     component.onAccountBoardDelete('default', new MouseEvent('click'));
-    component.onAccountBoardDelete('default', new MouseEvent('click'));
+    expect(remove).not.toHaveBeenCalled();
+    component.confirmBoardDelete();
+    component.confirmBoardDelete();
     expect(remove).toHaveBeenCalledTimes(1);
-    expect(confirm).toHaveBeenCalledTimes(1);
+    expect(confirm).not.toHaveBeenCalled();
     expect(component.canLeaveBoard()).toBe(false);
     result.error({ error: { errors: [{ message: 'Choose another main board first.' }] } });
     await fixture.whenStable();
     expect(component.isDeletingBoard).toBe(false);
     expect(component.isBoardIdentityMenuOpen).toBe(true);
     expect(component.boardIdentityNameDraft).toBe('Unsaved name');
-    expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Unsaved changes'));
+    expect(component.pendingDeleteBoardUrl).toBe('default');
     expect(fixture.nativeElement.textContent).toContain('Choose another main board first.');
     confirm.mockRestore();
   });
@@ -382,7 +390,7 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.selectBoardTheme(family);
+    component.onAppearanceChange({ ...component.appearanceDraft, themeFamily: family });
     fixture.detectChanges();
     expect(component.boardTheme.id).toBe(family);
     expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe('default');
@@ -394,25 +402,24 @@ describe('BoardPageComponent', () => {
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
-  it('cycles intensity and resets a newly selected pattern to light', () => {
+  it('saves pattern intensity emitted by the shared appearance controls', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.selectBoardPattern('stars');
-    expect(component.atmosphereParticles.length).toBe(96);
-    component.selectBoardPattern('stars');
+    component.toggleBoardIdentityMenu();
+    fixture.detectChanges();
+    const controls = fixture.debugElement.query(By.directive(AppearanceSettingsComponent)).componentInstance as AppearanceSettingsComponent;
+    controls.selectPattern('stars');
+    fixture.detectChanges();
+    expect(component.boardPatternIntensityDraft).toBe('light');
+    controls.selectPattern('stars');
+    fixture.detectChanges();
     expect(component.boardPatternIntensityDraft).toBe('medium');
-    expect(component.atmosphereParticles.length).toBe(160);
-    component.selectBoardPattern('stars');
-    expect(component.appearanceDraft.patternIntensity).toBe('heavy');
-    expect(component.atmosphereParticles.length).toBe(240);
-    component.selectBoardPattern('stars');
-    expect(component.boardPatternIntensityDraft).toBe('light');
-    component.selectBoardPattern('stars');
-    component.selectBoardPattern('sakura');
-    expect(component.boardPatternIntensityDraft).toBe('light');
-    component.selectBoardPattern('none');
-    component.selectBoardPattern('none');
+    controls.selectPattern('stars');
+    fixture.detectChanges();
+    expect(component.boardPatternIntensityDraft).toBe('heavy');
+    controls.selectPattern('sakura');
+    fixture.detectChanges();
     expect(component.boardPatternIntensityDraft).toBe('light');
   });
 
@@ -480,7 +487,7 @@ describe('BoardPageComponent', () => {
     component.toggleBoardIdentityMenu();
     expect(document.activeElement?.getAttribute('name')).toBe('board-identity-name');
     component.boardPatternDraft = 'grid';
-    component.onEscapeKey();
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
     expect(document.activeElement?.classList.contains('board-identity-button')).toBe(true);
     expect(component.settingsFeedback).toBe('Unsaved board settings');
@@ -507,23 +514,7 @@ describe('BoardPageComponent', () => {
     expect(component.boardPatternDraft).toBe('dots');
   });
 
-  it('keeps small snow at every intensity while increasing the share of large flakes', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    component.boardPatternDraft = 'snow';
-    const largeShares = (['light', 'medium', 'heavy'] as const).map(level => {
-      component.boardPatternIntensityDraft = level;
-      const particles = component.atmosphereParticles;
-      expect(particles.some(p => p.size < 2.1)).toBe(true);
-      expect(particles.some(p => p.size > 2.5 && p.size < 4.6)).toBe(true);
-      expect(particles.some(p => p.size >= 6)).toBe(true);
-      expect(component.atmosphereParticles).toBe(particles);
-      return particles.filter(p => p.size >= 6).length / particles.length;
-    });
-    expect(largeShares[1]).toBeGreaterThan(largeShares[0]);
-    expect(largeShares[2]).toBeGreaterThan(largeShares[1]);
-    expect(largeShares[2]).toBeLessThan(.4);
-  });
+
 
   it('autosaves settings without closing the panel and reuses the returned version', () => {
     const pending = new Subject<import('../../models/board').Board>();
@@ -534,7 +525,7 @@ describe('BoardPageComponent', () => {
     fixture.detectChanges();
     component.canEditBoard = true;
     component.isBoardIdentityMenuOpen = true;
-    component.selectBoardPattern('snow');
+    component.onAppearanceChange({ ...component.appearanceDraft, pattern: 'snow', patternIntensity: 'light' });
     expect(update).toHaveBeenCalledTimes(1);
     component.saveSettingsAutomatically();
     expect(update).toHaveBeenCalledTimes(1);
@@ -553,7 +544,7 @@ describe('BoardPageComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.canEditBoard = true;
-    component.selectBoardPattern('rainfall');
+    component.onAppearanceChange({ ...component.appearanceDraft, pattern: 'rainfall', patternIntensity: 'light' });
     expect(component.identitySaveError).toBeTruthy();
     expect(component.boardPatternDraft).toBe('rainfall');
     expect(component.settingsChanged).toBe(true);

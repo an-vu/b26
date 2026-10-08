@@ -1,0 +1,32 @@
+:host { display: contents; }
+/* Toolbar identity and Board-specific content; shared panels own geometry. */
+.board-identity-wrap { display: flex; align-items: center; gap: 8px; justify-self: center; min-width: 0; max-width: 100%; grid-column: 2; }
+.board-identity-menu-anchor { position: static; min-width: 0; flex: 1 1 auto; }
+.board-identity-button { max-width: 100%; width: 100%; display: flex; align-items: center; gap: 6px; height: 32px; min-height: 32px; padding: 5px 12px; text-align: left; }
+.toolbar-board-name, .toolbar-board-path { display: block; max-width: 100%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+.toolbar-board-name { font-size: 13px; line-height: 20px; }
+.toolbar-board-path { display: none; }
+.board-identity-wrap > .app-button { flex: 0 0 auto; }
+.board-identity-menu label { display: grid; gap: 4px; }
+.slug-input-wrap { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: center; gap: 6px; }
+.slug-input-wrap > span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.board-identity-menu button, .board-identity-menu input:not([type='checkbox']) { min-height: 32px; font: inherit; box-sizing: border-box; }
+.board-identity-menu input { min-width: 0; max-width: 100%; }
+.board-settings-tools .settings-reset { order: 1; }
+.board-settings-tools .settings-delete { order: 2; }
+.board-settings-tools .settings-coverflow { order: 0; }
+.board-switcher-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; }
+.board-switcher-link { justify-content: flex-start; text-align: left; }
+.board-switcher-link[aria-current='page'] { border-color: var(--theme-focus); }
+
+.board-panel-view p { margin: 0; }
+.board-switcher-link { min-width: 0; overflow-wrap: anywhere; }
+.board-identity-menu:has(.board-panel-view) { grid-template-rows: auto minmax(0, 1fr) auto; overflow: hidden; }
+.board-panel-view { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
+@media (max-width: 700px) {
+  .board-identity-wrap { width: 100%; flex-wrap: wrap; gap: 6px; }
+  .board-identity-menu-anchor { width: auto; flex-basis: 60px; }
+  .board-identity-wrap > .app-button { padding-inline: 9px; }
+  .board-identity-button { overflow: hidden; text-overflow: ellipsis; }
+  .board-identity-menu input { font-size: 16px; }
+}

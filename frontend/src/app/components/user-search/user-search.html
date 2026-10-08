@@ -1,5 +1,4 @@
-<dialog class="utility-panel" #dialog aria-label="Search users" (cancel)="close()"
-  (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); close()">
+<dialog class="utility-panel" appPanelBehavior [panelOpener]="panelOpener" (panelDismiss)="close($event !== 'outside')" #dialog aria-label="Search users" (cancel)="close()">
   <ul *ngIf="state.status === 'ready' && state.results.length" aria-label="Search results">
     <li *ngFor="let user of state.results">
       <a [routerLink]="['/', user.username]" (click)="close(false)">
@@ -15,6 +14,6 @@
     <p *ngIf="state.status === 'error'">Search is unavailable. <button class="app-button" type="button" (click)="retry()">Try again</button></p>
   </div>
   <input id="user-search-input" type="search" autofocus autocomplete="off" spellcheck="false"
-    aria-label="Search by username" placeholder="@username" maxlength="65" [value]="query"
+    aria-label="Search by username" placeholder="Search" maxlength="65" [value]="query"
     (input)="setQuery($any($event.target).value)" aria-describedby="user-search-status" />
 </dialog>

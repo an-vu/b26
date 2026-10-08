@@ -1,5 +1,5 @@
 :host { display: contents; }
-dialog { position: fixed; inset: auto; margin: 0; z-index: 40; box-sizing: border-box; width: min(340px, calc(100vw - 32px)); padding: 10px; overflow: hidden; }
+dialog { box-sizing: border-box; width: var(--panel-width); padding: var(--panel-padding); overflow: hidden; }
 dialog[open] { display: flex; flex-direction: column; gap: 0; }
 input { flex: 0 0 auto; box-sizing: border-box; width: 100%; min-height: 36px; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px; font: inherit; font-size: 13px; }
 p { margin: 0 0 10px; font-size: 12px; color: var(--theme-muted); }
@@ -9,7 +9,6 @@ a:hover { background: color-mix(in srgb, var(--theme-text) 8%, transparent); }
 .search-user { display: grid; gap: 3px; min-width: 0; }
 .search-user strong { font-size: 13px; overflow-wrap: anywhere; }
 .search-user > span { color: var(--theme-muted); font-size: 11px; overflow-wrap: anywhere; }
-:focus-visible { outline: 1px solid color-mix(in srgb, var(--theme-focus) 40%, transparent); outline-offset: 1px; }
 @media (prefers-reduced-motion: reduce) { a { transition: none; } }
 
 .search-likes { display: grid; gap: 3px; justify-items: end; flex: 0 0 auto; font-size: 12px; font-variant-numeric: tabular-nums; }

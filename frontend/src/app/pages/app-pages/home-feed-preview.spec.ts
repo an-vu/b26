@@ -11,7 +11,7 @@ it('shows an avatar with simple owner details and icon-only reactions without ne
   expect(tiles[0].querySelector('.avatar')?.getAttribute('src')).toBe('/brand/avatar-placeholder.svg');
   expect(tiles[0].querySelector('.activity-identity')?.textContent).toContain('Emma');
   expect(tiles[0].querySelector('.activity-identity')?.textContent).toContain('@emma');
-  expect(tiles[0].querySelector('.activity-time')?.textContent).toBe('9m');
+  expect(tiles[0].querySelector('.activity-time')?.textContent).toBe('9m ago');
   expect(element.querySelector('.activity-action')).toBeNull();
   const buttons = tiles[0].querySelectorAll<HTMLButtonElement>('.activity-footer button');
   expect(buttons).toHaveLength(2);

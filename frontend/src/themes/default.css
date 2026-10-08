@@ -66,7 +66,6 @@
 }
 .page[data-theme="default"] a { color: inherit; }
 .page[data-theme="default"] .bottom-action-pill { color: var(--palette-black); }
-.page[data-theme="default"] .orb-button { --orb-label-color: var(--palette-black); }
 .page[data-theme="default"] :is(.text-muted, .meta-label, .subtitle) { color: var(--theme-muted); opacity: 1; }
 .page[data-theme="default"] :is(input:not([type='checkbox']):not([type='range']), textarea, select) {
   background-color: var(--theme-surface);
@@ -75,14 +74,12 @@
 }
 .page[data-theme="default"] .inline-edit { background: transparent; }
 .page[data-theme="default"] .inline-edit:focus { border-bottom-color: var(--theme-focus); }
-.page[data-theme="default"] :is(button, input, select, textarea, a):focus-visible {
-  outline: 2px solid var(--theme-focus);
-  outline-offset: 2px;
-}
 
 /* Berry: vHuman's warm paper, Georgia typography, and quiet editorial spacing. */
-[data-theme='default'] { font-family: Georgia, "Times New Roman", serif; }
-.page.page-fixed-scroll[data-theme='default'] { --header-title-font-size: clamp(30px, 3.5vw, 48px); --header-title-line-height: 1.08; }
+[data-theme='default'] { font-family: Georgia, "Times New Roman", serif;
+  --focus-width: 2px;
+  --focus-color: var(--theme-focus);
+  --focus-offset: 2px; }
 .page[data-theme='default'] :is(.title, .board-header-stack h1) { font-weight: 400; letter-spacing: -.035em; }
 .page[data-theme='default'] .subtitle { line-height: 1.6; }
 .page[data-theme='default'] :is(.widget, .board-card) {
@@ -90,8 +87,8 @@
   box-shadow: none;
 }
 .page[data-theme='default'] .widget h3 { font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; letter-spacing: -.02em; }
-.page[data-theme='default'] button.app-button,
-[data-theme='default'] dialog button.app-button {
+.page[data-theme='default'] :is(button, a).app-button,
+[data-theme='default'] dialog :is(button, a).app-button {
   font-family: Georgia, "Times New Roman", serif;
   font-weight: 400;
   border-color: color-mix(in srgb, var(--theme-text) 30%, transparent);
@@ -104,3 +101,13 @@
 .page[data-theme='default'] .account-menu a:hover { color: var(--palette-black); }
 
 .page[data-theme="default"] .board-identity-menu input:not([type="checkbox"]):not([type="range"]) { border: 1px solid var(--palette-light-gray); border-radius: 6px; padding: 6px 8px; }
+
+.page[data-theme="default"] .orb-button { --orb-label-color: var(--palette-black);
+}
+
+.page.page-fixed-scroll[data-theme='default'] { --header-title-font-size: clamp(30px, 3.5vw, 48px); --header-title-line-height: 1.08;
+}
+
+.page[data-theme='default'] :is(button, a).app-button, [data-theme='default'] dialog :is(button, a).app-button {
+  --button-rest-shadow: none;
+}

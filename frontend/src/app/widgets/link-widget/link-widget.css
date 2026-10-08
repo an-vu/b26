@@ -2,10 +2,6 @@
   width: fit-content;
   align-self: start;
   justify-self: start;
-  text-decoration: none;
-  border: 1px solid var(--theme-border);
-  border-radius: 8px;
-  padding: 6px 10px;
 }
 
 .widget:has(img) { grid-template-rows: auto minmax(0, 1fr) auto auto; }

@@ -1,5 +1,4 @@
-<dialog class="utility-panel" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()"
-  (keydown.escape)="$event.preventDefault(); $event.stopPropagation(); close()">
+<dialog class="utility-panel" appPanelBehavior [panelOpener]="panelOpener" (panelDismiss)="close($event !== 'outside')" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()">
   <img class="about-icon" src="/brand/blueberry-about.png?v=5" width="132" height="132" alt="BlueBerry" draggable="false" />
   <h2 class="about-name">BlueBerry</h2>
   <p class="about-version">Version {{ release.version }}</p>

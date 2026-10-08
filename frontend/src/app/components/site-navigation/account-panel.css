@@ -1,0 +1,10 @@
+/* Account content; shared panel styles own dimensions and actions. */
+.account-menu-wrap { position: static; display: inline-flex; align-items: center; }
+.account-menu a { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; width: 100%; text-align: left; font: inherit; line-height: 1.2; text-decoration: none; color: inherit; background: transparent; border: 0; border-radius: 0; padding: 4px 0; margin: 0; cursor: pointer; }
+.account-heading { overflow-wrap: anywhere; }
+.account-notifications { min-height: clamp(180px, 32dvh, 280px); padding: 16px; box-sizing: border-box; background: transparent; }
+.account-notifications p { margin: 0; text-align: center; color: var(--theme-muted); font-size: 12px; line-height: 1.5; }
+.account-menu-error { margin: 0; font-size: .75rem; line-height: 1.2; color: var(--theme-error); }
+.account-settings-list { display: grid; width: 100%; gap: 10px; }
+@media (max-width: 700px) { .account-menu a { min-width: 0; overflow-wrap: anywhere; } }
+@media (max-height: 500px) { .account-notifications { min-height: 90px; } }

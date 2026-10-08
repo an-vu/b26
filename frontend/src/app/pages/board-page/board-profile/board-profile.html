@@ -1,0 +1,42 @@
+      <aside class="board-rail">
+        <div class="profile-avatar" role="img" aria-label="Profile picture placeholder">
+          <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="24" r="10" fill="currentColor"/><path d="M12 57c0-13 8-20 20-20s20 7 20 20" fill="currentColor"/></svg>
+        </div>
+        <div class="profile-field profile-name-field" [class.is-editing]="isWidgetEditMode">
+          <h1 class="profile-name" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? profileNameDraft : board.ownerDisplayName || board.ownerUsername) || 'Name' }}</h1>
+          <textarea *ngIf="isWidgetEditMode" aria-label="Profile name" name="profile-name" [ngModel]="profileNameDraft" (ngModelChange)="profileNameDraftChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" rows="1" placeholder="Name"></textarea>
+        </div>
+        <p class="profile-handle">@{{ board.ownerUsername || 'username' }}</p>
+        <div class="profile-stats" aria-label="Profile statistics placeholders">
+          <span><strong>0</strong> Likes</span><span><strong>0</strong> Followers</span><span><strong>0</strong> Following</span>
+        </div>
+        <div class="profile-bio">
+          <div class="profile-field profile-description-field" [class.is-editing]="isWidgetEditMode">
+            <span class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftHeadline : board.headline) || 'Welcome to my page' }}</span>
+            <textarea *ngIf="isWidgetEditMode" aria-label="Profile description" name="board-headline" [ngModel]="boardDraftHeadline" (ngModelChange)="boardDraftHeadlineChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Welcome to my page" rows="1"></textarea>
+          </div>
+          <div *ngIf="isWidgetEditMode || board.website?.trim()" class="profile-field profile-website-field" [class.is-editing]="isWidgetEditMode">
+            <span *ngIf="isWidgetEditMode || !safeWebsite(board.website)" class="profile-field-text" [class.profile-field-mirror]="isWidgetEditMode">{{ (isWidgetEditMode ? boardDraftWebsite : board.website) || 'Link in bio' }}</span>
+            <a *ngIf="!isWidgetEditMode && safeWebsite(board.website) as website" [href]="website" target="_blank" rel="noopener noreferrer">{{ board.website }}</a>
+            <textarea *ngIf="isWidgetEditMode" aria-label="Website or social URL" name="board-website" [ngModel]="boardDraftWebsite" (ngModelChange)="boardDraftWebsiteChange.emit($event)" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link in bio" rows="1"></textarea>
+          </div>
+        </div>
+        <div class="profile-edit-actions" *ngIf="!readOnlyView && canEditBoard">
+          <button
+            type="button"
+            class="app-button"
+            *ngIf="!isWidgetEditMode; else doneButton"
+            (click)="edit.emit()"
+            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
+          >
+          {{ isWidgetLoading ? 'Loading...' : 'Edit' }}
+        </button>
+        <ng-template #doneButton>
+          <button type="button" class="app-button" (click)="save.emit()" [disabled]="isWidgetSaving">
+            {{ isWidgetSaving ? 'Saving...' : 'Save' }}
+          </button>
+          <button type="button" class="app-button" (click)="cancel.emit()" [disabled]="isWidgetSaving">Cancel</button>
+        </ng-template>
+        </div>
+        <p class="board-settings-feedback" role="status" aria-live="polite" *ngIf="canEditBoard && !readOnlyView">{{ settingsFeedback }}</p>
+      </aside>

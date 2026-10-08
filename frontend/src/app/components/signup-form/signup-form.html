@@ -1,8 +1,8 @@
 <article class="widget">
   <h3>{{ widget?.title || 'Create Your Account' }}</h3>
 
-  <form class="signup-block" (ngSubmit)="onSignupSubmit()">
-    <label class="signup-field">
+  <form class="auth-form" (ngSubmit)="onSignupSubmit()">
+    <label class="auth-field">
       <span>Email</span>
       <input
         type="email"
@@ -15,7 +15,7 @@
       />
     </label>
 
-    <label class="signup-field">
+    <label class="auth-field">
       <span>Password</span>
       <input
         type="password"
@@ -30,7 +30,7 @@
       />
     </label>
 
-    <label class="signup-field">
+    <label class="auth-field">
       <span>Confirm Password</span>
       <input
         type="password"
@@ -50,6 +50,6 @@
       Already Have an Account?
     </button>
 
-    <p class="signup-message signup-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    <p class="auth-message auth-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
   </form>
 </article>

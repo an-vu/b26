@@ -41,7 +41,6 @@
   animation: board-rain calc(var(--particle-duration) * .42 * var(--fall-speed)) linear var(--particle-delay) infinite;
 }
 .page[data-pattern='snow'] .board-atmosphere span {
-  width: calc(var(--particle-size) * 2.2); height: calc(var(--particle-size) * 2.2);
   background: radial-gradient(circle, #fff 0 15%, #fffC 28%, #e4f2ff70 42%, transparent 70%);
   filter: blur(calc((1 - var(--depth)) * 2px));
   animation: board-snow calc(var(--particle-duration) * 2.4) linear var(--particle-delay) infinite;
@@ -81,10 +80,6 @@
   65% { transform: translate3d(calc(var(--drift) * -.4 + var(--wind) * .2), 33vh, 0) rotate(calc(var(--turn) + 240deg)) rotateY(240deg); }
   100% { transform: translate3d(calc(var(--wind) * .5), 110vh, 0) rotate(calc(var(--turn) + 400deg)) rotateY(360deg); opacity: 0; }
 }
-@keyframes board-wave-glow {
-  0%, 100% { opacity: .05; transform: translate3d(0, 20px, 0) scale(.7); }
-  48% { opacity: calc(var(--depth) * .8); transform: translate3d(var(--drift), -20px, 0) scale(1.2); }
-}
 @media (prefers-reduced-motion: reduce) {
   .page[data-pattern] .board-atmosphere span { animation: none; opacity: .35; transform: none; }
 }
@@ -93,16 +88,16 @@
 .page[data-theme] .board-pattern-options button { background-image: none; }
 
 /* Softer weather; Sakura deliberately keeps its existing wind settings. */
-.page[data-pattern='rainfall'] .board-atmosphere { --wind: 5vw; --rain-angle: -3deg; --rain-length: .65; --fall-speed: 1.3; --effect-opacity: .38; }
-.page[data-pattern='rainfall'][data-intensity='medium'] .board-atmosphere { --wind: 14vw; --rain-angle: -7deg; --rain-length: .8; --fall-speed: 1.05; --effect-opacity: .45; }
-.page[data-pattern='rainfall'][data-intensity='heavy'] .board-atmosphere { --wind: 24vw; --rain-angle: -12deg; --rain-length: 1; --fall-speed: .85; --effect-opacity: .52; }
-.page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { width: calc(12px + var(--particle-size)); height: calc(12px + var(--particle-size)); background: url('/themes/snowflake.svg') center / contain no-repeat; filter: none; }
+.page[data-pattern='rainfall'] .board-atmosphere { --wind: 5vw; --rain-angle: -3deg; --rain-length: .65; --fall-speed: 1.3; }
+.page[data-pattern='rainfall'][data-intensity='medium'] .board-atmosphere { --wind: 14vw; --rain-angle: -7deg; --rain-length: .8; --fall-speed: 1.05; }
+.page[data-pattern='rainfall'][data-intensity='heavy'] .board-atmosphere { --wind: 24vw; --rain-angle: -12deg; --rain-length: 1; --fall-speed: .85; }
+.page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { background: url('/themes/snowflake.svg') center / contain no-repeat; filter: none; }
 .page[data-theme][data-pattern='stars'] .board-atmosphere span:nth-child(5n) { background: radial-gradient(circle, #fff9dd 0 8%, #eddb9c90 20%, #d2b56a20 45%, transparent 72%); box-shadow: none; }
 .page[data-theme][data-pattern='stars'] .board-atmosphere span:nth-child(11n) { background: radial-gradient(circle, #fff0dd 0 8%, #edba8b85 20%, #c6946420 45%, transparent 72%); box-shadow: none; }
 /* Two cached image layers replace full-screen SVG blur/filter repainting. */
 .wave-sheets { position: absolute; inset: 0; overflow: hidden; contain: paint; }
 .wave-sheet { position: absolute; inset: -5%; background: url('/themes/wave-silk.svg') center / 100% 100% no-repeat; will-change: transform; animation: wave-sheet-drift 28s ease-in-out infinite alternate; }
-.wave-sheet-back { opacity: .5; animation-delay: -14s; animation-direction: alternate-reverse; }
+.wave-sheet-back { animation-delay: -14s; animation-direction: alternate-reverse; }
 .page[data-pattern='wave'] .board-atmosphere span { filter: none; box-shadow: none; }
 
 .page[data-pattern='grid'] .atmosphere-grid { color: #c9cee0; }

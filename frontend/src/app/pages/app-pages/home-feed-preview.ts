@@ -1,3 +1,4 @@
+import { IconComponent } from '../../components/icon/icon';
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
@@ -8,7 +9,7 @@ import { boardRoute } from '../../models/board-route';
 
 @Component({
   selector: 'app-home-feed-preview', standalone: true,
-  imports: [CommonModule, RouterLink, WidgetHostComponent],
+  imports: [IconComponent, CommonModule, RouterLink, WidgetHostComponent],
   templateUrl: './home-feed-preview.html', styleUrl: './home-feed-preview.css',
 })
 export class HomeFeedPreviewComponent {

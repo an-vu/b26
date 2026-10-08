@@ -1,13 +1,7 @@
 :host { display: block; }
 .home-stage { position: relative; }
-.home-settings-anchor { position: relative; }
+.home-settings-anchor { position: static; }
 .home-settings-button { height: 32px; min-height: 32px; padding: 5px 12px; font-size: 13px; line-height: 20px; }
-.home-settings {
-  position: absolute; left: 50%; bottom: calc(100% + 20px); transform: translateX(-50%);
-  width: var(--toolbar-panel-width, min(320px, calc(100vw - 32px))); padding: 12px; display: grid; gap: 12px;
-  box-sizing: border-box; font-size: 12px;
-}
-.home-settings h2 { margin: 0; padding-bottom: 10px; font-size: 16px; text-align: center; border-bottom: 1px solid var(--theme-border); }
 .home-settings p { margin: 0; }
 .is-signed-in .feed-empty { position: relative; z-index: 1; }
 .home-intro { position: relative; padding: 48px 44% 64px 0; min-height: 320px; box-sizing: border-box; }
@@ -48,5 +42,3 @@ a:focus-visible { outline: 2px solid var(--theme-focus); outline-offset: 5px; }
   .feed-heading { padding-top: 24px; }
   .feed-empty { padding: 44px 16px; }
 }
-
-.home-settings { max-height: calc(100dvh - 110px); overflow-y: auto; }

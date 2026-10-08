@@ -31,7 +31,7 @@ import { AppPageShellComponent } from './app-page-shell';
       </ng-container>
       <p role="alert" *ngIf="error">{{error}}</p>
     </app-page-shell>`,
-  styles: [`select{margin-left:12px;padding:8px;border-radius:8px}dl{display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:24px;border:1px solid #ddd;border-radius:16px}dd{margin:0;text-align:right}`]
+  styleUrl: './insights-page.css'
 })
 export class InsightsPageComponent {
   private readonly boardService = inject(BoardService);

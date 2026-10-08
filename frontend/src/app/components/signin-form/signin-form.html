@@ -6,8 +6,8 @@
   <article class="widget">
     <h3>{{ widget?.title || 'Welcome Back!' }}</h3>
 
-    <form class="signin-block" (ngSubmit)="onSigninSubmit()">
-      <label class="signin-field">
+    <form class="auth-form" (ngSubmit)="onSigninSubmit()">
+      <label class="auth-field">
         <span>Email</span>
         <input
           type="email"
@@ -20,7 +20,7 @@
         />
       </label>
 
-      <label class="signin-field">
+      <label class="auth-field">
         <span>Password</span>
         <input
           type="password"
@@ -40,7 +40,7 @@
         Don't Have an Account?
       </button>
 
-      <p class="signin-message signin-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      <p class="auth-message auth-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
     </form>
   </article>
 </ng-template>

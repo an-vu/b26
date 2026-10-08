@@ -1,3 +1,4 @@
+import { paperColor, nightColor, foregroundColor } from '../themes/appearance-values';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { combineLatest, distinctUntilChanged, map } from 'rxjs';
@@ -23,16 +24,9 @@ export class SiteThemeService {
   readonly appearance = computed(() => this.homeAppearance() ?? this.mainAppearance());
   readonly themeId = computed(() => this.appearance().themeFamily ?? 'default');
   readonly colorMode = computed(() => this.appearance().theme);
-  readonly background = computed(() => this.appearance().backgroundColor === '#ffffff' ? '#f9f8f6' : this.appearance().backgroundColor);
-  readonly nightBackground = computed(() => this.background() === '#f9f8f6' ? '#30302e' : `color-mix(in srgb, ${this.background()} 38%, #181a19)`);
-  readonly foreground = computed(() => {
-    const color = this.background().slice(1);
-    const values = [0, 2, 4].map(offset => {
-      const value = parseInt(color.slice(offset, offset + 2), 16) / 255;
-      return value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4;
-    });
-    return values[0] * .2126 + values[1] * .7152 + values[2] * .0722 < .3 ? '#f9f8f6' : '#30302e';
-  });
+  readonly background = computed(() => paperColor(this.appearance().backgroundColor));
+  readonly nightBackground = computed(() => nightColor(this.background()));
+  readonly foreground = computed(() => foregroundColor(this.background()));
 
   constructor() {
     combineLatest([this.auth.user$, this.users.mainBoardId$, this.boards.boards$])

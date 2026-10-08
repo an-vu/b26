@@ -15,6 +15,9 @@
   --aero-pattern: none;
   font-family: "Segoe UI", Tahoma, Arial, sans-serif;
   color: var(--theme-text);
+  --focus-width: 2px;
+  --focus-color: var(--theme-focus);
+  --focus-offset: 2px;
 }
 .page[data-theme='frutiger-aero'] {
   position: relative;
@@ -36,12 +39,6 @@
   background-size: 24px 24px;
   opacity: .14;
 }
-.page[data-theme='frutiger-aero'][data-pattern='dots'] { --aero-pattern: radial-gradient(white 1px, transparent 1px); }
-.page[data-theme='frutiger-aero'][data-pattern='grid'] { --aero-pattern: linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px); }
-.page[data-theme='frutiger-aero'][data-pattern='diagonal'] { --aero-pattern: repeating-linear-gradient(45deg, white 0 1px, transparent 1px 12px); }
-.page[data-theme='frutiger-aero'][data-pattern='reverse-diagonal'] { --aero-pattern: repeating-linear-gradient(-45deg, white 0 1px, transparent 1px 12px); }
-.page[data-theme='frutiger-aero'][data-pattern='stripes'] { --aero-pattern: repeating-linear-gradient(90deg, white 0 6px, transparent 6px 12px); }
-.page[data-theme='frutiger-aero'][data-pattern='checkered'] { --aero-pattern: conic-gradient(white 25%, transparent 0 50%, white 0 75%, transparent 0); }
 .page[data-theme='frutiger-aero'] .board-content { background: transparent; }
 .page[data-theme='frutiger-aero'] .board-rail {
   color: #fff;
@@ -76,21 +73,22 @@
   -webkit-backdrop-filter: blur(22px) saturate(150%);
 }
 [data-theme='frutiger-aero'] .utility-panel { background-color: var(--aero-paper); }
-[data-theme='frutiger-aero'] button.app-button {
+[data-theme='frutiger-aero'] :is(button, a).app-button {
   background: linear-gradient(to bottom, var(--aero-button-top) 0%, var(--aero-button-mid) 48%, var(--aero-button-bottom) 49%, var(--aero-button-mid) 100%);
   border: 1px solid var(--theme-border);
-  color: var(--theme-text);
-  box-shadow: inset 0 0 0 1px var(--aero-highlight), 0 1px 2px rgb(0 29 57 / 17%);
-  text-shadow: 0 1px var(--aero-highlight);
+  color: var(--button-rest-color);
+  box-shadow: var(--button-rest-shadow);
+  text-shadow: var(--button-rest-text-shadow);
+  --button-rest-color: var(--theme-text);
+  --button-rest-shadow: inset 0 0 0 1px var(--aero-highlight), 0 1px 2px rgb(0 29 57 / 17%);
+  --button-rest-text-shadow: 0 1px var(--aero-highlight);
+  --button-hover-background: linear-gradient(180deg, var(--aero-button-top), var(--aero-button-mid) 65%, var(--aero-button-bottom));
+  --button-hover-border: #5baccb;
+  --button-hover-shadow: inset 0 1px 2px var(--aero-highlight), 0 2px 5px #00365325;
+  --button-hover-transform: translateY(-1px);
+  --button-active-background: var(--aero-button-bottom);
+  --button-active-shadow: inset 0 1px 4px rgb(0 37 70 / 30%);
 }
-[data-theme='frutiger-aero'] button.app-button:hover:not(:disabled):not([aria-disabled='true']) {
-  background: linear-gradient(180deg, var(--aero-button-top), var(--aero-button-mid) 65%, var(--aero-button-bottom));
-  border-color: #5baccb;
-  box-shadow: inset 0 1px 2px var(--aero-highlight), 0 2px 5px #00365325;
-  transform: translateY(-1px);
-}
-[data-theme='frutiger-aero'] button.app-button:active:not(:disabled) { background: var(--aero-button-bottom); box-shadow: inset 0 1px 4px rgb(0 37 70 / 30%); }
-[data-theme='frutiger-aero'] :is(button, input, select, textarea, a):focus-visible { outline: 2px solid var(--theme-focus); outline-offset: 2px; }
 [data-theme='frutiger-aero'] :is(input:not([type='range']):not([type='checkbox']), select, textarea) {
   background: var(--aero-paper);
   color: var(--theme-text);
@@ -107,7 +105,7 @@
 }
 .page[data-theme='frutiger-aero'] .toolbar-wordmark { color: #3e6073; text-shadow: 0 1px 1px white; }
 .page[data-theme='frutiger-aero'] .toolbar-wordmark:hover { color: #16374b; }
-[data-theme='frutiger-aero'] :is(.board-settings-help, .meta-label, .settings-placeholder, .settings-section-title) { color: var(--theme-muted); }
+[data-theme='frutiger-aero'] :is(.meta-label, .settings-placeholder, .settings-section-title) { color: var(--theme-muted); }
 .page[data-theme='frutiger-aero'] .board-settings-feedback { background: var(--aero-paper); color: var(--theme-text); text-shadow: none; }
 [data-theme='frutiger-aero'] a { color: inherit; }
 [data-theme='frutiger-aero'] .error { color: var(--theme-error); }
@@ -128,18 +126,8 @@
 .page[data-theme='frutiger-aero'][data-color-mode='dark'] {
   background-image: linear-gradient(rgb(0 15 40 / 48%), rgb(0 15 40 / 48%)), url('/themes/aero-aurora.svg');
 }
-.page[data-theme='frutiger-aero'][data-color-mode='dark'] .bottom-actions,
-[data-theme='frutiger-aero'][data-color-mode='dark'] .utility-panel {
-  --theme-text: #e6f6ff;
-  --theme-muted: #b4d6e8;
-  --theme-surface: #14354e;
-}
 .page[data-theme='frutiger-aero'][data-color-mode='dark'] .toolbar-wordmark { color: #b4d6e8; text-shadow: 0 1px #001525; }
 .page[data-theme='frutiger-aero'][data-color-mode='dark'] .toolbar-wordmark:hover { color: #fff; }
-.theme-swatch { display: block; width: 100%; height: 18px; border-radius: 999px; border: 1px solid #62625e66; }
-.theme-swatch[data-family='default'] { background: #f9f8f6; }
-.theme-swatch[data-family='frutiger-aero'] { background: linear-gradient(150deg, #ecffff99, transparent 55%), linear-gradient(130deg, #12518a, #33cbcf 65%, #83cc74); }
-.theme-swatch[data-family='aqua'] { background: repeating-linear-gradient(#f9f8f6 0 2px, #c7c6c4 2px 3px); }
 @media (prefers-reduced-transparency: reduce) {
   .page[data-theme='frutiger-aero'] :is(.widget, .board-card, .bottom-actions),
 [data-theme='frutiger-aero'] .utility-panel { backdrop-filter: none; -webkit-backdrop-filter: none; background: var(--theme-surface); }
@@ -147,21 +135,52 @@
 
 [data-theme='frutiger-aero'] .light-switch-track {
   border: 1px solid var(--theme-border); box-sizing: border-box;
-  background: linear-gradient(#7894a5, #c4dce9); box-shadow: inset 0 1px 3px #092c5260, 0 1px #fff8;
+  background: var(--switch-off); box-shadow: inset 0 1px 3px #092c5260, 0 1px #fff8;
 }
 [data-theme='frutiger-aero'] .light-switch-control input:checked + .light-switch-track {
-  background: linear-gradient(#5ccef7, #168fc1 48%, #00729f 52%, #55d5ed);
+  background: var(--switch-on);
 }
-[data-theme='frutiger-aero'] .light-switch-track::after { background: linear-gradient(#fff, #deedf5 48%, #abc9db 50%, #f5fcff); border: 1px solid #6f97b6; box-sizing: border-box; }
-
-[data-theme="frutiger-aero"] { --switch-off: linear-gradient(#7894a5, #c4dce9); --switch-on: linear-gradient(#5ccef7, #168fc1 48%, #00729f 52%, #55d5ed); --switch-knob: linear-gradient(#fff, #deedf5 48%, #abc9db 50%, #f5fcff); --switch-shadow: inset 0 1px 3px #14284060, 0 1px #fff9; }
+[data-theme='frutiger-aero'] .light-switch-track::after { background: var(--switch-knob); border: 1px solid #6f97b6; box-sizing: border-box; }
 
 /* Recessed glass slider with a luminous blue fill and pearl handle. */
-.page[data-theme='frutiger-aero'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
-.page[data-theme='frutiger-aero'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #6198b8; border-radius: 99px; background: linear-gradient(90deg, #22b9e9 var(--radius-fill, 50%), #c5e3ed var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #12557866, 0 1px #fff9; }
-.page[data-theme='frutiger-aero'] input[type='range']::-moz-range-track { height: 5px; border: 1px solid #6198b8; border-radius: 99px; background: linear-gradient(90deg, #22b9e9 var(--radius-fill, 50%), #c5e3ed var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #12557866; }
-.page[data-theme='frutiger-aero'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; box-sizing: border-box; width: 16px; height: 16px; margin-top: -5.5px; border: 1px solid #6f97b6; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 2px #30302e40; }
-.page[data-theme='frutiger-aero'] input[type='range']::-moz-range-thumb { box-sizing: border-box; width: 16px; height: 16px; border: 1px solid #6f97b6; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 2px #30302e40; }
 
-[data-theme='frutiger-aero'] button.app-button { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
-@media (prefers-reduced-motion: reduce) { [data-theme='frutiger-aero'] button.app-button { transition: none; } }
+[data-theme='frutiger-aero'] :is(button, a).app-button { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
+@media (prefers-reduced-motion: reduce) { [data-theme='frutiger-aero'] :is(button, a).app-button { transition: none; } }
+.page[data-theme='frutiger-aero'][data-pattern='dots'] { --aero-pattern: radial-gradient(white 1px, transparent 1px);
+}
+.page[data-theme='frutiger-aero'][data-pattern='grid'] { --aero-pattern: linear-gradient(white 1px, transparent 1px), linear-gradient(90deg, white 1px, transparent 1px);
+}
+.page[data-theme='frutiger-aero'][data-pattern='diagonal'] { --aero-pattern: repeating-linear-gradient(45deg, white 0 1px, transparent 1px 12px);
+}
+.page[data-theme='frutiger-aero'][data-pattern='reverse-diagonal'] { --aero-pattern: repeating-linear-gradient(-45deg, white 0 1px, transparent 1px 12px);
+}
+.page[data-theme='frutiger-aero'][data-pattern='stripes'] { --aero-pattern: repeating-linear-gradient(90deg, white 0 6px, transparent 6px 12px);
+}
+.page[data-theme='frutiger-aero'][data-pattern='checkered'] { --aero-pattern: conic-gradient(white 25%, transparent 0 50%, white 0 75%, transparent 0);
+}
+.page[data-theme='frutiger-aero'][data-color-mode='dark'] .bottom-actions,
+[data-theme='frutiger-aero'][data-color-mode='dark'] .utility-panel {
+  --theme-text: #e6f6ff;
+  --theme-muted: #b4d6e8;
+  --theme-surface: #14354e;
+}
+[data-theme="frutiger-aero"] { --switch-off: linear-gradient(#7894a5, #c4dce9); --switch-on: linear-gradient(#5ccef7, #168fc1 48%, #00729f 52%, #55d5ed); --switch-knob: linear-gradient(#fff, #deedf5 48%, #abc9db 50%, #f5fcff); --switch-shadow: inset 0 1px 3px #14284060, 0 1px #fff9;
+}
+[data-theme='frutiger-aero'] input[type='range'] {
+  --range-track-border: 1px solid #6198b8;
+  --range-track-radius: 99px;
+  --range-track-background: linear-gradient(90deg, #22b9e9 var(--radius-fill, 50%), #c5e3ed var(--radius-fill, 50%));
+  --range-track-shadow: inset 0 1px 2px #12557866, 0 1px #fff9;
+  --range-track-firefox-shadow: inset 0 1px 2px #12557866;
+  --range-thumb-box: border-box;
+  --range-thumb-size: 16px;
+  --range-thumb-offset: -5.5px;
+  --range-thumb-border: 1px solid #6f97b6;
+  --range-thumb-shadow: 0 1px 2px #30302e40;
+  --range-thumb-firefox-size: 16px;
+  --range-thumb-firefox-shadow: 0 1px 2px #30302e40;
+}
+.page[data-theme='frutiger-aero'] .navigation-orb { --nav-material-halo: #b2f5ff70;
+}
+
+[data-theme='frutiger-aero'] { --picker-glow: #60daf780; --picker-shine: #ffffffc0; }

@@ -16,12 +16,12 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
     <p>Public boards can be visited by anyone with the link. Your main board appears at your username. Making a board public does not publish it to Home.</p>
     <p *ngIf="error" role="alert">{{error}}</p><p *ngIf="loading">Loading boards…</p>
     <article *ngFor="let board of boards"><div><a [routerLink]="boardRoute(board)">{{board.boardName}}</a><small>{{board.visibility === 'private' ? 'Private' : 'Public'}}{{board.id === mainId ? ' · Main board' : ''}}</small></div>
-      <div class="actions"><button type="button" [disabled]="busy" (click)="changeVisibility(board)">{{board.visibility === 'private' ? 'Make public' : 'Make private'}}</button>
-      <button type="button" [disabled]="busy" (click)="setMain(board)">{{board.id === mainId ? 'Remove main board' : 'Set as main board'}}</button></div>
+      <div class="actions"><button class="app-button" type="button" [disabled]="busy" (click)="changeVisibility(board)">{{board.visibility === 'private' ? 'Make public' : 'Make private'}}</button>
+      <button class="app-button" type="button" [disabled]="busy" (click)="setMain(board)">{{board.id === mainId ? 'Remove main board' : 'Set as main board'}}</button></div>
     </article><p *ngIf="!loading && !boards.length">Sign in to manage your boards.</p>
-    <button *ngIf="boards.length" type="button" [disabled]="busy" (click)="create()">Create private board</button>
+    <button class="app-button" *ngIf="boards.length" type="button" [disabled]="busy" (click)="create()">Create private board</button>
   </section>`,
-  styles: [`section{margin:24px 0;padding:24px;background:var(--theme-surface);color:var(--theme-text);border-radius:18px;border:1px solid var(--theme-border)}article{display:flex;gap:16px;justify-content:space-between;padding:16px 0;border-top:1px solid var(--theme-border)}small{display:block;margin-top:6px;color:var(--theme-muted)}.actions{display:flex;gap:8px;flex-wrap:wrap}button{cursor:pointer;padding:8px 12px;border-radius:8px;border:1px solid #aaa;background:linear-gradient(white,#eee)}button:disabled{opacity:.5;cursor:default}@media(max-width:600px){article{flex-direction:column}}`]
+  styleUrl: './board-library.css'
 })
 export class BoardLibraryComponent {
   private readonly cdr = inject(ChangeDetectorRef);

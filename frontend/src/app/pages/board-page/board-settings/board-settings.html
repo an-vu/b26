@@ -1,0 +1,62 @@
+      <div class="board-identity-wrap" appPanelBehavior [panelOpen]="isBoardIdentityMenuOpen" [panelInternalView]="isBoardSwitcherOpen || !!pendingDeleteBoardUrl" [panelBusy]="isDeletingBoard" (panelDismiss)="dismiss.emit($event)">
+        <div class="board-identity-menu-anchor">
+          <button type="button" class="app-button board-identity-button" (click)="toggle.emit()" [attr.aria-busy]="isSettingsReloading" [attr.aria-disabled]="isSettingsReloading" [attr.aria-expanded]="isBoardIdentityMenuOpen" aria-controls="board-settings-panel" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
+            <span class="toolbar-board-name">{{ boardIdentityNameDraft || menuLabel }}</span>
+            <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || board.boardUrl, ownerUsername: board.ownerUsername }) }}</span>
+          </button>
+          <div class="board-identity-menu utility-panel toolbar-panel toolbar-panel--center" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
+            <h2 class="board-settings-heading">{{ isBoardSwitcherOpen ? 'Your Boards' : pendingDeleteBoardUrl ? 'Delete Board' : 'Board Settings' }}</h2>
+            <ng-container *ngIf="!isBoardSwitcherOpen && !pendingDeleteBoardUrl">
+            <label>
+              Board Name
+              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [ngModel]="boardIdentityNameDraft" (ngModelChange)="boardIdentityNameDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
+            </label>
+            <label>
+              URL
+              <div class="slug-input-wrap">
+                <span>/{{ board.ownerUsername || 'b' }}/</span>
+                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [ngModel]="boardIdentitySlugDraft" (ngModelChange)="boardIdentitySlugDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
+              </div>
+            </label>
+            <hr />
+            <app-appearance-settings #appearanceControls [showReset]="false" [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearanceChange)="appearanceChange.emit($event)" />
+
+            </ng-container>
+            <section *ngIf="isBoardSwitcherOpen" class="board-switcher board-panel-view panel-content-centered" id="board-switcher" aria-label="Your boards">
+              <div class="panel-content-group">
+              <button class="app-button panel-back" type="button" aria-label="Back to Board Settings" (click)="dismiss.emit('back')">← Back</button>
+              <div class="board-switcher-row" *ngFor="let board of accountBoards">
+                <button class="app-button board-switcher-link" type="button" (click)="switchBoard.emit(board.route)" [attr.aria-current]="board.boardUrl === board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ board.label }}</button>
+                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="accountMainBoardId === board.id" [disabled]="accountMainBoardId === board.id || isSettingMainBoard || board.visibility === 'private'" (click)="setMain.emit({ id: board.id, event: $event })">{{ accountMainBoardId === board.id ? 'Main' : 'Set main' }}</button>
+              </div>
+              <p *ngIf="!accountBoards.length">No boards yet.</p>
+              <p class="error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
+              </div>
+            </section>
+            <section *ngIf="pendingDeleteBoardUrl" class="board-panel-view board-delete-confirmation panel-content-centered" aria-label="Delete board confirmation">
+              <div class="panel-content-group">
+              <p>Delete “{{ pendingDeleteBoardLabel }}” and its contents?</p>
+              <p *ngIf="hasUnsavedChanges" class="settings-help">Unsaved changes will also be lost.</p>
+              <p class="error" role="alert" *ngIf="boardDeleteError">{{ boardDeleteError }}</p>
+              <div class="confirmation-actions">
+                <button class="app-button" type="button" (click)="confirmDelete.emit()" [disabled]="isDeletingBoard || isIdentitySaving">{{ isDeletingBoard ? 'Deleting…' : 'OK' }}</button>
+                <button class="app-button" type="button" (click)="dismiss.emit('back')" [disabled]="isDeletingBoard">Cancel</button>
+              </div>
+              </div>
+            </section>
+            <div class="board-settings-tools panel-actions">
+              <button class="app-button settings-reset panel-action-main" type="button" [disabled]="isWidgetSaving || isIdentitySaving || isDeletingBoard" (click)="reset.emit()">Reset to default</button>
+              <button class="app-button settings-icon-button app-button--icon settings-delete app-button--danger" type="button"
+                aria-label="Delete board" title="Delete board" (click)="deleteBoard.emit($event)"
+                [attr.aria-busy]="isDeletingBoard && deletingBoardUrl === board.boardUrl" [disabled]="isDeletingBoard || isIdentitySaving">
+                <app-icon name="trash" [strokeWidth]="1.7" />
+              </button>
+              <button class="app-button settings-icon-button app-button--icon settings-coverflow" type="button" aria-label="Board switcher" [disabled]="isDeletingBoard" [attr.aria-expanded]="isBoardSwitcherOpen" aria-controls="board-switcher" (click)="toggleSwitcher.emit()" title="Switch boards">
+                <app-icon name="boards" [strokeWidth]="1.5" />
+              </button>
+            </div>
+            <p class="error" id="board-settings-error" tabindex="-1" role="alert" *ngIf="identitySaveError">{{ identitySaveError }}</p>
+            <button *ngIf="identitySaveError" class="app-button" type="button" (click)="save.emit()" [disabled]="isIdentitySaving">Retry saving</button>
+          </div>
+        </div>
+      </div>

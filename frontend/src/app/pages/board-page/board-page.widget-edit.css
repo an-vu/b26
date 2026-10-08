@@ -3,12 +3,6 @@
   color: var(--theme-error);
 }
 
-.field-error {
-  margin: 0;
-  color: var(--theme-error);
-  font-size: 12px;
-}
-
 .widget-tile app-widget-host {
   display: block;
   width: 100%;
@@ -29,50 +23,6 @@
   font-size: 14px;
 }
 
-.widget-edit-tile label {
-  display: grid;
-  gap: 4px;
-}
-
-.widget-edit-tile input,
-.widget-edit-tile select,
-.widget-edit-tile textarea {
-  min-width: 0;
-}
-
-.widget-edit-tile textarea {
-  resize: vertical;
-}
-
-.widget-edit-tile .checkbox {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.widget-edit-tile .checkbox input {
-  margin: 0;
-}
-
-.widget-editor-head {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-
-.widget-title-inline {
-  font-size: 14px;
-  font-weight: 700;
-  line-height: 1.2;
-}
-
-.widget-editor-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-
 .widget-delete-button {
   position: absolute;
   top: -10px;
@@ -87,15 +37,6 @@
 
 .widget-settings-open {
   overflow: visible;
-}
-
-.widget-settings-panel {
-  min-height: 0;
-  height: 100%;
-  overflow: auto;
-  display: grid;
-  align-content: start;
-  gap: 8px;
 }
 
 .add-widget-tile {

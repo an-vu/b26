@@ -8,6 +8,9 @@
   --switch-off: linear-gradient(#183935, #54766b); --switch-knob: linear-gradient(#fff, #d8e5e0 48%, #91ada3);
   --switch-shadow: inset 0 1px 4px #001e1880, 0 1px #efffe950;
   color: var(--theme-text);
+  --focus-width: 2px;
+  --focus-color: #c7f88b;
+  --focus-offset: 3px;
 }
 .page[data-theme='kiwi'] { background: #16372f url('/themes/kiwi-fluid.svg') center / cover fixed; }
 .page[data-theme='kiwi']::after { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: var(--wallpaper-tint, transparent); mix-blend-mode: color; opacity: .55; }
@@ -28,27 +31,59 @@
 }
 .page[data-theme='kiwi'] .bottom-actions { background: linear-gradient(#c6e2d64d, #537b694d 48%, #132f32df 51%, #20443bdc); }
 .page[data-theme='kiwi'] .board-settings-heading { color: #ddffa8; font-weight: 400; font-size: 17px; letter-spacing: .02em; }
-[data-theme='kiwi'] button.app-button, .page[data-theme='kiwi'] .widget a.link {
-  color: #e9f9e9; border: 1px solid #b6dace80; background: linear-gradient(#adcbb340, #47786945 48%, #173d33a6 51%, #4d806466);
-  box-shadow: inset 0 1px #f2ffec66, 0 2px 4px #031e2650; text-shadow: 0 1px #0a2d29;
+[data-theme='kiwi'] :is(button, a).app-button {
+  color: var(--button-rest-color); border: 1px solid #b6dace80; background: linear-gradient(#adcbb340, #47786945 48%, #173d33a6 51%, #4d806466);
+  box-shadow: var(--button-rest-shadow); text-shadow: var(--button-rest-text-shadow);
+  --button-rest-color: #e9f9e9;
+  --button-rest-shadow: inset 0 1px #f2ffec66, 0 2px 4px #031e2650;
+  --button-rest-text-shadow: 0 1px #0a2d29;
+  --button-hover-color: #edffda;
+  --button-hover-background: linear-gradient(#c1ee784d, #488e424d);
+  --button-hover-border: #d4ff86;
+  --button-hover-shadow: inset 0 1px #f5ffe6, 0 0 9px #a8f33626;
 }
-.page[data-theme='kiwi'] .widget a.link { display: inline-flex; padding: 6px 14px; border-radius: 999px; text-decoration: none; }
-[data-theme='kiwi'] button.app-button:hover:not(:disabled):not([aria-disabled='true']), .page[data-theme='kiwi'] .widget a.link:hover { color: #edffda; background: linear-gradient(#c1ee784d, #488e424d); border-color: #d4ff86; box-shadow: inset 0 1px #f5ffe6, 0 0 9px #a8f33626; }
-.page[data-theme='kiwi'] .board-settings-actions button:first-child { color: #203c1e; background: var(--switch-on); text-shadow: 0 1px #efffd0; border-color: #ddffa8; }
 [data-theme='kiwi'] :is(input:not([type='range']):not([type='checkbox']), select, textarea) { color: #f0f8ed; background: #0b2525c9; border: 1px solid #91bbaa; border-radius: 7px; box-shadow: inset 0 2px 4px #00151470; }
 [data-theme='kiwi'] input[type='range'], [data-theme='kiwi'] input[type='checkbox'] { accent-color: #b5ed57; }
-[data-theme='kiwi'] :is(button, input, select, textarea, a):focus-visible { outline: 2px solid #c7f88b; outline-offset: 3px; }
 .page[data-theme='kiwi'] .navigation-orb .orb-button__dot { background: linear-gradient(#ffffff55, transparent 50%, #09293b35), var(--orb-dot); border-color: #d5f7df80; box-shadow: inset 0 1px #fff9, 0 1px 3px #001b26; }
 .page[data-theme='kiwi'] .toolbar-wordmark { color: #d9efc3; text-shadow: 0 1px 5px #15391e; }
 .page[data-theme='kiwi'] .toolbar-wordmark:hover { color: #f2ffdf; }
 .page[data-theme='kiwi'] .board-atmosphere { color: #d9f8cf; }
 [data-theme='kiwi'] a { color: inherit; }
 [data-theme='kiwi'] .error { color: var(--theme-error); }
-[data-theme='kiwi'][data-color-mode='dark'] { --kiwi-panel: #092523cf; --kiwi-menu: #102623f7; }
 .page[data-theme='kiwi'][data-color-mode='dark'] { background-image: linear-gradient(#04131b66, #04131b66), url('/themes/kiwi-fluid.svg'); }
-.theme-swatch[data-family='kiwi'] { background: radial-gradient(ellipse at 75% 15%, #edffb7, transparent 55%), linear-gradient(125deg, #173d47, #8dd638 50%, #75cbbb 80%, #2c456d); border-color: #a9c48c; box-shadow: inset 0 1px #f3ffd7; }
-.page[data-theme='kiwi'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
-.page[data-theme='kiwi'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #92b998; border-radius: 99px; background: linear-gradient(90deg, #b9ef5d var(--radius-fill, 50%), #315b4c var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #001d19; }
-.page[data-theme='kiwi'] input[type='range']::-moz-range-track { height: 5px; border: 1px solid #92b998; border-radius: 99px; background: linear-gradient(90deg, #b9ef5d var(--radius-fill, 50%), #315b4c var(--radius-fill, 50%)); }
-.page[data-theme='kiwi'] input[type='range']::-webkit-slider-thumb { appearance: none; -webkit-appearance: none; width: 17px; height: 17px; margin-top: -6px; border: 1px solid #c0e0a0; border-radius: 50%; background: var(--switch-knob); box-shadow: 0 1px 4px #072e24; }
-.page[data-theme='kiwi'] input[type='range']::-moz-range-thumb { width: 15px; height: 15px; border: 1px solid #c0e0a0; border-radius: 50%; background: var(--switch-knob); }
+
+.page[data-theme='kiwi'] .navigation-orb .orb-button__dot {
+  background: radial-gradient(ellipse at 35% 18%, #ffffffb0, transparent 42%), radial-gradient(ellipse at 70% 90%, #d9ffbf55, transparent 55%), var(--orb-dot);
+  border: 1px solid #e4ffceaa;
+  box-shadow: inset 0 0 0 2px #ffffff30, inset 0 -3px 4px #09283170, 0 0 0 2px #132e3880, 0 1px 4px #0006;
+}
+
+[data-theme='kiwi'][data-color-mode='dark'] { --kiwi-panel: #092523cf; --kiwi-menu: #102623f7;
+}
+
+[data-theme='kiwi'] input[type='range'] {
+  --range-track-border: 1px solid #92b998;
+  --range-track-radius: 99px;
+  --range-track-background: linear-gradient(90deg, #b9ef5d var(--radius-fill, 50%), #315b4c var(--radius-fill, 50%));
+  --range-track-shadow: inset 0 1px 2px #001d19;
+  --range-track-firefox-shadow: none;
+  --range-thumb-box: content-box;
+  --range-thumb-size: 17px;
+  --range-thumb-offset: -6px;
+  --range-thumb-border: 1px solid #c0e0a0;
+  --range-thumb-shadow: 0 1px 4px #072e24;
+  --range-thumb-firefox-size: 15px;
+  --range-thumb-firefox-shadow: initial;
+}
+
+.page[data-theme='kiwi'] .navigation-orb { --nav-material-halo: #c6ff9560;
+}
+
+[data-theme='kiwi'] .app-button { --button-active-background: var(--button-hover-background);
+}
+
+[data-theme='kiwi'] .navigation-orb {
+  --nav-hover-shadow: inset 0 0 0 2px #ffffff60, inset 0 -2px 4px #09283150, 0 0 0 2px #d9ffbf40, 0 0 11px #bcff8460;
+}
+
+[data-theme='kiwi'] { --picker-glow: #c6ff9570; --picker-shine: #efffd4b0; --danger-ink: #ff9690; }

@@ -1,21 +1,16 @@
-import { SigninPageComponent } from './pages/app-pages/signin-page';
-import { SettingsPageComponent } from './pages/app-pages/settings-page';
-import { HomePageComponent } from './pages/app-pages/home-page';
-import { InsightsPageComponent } from './pages/app-pages/insights-page';
-import { ProfilePageComponent } from './pages/app-pages/profile-page';
 import { CanDeactivateFn, Routes } from '@angular/router';
-import { BoardPageComponent } from './pages/board-page/board-page';
+import type { BoardPageComponent } from './pages/board-page/board-page';
 
 export const pendingBoardChangesGuard: CanDeactivateFn<BoardPageComponent> = component => component.canLeaveBoard();
 
 export const routes: Routes = [
-  { path: '', pathMatch: 'full', component: HomePageComponent },
-  { path: 'b/:boardId', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard] },
-  { path: 'insights', component: InsightsPageComponent },
-  { path: 'settings', component: SettingsPageComponent },
-  { path: 'signin', component: SigninPageComponent },
+  { path: '', pathMatch: 'full', loadComponent: () => import('./pages/app-pages/home-page').then(m => m.HomePageComponent) },
+  { path: 'b/:boardId', loadComponent: () => import('./pages/board-page/board-page').then(m => m.BoardPageComponent), canDeactivate: [pendingBoardChangesGuard] },
+  { path: 'insights', loadComponent: () => import('./pages/app-pages/insights-page').then(m => m.InsightsPageComponent) },
+  { path: 'settings', loadComponent: () => import('./pages/app-pages/settings-page').then(m => m.SettingsPageComponent) },
+  { path: 'signin', loadComponent: () => import('./pages/app-pages/signin-page').then(m => m.SigninPageComponent) },
   { path: 'u/:boardId', redirectTo: 'b/:boardId' },
-  { path: ':username/:boardId', component: BoardPageComponent, canDeactivate: [pendingBoardChangesGuard] },
-  { path: ':username', component: ProfilePageComponent, data: { userMainRoute: true, readOnly: true } },
+  { path: ':username/:boardId', loadComponent: () => import('./pages/board-page/board-page').then(m => m.BoardPageComponent), canDeactivate: [pendingBoardChangesGuard] },
+  { path: ':username', loadComponent: () => import('./pages/app-pages/profile-page').then(m => m.ProfilePageComponent), data: { userMainRoute: true, readOnly: true } },
   { path: '**', redirectTo: '' },
 ];

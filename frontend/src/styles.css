@@ -7,6 +7,12 @@
 @import "./themes/atmosphere.css";
 @import "./themes/omahakase.css";
 @import "./themes/kiwi.css";
+@import "./themes/forms.css";
+@import "./themes/controls.css";
+@import "./themes/surfaces.css";
+@import "./themes/chrome.css";
+@import "./themes/theme-previews.css";
+@import "./themes/responsive.css";
 
 html,
 body {
@@ -101,7 +107,7 @@ body {
   );
 }
 
-.widget {
+:is(.widget, .board-card) {
   border: 1px solid var(--theme-border);
   border-radius: var(--board-widget-radius, 12px);
   padding: 12px;
@@ -141,274 +147,8 @@ app-widget-host.widget-host-preview .widget {
   background: transparent;
 }
 
-.bottom-actions {
-  position: fixed;
-  left: 16px;
-  right: 16px;
-  bottom: 16px;
-  display: grid;
-  grid-template-columns: minmax(80px, 1fr) minmax(0, auto) minmax(80px, 1fr);
-  align-items: center;
-  gap: 16px;
-  min-height: 52px;
-  box-sizing: border-box;
-  padding: 8px 14px;
-  border: 1px solid var(--palette-light-gray);
-  border-radius: 12px;
-  background: var(--palette-white);
-  --theme-surface: var(--palette-white);
-  --theme-text: var(--palette-black);
-  --theme-muted: var(--palette-gray);
-  color: var(--palette-black);
-  z-index: 30;
-}
-
-.bottom-actions-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  justify-self: start;
-}
-
-.bottom-action-button {
-  --bottom-action-height: 24px;
-  font: inherit;
-  font-size: 13px;
-  line-height: 1;
-  color: inherit;
-  border: 0;
-  border-radius: 999px;
-  margin: 0;
-  display: inline-flex;
-  align-items: center;
-  height: var(--bottom-action-height);
-  white-space: nowrap;
-  appearance: none;
-  padding: 0;
-}
-
-.orb-button {
-  --orb-size: var(--bottom-action-height);
-  --orb-bg: var(--palette-light-gray);
-  --orb-dot: var(--palette-gray);
-  --orb-label-color: var(--theme-muted);
-  justify-content: flex-start;
-  gap: 0;
-  max-width: var(--orb-size);
-  background: transparent;
-  color: var(--orb-label-color);
-  overflow: hidden;
-  cursor: pointer;
-  transition: max-width 320ms ease-out, background-color 220ms ease-out;
-}
-
-.orb-button__dot {
-  flex: 0 0 auto;
-  width: var(--orb-size);
-  height: var(--orb-size);
-  border-radius: 50%;
-  background: var(--orb-dot);
-  margin: 0;
-}
-
-.orb-button__label {
-  display: inline-block;
-  max-width: 0;
-  opacity: 0;
-  white-space: nowrap;
-  font-weight: 400;
-  line-height: 1;
-  transition:
-    max-width 300ms ease-out,
-    opacity 220ms ease-out;
-}
-
-.orb-button:hover,
-.orb-button:focus-visible,
-.orb-button:active {
-  max-width: 220px;
-  padding: 0 8px 0 0;
-  background: var(--orb-bg);
-}
-
-.orb-button:hover .orb-button__label,
-.orb-button:focus-visible .orb-button__label,
-.orb-button:active .orb-button__label {
-  max-width: 180px;
-  margin-left: 6px;
-  opacity: 1;
-}
-
-.orb-button--red {
-  --orb-dot: var(--palette-red);
-}
-
-.orb-button--yellow {
-  --orb-dot: var(--palette-yellow);
-}
-
-.orb-button--blue {
-  --orb-dot: var(--palette-blue);
-}
-
-.orb-button--gray {
-  --orb-bg: var(--palette-light-gray);
-  --orb-dot: var(--palette-light-gray);
-}
-
-.orb-button:disabled {
-  opacity: 0.6;
-  cursor: default;
-}
-
-/* Navigation traffic lights: fixed circles, group icon reveal, labels above. */
-.bottom-actions-left .orb-button.navigation-orb {
-  position: relative;
-  width: var(--orb-size);
-  min-width: var(--orb-size);
-  max-width: var(--orb-size);
-  padding: 0;
-  overflow: visible;
-  background: transparent;
-  transition: none;
-}
-.navigation-orb .orb-button__dot {
-  display: grid;
-  place-items: center;
-  color: var(--palette-black);
-  box-sizing: border-box;
-  border: 1px solid color-mix(in srgb, var(--palette-black) 28%, transparent);
-}
-.navigation-orb__icon {
-  width: 12px;
-  height: 12px;
-  opacity: 0;
-  transition: opacity 220ms ease;
-}
-.bottom-actions-left:hover .navigation-orb__icon,
-.bottom-actions-left:focus-within .navigation-orb__icon {
-  opacity: 1;
-}
-.bottom-actions-left .navigation-orb .orb-button__label {
-  position: absolute;
-  bottom: calc(100% + 24px);
-  left: 50%;
-  transform: translate(var(--label-shift, -50%), 4px);
-  max-width: none;
-  margin: 0;
-  padding: 5px 8px;
-  border: 1px solid var(--palette-gray);
-  border-radius: 5px;
-  background: var(--palette-white);
-  color: var(--palette-black);
-  pointer-events: none;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 220ms ease, transform 220ms ease, visibility 0s linear 220ms;
-}
-.bottom-actions-left > .navigation-orb:first-child .orb-button__label {
-  left: 0;
-  --label-shift: 0px;
-}
-.bottom-actions-left .navigation-orb:hover .orb-button__label,
-.bottom-actions-left .navigation-orb:focus-visible .orb-button__label {
-  opacity: 1;
-  visibility: visible;
-  transform: translate(var(--label-shift, -50%), 0);
-  transition-delay: 0s;
-}
-.navigation-orb:active .orb-button__dot { transform: scale(.9); }
-@media (hover: none) {
-  .navigation-orb__icon { opacity: 1; }
-}
-@media (prefers-reduced-motion: reduce) {
-  .navigation-orb__icon,
-  .bottom-actions-left .navigation-orb .orb-button__label { transition: none; }
-}
-
-/* Navigation colors from the shared palette. */
-.navigation-orb[aria-label='Home'] { --orb-dot: var(--palette-cyan); }
-.navigation-orb[aria-label='Search'] { --orb-dot: var(--palette-blue); }
-.navigation-orb[aria-label='Account'] { --orb-dot: var(--palette-purple); }
-
-.toolbar-wordmark {
-  appearance: none; border: 0; padding: 0; background: transparent; cursor: pointer; user-select: none; -webkit-user-select: none;
-  grid-column: 3;
-  justify-self: end;
-  font-family: "Apple Garamond", "Baskerville", "Garamond", "Times New Roman", serif;
-  font-size: 30px;
-  font-weight: 400;
-  font-style: normal;
-  color: var(--palette-gray);
-  transition: color 250ms ease, text-shadow 250ms ease;
-  line-height: 1;
-  letter-spacing: -.6px;
-  white-space: nowrap;
-}
-@media (max-width: 700px) {
-  .bottom-actions {
-    left: 10px;
-    right: 10px;
-    bottom: max(10px, env(safe-area-inset-bottom));
-    padding: 10px;
-    gap: 10px;
-  }
-  .toolbar-wordmark { font-size: 24px; }
-}
-
-.toolbar-wordmark:hover { color: var(--palette-black); }
-
-.navigation-orb .orb-button__dot { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
-@media (prefers-reduced-motion: reduce) {
-  .toolbar-wordmark, .navigation-orb .orb-button__dot, .navigation-orb__icon,
-  .bottom-actions-left .navigation-orb .orb-button__label { transition: none; }
-}
-
-/* Short, compositor-driven crossfade when changing theme families. */
-::view-transition-old(root), ::view-transition-new(root) { animation-duration: 420ms; animation-timing-function: cubic-bezier(.22, .61, .36, 1); }
-::view-transition-group(root) { animation-duration: 420ms; }
-@media (prefers-reduced-motion: reduce) { ::view-transition-old(root), ::view-transition-new(root), ::view-transition-group(root) { animation: none; } }
-
-/* Signature dots share a small lift, with material-specific light. */
-.page[data-theme] .navigation-orb { --nav-halo: color-mix(in srgb, var(--orb-dot) 24%, transparent); }
-.page[data-theme='frutiger-aero'] .navigation-orb { --nav-halo: #b2f5ff70; }
-.page[data-theme='omahakase'] .navigation-orb { --nav-halo: #f7a9ca60; }
-.page[data-theme='kiwi'] .navigation-orb { --nav-halo: #c6ff9560; }
-.page[data-theme] .navigation-orb:hover .orb-button__dot,
-.page[data-theme] .navigation-orb:focus-visible .orb-button__dot {
-  transform: translateY(-1px) scale(1.08);
-  box-shadow: inset 0 1px 2px #ffffff80, 0 2px 5px #00000020, 0 0 9px var(--nav-halo, #c4ddff50);
-}
-.page[data-theme] .navigation-orb:active .orb-button__dot { transform: scale(.94); }
-.page[data-theme='kiwi'] .navigation-orb .orb-button__dot {
-  background: radial-gradient(ellipse at 35% 18%, #ffffffb0, transparent 42%), radial-gradient(ellipse at 70% 90%, #d9ffbf55, transparent 55%), var(--orb-dot);
-  border: 1px solid #e4ffceaa;
-  box-shadow: inset 0 0 0 2px #ffffff30, inset 0 -3px 4px #09283170, 0 0 0 2px #132e3880, 0 1px 4px #0006;
-}
-.page[data-theme='kiwi'] .navigation-orb:hover .orb-button__dot,
-.page[data-theme='kiwi'] .navigation-orb:focus-visible .orb-button__dot {
-  box-shadow: inset 0 0 0 2px #ffffff60, inset 0 -2px 4px #09283150, 0 0 0 2px #d9ffbf40, 0 0 11px #bcff8460;
-}
-
-/* Quiet focus and text selection, consistent across the five materials. */
-[data-theme] ::selection { background: color-mix(in srgb, var(--theme-focus) 22%, transparent); color: inherit; }
-.page[data-theme] :is(input, textarea, select):focus-visible,
-[data-theme] dialog :is(input, textarea, select):focus-visible {
-  outline: 1px solid color-mix(in srgb, var(--theme-focus) 40%, var(--theme-border)); outline-offset: 1px;
-}
-@media (max-height: 740px) {
-
-
-}
-
 html, body { overscroll-behavior: none; }
 .navigation-orb__icon { display: block; }
-
-/* Shared text insets; inline profile editors intentionally retain their own geometry. */
-.page[data-theme] :is(input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.inline-edit), textarea, select) { padding: 8px 10px; box-sizing: border-box; }
-.page[data-theme] .profile-field textarea { padding: 0; }
-
-.bottom-actions { --toolbar-panel-gap: 12px; --toolbar-panel-width: min(320px, calc(100vw - 32px)); }
 
 /* Freeze CSS timelines in hidden tabs without discarding their animation position. */
 html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidden] *::after {
@@ -430,3 +170,7 @@ html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidde
 
 .page.board-status { min-height: 100dvh; }
 .page.board-status[data-theme='aqua'] > p { color: #f5f8ff; text-shadow: 0 1px 3px #07132a; }
+
+html[data-chrome-blur-off] .bottom-actions {
+  backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
+}
