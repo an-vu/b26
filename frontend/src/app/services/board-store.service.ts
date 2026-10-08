@@ -30,7 +30,8 @@ export class BoardStoreService {
     this.boardsSubject.next([]);
   }
 
-  updateBoardInStore(_updated: Board) {
+  updateBoardInStore(updated: Board) {
+    this.boardsSubject.next(this.boardsSubject.value.map(board => board.id === updated.id ? this.toIdentity(updated) : board));
     this.refreshBoards();
   }
 
@@ -41,6 +42,7 @@ export class BoardStoreService {
       boardUrl: board.boardUrl,
       ownerUsername: board.ownerUsername,
       visibility: board.visibility,
+      appearance: board.appearance,
     };
   }
 }

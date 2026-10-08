@@ -11,29 +11,18 @@
     *ngIf="state.status === 'ready'"
     [attr.data-pattern]="boardPatternDraft"
     [attr.data-intensity]="boardPatternIntensityDraft"
-    [attr.data-theme]="boardTheme.id"
-    [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"
+    [attr.data-theme]="siteTheme.themeId()"
+    [attr.data-color-mode]="siteTheme.colorMode()"
     [style.--board-widget-radius.px]="boardRadiusDraft"
     [style.--widget-spacing.px]="boardSpacingStepDraft * 8"
-    [style.--board-bg-color]="boardDisplayBackground"
-    [style.--board-night-bg]="boardDarkBackground"
-    [style.--board-foreground]="boardDisplayText"
-    [style.--wallpaper-tint]="boardDisplayBackground === '#f9f8f6' ? 'transparent' : boardDisplayBackground"
-    [style.--board-accent]="boardDisplayBackground === '#f9f8f6' ? '#00b2d7' : boardDisplayBackground"
-    [style.--board-muted]="boardDisplayBackground === '#f9f8f6' ? '#62625e' : boardDisplayText"
+    [style.--board-bg-color]="siteTheme.background()"
+    [style.--board-night-bg]="siteTheme.nightBackground()"
+    [style.--board-foreground]="siteTheme.foreground()"
+    [style.--wallpaper-tint]="siteTheme.background() === '#f9f8f6' ? 'transparent' : siteTheme.background()"
+    [style.--board-accent]="siteTheme.background() === '#f9f8f6' ? '#00b2d7' : siteTheme.background()"
+    [style.--board-muted]="siteTheme.background() === '#f9f8f6' ? '#62625e' : siteTheme.foreground()"
   >
-    <div class="board-atmosphere" aria-hidden="true" *ngIf="boardPatternDraft !== 'none'">
-      <ng-container *ngIf="boardPatternDraft !== 'grid'">
-        <span *ngFor="let particle of atmosphereParticles" [style.left.%]="particle.x" [style.top.%]="particle.y"
-          [style.--particle-delay]="particle.delay + 's'" [style.--particle-duration]="particle.duration + 's'"
-          [style.--particle-tint]="particle.tint" [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
-      </ng-container>
-      <app-grid-atmosphere *ngIf="boardPatternDraft === 'grid'" [intensity]="boardPatternIntensityDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'"></app-grid-atmosphere>
-      <div *ngIf="boardPatternDraft === 'wave'" class="wave-sheets" aria-hidden="true"><div class="wave-sheet"></div><div class="wave-sheet wave-sheet-back"></div></div>
-      <div *ngIf="boardPatternDraft === 'rainfall'" class="screen-droplets" aria-hidden="true">
-        <i *ngFor="let drop of screenDroplets" [style.left.%]="drop.x" [style.top.%]="drop.y" [style.--depth]="drop.depth" [style.--particle-duration]="drop.duration + 's'" [style.--particle-delay]="drop.delay + 's'" [style.--particle-size]="drop.size + 'px'"></i>
-      </div>
-    </div>
+    <app-board-atmosphere [appearance]="appearanceDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'" />
     <div class="board-shell">
       <aside class="board-rail">
         <div class="profile-avatar" role="img" aria-label="Profile picture placeholder">
@@ -148,43 +137,7 @@
       </section>
     </div>
 
-    <div class="bottom-actions" *ngIf="widgets$ | async as widgets">
-      <div class="bottom-actions-left">
-        <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb orb-button--red" routerLink="/">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h5v-7h4v7h5V9"/></svg></span>
-        </button>
-        <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open($event)" aria-haspopup="dialog">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg></span>
-        </button>
-        <div class="account-menu-wrap">
-          <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb orb-button--blue" (click)="toggleAccountMenu()" [attr.aria-expanded]="isAccountMenuOpen">
-            <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
-          </button>
-          <div class="account-menu account-panel utility-panel" role="region" aria-label="Account" *ngIf="isAccountMenuOpen">
-            <ng-container *ngIf="isSignedIn; else signedOutMenu">
-            <h2 class="board-settings-heading account-heading">{{ accountUser.username }}</h2>
-            <section class="account-notifications" aria-label="Notifications">
-              <p>No new notifications</p>
-            </section>
-            <hr />
-            <div class="board-settings-tools account-tools">
-              <button type="button" class="app-button settings-icon-button" aria-label="Insights" routerLink="/insights" (click)="closeAccountMenu()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 18 6-6 4 3 6-9M15 6h5v5"/></svg>
-              </button>
-              <button type="button" class="app-button settings-reset" routerLink="/settings" (click)="closeAccountMenu()">Settings</button>
-              <button type="button" class="app-button settings-icon-button settings-delete" aria-label="Sign out" (click)="signOut()" [disabled]="isSigningOut" [attr.aria-busy]="isSigningOut">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4"/></svg>
-              </button>
-            </div>
-            <p class="account-menu-error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
-            </ng-container>
-            <ng-template #signedOutMenu>
-              <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
-            </ng-template>
-          </div>
-        </div>
-      </div>
-
+    <app-site-navigation [beforeSignOut]="prepareSignOut">
       <div class="board-identity-wrap" *ngIf="!readOnlyView && canEditBoard">
         <div class="board-identity-menu-anchor">
           <button type="button" class="app-button board-identity-button" (click)="toggleBoardIdentityMenu()" [attr.aria-busy]="isSettingsReloading" [attr.aria-disabled]="isSettingsReloading" [attr.aria-expanded]="isBoardIdentityMenuOpen" aria-controls="board-settings-panel" [disabled]="isWidgetEditMode || isWidgetLoading || isWidgetSaving">
@@ -205,74 +158,8 @@
               </div>
             </label>
             <hr />
-            <fieldset class="board-theme-picker">
-              <legend>Theme · {{ pickerLabel('theme', boardTheme.label) }}</legend>
-              <div class="board-theme-options">
-                <button class="board-theme-option" type="button" *ngFor="let theme of boardThemes"
-                  [disabled]="isIdentitySaving" [attr.aria-label]="theme.label"
-                  [attr.aria-pressed]="boardTheme.id === theme.id" [attr.data-theme-option]="theme.id" (mouseenter)="pickerHover['theme'] = theme.label" (mouseleave)="pickerHover['theme'] = null"
-                  (focus)="pickerFocus['theme'] = theme.label" (blur)="pickerFocus['theme'] = null"
-                  (click)="selectBoardTheme(theme.id)">
-                  <span class="theme-swatch" [attr.data-family]="theme.id" aria-hidden="true"></span>
-
-                </button>
-              </div>
-            </fieldset>
-            <hr />
-            <div class="board-appearance-row">
-              <label>
-                Widget Radius
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-radius" [style.--radius-fill]="(boardRadiusStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="radiusLabel" min="1" max="3" step="1" [(ngModel)]="boardRadiusStepDraft" (change)="saveSettingsAutomatically()" />
-              </label>
-              <label>
-                Widget Space
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="range" name="board-spacing" aria-label="Widget space" min="1" max="3" step="1" [style.--radius-fill]="(boardSpacingStepDraft - 1) * 50 + '%'" [attr.aria-valuetext]="spacingLabel" [(ngModel)]="boardSpacingStepDraft" (change)="saveSettingsAutomatically()" />
-              </label>
-            </div>
-            <hr />
-            <fieldset>
-              <legend>Background Color · {{ pickerLabel('color', backgroundColorLabel) }}</legend>
-              <div class="board-color-options">
-                <button *ngFor="let color of boardColors" type="button"
-                  [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="boardDisplayBackground === color.value"
-                  [style.background]="color.value" (mouseenter)="pickerHover['color'] = color.name" (mouseleave)="pickerHover['color'] = null"
-                  (focus)="pickerFocus['color'] = color.name" (blur)="pickerFocus['color'] = null" [disabled]="isIdentitySaving"
-                  (click)="boardBackgroundColorDraft = color.value; saveSettingsAutomatically()"></button>
-              </div>
-            </fieldset>
-            <fieldset>
-              <legend>Pattern · {{ pickerLabel('pattern', patternLabel(boardPatternDraft)) }}</legend>
-              <div class="board-pattern-options">
-                <button *ngFor="let pattern of boardPatterns" type="button"
-                  [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
-                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="boardPatternDraft === pattern"
-                  [disabled]="isIdentitySaving" (click)="selectBoardPattern(pattern)">
-                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" [ngSwitch]="pattern">
-                    <g *ngSwitchCase="'none'"><circle cx="12" cy="12" r="7.5"/><path d="m7 17 10-10"/></g>
-                    <g *ngSwitchCase="'stars'"><circle cx="7" cy="8" r="1.3"/><circle cx="16" cy="5" r=".6"/><circle cx="15" cy="15" r="2"/><path d="M5 17h.01M20 10h.01"/></g>
-                    <path *ngSwitchCase="'snow'" d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9 5l3 3 3-3M9 19l3-3 3 3M4.5 11l4-1-1-4M16.5 18l-1-4 4-1M4.5 13l4 1-1 4M16.5 6l-1 4 4 1"/>
-                    <g *ngSwitchCase="'grid'"><path opacity=".4" d="M8 3v18M16 3v18M3 8h18M3 16h18"/><path d="M3 8h5v8h8V3"/></g>
-                    <path *ngSwitchCase="'rainfall'" d="m6 4-2 6m9-7-2 6m9-5-2 6M9 13l-2 7m9-7-2 7"/>
-                    <g *ngSwitchCase="'sakura'"><path d="M12 12C5 14 3 8 7 5c4 0 7 3 5 7ZM12 12c1-6 6-7 8-3-1 4-4 5-8 3ZM12 12c5 2 5 7 1 9-4-2-5-6-1-9Z"/><path opacity=".5" d="m6 19 2-2"/></g>
-                    <path *ngSwitchCase="'wave'" d="M3 8c6-8 12 8 18 0M3 12c6-8 12 8 18 0M3 16c6-8 12 8 18 0"/>
-                  </svg>
-                </button>
-              </div>
-            </fieldset>
-            <hr />
-            <div class="board-light-row">
-              <label class="light-switch-label" for="board-theme-toggle">
-                <span>Light switch</span>
-                <span class="light-switch-control">
-                  <input [disabled]="isWidgetSaving || isIdentitySaving" type="checkbox" role="switch" id="board-theme-toggle" name="board-theme-toggle"
-                    [ngModel]="!boardThemeToggleDraft" (ngModelChange)="boardThemeToggleDraft = !$event; saveSettingsAutomatically()" />
-                  <span class="light-switch-track" aria-hidden="true"></span>
-                </span>
-              </label>
-            </div>
-            <hr />
+            <app-appearance-settings [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearanceChange)="onAppearanceChange($event)" />
             <div class="board-settings-tools">
-              <button class="app-button settings-reset" type="button" (click)="resetAppearance()" [disabled]="isIdentitySaving">Reset to default</button>
               <button class="app-button settings-icon-button settings-delete" type="button"
                 aria-label="Delete board" title="Delete board" (click)="onAccountBoardDelete(state.board.boardUrl, $event)"
                 [attr.aria-busy]="isDeletingBoard && deletingBoardUrl === state.board.boardUrl" [disabled]="isDeletingBoard || isIdentitySaving">
@@ -296,54 +183,16 @@
           </div>
         </div>
       </div>
-      <button class="toolbar-wordmark" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="aboutPanel.open($event)">BlueBerry</button>
-    </div>
+    </app-site-navigation>
   </main>
-  <main class="page" *ngIf="state.status === 'loading'">
+  <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none" *ngIf="state.status === 'loading'">
     <p>Loading...</p>
   </main>
-  <main class="page" *ngIf="state.status === 'missing'">
+  <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none" *ngIf="state.status === 'missing'">
     <p>Board not found.</p>
   </main>
 
-  <div class="bottom-actions" *ngIf="state.status !== 'ready'">
-    <div class="bottom-actions-left">
-      <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb orb-button--red" routerLink="/">
-        <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><path d="m3 10 9-7 9 7"/><path d="M5 9v12h5v-7h4v7h5V9"/></svg></span>
-      </button>
-      <button type="button" aria-label="Search" class="bottom-action-button orb-button navigation-orb orb-button--yellow" (click)="userSearch.open($event)" aria-haspopup="dialog">
-        <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="10" cy="10" r="6"/><path d="m14.5 14.5 5 5"/></svg></span>
-      </button>
-      <div class="account-menu-wrap">
-        <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb orb-button--blue" (click)="toggleAccountMenu()" [attr.aria-expanded]="isAccountMenuOpen">
-          <span class="orb-button__dot" aria-hidden="true"><svg class="navigation-orb__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" focusable="false"><circle cx="12" cy="8" r="4"/><path d="M4 21v-2a8 8 0 0 1 16 0v2"/></svg></span>
-        </button>
-        <div class="account-menu account-panel utility-panel" role="region" aria-label="Account" *ngIf="isAccountMenuOpen">
-          <ng-container *ngIf="isSignedIn; else signedOutMenuFallback">
-            <h2 class="board-settings-heading account-heading">{{ accountUser.username }}</h2>
-            <section class="account-notifications" aria-label="Notifications">
-              <p>No new notifications</p>
-            </section>
-            <hr />
-            <div class="board-settings-tools account-tools">
-              <button type="button" class="app-button settings-icon-button" aria-label="Insights" routerLink="/insights" (click)="closeAccountMenu()">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m4 18 6-6 4 3 6-9M15 6h5v5"/></svg>
-              </button>
-              <button type="button" class="app-button settings-reset" routerLink="/settings" (click)="closeAccountMenu()">Settings</button>
-              <button type="button" class="app-button settings-icon-button settings-delete" aria-label="Sign out" (click)="signOut()" [disabled]="isSigningOut" [attr.aria-busy]="isSigningOut">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 4H4v16h5M10 12h11m-4-4 4 4-4 4"/></svg>
-              </button>
-            </div>
-            <p class="account-menu-error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
-            </ng-container>
-          <ng-template #signedOutMenuFallback>
-            <a class="account-link" routerLink="/signin" (click)="closeAccountMenu()">Sign In</a>
-          </ng-template>
-        </div>
-      </div>
-    </div>
-    <button class="toolbar-wordmark" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="aboutPanel.open($event)">BlueBerry</button>
-  </div>
+  <app-site-navigation *ngIf="state.status !== 'ready'" />
 </ng-container>
 
 <ng-template #widgetSettingsForm let-draft let-isNew="isNew" let-i="index">
@@ -425,7 +274,3 @@
     </div>
   </div>
 </ng-template>
-
-<app-user-search #userSearch [attr.data-theme]="boardTheme.id" [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"></app-user-search>
-
-<app-about-panel #aboutPanel [attr.data-theme]="boardTheme.id" [attr.data-color-mode]="boardThemeToggleDraft ? 'dark' : 'light'"></app-about-panel>

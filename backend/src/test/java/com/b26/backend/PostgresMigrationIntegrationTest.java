@@ -65,6 +65,13 @@ class PostgresMigrationIntegrationTest {
         flyway.migrate();
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
+        try (var rows = statement.executeQuery("select home_radius_step, home_spacing_step from user_preferences where user_id = 'anvu'")) {
+          rows.next();
+          assertEquals(2, rows.getInt(1));
+          assertEquals(2, rows.getInt(2));
+        }
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update user_preferences set home_spacing_step = 0 where user_id = 'anvu'"));
         try (var rows = statement.executeQuery("select name from boards where id = 'default'")) {
           rows.next();
           assertEquals("Preserved title", rows.getString(1));

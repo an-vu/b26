@@ -1,0 +1,67 @@
+            <fieldset class="board-theme-picker">
+              <legend>Theme · {{ pickerLabel('theme', selectedTheme.label) }}</legend>
+              <div class="board-theme-options">
+                <button class="board-theme-option" type="button" *ngFor="let theme of themes"
+                  [disabled]="disabled()" [attr.aria-label]="theme.label"
+                  [attr.aria-pressed]="selectedTheme.id === theme.id" [attr.data-theme-option]="theme.id" (mouseenter)="pickerHover['theme'] = theme.label" (mouseleave)="pickerHover['theme'] = null"
+                  (focus)="pickerFocus['theme'] = theme.label" (blur)="pickerFocus['theme'] = null"
+                  (click)="set('themeFamily', theme.id)">
+                  <span class="theme-swatch" [attr.data-family]="theme.id" aria-hidden="true"></span>
+
+                </button>
+              </div>
+            </fieldset>
+            <hr />
+            <div class="board-appearance-row">
+              <label>
+                Widget Radius
+                <input [disabled]="disabled()" type="range" name="board-radius" [style.--radius-fill]="(appearance().radiusStep - 1) * 50 + '%'" [attr.aria-valuetext]="sizeLabel(appearance().radiusStep)" min="1" max="3" step="1" [ngModel]="appearance().radiusStep" (ngModelChange)="set('radiusStep', $event)" />
+              </label>
+              <label>
+                Widget Space
+                <input [disabled]="disabled()" type="range" name="board-spacing" aria-label="Widget space" min="1" max="3" step="1" [style.--radius-fill]="((appearance().spacingStep ?? 2) - 1) * 50 + '%'" [attr.aria-valuetext]="sizeLabel(appearance().spacingStep ?? 2)" [ngModel]="appearance().spacingStep ?? 2" (ngModelChange)="set('spacingStep', $event)" />
+              </label>
+            </div>
+            <hr />
+            <fieldset>
+              <legend>Background Color · {{ pickerLabel('color', colorLabel) }}</legend>
+              <div class="board-color-options">
+                <button *ngFor="let color of colors" type="button"
+                  [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="appearance().backgroundColor === color.value"
+                  [style.background]="color.value" (mouseenter)="pickerHover['color'] = color.name" (mouseleave)="pickerHover['color'] = null"
+                  (focus)="pickerFocus['color'] = color.name" (blur)="pickerFocus['color'] = null" [disabled]="disabled()"
+                  (click)="set('backgroundColor', color.value)"></button>
+              </div>
+            </fieldset>
+            <fieldset>
+              <legend>Pattern · {{ pickerLabel('pattern', patternLabel(appearance().pattern)) }}</legend>
+              <div class="board-pattern-options">
+                <button *ngFor="let pattern of patterns" type="button"
+                  [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
+                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="appearance().pattern === pattern"
+                  [disabled]="disabled()" (click)="selectPattern(pattern)">
+                  <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.35" stroke-linecap="round" stroke-linejoin="round" [ngSwitch]="pattern">
+                    <g *ngSwitchCase="'none'"><circle cx="12" cy="12" r="7.5"/><path d="m7 17 10-10"/></g>
+                    <g *ngSwitchCase="'stars'"><circle cx="7" cy="8" r="1.3"/><circle cx="16" cy="5" r=".6"/><circle cx="15" cy="15" r="2"/><path d="M5 17h.01M20 10h.01"/></g>
+                    <path *ngSwitchCase="'snow'" d="M12 3v18M4.2 7.5l15.6 9M4.2 16.5l15.6-9M9 5l3 3 3-3M9 19l3-3 3 3M4.5 11l4-1-1-4M16.5 18l-1-4 4-1M4.5 13l4 1-1 4M16.5 6l-1 4 4 1"/>
+                    <g *ngSwitchCase="'grid'"><path opacity=".4" d="M8 3v18M16 3v18M3 8h18M3 16h18"/><path d="M3 8h5v8h8V3"/></g>
+                    <path *ngSwitchCase="'rainfall'" d="m6 4-2 6m9-7-2 6m9-5-2 6M9 13l-2 7m9-7-2 7"/>
+                    <g *ngSwitchCase="'sakura'"><path d="M12 12C5 14 3 8 7 5c4 0 7 3 5 7ZM12 12c1-6 6-7 8-3-1 4-4 5-8 3ZM12 12c5 2 5 7 1 9-4-2-5-6-1-9Z"/><path opacity=".5" d="m6 19 2-2"/></g>
+                    <path *ngSwitchCase="'wave'" d="M3 8c6-8 12 8 18 0M3 12c6-8 12 8 18 0M3 16c6-8 12 8 18 0"/>
+                  </svg>
+                </button>
+              </div>
+            </fieldset>
+            <hr />
+            <div class="board-light-row">
+              <label class="light-switch-label">
+                <span>Light switch</span>
+                <span class="light-switch-control">
+                  <input [disabled]="disabled()" type="checkbox" role="switch" name="appearance-light-switch"
+                    [ngModel]="appearance().theme !== 'dark'" (ngModelChange)="set('theme', $event ? 'light' : 'dark')" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
+              </label>
+            </div>
+            <hr />
+<div class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>

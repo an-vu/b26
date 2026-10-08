@@ -1,0 +1,48 @@
+<app-page-shell [home]="true" [appearance]="appearance()">
+  <div class="home-stage" [class.is-signed-in]="!!(auth.user$ | async)"
+    [style.--board-widget-radius.px]="appearance().radiusStep === 1 ? 6 : appearance().radiusStep === 3 ? 24 : 12"
+    [style.--feed-gap.px]="(appearance().spacingStep ?? 2) * 8">
+  <ng-container *ngIf="!(auth.user$ | async)" [ngTemplateOutlet]="visitor" />
+  <ng-template #visitor>
+    <section class="home-intro" aria-labelledby="intro-title">
+      <p class="eyebrow">A little space for you</p>
+      <h1 id="intro-title">Make yourself<br />at home.</h1>
+      <p class="intro-copy">Thoughts, favorites, and little things that make you, you.<br class="desktop-break" /> Give them a place on your own BlueBerry board.</p>
+      <div class="intro-actions">
+        <a class="home-cta" routerLink="/signin" [queryParams]="{mode: 'signup'}">Create your space <span aria-hidden="true">↗</span></a>
+        <a class="home-link" routerLink="/signin">Already here? Sign in</a>
+      </div>
+      <div class="intro-mosaic" aria-hidden="true">
+        <div class="mosaic-tile mosaic-orange"><svg viewBox="0 0 80 80" fill="none"><path d="M40 10v60M10 40h60M19 19l42 42M19 61l42-42" stroke="currentColor" stroke-width="10" stroke-linecap="round"/></svg></div>
+        <div class="mosaic-tile mosaic-green"><span>hello,<br /><i>world.</i></span></div>
+        <div class="mosaic-tile mosaic-blue"><svg viewBox="0 0 100 80" fill="none"><path d="M-5 38c25-38 35 38 60 0s35 38 60 0M-5 57c25-38 35 38 60 0s35 38 60 0" stroke="currentColor" stroke-width="4"/></svg></div>
+      </div>
+    </section>
+    <header class="home-heading feed-heading"><div><p class="eyebrow">A window into everyone's world</p><h2>From the community</h2></div></header>
+  </ng-template>
+  <app-home-feed-preview *ngIf="showPreview && (auth.user$ | async); else emptyFeed" />
+  <ng-template #emptyFeed>
+  <section class="feed-empty" aria-labelledby="empty-title">
+    <div class="empty-illustration" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
+    <p class="eyebrow">Room for something good</p>
+    <h2 id="empty-title">A quiet beginning.</h2>
+    <p>There are no published updates yet.<br />This is where the community's stories will gather.</p>
+  </section>
+  </ng-template>
+  </div>
+  <div page-navigation class="home-settings-anchor">
+    <button type="button" class="app-button home-settings-button" [attr.aria-expanded]="settingsOpen()" aria-controls="home-settings-panel" (click)="settingsOpen.update(toggle)">Home</button>
+    @if (settingsOpen()) {
+      <section id="home-settings-panel" class="home-settings utility-panel" aria-label="Home settings">
+        <h2>Home Settings</h2>
+        @if (auth.user$ | async) {
+          <app-appearance-settings [appearance]="appearance()" [disabled]="loading() || saving()" (appearanceChange)="saveAppearance($event)" />
+          <p role="status" *ngIf="loading() || saving()">{{ loading() ? 'Loading…' : 'Saving…' }}</p>
+          <p class="error" role="alert" *ngIf="error()">{{ error() }}</p>
+        } @else {
+          <a routerLink="/signin">Sign in to personalize Home</a>
+        }
+      </section>
+    }
+  </div>
+</app-page-shell>

@@ -5,6 +5,7 @@ import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.api.UpdateUserPreferencesRequest;
+import com.b26.backend.user.api.HomeAppearanceDto;
 import com.b26.backend.user.api.UserMainBoardDto;
 import com.b26.backend.user.api.UserPreferencesDto;
 import com.b26.backend.user.persistence.AppUserEntity;
@@ -39,6 +40,35 @@ public class UserPreferencesService {
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
     return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
+  }
+
+  @Transactional
+  public HomeAppearanceDto getHomeAppearance(String authorizationHeader) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+    UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
+    return homeAppearance(preference);
+  }
+
+  @Transactional
+  public HomeAppearanceDto updateHomeAppearance(String authorizationHeader, HomeAppearanceDto request) {
+    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+    appUserRepository.lockById(user.getId()).orElseThrow(() -> new UserNotFoundException(user.getId()));
+    UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
+    preference.setHomeRadiusStep(request.radiusStep());
+    preference.setHomeSpacingStep(request.spacingStep());
+    if (request.themeFamily() != null) preference.setHomeThemeFamily(request.themeFamily());
+    if (request.theme() != null) preference.setHomeColorMode(request.theme());
+    if (request.backgroundColor() != null) preference.setHomeBackgroundColor(request.backgroundColor().toLowerCase(java.util.Locale.ROOT));
+    if (request.pattern() != null) preference.setHomePattern(request.pattern());
+    if (request.patternIntensity() != null) preference.setHomePatternIntensity(request.patternIntensity());
+    userPreferenceRepository.save(preference);
+    return homeAppearance(preference);
+  }
+
+  private HomeAppearanceDto homeAppearance(UserPreferenceEntity preference) {
+    return new HomeAppearanceDto(preference.getHomeRadiusStep(), preference.getHomeSpacingStep(),
+        preference.getHomeThemeFamily(), preference.getHomeColorMode(), preference.getHomeBackgroundColor(),
+        preference.getHomePattern(), preference.getHomePatternIntensity());
   }
 
   @Transactional

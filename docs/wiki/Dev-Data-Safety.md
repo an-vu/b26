@@ -10,6 +10,18 @@
 
 A hosted database stores data with its provider. Check the active datasource settings before running a backup or restore.
 
+## Home layout preview
+
+Signed-in Home on localhost includes a development-only sample feed using snapshots of seven generated demo boards, with music embeds, illustrated link widgets, mixed tile sizes, and suggested-board cards. Relative times are sample labels, not publication timestamps. Production builds and signed-out Home do not show this preview. Following and live publishing are not implemented by this prototype.
+
+Regenerate the fixtures from the repository root while the local Compose stack is running:
+
+```bash
+docker compose --project-name b26-local --file docker-compose.local.yml exec -T frontend node --input-type=module < scripts/seed-home-preview.mjs > frontend/src/app/pages/app-pages/home-preview-data.ts
+```
+
+This creates or resets only `home-preview-<username>` sample boards for the existing local demo users. It makes those sample boards public in the local database and replaces their sample widgets. Other boards and main-board preferences are preserved. Home reads the generated snapshot; rerun the command to refresh that snapshot after changing the fixture script.
+
 ## Migrations
 
 - New empty databases use **`B21__fresh_install.sql`**, then later versioned migrations.

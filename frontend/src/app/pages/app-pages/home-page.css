@@ -1,0 +1,52 @@
+:host { display: block; }
+.home-stage { position: relative; }
+.home-settings-anchor { position: relative; }
+.home-settings-button { height: 32px; min-height: 32px; padding: 5px 12px; font-size: 13px; line-height: 20px; }
+.home-settings {
+  position: absolute; left: 50%; bottom: calc(100% + 20px); transform: translateX(-50%);
+  width: var(--toolbar-panel-width, min(320px, calc(100vw - 32px))); padding: 12px; display: grid; gap: 12px;
+  box-sizing: border-box; font-size: 12px;
+}
+.home-settings h2 { margin: 0; padding-bottom: 10px; font-size: 16px; text-align: center; border-bottom: 1px solid var(--theme-border); }
+.home-settings p { margin: 0; }
+.is-signed-in .feed-empty { position: relative; z-index: 1; }
+.home-intro { position: relative; padding: 48px 44% 64px 0; min-height: 320px; box-sizing: border-box; }
+.eyebrow { margin: 0 0 16px; font: inherit; font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--theme-muted); }
+h1, h2, p { overflow-wrap: anywhere; }
+h1 { font-size: clamp(44px, 6.5vw, 76px); line-height: 1.05; letter-spacing: -.045em; font-weight: 400; margin: 0 0 24px; }
+.intro-copy { font-size: 16px; line-height: 1.75; margin: 0 0 28px; color: var(--theme-muted); }
+.intro-actions { display: flex; align-items: center; flex-wrap: wrap; gap: 20px; }
+a { color: inherit; text-decoration: none; }
+.home-cta { display: inline-flex; align-items: center; gap: 28px; padding: 14px 20px; border-radius: 999px; background: var(--theme-text); color: var(--theme-surface); font-size: 14px; }
+.home-link { font-size: 13px; line-height: 1.5; border-bottom: 1px solid color-mix(in srgb, currentColor 35%, transparent); padding: 4px 0; }
+a:hover { opacity: .75; }
+a:focus-visible { outline: 2px solid var(--theme-focus); outline-offset: 5px; }
+.intro-mosaic { position: absolute; right: 12px; top: 42px; width: 34%; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; transform: rotate(-5deg); }
+.mosaic-tile { border-radius: 24px; aspect-ratio: 1; display: grid; place-items: center; overflow: hidden; }
+.mosaic-orange { background: #f2c8ae; color: #b76b42; transform: rotate(-4deg); }
+.mosaic-orange svg { width: 55%; }
+.mosaic-green { background: #dce5c7; color: #667b43; transform: rotate(9deg) translateY(28px); }
+.mosaic-green span { font: 30px/1.05 Georgia, serif; letter-spacing: -.04em; }
+.mosaic-blue { background: #cedde9; color: #668aa7; grid-column: 1 / -1; aspect-ratio: 2.2; transform: rotate(2deg); }
+.mosaic-blue svg { width: 100%; height: 100%; }
+.home-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 24px; margin: 20px 0 28px; }
+.home-heading h2 { margin: 0; font-size: 27px; font-weight: 400; letter-spacing: -.025em; }
+.home-heading .eyebrow { margin-bottom: 10px; }
+.feed-heading { padding-top: 32px; border-top: 1px solid color-mix(in srgb, var(--theme-text) 18%, transparent); }
+.feed-empty { border: 1px solid color-mix(in srgb, var(--theme-text) 20%, transparent); border-radius: 24px; padding: 64px 24px; text-align: center; background: color-mix(in srgb, var(--theme-surface) 95%, transparent); }
+.feed-empty h2 { font-size: clamp(28px, 4vw, 38px); font-weight: 400; letter-spacing: -.025em; margin: 0 0 14px; }
+.feed-empty p:not(.eyebrow) { color: var(--theme-muted); line-height: 1.7; font-size: 14px; margin: 0 0 18px; }
+.empty-illustration { width: 54px; height: 54px; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; margin: 0 auto 26px; transform: rotate(-8deg); }
+.empty-illustration span { border: 1px solid color-mix(in srgb, var(--theme-text) 25%, transparent); border-radius: 6px; background: color-mix(in srgb, var(--theme-text) 5%, transparent); }
+.empty-illustration span:nth-child(2) { transform: translateY(3px); }
+@media(max-width: 640px) {
+  .home-intro { padding: 12px 0 28px; min-height: 0; }
+  .intro-mosaic { position: relative; right: auto; top: auto; width: min(68%, 260px); margin: 40px auto 10px; gap: 10px; }
+  .mosaic-tile { border-radius: 18px; }
+  .intro-actions { gap: 16px; }
+  .desktop-break { display: none; }
+  .feed-heading { padding-top: 24px; }
+  .feed-empty { padding: 44px 16px; }
+}
+
+.home-settings { max-height: calc(100dvh - 110px); overflow-y: auto; }

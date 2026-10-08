@@ -120,6 +120,8 @@ body {
 }
 
 .widget {
+  min-height: 0;
+  overflow: auto;
   min-width: 0;
   overflow-wrap: anywhere;
 }
@@ -412,3 +414,19 @@ html, body { overscroll-behavior: none; }
 html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidden] *::after {
   animation-play-state: paused !important;
 }
+
+/* Dedicated pages sit directly on Aqua's galaxy wallpaper. Keep chrome and panels
+   in their existing silver palette while giving exposed page text enough contrast. */
+.page.app-page[data-theme='aqua'] .app-page-content { color: #f5f8ff; }
+.page.app-page[data-theme='aqua'] :is(.home-heading, .home-intro) {
+  --theme-text: #f5f8ff; --theme-muted: #dce6f6;
+  text-shadow: 0 1px 3px #07132a;
+}
+.page.app-page[data-theme='aqua'] .home-cta { text-shadow: none; }
+.page.app-page[data-theme='aqua'] :is(.widget, .feed-empty, .board-library) { color: var(--theme-text); }
+
+.page.app-page .home-cta { color: var(--theme-surface); }
+.page.app-page[data-theme='aqua'] .home-cta { color: #283341; }
+
+.page.board-status { min-height: 100dvh; }
+.page.board-status[data-theme='aqua'] > p { color: #f5f8ff; text-shadow: 0 1px 3px #07132a; }

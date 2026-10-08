@@ -1,36 +1,25 @@
-import { Component, DestroyRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
-import { AboutPanelComponent } from '../../components/about-panel/about-panel';
-import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { AuthService } from '../../services/auth.service';
+import { Component, inject, input } from '@angular/core';
+import { SiteNavigationComponent } from '../../components/site-navigation/site-navigation';
+import { SiteThemeService } from '../../services/site-theme.service';
+import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
+import type { BoardAppearance } from '../../models/board';
 
 @Component({
   selector: 'app-page-shell', standalone: true,
-  imports: [CommonModule, RouterLink, AboutPanelComponent],
+  imports: [SiteNavigationComponent, BoardAtmosphereComponent],
   template: `
-    <main class="page app-page" data-theme="default" data-color-mode="light">
-      <header>
-        <a routerLink="/">BlueBerry</a>
-        <nav aria-label="Main navigation">
-          <a routerLink="/">Home</a>
-          <a routerLink="/settings">Settings</a>
-          <a routerLink="/insights">Insights</a>
-          <a *ngIf="auth.user$ | async as user; else signin" [routerLink]="['/', user.username]">My profile</a>
-          <ng-template #signin><a routerLink="/signin">Sign In</a></ng-template>
-        </nav>
-      </header>
+    <main class="page app-page" [class.home-page]="home()" [attr.data-theme]="theme.themeId()" [attr.data-color-mode]="theme.colorMode()"
+      [attr.data-pattern]="appearance()?.pattern" [attr.data-intensity]="appearance()?.patternIntensity">
+      @if (appearance(); as appearance) {
+        <app-board-atmosphere [appearance]="appearance" [darkInk]="theme.themeId() === 'default' && theme.colorMode() === 'light' && theme.foreground() === '#30302e'" />
+      }
       <section class="app-page-content"><ng-content /></section>
-      <footer class="app-page-footer"><button class="app-button" (click)="about.open($event)">About BlueBerry</button></footer>
-      <app-about-panel #about />
+      <app-site-navigation [brandAtTop]="home()"><ng-content select="[page-navigation]" /></app-site-navigation>
     </main>`,
   styleUrl: './app-pages.css'
 })
 export class AppPageShellComponent {
-  readonly auth = inject(AuthService);
-  constructor() {
-    if (this.auth.getAccessToken()) {
-      this.auth.me().pipe(takeUntilDestroyed(inject(DestroyRef))).subscribe({ error: () => {} });
-    }
-  }
+  readonly home = input(false);
+  readonly appearance = input<BoardAppearance | null>(null);
+  readonly theme = inject(SiteThemeService);
 }

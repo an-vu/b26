@@ -1,11 +1,12 @@
 import { AtmosphereParticles } from '../../themes/atmosphere-particles';
-import { AboutPanelComponent } from '../../components/about-panel/about-panel';
+import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
+import { SiteNavigationComponent } from '../../components/site-navigation/site-navigation';
+import { SiteThemeService } from '../../services/site-theme.service';
 import { WidgetBounceDirective } from '../../directives/widget-bounce';
-import { GridAtmosphereComponent } from '../../components/grid-atmosphere/grid-atmosphere';
+import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
 import { BOARD_PALETTE } from '../../themes/board-palette';
 import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
-import { UserSearchComponent } from '../../components/user-search/user-search';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
@@ -14,7 +15,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { hasDraftChangedByOriginal } from './board-page.save-flow';
 import { getApiErrorMessage } from '../../utils/api-error.util';
 import { FormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Router } from '@angular/router';
 
 import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
@@ -67,7 +68,6 @@ import { initializeBoardPageAccountState } from './board-page.account-state';
 import {
   runCreateNewBoardAction,
   runDeleteBoardAction,
-  runSignOutAction,
 } from './board-page.account-actions';
 import {
   getDocumentClickMenuCloseActions,
@@ -83,7 +83,7 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [AboutPanelComponent, WidgetBounceDirective, GridAtmosphereComponent, UserSearchComponent, CommonModule, FormsModule, RouterLink, WidgetHostComponent],
+  imports: [AppearanceSettingsComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, FormsModule, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrls: [
     './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
@@ -91,7 +91,12 @@ import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
   ],
 })
 export class BoardPageComponent {
+  onAppearanceChange(appearance: BoardAppearance) {
+    this.applyAppearance(appearance);
+    this.saveSettingsAutomatically();
+  }
   readonly boardRoute = boardRoute;
+  readonly siteTheme = inject(SiteThemeService);
   private route = inject(ActivatedRoute);
   private router = inject(Router);
   private boardService = inject(BoardService);
@@ -121,7 +126,6 @@ export class BoardPageComponent {
   isWidgetSaving = false;
   isAccountMenuOpen = false;
   accountBoardActionsMenuBoardId: string | null = null;
-  isSigningOut = false;
   isSignedIn = false;
   isCreatingBoard = false;
   isDeletingBoard = false;
@@ -607,22 +611,12 @@ export class BoardPageComponent {
     });
   }
 
-  signOut() {
-    if (!this.canLeaveBoard()) return;
+  readonly prepareSignOut = () => {
+    if (!this.canLeaveBoard()) return false;
     this.cancelWidgetEdit();
     this.resetIdentityDraft();
-    runSignOutAction({
-      isSigningOut: this.isSigningOut,
-      setSigningOut: (isSigningOut) => {
-        this.isSigningOut = isSigningOut;
-      },
-      authService: this.authService,
-      userStore: this.userStore,
-      boardStore: this.boardStore,
-      router: this.router,
-      closeAccountMenu: () => this.closeAccountMenu(),
-    });
-  }
+    return true;
+  };
 
   toggleBoardIdentityMenu() {
     if (this.isSettingsReloading) return;

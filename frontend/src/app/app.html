@@ -1,1 +1,7 @@
-<router-outlet></router-outlet>
+<div class="page site-frame" [attr.data-theme]="theme.themeId()" [attr.data-color-mode]="theme.colorMode()"
+  data-pattern="none" [style.--board-bg-color]="theme.background()" [style.--board-night-bg]="theme.nightBackground()"
+  [style.--board-foreground]="theme.foreground()" [style.--board-muted]="theme.background() === '#f9f8f6' ? '#62625e' : theme.foreground()"
+  [style.--wallpaper-tint]="theme.background() === '#f9f8f6' ? 'transparent' : theme.background()"
+  [style.--board-accent]="theme.background() === '#f9f8f6' ? '#00b2d7' : theme.background()">
+  <router-outlet />
+</div>

@@ -1,0 +1,62 @@
+:host { display: contents; }
+.navigation-context { min-width: 0; }
+.has-top-brand .navigation-context { grid-column: 2; justify-self: center; }
+.has-top-brand { grid-template-columns: minmax(80px, 1fr) minmax(0, auto) minmax(80px, 1fr); }
+/* vHuman Studios' progressive glass: same placement, reach and blur layers. */
+.home-header {
+  --header-height: 86px; --blur-reach: 22px;
+  position: fixed; inset: 0 0 auto; z-index: 29;
+  color: var(--theme-text);
+}
+.header-inner {
+  position: relative; z-index: 3; height: var(--header-height);
+  display: flex; align-items: center; justify-content: center;
+}
+.home-header-brand { color: inherit; font-size: 24px; }
+.home-header-brand:hover { color: inherit; opacity: .75; }
+.home-header-brand:focus-visible { outline: 2px solid var(--theme-focus); outline-offset: 5px; }
+.header-blur {
+  position: absolute; top: 0; left: 0; right: 0; height: var(--header-height);
+  z-index: 2; pointer-events: none;
+  --blur-inset: 0 0 calc(-1 * var(--blur-reach));
+}
+.blur-layer {
+  position: absolute; inset: var(--blur-inset); background: transparent;
+  --edge-mask: linear-gradient(to bottom, #000 calc(100% - var(--blur-reach)),
+    rgba(0, 0, 0, .85) calc(100% - var(--blur-reach) * .75), rgba(0, 0, 0, .5) calc(100% - var(--blur-reach) * .5),
+    rgba(0, 0, 0, .15) calc(100% - var(--blur-reach) * .25), transparent 100%);
+  -webkit-mask-image: var(--edge-mask); mask-image: var(--edge-mask);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .blur-layer {
+    background: transparent;
+    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
+  }
+  .header-blur::before, .header-blur::after {
+    content: ''; position: absolute; inset: var(--blur-inset); pointer-events: none;
+    -webkit-mask-image: var(--progressive-mask); mask-image: var(--progressive-mask);
+  }
+  .header-blur::before {
+    z-index: 1; --progressive-mask: linear-gradient(to bottom, #000 55%, transparent 95%);
+    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
+  }
+  .header-blur::after {
+    z-index: 2; --progressive-mask: linear-gradient(to bottom, #000 40%, transparent 80%);
+    -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
+  }
+}
+@media(max-width: 760px) {
+  .home-header { --header-height: 72px; }
+  .home-header-brand { font-size: 22px; }
+}
+@media(prefers-reduced-transparency: reduce) {
+  .blur-layer, .header-blur::before, .header-blur::after { display: none; }
+  .header-blur { background: transparent; }
+}
+.board-settings-heading { font-size: 16px; margin: 0; padding: 0 0 10px; text-align: center; border-bottom: 1px solid var(--theme-border); }
+.account-tools { display: grid; grid-template-columns: 32px 1fr 32px; gap: 8px; }
+.nav-icon-button { width: 32px; padding: 6px; }
+.nav-icon-button svg { width: 18px; height: 18px; }
+.settings-delete { color: var(--theme-error); }
+@media(max-width: 700px) { .bottom-actions { grid-template-columns: auto minmax(0, 1fr) auto; gap: 8px; } }
+@media(max-width: 700px) { .bottom-actions.has-top-brand { grid-template-columns: minmax(80px, 1fr) minmax(0, auto) minmax(80px, 1fr); } }

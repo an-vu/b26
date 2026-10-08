@@ -1,0 +1,10 @@
+ALTER TABLE user_preferences ADD COLUMN home_theme_family VARCHAR(32) NOT NULL DEFAULT 'default';
+ALTER TABLE user_preferences ADD COLUMN home_color_mode VARCHAR(8) NOT NULL DEFAULT 'light';
+ALTER TABLE user_preferences ADD COLUMN home_background_color VARCHAR(7) NOT NULL DEFAULT '#f9f8f6';
+ALTER TABLE user_preferences ADD COLUMN home_pattern VARCHAR(32) NOT NULL DEFAULT 'none';
+ALTER TABLE user_preferences ADD COLUMN home_pattern_intensity VARCHAR(8) NOT NULL DEFAULT 'light';
+ALTER TABLE user_preferences ADD CONSTRAINT chk_home_theme_family CHECK (home_theme_family IN ('default', 'frutiger-aero', 'aqua', 'omahakase', 'kiwi'));
+ALTER TABLE user_preferences ADD CONSTRAINT chk_home_color_mode CHECK (home_color_mode IN ('light', 'dark'));
+ALTER TABLE user_preferences ADD CONSTRAINT chk_home_background_color CHECK (home_background_color ~ '^#[0-9a-fA-F]{6}$');
+ALTER TABLE user_preferences ADD CONSTRAINT chk_home_pattern CHECK (home_pattern IN ('none', 'dots', 'grid', 'diagonal', 'reverse-diagonal', 'stripes', 'checkered', 'rainfall', 'stars', 'snow', 'sakura', 'wave'));
+ALTER TABLE user_preferences ADD CONSTRAINT chk_home_pattern_intensity CHECK (home_pattern_intensity IN ('light', 'medium', 'heavy'));

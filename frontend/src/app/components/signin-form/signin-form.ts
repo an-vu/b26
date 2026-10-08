@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChangeDetectorRef, Component, Input, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import type { Widget } from '../../models/widget';
 import { SignupFormComponent } from '../signup-form/signup-form';
 import { AuthService } from '../../services/auth.service';
@@ -17,7 +17,7 @@ import { AuthService } from '../../services/auth.service';
 export class SigninFormComponent {
   @Input() widget?: Widget;
 
-  showSignup = false;
+  showSignup = inject(ActivatedRoute).snapshot.queryParamMap?.get('mode') === 'signup';
   private readonly cdr = inject(ChangeDetectorRef);
 
   email = '';

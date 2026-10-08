@@ -1,3 +1,4 @@
+import { SiteThemeService } from './services/site-theme.service';
 import { PageActivityService } from './services/page-activity.service';
 import { Component, inject } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
@@ -7,7 +8,9 @@ import { RouterOutlet } from '@angular/router';
   standalone: true,
   imports: [RouterOutlet],
   templateUrl: './app.html',
+  styles: [':host { display: block; } .site-frame { min-height: 100dvh; } .site-frame::after { content: none; }'],
 })
 export class AppComponent {
+  readonly theme = inject(SiteThemeService);
   private readonly activity = inject(PageActivityService);
 }

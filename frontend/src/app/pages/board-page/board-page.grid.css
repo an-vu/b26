@@ -5,17 +5,15 @@
   align-content: start;
   grid-template-columns: repeat(var(--board-grid-cols), minmax(0, 1fr));
   gap: var(--board-grid-gap);
-  /* Tile dimensions are a minimum: forms and validation messages need room to grow. */
-  grid-auto-rows: minmax(
-    calc((100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols)),
-    auto
-  );
+  /* A grid unit is square. Content never grows its row. */
+  grid-auto-rows: calc((100cqw - (var(--board-grid-cols) - 1) * var(--board-grid-gap)) / var(--board-grid-cols));
 }
 
 .board-tile {
   cursor: default;
   min-width: 0;
-  grid-column: span min(var(--tile-cols, 1), var(--board-grid-cols));
+  min-height: 0;
+  grid-column: span var(--tile-cols, 1);
 }
 
 .board-card {
@@ -27,6 +25,8 @@
   align-items: start;
   gap: 8px;
   height: 100%;
+  min-height: 0;
+  overflow: auto;
   box-sizing: border-box;
 }
 
@@ -73,14 +73,5 @@
   grid-row: span 1;
 }
 
-@media (max-width: 1024px) {
-  .board-grid {
-    --board-grid-cols: 2;
-  }
-}
-
-@media (max-width: 640px) {
-  .board-grid {
-    --board-grid-cols: 1;
-  }
-}
+/* Keep all four columns on narrow screens: changing the unit size scales the
+   whole grid proportionally, without reshaping a 2x2 tile into 1x2. */

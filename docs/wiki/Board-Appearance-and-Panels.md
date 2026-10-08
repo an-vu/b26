@@ -1,8 +1,12 @@
 # Board appearance and panels
 
-As of October 8, 2026, the latest local release commit is **1.5.3** (`93a2e2b`), following 1.5.2 (`6d712dd`). Profile/sidebar editing, automatic board settings, panel redesigns, and performance refinements are **committed in 1.5.3**. The About panel displays **Version 26.1**; this display label is not a Git tag or deployment identifier.
+## Site-wide theme
 
-Hosting checked October 8, 2026: Vercel production is Ready on 1.5.3; Render’s retry of 1.5.3 is live; Neon production has successful V30/V31 migrations. See deployment notes for evidence. The October 6 audit below remains historical evidence. Permission matrices, full insights, and social counts remain unfinished.
+Signed-out visitors always use **Berry**. Signed-in users use their selected main board’s theme family, light/dark mode, and background across Sign In, Settings, Insights, profiles, boards, bottom navigation, and utility panels. With no selected main board, the fallback is Berry. Viewing someone else’s board does not switch the viewer’s theme.
+
+Saved changes to the selected main board update the site theme. Changing another board’s appearance does not replace it. Widget radius, spacing, and atmosphere patterns remain per-board settings. Home is an exception: it uses its own saved theme family, light/dark mode, background, pattern/intensity, radius, and spacing. Home and boards share the same appearance controls and atmosphere renderer; leaving Home restores the normal main-board theme.
+
+`SiteThemeService` resolves the session and main-board preference; `SiteNavigationComponent` contains the common bottom bar, Account, Search, and About panels. Dedicated application pages use `AppPageShellComponent`; board pages project their board settings into the same navigation.
 
 ## Board settings
 
@@ -10,7 +14,7 @@ Open the board-name button in the bottom toolbar. Theme, background color, patte
 
 Five themes: **Berry**, **Aero**, **Aqua**, **Omakase**, and **Kiwi**. The Light switch controls light/dark mode independently. Nine background colors blend into the wallpaper, with darker tinting in dark mode. Patterns are None, Stars, Snow, Meteor, Rainfall, Sakura, and Wave. Clicking a selected animated pattern cycles its light/medium/heavy intensity. Visitors see saved appearance; writes remain owner/admin only.
 
-The theme picker uses five previews in one row. Theme, color, and pattern labels reflect the hovered choice, then return to the selection. Settings tools run left to right: board switcher, Reset to default, red Delete board. The switcher selects boards and sets the main board; on smaller screens it occupies the settings panel instead of opening beside it.
+The theme picker uses five previews in one row. Theme, color, and pattern labels reflect the hovered choice, then return to the selection. Reset to default is part of the shared appearance controls. Board switcher and red Delete board remain board-only tools. The switcher selects boards and sets the main board; on smaller screens it occupies the settings panel instead of opening beside it.
 
 ## Layout and panels
 
@@ -24,6 +28,12 @@ The footer keeps the brand's cyan Home, blue Search, and purple Account dots. Ho
 CSS animations pause when the page is hidden. Meteor's canvas loop and the widget scroll-bounce animation also stop, then resume without catching up the hidden interval. Reduced motion gives Meteor a static frame with no idle rendering loop. Third-party embeds retain their own playback behavior.
 
 Implementation: shared panel material in `frontend/src/themes/panels.css` plus each theme stylesheet; visibility lifecycle in `frontend/src/app/services/page-activity.service.ts`.
+
+## Fixed widget footprints
+
+Saved layouts use whole-cell footprints: 1×1, 2×1, 3×1, 4×1, 1×2, 2×2, and 3×3. Grid cells are square; content scrolls or truncates inside its tile instead of growing the row. Four-column grids preserve the footprint when the viewport changes. Feed packing never changes widget dimensions.
+
+Home widgets always show an owner avatar at the top-left. Hover/focus scales only that card subtly (1.025×), revealing name/@username next to the avatar, time at the top-right, and heart/comment icons at the bottom corners. Action phrases and counts are absent; icons are placeholders. Neighbors never shrink or move, and grid slots/saved footprints remain unchanged. Touch devices show details without hover. Missing photos use a neutral avatar. User-board widgets do not have this treatment.
 
 ## Editing
 

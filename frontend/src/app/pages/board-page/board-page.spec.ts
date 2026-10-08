@@ -384,7 +384,8 @@ describe('BoardPageComponent', () => {
     fixture.detectChanges();
     component.selectBoardTheme(family);
     fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe(family);
+    expect(component.boardTheme.id).toBe(family);
+    expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe('default');
     expect(component.hasUnsavedChanges).toBe(false);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({

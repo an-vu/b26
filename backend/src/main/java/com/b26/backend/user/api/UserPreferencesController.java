@@ -5,6 +5,7 @@ import com.b26.backend.user.domain.UserProfileService;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -53,5 +54,18 @@ public class UserPreferencesController {
   @GetMapping("/{username}/main-board")
   public UserMainBoardDto getUserMainBoard(@PathVariable String username) {
     return userPreferencesService.getMainBoardByUsername(username);
+  }
+
+  @GetMapping("/me/preferences/home")
+  public HomeAppearanceDto getHomeAppearance(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    return userPreferencesService.getHomeAppearance(authorizationHeader);
+  }
+
+  @PutMapping("/me/preferences/home")
+  public HomeAppearanceDto updateHomeAppearance(
+      @RequestHeader(name = "Authorization", required = false) String authorizationHeader,
+      @Valid @RequestBody HomeAppearanceDto request) {
+    return userPreferencesService.updateHomeAppearance(authorizationHeader, request);
   }
 }

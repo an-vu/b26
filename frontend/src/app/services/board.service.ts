@@ -19,6 +19,7 @@ import type {
   BoardPermissions,
 } from '../models/board';
 import type { SyncWidgetsRequest, UpsertWidgetRequest, Widget } from '../models/widget';
+import type { HomeAppearance } from '../models/home-appearance';
 import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
@@ -142,6 +143,14 @@ export class BoardService {
 
   getMyPreferences(): Observable<UserPreferences> {
     return this.http.get<UserPreferences>(`/api/users/me/preferences`);
+  }
+
+  getHomeAppearance(): Observable<HomeAppearance> {
+    return this.http.get<HomeAppearance>('/api/users/me/preferences/home');
+  }
+
+  updateHomeAppearance(appearance: HomeAppearance): Observable<HomeAppearance> {
+    return this.http.put<HomeAppearance>('/api/users/me/preferences/home', appearance);
   }
 
   updateMyPreferences(payload: UpdateUserPreferencesRequest): Observable<UserPreferences> {
