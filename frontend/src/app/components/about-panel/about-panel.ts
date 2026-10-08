@@ -24,6 +24,9 @@ export class AboutPanelComponent {
     }
     this.dialog.nativeElement.focus();
   }
+  contact(): void {
+    if (this.release.contactUrl) window.location.assign(this.release.contactUrl);
+  }
   close(restoreFocus = true): void {
     this.dialog.nativeElement.close(); this.observer?.disconnect();
     if (restoreFocus) this.opener?.focus();

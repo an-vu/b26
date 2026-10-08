@@ -1,7 +1,3 @@
 package com.b26.backend.user.api;
-
-import jakarta.validation.constraints.NotBlank;
-
-public record UpdateUserPreferencesRequest(
-    @NotBlank(message = "mainBoardId is required") String mainBoardId
-) {}
+/** A null or empty mainBoardId explicitly removes the public main board. */
+public record UpdateUserPreferencesRequest(String mainBoardId) {}

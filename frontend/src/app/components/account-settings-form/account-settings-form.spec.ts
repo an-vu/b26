@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { UserSettingsWidgetComponent } from './user-settings-widget';
+import { AccountSettingsFormComponent } from './account-settings-form';
 import { AuthService } from '../../services/auth.service';
 import { UserStoreService } from '../../services/user-store.service';
 import { BoardStoreService } from '../../services/board-store.service';
@@ -22,7 +22,7 @@ describe('Settings sign out', () => {
       { provide: BoardService, useValue: {} },
       { provide: Router, useValue: router },
     ] });
-    const component = TestBed.createComponent(UserSettingsWidgetComponent).componentInstance;
+    const component = TestBed.createComponent(AccountSettingsFormComponent).componentInstance;
     return { component, response, auth, user, boards, router };
   }
 
@@ -73,8 +73,9 @@ describe('Settings username changes', () => {
         } },
         { provide: BoardService, useValue: { getMyPreferences: () => of({ username: 'alice', mainBoardId: 'one' }) } },
       ] });
-      const fixture = TestBed.createComponent(UserSettingsWidgetComponent);
+      const fixture = TestBed.createComponent(AccountSettingsFormComponent);
       const component = fixture.componentInstance;
+      component.showMainBoard = false;
       component.widget = { id: 1, type: 'user-settings', title: 'Settings', layout: 'span-2', config: {}, enabled: true, order: 0 };
       fixture.detectChanges();
       boards.refreshBoards.mockClear();
@@ -83,6 +84,8 @@ describe('Settings username changes', () => {
       component.onProfileFieldChanged('username', 'settings');
       await vi.advanceTimersByTimeAsync(650);
       expect(error).toBe('username is reserved');
+      fixture.detectChanges();
+      expect(fixture.nativeElement.querySelector('[role=alert]').textContent).toContain('username is reserved');
       expect(boards.refreshBoards).not.toHaveBeenCalled();
       updateMyProfile.mockReturnValue(of({ ...profile, username: 'alice-new' }));
       component.onProfileFieldChanged('username', 'alice-new');

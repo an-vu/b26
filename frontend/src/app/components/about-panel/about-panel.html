@@ -4,7 +4,7 @@
   <h2 class="about-name">BlueBerry</h2>
   <p class="about-version">Version {{ release.version }}</p>
   <div class="about-actions">
-    <a *ngIf="release.contactUrl; else contactPlaceholder" class="app-button" [href]="release.contactUrl">Contact</a>
+    <button *ngIf="release.contactUrl; else contactPlaceholder" class="app-button" type="button" (click)="contact()">Contact</button>
     <ng-template #contactPlaceholder><button class="app-button" type="button" disabled title="Contact details coming soon">Contact</button></ng-template>
     <a *ngIf="release.legalUrl; else legalPlaceholder" class="app-button" [href]="release.legalUrl">Legal</a>
     <ng-template #legalPlaceholder><button class="app-button" type="button" disabled title="Legal information coming soon">Legal</button></ng-template>

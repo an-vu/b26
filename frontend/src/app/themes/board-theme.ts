@@ -30,7 +30,7 @@ export const BOARD_THEMES = [
     id: 'aqua',
     label: 'Aqua',
     status: 'available',
-    direction: '2010–2014 Apple: silver windows, iOS 6 blue chrome, linen, tactile controls, and a galaxy desktop.',
+    direction: 'Leopard–Mavericks and iOS 4–6: silver windows, blue chrome, linen, tactile controls, and a Snow Leopard-inspired violet aurora.',
   },
   { id: 'omahakase', label: 'Omakase', status: 'available', direction: 'Black lacquer, illuminated rose glass, cherry blossoms, and amber light.' },
   { id: 'kiwi', label: 'Kiwi', status: 'available', direction: 'Liquid lime, clear console plastic, chrome edges, and luminous dreamlike ribbons.' },

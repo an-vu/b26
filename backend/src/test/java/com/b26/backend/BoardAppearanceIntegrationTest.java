@@ -12,7 +12,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     var created = objectMapper.readTree(mockMvc.perform(post(API_BOARD)
         .header(AUTHORIZATION_HEADER, token)).andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString());
-    return (ObjectNode) objectMapper.readTree(mockMvc.perform(get(API_BOARD + "/" + created.get("boardUrl").asText()))
+    return (ObjectNode) objectMapper.readTree(mockMvc.perform(get(API_BOARD + "/" + created.get("boardUrl").asText()).header(AUTHORIZATION_HEADER, token))
         .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
   }
 
@@ -39,7 +39,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(request.toString()))
         .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.backgroundColor").value("#e6f0ff"));
-    mockMvc.perform(get(url)).andExpect(jsonPath("$.appearance.theme").value("dark"))
+    mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token)).andExpect(jsonPath("$.appearance.theme").value("dark"))
         .andExpect(jsonPath("$.appearance.patternIntensity").value("heavy"))
         .andExpect(jsonPath("$.appearance.spacingStep").value(3))
         .andExpect(jsonPath("$.appearance.radiusStep").value(3)).andExpect(jsonPath("$.appearance.pattern").value("sakura"));
@@ -64,7 +64,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(update.toString()))
         .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.themeFamily").value(family));
-    var saved = (ObjectNode) objectMapper.readTree(mockMvc.perform(get(url))
+    var saved = (ObjectNode) objectMapper.readTree(mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token))
         .andExpect(jsonPath("$.appearance.themeFamily").value(family))
         .andReturn().getResponse().getContentAsString());
     var legacy = request(saved);
@@ -92,7 +92,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     var missingVersion = request(board); missingVersion.remove("version");
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(missingVersion.toString())).andExpect(status().isBadRequest());
-    var after = objectMapper.readTree(mockMvc.perform(get(url)).andReturn().getResponse().getContentAsString());
+    var after = objectMapper.readTree(mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token)).andReturn().getResponse().getContentAsString());
     assertEquals(board, after);
   }
 
@@ -121,7 +121,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     var saved = objectMapper.readTree(mockMvc.perform(put(url + "/editor").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(request.toString())).andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString());
-    mockMvc.perform(get(url)).andExpect(jsonPath("$.ownerDisplayName").value("New Profile Name"))
+    mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token)).andExpect(jsonPath("$.ownerDisplayName").value("New Profile Name"))
         .andExpect(jsonPath("$.website").value("https://example.com/social"));
     assertEquals("New Profile Name", appUserRepository.findById("profile-editor").orElseThrow().getDisplayName());
     request.set("version", saved.at("/board/version"));

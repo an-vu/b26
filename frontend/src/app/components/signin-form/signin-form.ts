@@ -4,38 +4,26 @@ import { ChangeDetectorRef, Component, Input, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import type { Widget } from '../../models/widget';
-import { SignupWidgetComponent } from '../signup-widget/signup-widget';
+import { SignupFormComponent } from '../signup-form/signup-form';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-signin-widget',
+  selector: 'app-signin-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, SignupWidgetComponent],
-  templateUrl: './signin-widget.html',
-  styleUrl: './signin-widget.css',
+  imports: [CommonModule, FormsModule, SignupFormComponent],
+  templateUrl: './signin-form.html',
+  styleUrl: './signin-form.css',
 })
-export class SigninWidgetComponent {
-  @Input({ required: true }) widget!: Widget;
+export class SigninFormComponent {
+  @Input() widget?: Widget;
 
   showSignup = false;
-  readonly signupWidget: Widget = {
-    id: 0,
-    type: 'signup',
-    title: 'Create Your Account',
-    layout: 'span-2',
-    config: {},
-    enabled: true,
-    order: 0,
-  };
-
   private readonly cdr = inject(ChangeDetectorRef);
 
   email = '';
   password = '';
-  rememberMe = true;
   isSubmitting = false;
   errorMessage = '';
-  infoMessage = '';
 
   constructor(
     private authService: AuthService,
@@ -48,7 +36,6 @@ export class SigninWidgetComponent {
     }
 
     this.errorMessage = '';
-    this.infoMessage = '';
 
     const email = this.email.trim().toLowerCase();
     const password = this.password;

@@ -84,6 +84,11 @@ public class BoardEntity {
   public String getPattern() { return pattern; }
   public void setPattern(String value) { pattern = value; }
 
+  @Column(nullable = false)
+  private String visibility = "public";
+  public String getVisibility() { return visibility; }
+  public void setVisibility(String visibility) { this.visibility = visibility; }
+
   @Version private Long version;
 
   @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)

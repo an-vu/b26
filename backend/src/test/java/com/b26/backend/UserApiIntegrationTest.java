@@ -12,6 +12,7 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
 
   @Test
   void getMyUserPreferences_returns200() throws Exception {
+    selectDefault();
     mockMvc
         .perform(auth(get(API_USERS_ME_PREFERENCES)))
         .andExpect(status().isOk())
@@ -100,6 +101,7 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
 
   @Test
   void getUserMainBoardByUsername_returns200() throws Exception {
+    selectDefault();
     mockMvc
         .perform(get("/api/users/anvu/main-board"))
         .andExpect(status().isOk())
@@ -107,5 +109,9 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(jsonPath("$.username").value("anvu"))
         .andExpect(jsonPath("$.mainBoardId").isNotEmpty())
         .andExpect(jsonPath("$.mainBoardUrl").isNotEmpty());
+  }
+  private void selectDefault() throws Exception {
+    mockMvc.perform(authJson(patch(API_USERS_ME_PREFERENCES), "{\"mainBoardId\":\"default\"}"))
+        .andExpect(status().isOk());
   }
 }

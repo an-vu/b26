@@ -1,5 +1,5 @@
 <article class="widget">
-  <h3>{{ widget.title || 'Create Your Account' }}</h3>
+  <h3>{{ widget?.title || 'Create Your Account' }}</h3>
 
   <form class="signup-block" (ngSubmit)="onSignupSubmit()">
     <label class="signup-field">

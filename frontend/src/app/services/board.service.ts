@@ -85,6 +85,10 @@ export class BoardService {
     );
   }
 
+  updateBoardVisibility(slug: string, visibility: 'public' | 'private', version: number): Observable<Board> {
+    return this.http.patch<Board>(`/api/board/${slug}/visibility`, { visibility, version });
+  }
+
   getBoardPermissions(boardId: string): Observable<BoardPermissions> {
     return this.http.get<BoardPermissions>(`/api/board/${boardId}/permissions`);
   }

@@ -108,6 +108,12 @@ public class BoardController {
     return boardService.updateBoardIdentity(boardId, request);
   }
 
+  @PatchMapping("/{boardId}/visibility")
+  public BoardDto updateVisibility(@PathVariable String boardId,
+      @Valid @RequestBody UpdateBoardVisibilityRequest request) {
+    return boardService.updateVisibility(boardId, request);
+  }
+
   @DeleteMapping("/{boardId}")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void deleteBoard(@PathVariable String boardId) {

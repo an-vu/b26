@@ -506,6 +506,24 @@ describe('BoardPageComponent', () => {
     expect(component.boardPatternDraft).toBe('dots');
   });
 
+  it('keeps small snow at every intensity while increasing the share of large flakes', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance;
+    component.boardPatternDraft = 'snow';
+    const largeShares = (['light', 'medium', 'heavy'] as const).map(level => {
+      component.boardPatternIntensityDraft = level;
+      const particles = component.atmosphereParticles;
+      expect(particles.some(p => p.size < 2.1)).toBe(true);
+      expect(particles.some(p => p.size > 2.5 && p.size < 4.6)).toBe(true);
+      expect(particles.some(p => p.size >= 6)).toBe(true);
+      expect(component.atmosphereParticles).toBe(particles);
+      return particles.filter(p => p.size >= 6).length / particles.length;
+    });
+    expect(largeShares[1]).toBeGreaterThan(largeShares[0]);
+    expect(largeShares[2]).toBeGreaterThan(largeShares[1]);
+    expect(largeShares[2]).toBeLessThan(.4);
+  });
+
   it('autosaves settings without closing the panel and reuses the returned version', () => {
     const pending = new Subject<import('../../models/board').Board>();
     const update = vi.fn((_url: string, _request: import('../../models/board').UpdateBoardIdentityRequest) => pending);

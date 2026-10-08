@@ -87,7 +87,7 @@ public class AuthService {
     var board = boardService.createStarterBoardForOwner(savedUser);
     UserPreferenceEntity preference = new UserPreferenceEntity();
     preference.setUserId(savedUser.getId());
-    preference.setMainBoardId(board.id());
+    preference.setMainBoardId(null);
     userPreferenceRepository.save(preference);
     return createSession(savedUser);
   }

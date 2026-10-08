@@ -8,10 +8,10 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class CorsConfig implements WebMvcConfigurer {
-  private final ApiWriteAuthorizationInterceptor apiWriteAuthorizationInterceptor;
+  private final ApiAuthorizationInterceptor apiAuthorizationInterceptor;
 
-  public CorsConfig(ApiWriteAuthorizationInterceptor apiWriteAuthorizationInterceptor) {
-    this.apiWriteAuthorizationInterceptor = apiWriteAuthorizationInterceptor;
+  public CorsConfig(ApiAuthorizationInterceptor apiAuthorizationInterceptor) {
+    this.apiAuthorizationInterceptor = apiAuthorizationInterceptor;
   }
 
   @org.springframework.beans.factory.annotation.Value("${app.cors.allowed-origins:http://localhost:4200}")
@@ -34,6 +34,6 @@ public class CorsConfig implements WebMvcConfigurer {
 
   @Override
   public void addInterceptors(InterceptorRegistry registry) {
-    registry.addInterceptor(apiWriteAuthorizationInterceptor);
+    registry.addInterceptor(apiAuthorizationInterceptor);
   }
 }

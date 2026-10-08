@@ -2,7 +2,7 @@ import { TestBed } from '@angular/core/testing';
 import { Router } from '@angular/router';
 import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
-import { SignupWidgetComponent } from './signup-widget';
+import { SignupFormComponent } from './signup-form';
 import { AuthService } from '../../services/auth.service';
 import { BoardService } from '../../services/board.service';
 
@@ -14,11 +14,11 @@ describe('Signup onboarding', () => {
       providers: [
         { provide: Router, useValue: router },
         { provide: AuthService, useValue: auth },
-        { provide: BoardService, useValue: { getMyPreferences: () => failedPreferences
-          ? throwError(() => new Error('offline')) : of({ mainBoardUrl: 'first-board' }) } },
+        { provide: BoardService, useValue: { getMyBoards: () => failedPreferences
+          ? throwError(() => new Error('offline')) : of([{ boardUrl: 'first-board', ownerUsername: 'new-user' }]) } },
       ],
     });
-    const component = TestBed.createComponent(SignupWidgetComponent).componentInstance;
+    const component = TestBed.createComponent(SignupFormComponent).componentInstance;
     component.email = 'new@example.com';
     component.password = 'test-password-123';
     component.confirmPassword = component.password;
@@ -31,10 +31,10 @@ describe('Signup onboarding', () => {
     expect(router.navigateByUrl).toHaveBeenCalledWith('/new-user/first-board');
   });
 
-  it('falls back to the public main board when preference loading fails', () => {
+  it('falls back to Settings when library loading fails', () => {
     const { component, router } = setup(true);
     component.onSignupSubmit();
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/new-user');
+    expect(router.navigateByUrl).toHaveBeenCalledWith('/settings');
     expect(component.errorMessage).toBe('');
   });
 
@@ -45,7 +45,7 @@ describe('Signup onboarding', () => {
       { provide: AuthService, useValue: { signup: () => response } },
       { provide: BoardService, useValue: {} },
     ] });
-    const fixture = TestBed.createComponent(SignupWidgetComponent);
+    const fixture = TestBed.createComponent(SignupFormComponent);
     const component = fixture.componentInstance;
     component.widget = { id: 1, type: 'signup', title: 'Create Account', layout: 'span-2', config: {}, enabled: true, order: 0 };
     component.email = 'test@example.com';

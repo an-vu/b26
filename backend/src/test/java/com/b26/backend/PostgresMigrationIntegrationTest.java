@@ -109,6 +109,12 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("kiwi", rows.getString(1));
         }
+        try (var rows = statement.executeQuery("select visibility from boards where id = 'default'")) {
+          rows.next(); assertEquals("public", rows.getString(1));
+        }
+        statement.executeUpdate("update boards set visibility = 'private' where id = 'default'");
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update boards set visibility = 'unknown' where id = 'default'"));
         // Matches the current entity: no obsolete required signup-route column.
         statement.executeUpdate("insert into system_settings "
             + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "

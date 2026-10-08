@@ -12,7 +12,7 @@ describe('Owner-qualified board routes', () => {
   function resolve(username: string | null, slug: string | null, service: object) {
     return firstValueFrom(resolveBoardId$({
       boardService: service as BoardService, routeParamBoardId: slug, routeParamUsername: username,
-      dataBoardId: undefined, systemRoute: undefined, userMainRoute: !slug,
+      dataBoardId: undefined, userMainRoute: !slug,
     }));
   }
 

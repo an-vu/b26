@@ -62,7 +62,7 @@ class PostgresOnboardingIntegrationTest {
     var result = mockMvc.perform(get("/api/users/me/preferences").header("Authorization", token)).andReturn();
     var prefs = objectMapper.readTree(result.getResponse().getContentAsString());
     String userId = prefs.get("userId").asText();
-    String firstSlug = prefs.get("mainBoardUrl").asText();
+    String firstSlug = boards.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(userId).get(0).getBoardUrl();
     var extra = mockMvc.perform(post("/api/board").header("Authorization", token)
         .contentType(MediaType.APPLICATION_JSON).content("{}")).andExpect(status().isOk()).andReturn();
     String secondSlug = objectMapper.readTree(extra.getResponse().getContentAsString()).get("boardUrl").asText();
@@ -98,14 +98,14 @@ class PostgresOnboardingIntegrationTest {
     var session = objectMapper.readTree(result.getResponse().getContentAsString());
     String token = "Bearer " + session.get("accessToken").asText();
     var preferenceResult = mockMvc.perform(get("/api/users/me/preferences").header("Authorization", token))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardId").isNotEmpty()).andReturn();
+        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardId").value("")).andReturn();
     var preference = objectMapper.readTree(preferenceResult.getResponse().getContentAsString());
-    String slug = preference.get("mainBoardUrl").asText();
+    String slug = boards.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(preference.get("userId").asText()).get(0).getBoardUrl();
     mockMvc.perform(get("/api/board/" + slug + "/permissions").header("Authorization", token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.canEdit").value(true));
     mockMvc.perform(get("/api/users/first/main-board"))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardUrl").value(slug));
-    var editorResult = mockMvc.perform(get("/api/board/" + slug + "/editor"))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardUrl").value(""));
+    var editorResult = mockMvc.perform(get("/api/board/" + slug + "/editor").header("Authorization", token))
         .andExpect(status().isOk()).andReturn();
     long version = objectMapper.readTree(editorResult.getResponse().getContentAsString())
         .get("board").get("version").asLong();

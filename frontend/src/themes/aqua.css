@@ -1,24 +1,25 @@
-/* 2010–2014 Apple materials: silver window frames, linen, inset controls,
+/* Leopard–Mavericks and iOS 4–6 Apple materials: silver window frames, linen, inset controls,
    iOS 6 blue chrome and a reflective desktop shelf. All artwork is original. */
 [data-theme='aqua'] {
   color-scheme: light;
   font-family: 'Lucida Grande', 'Lucida Sans Unicode', 'Helvetica Neue', Arial, sans-serif;
   --theme-text: #283341; --theme-muted: #586777; --theme-border: #929ca8;
   --theme-surface: #edf0f3; --theme-focus: #64a7e9; --theme-error: #a52e34;
-  --aqua-paper: #fbfcfd; --aqua-metal: linear-gradient(#f0f2f4, #d3d7dd 50%, #b8bec8);
+  --aqua-paper: #fafbfc; --aqua-metal: linear-gradient(#fafbfc, #e3e6eb 45%, #d5d9e0 50%, #c4cad3);
   --aqua-blue: linear-gradient(#afc2d9, #7997bb 49%, #597da8 51%, #486f9e);
   --aqua-rim: #ffffffd9; --aqua-shadow: #050b234d;
   --aqua-engrave: #ffffff80; --aqua-paper-glint: #ffffff80;
-  --aqua-field: #fff; --aqua-linen: #dce1e7;
+  --aqua-field: #fff; --aqua-linen: #e2e5ea;
+  --aqua-frame: #7e8796; --aqua-title-text: #303844; --aqua-title-engrave: #ffffffd9;
   --switch-travel: 28px;
   --switch-off: linear-gradient(#8693a1, #cad1d8);
   --switch-on: linear-gradient(#3973b8, #5598e0 48%, #2273c6 51%, #67a8ec);
-  --switch-knob: linear-gradient(#fff, #f1f2f4 48%, #d9dce1);
+  --switch-knob: repeating-radial-gradient(circle at center, #ffffff12 0 .5px, #59616b0d .5px 1px), conic-gradient(from 15deg, #b4b9bf, #f8f9fa 45deg, #a0a6ad 90deg, #e9ecef 135deg, #b6bcc2 180deg, #fff 225deg, #9ba2aa 270deg, #e8ebee 315deg, #b4b9bf);
   --switch-shadow: inset 0 1px 4px #14243880, 0 1px #fff;
   color: var(--theme-text);
 }
 .page[data-theme='aqua'] {
-  background: #142449 url('/themes/aqua-galaxy.svg') center / cover fixed;
+  background: #201b45 url('/themes/aqua-galaxy.svg') center / cover fixed;
   --header-subtitle-font-size: 15px;
 }
 .page[data-theme='aqua'] .board-rail { color: #fff; text-shadow: 0 2px 3px #07132a; }
@@ -26,7 +27,7 @@
 .page[data-theme='aqua'] .board-rail .subtitle { color: #dae5fa; opacity: 1; line-height: 1.55; }
 .page[data-theme='aqua'] :is(.widget, .board-card) {
   color: var(--theme-text); background: linear-gradient(var(--aqua-paper-glint), transparent 90px), var(--aqua-paper);
-  border: 1px solid #68778b; border-radius: var(--board-widget-radius, 12px);
+  border: 1px solid var(--aqua-frame); border-radius: var(--board-widget-radius, 12px);
   box-shadow: inset 0 0 0 1px var(--aqua-rim), 0 1px 3px #0005, 0 12px 28px var(--aqua-shadow);
 }
 .page[data-theme='aqua'] .widget h3 {
@@ -42,7 +43,7 @@
 .page[data-theme='aqua'] .bottom-actions {
   --theme-text: #253448; --theme-muted: #506076; --theme-surface: #dbe2ed;
   border: 1px solid #ced8eb99; border-bottom-color: #1d2c49;
-  background: linear-gradient(#e7efffaf, #acbbd28c 46%, #7184a299 49%, #b7c7decc 94%, #e8f3ff);
+  background: linear-gradient(#f4f5ffbf, #c7cbdc99 46%, #7e87a299 49%, #c3cce2cc 94%, #f0f3ff);
   box-shadow: inset 0 1px #fff9, inset 0 -2px #ffffff70, 0 7px 18px #040a1e80;
   border-radius: 9px;
 }
@@ -50,7 +51,7 @@
 .page[data-theme='aqua'] .toolbar-wordmark:hover { color: #f5fbff; text-shadow: 0 1px 2px #17283f, 0 0 8px #d4edff80; }
 .page[data-theme='aqua'] .orb-button { --orb-label-color: #fff; }
 .page[data-theme='aqua'] .navigation-orb .orb-button__dot {
-  border-radius: 50%; background: linear-gradient(#ffffff35, transparent 55%, #142d4c25), var(--orb-dot);
+  border-radius: 50%; background: radial-gradient(ellipse at 50% 8%, #ffffffb3, #ffffff30 34%, transparent 55%), linear-gradient(transparent 48%, #17295430 51%, #ffffff25), var(--orb-dot);
   color: #253548; border-color: #263b5570; box-shadow: inset 0 1px #ffffffa0, inset 0 -1px #14233c40, 0 1px 2px #14233c50;
 }
 .page[data-theme='aqua'] .navigation-orb__icon { width: 12px; height: 12px; }
@@ -59,8 +60,8 @@
 /* Utility panels combine linen backing with inset grouped controls. */
 [data-theme='aqua'] .utility-panel {
   --theme-text: #283341; --theme-muted: #586777; --theme-surface: #edf0f3; --theme-border: #929ca8;
-  color: var(--theme-text); background: url('/themes/aqua-linen.svg'), var(--aqua-linen);
-  border: 1px solid #47586e; border-radius: 9px;
+  color: var(--theme-text); background: linear-gradient(var(--aqua-paper-glint), transparent 100px), url('/themes/aqua-linen.svg'), var(--aqua-linen);
+  border: 1px solid var(--aqua-frame); border-radius: 9px;
   box-shadow: inset 0 0 0 1px #ffffffa0, 0 2px 4px #0005, 0 16px 38px #07112780;
   text-shadow: 0 1px var(--aqua-engrave);
 }
@@ -75,9 +76,9 @@
 /* Convex silver controls, blue default actions, and physically depressed states. */
 [data-theme='aqua'] button.app-button,
 .page[data-theme='aqua'] .widget a.link {
-  color: var(--theme-text); background: linear-gradient(#fff, #f5f6f8 45%, #e6e9ee 51%, #d5dae1);
+  color: var(--theme-text); background: linear-gradient(#fff, #f8f9fb 44%, #e7eaf0 50%, #d9dee6);
   border: 1px solid #8b97a6; border-bottom-color: #6c798b; border-radius: 6px;
-  box-shadow: inset 0 1px #fff, 0 1px 2px #14263c38; text-shadow: 0 1px #fff;
+  box-shadow: inset 0 1px #fff, inset 0 -1px #ffffff50, 0 1px 2px #14263c38; text-shadow: 0 1px #fff;
   font-size: 13px; font-weight: 500; text-decoration: none;
 }
 .page[data-theme='aqua'] .widget a.link { display: inline-flex; padding: 6px 13px; align-items: center; min-height: 32px; box-sizing: border-box; }
@@ -96,12 +97,12 @@
   box-shadow: inset 0 1px 3px #22375038, 0 1px #ffffffa0; padding: 7px 9px; font: inherit; text-shadow: none;
 }
 [data-theme='aqua'] :is(input, textarea)::placeholder { color: var(--theme-muted); }
-[data-theme='aqua'] :is(button, input, textarea, select, a):focus-visible { outline: 3px solid #69aafa9e; outline-offset: 2px; }
+[data-theme='aqua'] :is(button, input, textarea, select, a):focus-visible { outline: 3px solid #78b3f0b3; outline-offset: 2px; }
 .page[data-theme='aqua'] .inline-edit { color: #fff; background: #0b1d3955; border-color: #bdd8ff80; box-shadow: inset 0 1px 3px #0004; }
 [data-theme='aqua'] input[type='checkbox'] { accent-color: #327ecc; }
 .page[data-theme='aqua'] .light-switch-control { width: 54px; height: 26px; }
-.page[data-theme='aqua'] .light-switch-track { width: 54px; height: 26px; border: 1px solid #6e7c8d; box-sizing: border-box; border-radius: 6px; }
-.page[data-theme='aqua'] .light-switch-track::after { width: 22px; height: 22px; top: 2px; left: 2px; border-radius: 4px; border: 1px solid #7e8997; box-sizing: border-box; box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
+.page[data-theme='aqua'] .light-switch-track { width: 54px; height: 26px; border: 1px solid #6e7c8d; box-sizing: border-box; border-radius: 13px; }
+.page[data-theme='aqua'] .light-switch-track::after { width: 22px; height: 22px; top: 2px; left: 2px; border-radius: 50%; border: 1px solid #7e8997; box-sizing: border-box; box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
 .page[data-theme='aqua'] .light-switch-control input:checked + .light-switch-track::after { transform: translateX(28px); }
 .page[data-theme='aqua'] input[type='range'] { appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer; }
 .page[data-theme='aqua'] input[type='range']::-webkit-slider-runnable-track { height: 7px; border: 1px solid #7e8fa4; border-radius: 5px; background: linear-gradient(90deg, #4e91d8 var(--radius-fill, 50%), #b7c1cf var(--radius-fill, 50%)); box-shadow: inset 0 1px 2px #163a6c55, 0 1px #fff; }
@@ -117,13 +118,14 @@
 [data-theme='aqua'] :is(.meta-label, .settings-placeholder, .settings-section-title) { color: var(--theme-muted); }
 [data-theme='aqua'] a { color: inherit; }
 [data-theme='aqua'] .error { color: var(--theme-error); }
-.theme-swatch[data-family='aqua'] { background: radial-gradient(ellipse at 20% 0, #ffffffa6, transparent 65%), linear-gradient(140deg, #192c59, #747db8 45%, #416da4 60%, #16294c); border-color: #708aa9; box-shadow: inset 0 1px #ddecff99; }
+.theme-swatch[data-family='aqua'] { background: url('/themes/aqua-galaxy.svg') center / cover; border-color: #9684b6; box-shadow: inset 0 1px #eee2ff99; }
 /* A graphite interpretation for lights off, not a claim of historical dark-mode support. */
 [data-theme='aqua'][data-color-mode='dark'] {
   color-scheme: dark; --aqua-engrave: #0005; --aqua-paper-glint: #ffffff08; --theme-text: #e5ebf4; --theme-muted: #b2bed0; --theme-surface: #354152;
   --theme-border: #66758b; --theme-error: #ffb0b4; --aqua-paper: #2c3645; --aqua-field: #1e2938;
   --aqua-linen: #303b4c; --aqua-metal: linear-gradient(#62718a, #46546b 50%, #344158);
   --aqua-rim: #ffffff35; --aqua-shadow: #02061980;
+  --aqua-frame: #66758b; --aqua-title-text: #edf2fa; --aqua-title-engrave: #162033;
 }
 .page[data-theme='aqua'][data-color-mode='dark'] { background-image: linear-gradient(#040a2455, #040a2455), url('/themes/aqua-galaxy.svg'); }
 .page[data-theme='aqua'][data-color-mode='dark'] .bottom-actions,
@@ -144,5 +146,12 @@
 .page[data-theme='aqua'] .board-identity-menu fieldset { background: transparent; border: 0; box-shadow: none; padding: 0; }
 
 .page[data-theme='aqua'] .board-identity-menu :is(label, .slug-input-wrap > span) { font-family: inherit; font-size: 11px; font-weight: 600; color: var(--theme-muted); }
-.page[data-theme='aqua'] input[type='range']::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; border-radius: 4px; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
-.page[data-theme='aqua'] input[type='range']::-moz-range-thumb { width: 20px; height: 20px; border-radius: 4px; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
+.page[data-theme='aqua'] input[type='range']::-webkit-slider-thumb { width: 22px; height: 22px; margin-top: -9px; border-radius: 50%; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
+.page[data-theme='aqua'] input[type='range']::-moz-range-thumb { width: 20px; height: 20px; border-radius: 50%; border: 1px solid #7e8997; background: var(--switch-knob); box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
+
+/* Snow Leopard's recessed search field and softly illuminated keyboard focus. */
+[data-theme='aqua'] input[type='search'] { border-radius: 999px; }
+[data-theme='aqua'] :is(input:not([type='checkbox']):not([type='range']), textarea, select):focus-visible {
+  border-color: #609bd5;
+  box-shadow: inset 0 1px 3px #22375038, 0 0 0 1px #c3e0ff80;
+}

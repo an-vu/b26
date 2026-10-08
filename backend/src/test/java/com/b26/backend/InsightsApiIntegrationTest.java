@@ -26,7 +26,7 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/insights/default"))
+        .perform(auth(get("/api/insights/default")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalClicks").value(2))
@@ -81,7 +81,7 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(get("/api/insights/default/summary"))
+        .perform(auth(get("/api/insights/default/summary")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalVisits").value(1))

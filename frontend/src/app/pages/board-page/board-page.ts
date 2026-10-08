@@ -1,3 +1,4 @@
+import { AtmosphereParticles } from '../../themes/atmosphere-particles';
 import { AboutPanelComponent } from '../../components/about-panel/about-panel';
 import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { GridAtmosphereComponent } from '../../components/grid-atmosphere/grid-atmosphere';
@@ -198,38 +199,10 @@ export class BoardPageComponent {
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
   readonly boardColors = BOARD_PALETTE;
-  // Stable, uneven positions and timing avoid re-randomizing on every change detection.
-  private readonly allAtmosphereParticles = (() => {
-    // Independent seeded draws keep the field stable without diagonal lattice artifacts.
-    let seed = 0x72a9b14f;
-    const random = () => { seed ^= seed << 13; seed ^= seed >>> 17; seed ^= seed << 5; return (seed >>> 0) / 4294967296; };
-    return Array.from({ length: 280 }, () => ({
-      x: random() * 100, y: random() * 100, delay: -random() * 60,
-      duration: 5 + random() * 10, size: 1.5 + random() * 5,
-      drift: -70 + random() * 140, depth: .3 + random() * .7,
-      turn: -240 + random() * 480,
-      tint: ['#f4f5ff', '#deecff', '#ede1ff', '#ffe9d6'][Math.floor(random() * 4)],
-      route: (() => {
-        const x = Math.floor(random() * 30) * 48, y = Math.floor(random() * 18) * 48;
-        return `M${x} ${y} h132 q12 0 12 12 v72 q0 12 -12 12 h-24 q-12 0 -12 12 v120 q0 12 12 12 h180`;
-      })(),
-    }));
-  })();
-  readonly boardPatterns: BoardAppearance['pattern'][] = [
-    'none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave',
-  ];
-  private readonly particleLevels = { light: this.allAtmosphereParticles.slice(0, 96), medium: this.allAtmosphereParticles.slice(0, 160), heavy: this.allAtmosphereParticles.slice(0, 240) };
-  private readonly waveParticles = this.allAtmosphereParticles.map(p => ({ ...p,
-    // Follow the ribbon's broad crest rather than filling the entire viewport.
-    y: 52 - 10 * Math.sin(p.x / 100 * Math.PI * 2) + (p.y / 100 - .5) * 13,
-  }));
-  private readonly rainLevels = { light: this.allAtmosphereParticles.slice(0, 144), medium: this.allAtmosphereParticles.slice(0, 200), heavy: this.allAtmosphereParticles };
-  private readonly dropletLevels = { light: this.allAtmosphereParticles.slice(0, 12), medium: this.allAtmosphereParticles.slice(0, 20), heavy: this.allAtmosphereParticles.slice(0, 30) };
-  private readonly waveParticleLevels = { light: this.waveParticles.slice(0, 40), medium: this.waveParticles.slice(0, 72), heavy: this.waveParticles.slice(0, 112) };
-  get screenDroplets() { return this.dropletLevels[this.boardPatternIntensityDraft]; }
-  get atmosphereParticles() {
-    return (this.boardPatternDraft === 'wave' ? this.waveParticleLevels : this.boardPatternDraft === 'rainfall' ? this.rainLevels : this.particleLevels)[this.boardPatternIntensityDraft];
-  }
+  private readonly atmosphere = new AtmosphereParticles();
+  readonly boardPatterns: BoardAppearance['pattern'][] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];
+  get screenDroplets() { return this.atmosphere.screenDroplets(this.boardPatternIntensityDraft); }
+  get atmosphereParticles() { return this.atmosphere.particles(this.boardPatternDraft, this.boardPatternIntensityDraft); }
   selectBoardPattern(pattern: BoardAppearance['pattern']) {
     if (this.isIdentitySaving) return;
     if (pattern === this.boardPatternDraft && pattern !== 'none') {
@@ -971,7 +944,6 @@ export class BoardPageComponent {
       routeParamBoardId,
       routeParamUsername,
       dataBoardId: this.route.snapshot?.data?.["boardId"],
-      systemRoute: this.route.snapshot?.data?.["systemRoute"],
       userMainRoute: !!this.route.snapshot?.data?.["userMainRoute"],
     });
   }

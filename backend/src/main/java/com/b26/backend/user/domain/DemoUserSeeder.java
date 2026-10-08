@@ -43,6 +43,7 @@ public class DemoUserSeeder {
       user.setRole("USER");
       users.saveAndFlush(user);
       var board = boards.createStarterBoardForOwner(user);
+      boards.updateVisibility(board.boardUrl(), new com.b26.backend.board.api.UpdateBoardVisibilityRequest("public", board.version()));
       UserPreferenceEntity preference = new UserPreferenceEntity();
       preference.setUserId(user.getId());
       preference.setMainBoardId(board.id());

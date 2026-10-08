@@ -12,6 +12,7 @@ export type BoardAppearance = {
 };
 
 export type Board = {
+  visibility?: 'public' | 'private';
   appearance?: BoardAppearance;
   version?: number;
   id: string;
@@ -85,6 +86,7 @@ export type UpdateUserPreferencesRequest = {
 };
 
 export type UserMainBoard = {
+  displayName?: string;
   userId: string;
   username: string;
   mainBoardId: string;

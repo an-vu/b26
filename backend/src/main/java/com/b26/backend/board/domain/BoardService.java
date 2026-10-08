@@ -102,6 +102,7 @@ public class BoardService {
   @Transactional(readOnly = true)
   public List<BoardDto> getBoards() {
     return boardRepository.findAll().stream()
+        .filter(board -> "public".equals(board.getVisibility()))
         .map(this::toDto)
         .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
         .toList();
@@ -156,6 +157,7 @@ public class BoardService {
     BoardEntity board = new BoardEntity();
     board.setId(UUID.randomUUID().toString());
     board.setOwnerUserId(user.getId());
+    board.setVisibility("private");
     board.setBoardName(boardName);
     board.setBoardUrl(boardUrl);
     board.setName("Title");
@@ -170,6 +172,7 @@ public class BoardService {
         saved.getBoardUrl(),
         new UpsertWidgetRequest("embed", "New Widget", "span-2", config, true, 0));
 
+    boardRepository.flush();
     return toDto(saved);
   }
 
@@ -179,6 +182,7 @@ public class BoardService {
     String id = UUID.randomUUID().toString();
     board.setId(id);
     board.setOwnerUserId(user.getId());
+    board.setVisibility("private");
     board.setBoardName("My Board");
     board.setBoardUrl("board-" + id);
     board.setName(user.getDisplayName());
@@ -269,21 +273,16 @@ public class BoardService {
 
   @Transactional
   public void deleteBoard(String boardId) {
-    // Always lock system settings before the owner; route and preference updates
-    // use these same locks before choosing a board.
     var settings = systemSettingsRepository.lockSettings();
     BoardEntity candidate = findBoardByUrl(boardId);
     appUserRepository.lockById(candidate.getOwnerUserId())
         .orElseThrow(() -> new BoardNotFoundException(boardId));
     BoardEntity board = boardRepository.findForEditing(boardId)
         .orElseThrow(() -> new BoardNotFoundException(boardId));
-    if (settings.filter(value ->
-        board.getId().equals(value.getGlobalHomepageBoardId())
-            || board.getId().equals(value.getGlobalInsightsBoardId())
-            || board.getId().equals(value.getGlobalSettingsBoardId())
-            || board.getId().equals(value.getGlobalSigninBoardId())).isPresent()) {
-      throw new InvalidBoardUpdateException(
-          "This board is used by a system route. Choose a replacement in Admin Settings before deleting it.");
+    if (settings.filter(value -> board.getId().equals(value.getGlobalHomepageBoardId())
+        || board.getId().equals(value.getGlobalInsightsBoardId()) || board.getId().equals(value.getGlobalSettingsBoardId())
+        || board.getId().equals(value.getGlobalSigninBoardId())).isPresent()) {
+      throw new InvalidBoardUpdateException("This board is still referenced by a legacy system route; it cannot be deleted yet.");
     }
     if (boardRepository.countByOwnerUserId(board.getOwnerUserId()) <= 1) {
       throw new InvalidBoardUpdateException(
@@ -291,10 +290,23 @@ public class BoardService {
     }
     if (userPreferenceRepository.existsByMainBoardId(board.getId())) {
       throw new InvalidBoardUpdateException(
-          "Cannot delete the main board. Choose another main board before deleting it.");
+          "Cannot delete the main board. Remove or replace the main board before deleting it.");
     }
     boardRepository.delete(board);
     boardRepository.flush();
+  }
+
+  @Transactional
+  public BoardDto updateVisibility(String slug, com.b26.backend.board.api.UpdateBoardVisibilityRequest request) {
+    BoardEntity candidate = findBoardByUrl(slug);
+    appUserRepository.lockById(candidate.getOwnerUserId()).orElseThrow();
+    BoardEntity board = boardRepository.findForEditing(slug).orElseThrow(() -> new BoardNotFoundException(slug));
+    if (!request.version().equals(board.getVersion())) throw new BoardEditConflictException();
+    if ("private".equals(request.visibility()) && userPreferenceRepository.existsByMainBoardId(board.getId())) {
+      throw new InvalidBoardUpdateException("Remove or replace this main board before making it private.");
+    }
+    board.setVisibility(request.visibility());
+    return persist(board);
   }
 
   private BoardDto persist(BoardEntity board) {
@@ -344,6 +356,6 @@ public class BoardService {
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
         owner.getUsername(),
         new com.b26.backend.board.api.BoardAppearance(board.getTheme(), board.getRadiusStep(),
-            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily(), board.getPatternIntensity(), board.getSpacingStep()), owner.getDisplayName(), board.getWebsite());
+            board.getBackgroundColor(), board.getPattern(), board.getThemeFamily(), board.getPatternIntensity(), board.getSpacingStep()), owner.getDisplayName(), board.getWebsite(), board.getVisibility());
   }
 }

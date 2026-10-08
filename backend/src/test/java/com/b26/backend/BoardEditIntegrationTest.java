@@ -16,7 +16,7 @@ class BoardEditIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   private ObjectNode snapshot(String slug) throws Exception {
-    var result = mockMvc.perform(get(API_BOARD + "/" + slug + "/editor"))
+    var result = mockMvc.perform(auth(get(API_BOARD + "/" + slug + "/editor")))
         .andExpect(status().isOk()).andReturn();
     return (ObjectNode) objectMapper.readTree(result.getResponse().getContentAsString());
   }

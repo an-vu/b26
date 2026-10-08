@@ -26,7 +26,7 @@
       <ng-container *ngIf="boardPatternDraft !== 'grid'">
         <span *ngFor="let particle of atmosphereParticles" [style.left.%]="particle.x" [style.top.%]="particle.y"
           [style.--particle-delay]="particle.delay + 's'" [style.--particle-duration]="particle.duration + 's'"
-          [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
+          [style.--particle-tint]="particle.tint" [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
       </ng-container>
       <app-grid-atmosphere *ngIf="boardPatternDraft === 'grid'" [intensity]="boardPatternIntensityDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'"></app-grid-atmosphere>
       <div *ngIf="boardPatternDraft === 'wave'" class="wave-sheets" aria-hidden="true"><div class="wave-sheet"></div><div class="wave-sheet wave-sheet-back"></div></div>
@@ -286,7 +286,7 @@
               <div class="board-switcher-heading"><strong>Your boards</strong><button class="app-button" type="button" aria-label="Close board switcher" (click)="isBoardSwitcherOpen = false">×</button></div>
               <div class="board-switcher-row" *ngFor="let board of accountBoards">
                 <button class="app-button board-switcher-link" type="button" (click)="switchToBoard(board.route)" [attr.aria-current]="board.boardUrl === state.board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ board.label }}</button>
-                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="isMainBoard(board.id)" [disabled]="isMainBoard(board.id) || isSettingMainBoard" (click)="onAccountBoardSetMain(board.id, $event)">{{ isMainBoard(board.id) ? 'Main' : 'Set main' }}</button>
+                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="isMainBoard(board.id)" [disabled]="isMainBoard(board.id) || isSettingMainBoard || board.visibility === 'private'" (click)="onAccountBoardSetMain(board.id, $event)">{{ isMainBoard(board.id) ? 'Main' : 'Set main' }}</button>
               </div>
               <p *ngIf="!accountBoards.length">No boards yet.</p>
               <p class="error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>
@@ -369,10 +369,6 @@
         <option value="embed">Embed</option>
         <option value="link">Link</option>
         <option value="map">Map</option>
-        <option value="user-settings">User Settings</option>
-        <option value="admin-settings">Admin Settings</option>
-        <option value="signin">Sign In</option>
-        <option value="signup">Sign Up</option>
       </select>
     </label>
     <label>

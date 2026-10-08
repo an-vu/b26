@@ -1,5 +1,5 @@
 <article class="widget">
-  <h3>{{ widget.title }}</h3>
+  <h3>{{ widget?.title || 'Account Settings' }}</h3>
 
   <ng-container *ngIf="vm$ | async as vm">
     <ng-container *ngIf="vm.profile; else signedOut">
@@ -45,37 +45,31 @@
         </div>
       </label>
 
-      <label class="settings-field">
-        <span>Password</span>
-        <input type="password" placeholder="Enter your password" />
-      </label>
-
       <div class="settings-actions">
         <button class="app-button" type="button" (click)="signOut()" [disabled]="isSigningOut">
           {{ isSigningOut ? 'Signing Out...' : 'Sign Out' }}
         </button>
-        <button class="app-button" type="button">Delete Account</button>
       </div>
     </section>
 
-    <section class="settings-section">
+    <section class="settings-section" *ngIf="showMainBoard">
       <p class="settings-section-title">Main Board</p>
 
       <label class="settings-field">
         <span class="settings-label-inline">Main board for /{{ vm.username }}</span>
         <div class="settings-input-status-row">
           <select [ngModel]="vm.mainBoardId" (ngModelChange)="onMainBoardChanged($event)">
-            <option value="" selected disabled>Select a board</option>
-            <option *ngFor="let board of vm.boards" [value]="board.id">
-              {{ board.boardName }} ({{ boardRoute(board) }})
+            <option value="">No public main board</option>
+            <option *ngFor="let board of vm.boards" [value]="board.id" [disabled]="board.visibility === 'private'">
+              {{ board.boardName }}{{ board.visibility === 'private' ? ' · Private' : '' }} ({{ boardRoute(board) }})
             </option>
           </select>
           <em class="settings-saved-indicator" *ngIf="vm.saved">Saved</em>
         </div>
       </label>
 
-      <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
     </section>
+    <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
     </ng-container>
     <ng-template #signedOut>
       <p *ngIf="vm.isHydrating; else signinPrompt">Loading account…</p>

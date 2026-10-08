@@ -11,7 +11,6 @@ import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
 import com.b26.backend.user.persistence.UserPreferenceEntity;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -22,8 +21,6 @@ public class UserPreferencesService {
   private final BoardRepository boardRepository;
   private final AuthService authService;
 
-  @Value("${app.user.default-id:anvu}")
-  private String defaultUserId;
 
   public UserPreferencesService(
       AppUserRepository appUserRepository,
@@ -41,7 +38,7 @@ public class UserPreferencesService {
     AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
-    return new UserPreferencesDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
+    return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
   }
 
   @Transactional
@@ -51,14 +48,15 @@ public class UserPreferencesService {
     AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     appUserRepository.lockById(user.getId())
         .orElseThrow(() -> new UserNotFoundException(user.getId()));
-    String boardId = request.mainBoardId().trim();
-    BoardEntity board = findBoardOwnedByUser(boardId, user.getId());
-
+    String boardId = request.mainBoardId() == null ? "" : request.mainBoardId().trim();
+    BoardEntity board = boardId.isEmpty() ? null : findBoardOwnedByUser(boardId, user.getId());
+    if (board != null && !"public".equals(board.getVisibility())) {
+      throw new InvalidUserPreferencesException("The main board must be public. Make it public before selecting it.");
+    }
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
-    preference.setMainBoardId(board.getId());
+    preference.setMainBoardId(board == null ? null : board.getId());
     userPreferenceRepository.save(preference);
-
-    return new UserPreferencesDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
+    return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
   }
 
   @Transactional
@@ -68,43 +66,18 @@ public class UserPreferencesService {
       throw new UserNotFoundException(username);
     }
 
-    AppUserEntity user;
-    if (normalized.equals(defaultUserId.toLowerCase())) {
-      user = findOrCreateDefaultUser();
-    } else {
-      user =
-          appUserRepository
-              .findByUsername(normalized)
-              .orElseThrow(() -> new UserNotFoundException(username));
-    }
-    UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
-    BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
-    return new UserMainBoardDto(user.getId(), user.getUsername(), board.getId(), board.getBoardUrl());
-  }
-
-  private AppUserEntity findOrCreateDefaultUser() {
-    return appUserRepository
-        .findById(defaultUserId)
-        .orElseGet(
-            () -> {
-              AppUserEntity user = new AppUserEntity();
-              user.setId(defaultUserId);
-              user.setUsername(defaultUserId.toLowerCase());
-              user.setDisplayName(defaultUserId);
-              user.setEmail(defaultUserId.toLowerCase() + "@local");
-              user.setRole("ADMIN");
-              return appUserRepository.save(user);
-            });
+    AppUserEntity user = appUserRepository.findByUsername(normalized)
+        .orElseThrow(() -> new UserNotFoundException(username));
+    String mainId = userPreferenceRepository.findById(user.getId()).map(UserPreferenceEntity::getMainBoardId).orElse(null);
+    BoardEntity board = resolveUserMainBoard(user.getId(), mainId);
+    return new UserMainBoardDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl(), user.getDisplayName());
   }
 
   private BoardEntity resolveUserMainBoard(String userId, String configuredBoardId) {
-    if (configuredBoardId != null && !configuredBoardId.isBlank()) {
-      return findBoardOwnedByUser(configuredBoardId.trim(), userId);
-    }
-
-    return boardRepository
-        .findFirstByOwnerUserIdOrderByBoardNameAsc(userId)
-        .orElseThrow(() -> new BoardNotFoundException("No boards for user: " + userId));
+    if (configuredBoardId == null || configuredBoardId.isBlank()) return null;
+    return boardRepository.findById(configuredBoardId)
+        .filter(board -> userId.equals(board.getOwnerUserId()) && "public".equals(board.getVisibility()))
+        .orElse(null);
   }
 
   private BoardEntity findBoardOwnedByUser(String boardId, String userId) {

@@ -3,6 +3,7 @@ package com.b26.backend.common.config;
 import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.auth.domain.AuthUnauthorizedException;
 import com.b26.backend.board.domain.BoardNotFoundException;
+import com.b26.backend.board.domain.BoardAccessService;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
@@ -13,24 +14,25 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 @Component
-public class ApiWriteAuthorizationInterceptor implements HandlerInterceptor {
+public class ApiAuthorizationInterceptor implements HandlerInterceptor {
   private final AuthService authService;
   private final BoardRepository boardRepository;
+  private final BoardAccessService boardAccess;
 
   @Value("${app.security.admin-token:}")
   private String adminToken;
 
-  public ApiWriteAuthorizationInterceptor(AuthService authService, BoardRepository boardRepository) {
+  public ApiAuthorizationInterceptor(AuthService authService, BoardRepository boardRepository, BoardAccessService boardAccess) {
     this.authService = authService;
     this.boardRepository = boardRepository;
+    this.boardAccess = boardAccess;
   }
 
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
-    if (!isWriteMethod(request.getMethod())) {
-      return true;
-    }
+    if ("GET".equalsIgnoreCase(request.getMethod()) || "HEAD".equalsIgnoreCase(request.getMethod())) return authorizeRead(request, response);
+    if (!isWriteMethod(request.getMethod())) return true;
 
     String uri = request.getRequestURI();
     if (uri == null || !uri.startsWith("/api/")) {
@@ -53,6 +55,27 @@ public class ApiWriteAuthorizationInterceptor implements HandlerInterceptor {
       return authorizeBoardWrite(request, response, uri);
     }
 
+    return true;
+  }
+
+  private boolean authorizeRead(HttpServletRequest request, HttpServletResponse response) throws Exception {
+    String uri = request.getRequestURI();
+    String slug = null;
+    boolean editor = false;
+    boolean insights = false;
+    if (uri.startsWith("/api/board/by-owner/")) {
+      String[] parts = uri.substring("/api/board/by-owner/".length()).split("/");
+      if (parts.length == 2) slug = parts[1];
+    } else if (uri.startsWith("/api/board/")) {
+      slug = extractBoardUrlSlug(uri);
+      if ("mine".equals(slug)) return true;
+      editor = uri.endsWith("/editor");
+    } else if (uri.startsWith("/api/insights/")) {
+      slug = uri.substring("/api/insights/".length()).split("/")[0];
+      insights = true;
+    }
+    if (slug == null) return true;
+    boardAccess.requireRead(slug, insights, editor || insights, request.getHeader("Authorization"));
     return true;
   }
 

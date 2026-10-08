@@ -40,8 +40,8 @@ describe('Unsaved board navigation', () => {
       ['/alice/portfolio', { username: 'alice', boardId: 'portfolio' }, {}],
       ['/b/portfolio', { boardId: 'portfolio' }, {}],
       ['/alice', { username: 'alice' }, { userMainRoute: true }],
-      ['/settings', {}, { systemRoute: 'settings' }],
-      ['/signin', {}, { systemRoute: 'signin' }],
+      ['/settings', {}, {}],
+      ['/signin', {}, {}],
     ] as const) {
       await harness.navigateByUrl(url, GuardedPage);
       const snapshot = TestBed.inject(Router).routerState.snapshot.root.firstChild!;

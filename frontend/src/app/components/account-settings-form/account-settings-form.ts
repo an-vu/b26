@@ -26,15 +26,16 @@ type UserSettingsState = {
 };
 
 @Component({
-  selector: 'app-user-settings-widget',
+  selector: 'app-account-settings-form',
   standalone: true,
   imports: [CommonModule, FormsModule, RouterLink],
-  templateUrl: './user-settings-widget.html',
-  styleUrl: './user-settings-widget.css',
+  templateUrl: './account-settings-form.html',
+  styleUrl: './account-settings-form.css',
 })
-export class UserSettingsWidgetComponent implements OnInit {
+export class AccountSettingsFormComponent implements OnInit {
+  @Input() showMainBoard = true;
   readonly boardRoute = boardRoute;
-  @Input({ required: true }) widget!: Widget;
+  @Input() widget?: Widget;
 
   private readonly destroyRef = inject(DestroyRef);
   readonly boards$;
@@ -248,7 +249,7 @@ export class UserSettingsWidgetComponent implements OnInit {
     const current = this.state$.value;
     this.state$.next({ ...current, mainBoardId, saved: false, errorMessage: '' });
 
-    if (current.isHydrating || !mainBoardId) {
+    if (current.isHydrating) {
       return;
     }
     this.saveRequests$.next(mainBoardId);

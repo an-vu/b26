@@ -40,6 +40,7 @@ export class BoardStoreService {
       boardName: board.boardName,
       boardUrl: board.boardUrl,
       ownerUsername: board.ownerUsername,
+      visibility: board.visibility,
     };
   }
 }

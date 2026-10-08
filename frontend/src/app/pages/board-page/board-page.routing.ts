@@ -2,8 +2,6 @@ import { Observable, of } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import type { BoardService } from '../../services/board.service';
 
-type SystemRoute = 'main' | 'insights' | 'settings' | 'signin';
-
 export function normalizeBoardUrl(rawValue: string): string {
   const normalized = rawValue.trim().toLowerCase().replace(/\s+/g, '-');
   return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized) ? normalized : '';
@@ -51,10 +49,9 @@ export function resolveBoardId$(params: {
   routeParamBoardId: string | null;
   routeParamUsername: string | null;
   dataBoardId: unknown;
-  systemRoute: unknown;
   userMainRoute: boolean;
 }): Observable<string> {
-  const { boardService, routeParamBoardId, routeParamUsername, dataBoardId, systemRoute, userMainRoute } = params;
+  const { boardService, routeParamBoardId, routeParamUsername, dataBoardId, userMainRoute } = params;
 
   if (routeParamUsername && routeParamBoardId) {
     return boardService.getBoardForUsername(routeParamUsername, routeParamBoardId).pipe(
@@ -79,36 +76,5 @@ export function resolveBoardId$(params: {
     return of(dataBoardId);
   }
 
-  if (systemRoute === 'main' || systemRoute === 'insights' || systemRoute === 'settings' || systemRoute === 'signin') {
-    return boardService.getSystemRoutes().pipe(
-      map((routes) => {
-        if (systemRoute === 'main') {
-          return routes.globalHomepageBoardUrl || 'home';
-        }
-        if (systemRoute === 'insights') {
-          return routes.globalInsightsBoardUrl || 'insights';
-        }
-        if (systemRoute === 'signin') {
-          return routes.globalSigninBoardUrl || routes.globalLoginBoardUrl || 'signin-board';
-        }
-        return routes.globalSettingsBoardUrl || 'settings';
-      }),
-      catchError(() => of(defaultBoardBySystemRoute(systemRoute)))
-    );
-  }
-
-  return of('default');
-}
-
-function defaultBoardBySystemRoute(systemRoute: unknown): string {
-  if (systemRoute === 'main') {
-    return 'home';
-  }
-  if (systemRoute === 'insights') {
-    return 'insights';
-  }
-  if (systemRoute === 'signin') {
-    return 'signin-board';
-  }
-  return 'settings';
+  return of('__missing-board__');
 }

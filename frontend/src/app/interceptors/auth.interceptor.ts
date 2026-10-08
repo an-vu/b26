@@ -9,7 +9,9 @@ function needsAuthHeader(url: string): boolean {
     url.includes('/api/auth/me') ||
     url.includes('/api/auth/signout') ||
     isBoardApi ||
-    url.includes('/api/system/')
+    url.includes('/api/system/') ||
+    url.includes('/api/insights/') ||
+    url.includes('/api/click/')
   );
 }
 

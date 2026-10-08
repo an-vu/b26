@@ -10,14 +10,14 @@ import { BoardService } from '../../services/board.service';
 import { AuthService } from '../../services/auth.service';
 
 @Component({
-  selector: 'app-signup-widget',
+  selector: 'app-signup-form',
   standalone: true,
   imports: [CommonModule, FormsModule],
-  templateUrl: './signup-widget.html',
-  styleUrl: './signup-widget.css',
+  templateUrl: './signup-form.html',
+  styleUrl: './signup-form.css',
 })
-export class SignupWidgetComponent {
-  @Input({ required: true }) widget!: Widget;
+export class SignupFormComponent {
+  @Input() widget?: Widget;
 
   @Output() signinRequested = new EventEmitter<void>();
 
@@ -68,9 +68,9 @@ export class SignupWidgetComponent {
       .pipe(
         switchMap((session) => {
           const username = session.user.username?.trim();
-          const fallback = username ? `/${username}` : '/';
-          return this.boardService.getMyPreferences().pipe(
-            map((preferences) => boardRoute({ boardUrl: preferences.mainBoardUrl, ownerUsername: preferences.username || username })),
+          const fallback = '/settings';
+          return this.boardService.getMyBoards().pipe(
+            map((boards) => boards[0] ? boardRoute(boards[0]) : fallback),
             catchError(() => of(fallback))
           );
         }),

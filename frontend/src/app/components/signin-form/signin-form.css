@@ -17,17 +17,6 @@
   font-size: 14px;
 }
 
-.signin-checkbox {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 14px;
-}
-
-.signin-checkbox input {
-  margin: 0;
-}
-
 .signin-message {
   margin: 0;
   font-size: 13px;

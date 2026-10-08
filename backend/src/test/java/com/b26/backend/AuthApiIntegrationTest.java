@@ -11,7 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class AuthApiIntegrationTest extends ApiIntegrationTestSupport {
   @Test
-  void signupCreatesAnOwnedPinnedBoardAndUsableSession() throws Exception {
+  void signupCreatesAnOwnedPrivateBoardAndUsableSession() throws Exception {
     String email = "new-" + UUID.randomUUID() + "@example.com";
     var result = mockMvc.perform(post("/api/auth/signup")
         .contentType(MediaType.APPLICATION_JSON)
@@ -26,11 +26,12 @@ class AuthApiIntegrationTest extends ApiIntegrationTestSupport {
     assertEquals(1, boards.size());
     var board = boards.get(0);
     assertEquals("New Member", board.getName());
+    assertEquals("private", board.getVisibility());
     assertFalse(board.getBoardUrl().isBlank());
     mockMvc.perform(get(API_USERS_ME_PREFERENCES).header(AUTHORIZATION_HEADER, token))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardId").value(board.getId()));
+        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardId").value(""));
     mockMvc.perform(get("/api/users/" + username + "/main-board"))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardUrl").value(board.getBoardUrl()));
+        .andExpect(status().isOk()).andExpect(jsonPath("$.mainBoardUrl").value(""));
     mockMvc.perform(get(API_BOARD + "/" + board.getBoardUrl() + "/permissions")
         .header(AUTHORIZATION_HEADER, token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.canEdit").value(true));

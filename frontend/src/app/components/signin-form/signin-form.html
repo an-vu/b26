@@ -1,11 +1,10 @@
-<app-signup-widget
+<app-signup-form
   *ngIf="showSignup; else signin"
-  [widget]="signupWidget"
   (signinRequested)="showSignup = false"
-></app-signup-widget>
+></app-signup-form>
 <ng-template #signin>
   <article class="widget">
-    <h3>{{ widget.title || 'Welcome Back!' }}</h3>
+    <h3>{{ widget?.title || 'Welcome Back!' }}</h3>
 
     <form class="signin-block" (ngSubmit)="onSigninSubmit()">
       <label class="signin-field">
@@ -34,16 +33,6 @@
         />
       </label>
 
-      <label class="signin-checkbox">
-        <input
-          type="checkbox"
-          name="rememberMe"
-          [(ngModel)]="rememberMe"
-          [disabled]="isSubmitting"
-        />
-        <span>Remember me</span>
-      </label>
-
       <button class="app-button" type="submit" [disabled]="isSubmitting">
         {{ isSubmitting ? 'Signing In...' : 'Sign In' }}
       </button>
@@ -52,7 +41,6 @@
       </button>
 
       <p class="signin-message signin-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
-      <p class="signin-message" *ngIf="!errorMessage && infoMessage">{{ infoMessage }}</p>
     </form>
   </article>
 </ng-template>

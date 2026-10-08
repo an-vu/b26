@@ -136,7 +136,7 @@
 .page[data-pattern='wave'][data-intensity='medium'] .board-atmosphere { --wave-speed: 8.5s; --spark-speed: .4; --spark-size: 2.1; }
 .page[data-pattern='wave'][data-intensity='heavy'] .board-atmosphere { --wave-speed: 6.5s; --spark-speed: .3; --spark-size: 2.6; }
 .page[data-pattern='wave'] .board-atmosphere span { width: calc(var(--particle-size) * var(--spark-size)); height: calc(var(--particle-size) * var(--spark-size)); }
-@keyframes wave-sheet-drift { from { transform: translate3d(-4%, -3%, 0) scaleY(.84) rotate(-2deg); } to { transform: translate3d(4%, 3%, 0) scaleY(1.16) rotate(2deg); } }
+@keyframes wave-sheet-drift { from { transform: translate3d(-4%, -3%, 0) scaleY(.9) rotate(-1deg); } to { transform: translate3d(4%, 3%, 0) scaleY(1.1) rotate(1deg); } }
 @media (prefers-reduced-motion: reduce) { .page[data-pattern] .grid-trail, .page[data-pattern] .screen-droplets i, .page[data-pattern] .wave-sheet { animation: none; will-change: auto; opacity: .3; } }
 
 /* Tint follows the wallpaper's existing light and shadow instead of flattening it. */
@@ -153,9 +153,12 @@
 .page[data-pattern='stars'][data-intensity='medium'] .board-atmosphere { --star-size: 2.1; }
 .page[data-pattern='stars'][data-intensity='heavy'] .board-atmosphere { --star-size: 2.8; }
 .page[data-pattern='stars'] .board-atmosphere span { width: calc(var(--particle-size) * var(--star-size)); height: calc(var(--particle-size) * var(--star-size)); }
-.page[data-pattern='snow'] .board-atmosphere { --snow-size: 1; }
-.page[data-pattern='snow'][data-intensity='medium'] .board-atmosphere { --snow-size: 1.35; }
-.page[data-pattern='snow'][data-intensity='heavy'] .board-atmosphere { --snow-size: 1.8; }
-.page[data-pattern='snow'] .board-atmosphere span { width: calc(var(--particle-size) * 2.2 * var(--snow-size)); height: calc(var(--particle-size) * 2.2 * var(--snow-size)); }
-.page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { width: calc((12px + var(--particle-size)) * var(--snow-size)); height: calc((12px + var(--particle-size)) * var(--snow-size)); }
+/* Snow intensity changes the size distribution, rather than scaling every flake. */
+.page[data-pattern='snow'] .board-atmosphere span { width: calc(var(--particle-size) * 2.2); height: calc(var(--particle-size) * 2.2); }
+.page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { width: calc(var(--particle-size) * 2.8); height: calc(var(--particle-size) * 2.8); }
 .page[data-pattern='snow'] .board-atmosphere span:nth-child(4n) { opacity: .45; }
+/* White cores with occasional pastel halos, shared with the silk ribbons. */
+.page[data-pattern='wave'] .board-atmosphere span,
+.page[data-theme='default'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
+  background: radial-gradient(circle, #fff 0 8%, var(--particle-tint, #edf6ff) 18%, transparent 65%);
+}

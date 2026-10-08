@@ -3,4 +3,5 @@ export type BoardIdentity = {
   boardName: string;
   boardUrl: string;
   ownerUsername?: string;
+  visibility?: "public" | "private";
 };

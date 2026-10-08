@@ -12,9 +12,13 @@ class BoardDeletionIntegrationTest extends ApiIntegrationTestSupport {
   @Test
   void ownerMustKeepOneBoardAndReplaceMainBeforeDeleting() throws Exception {
     String token = signup();
-    var prefs = objectMapper.readTree(mockMvc.perform(get(API_USERS_ME_PREFERENCES)
+    var prefs = objectMapper.readTree(mockMvc.perform(get(API_BOARD + "/mine")
         .header("Authorization", token)).andReturn().getResponse().getContentAsString());
-    String slug = prefs.get("mainBoardUrl").asText();
+    String slug = prefs.get(0).get("boardUrl").asText();
+    var board = boardRepository.findByBoardUrl(slug).orElseThrow();
+    board.setVisibility("public"); boardRepository.saveAndFlush(board);
+    mockMvc.perform(patch(API_USERS_ME_PREFERENCES).header("Authorization", token).contentType(MediaType.APPLICATION_JSON)
+        .content("{\"mainBoardId\":\"" + board.getId() + "\"}")).andExpect(status().isOk());
     mockMvc.perform(delete(API_BOARD + "/" + slug).header("Authorization", token))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.errors[0].message", org.hamcrest.Matchers.containsString("only board")));
@@ -24,6 +28,8 @@ class BoardDeletionIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(delete(API_BOARD + "/" + slug).header("Authorization", token))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.errors[0].message", org.hamcrest.Matchers.containsString("main board")));
+    var extraEntity = boardRepository.findById(extra.get("id").asText()).orElseThrow();
+    extraEntity.setVisibility("public"); boardRepository.saveAndFlush(extraEntity);
     mockMvc.perform(patch(API_USERS_ME_PREFERENCES).header("Authorization", token)
         .contentType(MediaType.APPLICATION_JSON).content("{\"mainBoardId\":\"" + extra.get("id").asText() + "\"}"))
         .andExpect(status().isOk());
