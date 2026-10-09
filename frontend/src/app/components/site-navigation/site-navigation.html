@@ -12,7 +12,7 @@
   <div class="footer-blur" aria-hidden="true"><span class="blur-layer"></span></div>
 }
 <nav class="bottom-actions" [class.has-top-brand]="brandAtTop()" aria-label="Main navigation">
-      <div class="bottom-actions-left">
+      <div class="bottom-actions-left" [attr.data-active-panel]="accountOpen() ? 'account' : userSearch.isOpen() ? 'search' : null">
         <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb" routerLink="/">
           <span class="orb-button__dot" aria-hidden="true"><app-icon name="home" svgClass="navigation-orb__icon" /></span>
         </button>
@@ -20,10 +20,10 @@
           <span class="orb-button__dot" aria-hidden="true"><app-icon name="search" svgClass="navigation-orb__icon" /></span>
         </button>
         <div class="account-menu-wrap" appPanelBehavior [panelOpen]="accountOpen()" [panelInternalView]="accountSettingsOpen()" (panelDismiss)="dismissAccount($event)">
-          <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb" (click)="toggleAccount()" [attr.aria-expanded]="accountOpen()">
+          <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb" (click)="userSearch.close(false); toggleAccount()" [attr.aria-expanded]="accountOpen()">
             <span class="orb-button__dot" aria-hidden="true"><app-icon name="account" svgClass="navigation-orb__icon" /></span>
           </button>
-          <div class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
+          <div animate.leave="panel-slide-down" class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
             <ng-container *ngIf="user$ | async as user; else signedOutMenu">
             <h2 class="board-settings-heading account-heading">@{{ user.username }}</h2>
             <section class="account-notifications panel-content-centered" aria-label="Notifications">

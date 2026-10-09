@@ -1,12 +1,47 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, afterNextRender, inject, ElementRef, DestroyRef, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { Board } from '../../../models/board';
 
 @Component({ selector: 'app-board-profile', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './board-profile.html', styleUrl: './board-profile.css' })
 export class BoardProfileComponent {
+  constructor() {
+    const host: HTMLElement = inject(ElementRef).nativeElement;
+    const destroyRef = inject(DestroyRef);
+    afterNextRender(() => {
+      const toolbar = host.closest('.page')?.querySelector<HTMLElement>('.bottom-actions');
+      if (!toolbar) return;
+      const updateClearance = () => {
+        const gap = Number.parseFloat(getComputedStyle(toolbar).getPropertyValue('--toolbar-panel-gap')) || 12;
+        host.style.setProperty('--profile-toolbar-clearance', `${window.innerHeight - toolbar.getBoundingClientRect().top + gap + 1}px`);
+      };
+      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateClearance);
+      observer?.observe(toolbar);
+      window.addEventListener('resize', updateClearance);
+      updateClearance();
+      destroyRef.onDestroy(() => { observer?.disconnect(); window.removeEventListener('resize', updateClearance); });
+    });
+  }
+
   @Input() board: Board = undefined!;
-  @Input() isWidgetEditMode: boolean = false;
+  private editing = false;
+  private readonly element = inject(ElementRef);
+  private readonly injector = inject(Injector);
+  @Input() set isWidgetEditMode(value: boolean) {
+    if (value === this.editing) return;
+    const rail = (this.element.nativeElement as HTMLElement).querySelector<HTMLElement>('.board-rail');
+    const previousTop = rail?.getBoundingClientRect().top;
+    this.editing = value;
+    if (!rail || previousTop === undefined) return;
+    afterNextRender(() => {
+      if (!rail.isConnected || !rail.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) return;
+      const distance = previousTop - rail.getBoundingClientRect().top;
+      if (Math.abs(distance) < 1) return;
+      rail.animate([{ translate: `0 ${distance}px` }, { translate: '0 0' }],
+        { duration: 260, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    }, { injector: this.injector });
+  }
+  get isWidgetEditMode() { return this.editing; }
   @Input() profileNameDraft: string = '';
   @Input() boardDraftHeadline: string = '';
   @Input() boardDraftWebsite: string = '';

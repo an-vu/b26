@@ -37,7 +37,9 @@
         [isWidgetLoading]="isWidgetLoading"
         [isIdentitySaving]="isIdentitySaving"
         [settingsFeedback]="settingsFeedback"
-        (edit)="requestWidgetEdit(state.board)" (save)="doneWidgetEdit()" (cancel)="discardWidgetEdit()" />
+        (edit)="requestWidgetEdit(state.board)" (save)="doneWidgetEdit()" (cancel)="discardWidgetEdit()">
+        <app-widget-library animate.leave="panel-slide-down" *ngIf="isWidgetEditMode" [disabled]="isWidgetSaving || isIdentitySaving" (selectWidget)="addWidgetFromLibrary($event)" />
+      </app-board-profile>
 
       <section appWidgetBounce class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
         <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
@@ -45,7 +47,8 @@
         <div class="board-grid square-grid" *ngIf="isWidgetEditMode">
           <article
             *ngFor="let draft of widgetDrafts; let i = index"
-            [class]="'board-tile board-card widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+            [class]="'board-tile widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+            [class.board-card]="isWidgetSettingsOpen(draft)"
             [class.widget-settings-open]="isWidgetSettingsOpen(draft)"
             (click)="openWidgetSettings(draft)"
           >
@@ -56,7 +59,7 @@
               (click)="deleteWidget(draft); $event.stopPropagation()"
               [disabled]="isWidgetSaving"
             >
-              <app-icon name="minus" [strokeWidth]="3" />
+              <app-icon name="minus" />
             </button>
 
             <ng-container *ngIf="isWidgetSettingsOpen(draft); else widgetPreview">
@@ -66,23 +69,12 @@
 
             <ng-template #widgetPreview>
               <div class="widget-edit-preview">
-                <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)" [previewMode]="true"></app-widget-host>
+                <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)"></app-widget-host>
               </div>
             </ng-template>
           </article>
 
-          <article
-            [class]="'board-tile board-card board-card--compact widget-tile widget-edit-tile add-widget-tile ' + tileLayoutClass(newWidgetDraft.layout)"
-            [class.add-widget-tile--collapsed]="!isAddWidgetExpanded"
-          >
-            <ng-container *ngIf="isAddWidgetExpanded; else addWidgetCollapsed">
-              <app-widget-editor [draft]="newWidgetDraft" [isNew]="true" [disabled]="isWidgetSaving || isIdentitySaving" [saving]="isWidgetSaving" [error]="newWidgetValidationError"
-                (fieldChange)="onNewWidgetFieldChange()" (typeChange)="onNewWidgetTypeChange()" (add)="addNewWidget()" />
-            </ng-container>
-            <ng-template #addWidgetCollapsed>
-              <button class="app-button" type="button" (click)="openAddWidgetForm()" [disabled]="isWidgetSaving">Add Widget</button>
-            </ng-template>
-          </article>
+
         </div>
 
         <ng-container *ngIf="!isWidgetEditMode">
@@ -126,7 +118,7 @@
         [hasUnsavedChanges]="hasUnsavedChanges"
         [isDeletingBoard]="isDeletingBoard"
         (toggle)="toggleBoardIdentityMenu()" (save)="saveSettingsAutomatically()" (reset)="resetAppearance()"
-        (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
+        (appearancePreview)="applyAppearance($event)" (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
         (deleteBoard)="onAccountBoardDelete(state.board.boardUrl, $event)" (setMain)="onAccountBoardSetMain($event.id, $event.event)"
         (toggleSwitcher)="toggleBoardSwitcher()" (confirmDelete)="confirmBoardDelete()" (dismiss)="dismissBoardSettings($event)" />
     </app-site-navigation>

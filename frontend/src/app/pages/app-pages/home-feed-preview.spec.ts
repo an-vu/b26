@@ -13,8 +13,9 @@ it('shows an avatar with simple owner details and icon-only reactions without ne
   expect(tiles[0].querySelector('.activity-identity')?.textContent).toContain('@emma');
   expect(tiles[0].querySelector('.activity-time')?.textContent).toBe('9m ago');
   expect(element.querySelector('.activity-action')).toBeNull();
-  const buttons = tiles[0].querySelectorAll<HTMLButtonElement>('.activity-footer button');
-  expect(buttons).toHaveLength(2);
+  const buttons = tiles[0].querySelectorAll<HTMLButtonElement>('.activity-controls button');
+  expect(buttons).toHaveLength(3);
+  expect(Array.from(buttons).map(button => button.getAttribute('aria-label'))).toEqual(['Like, preview only', 'Comments, preview only', 'Report or hide, coming soon']);
   expect(Array.from(buttons).every(button => button.disabled && button.querySelector('svg') && !button.textContent?.trim())).toBe(true);
   const neighborStyle = tiles[1].getAttribute('style');
   tiles[0].dispatchEvent(new Event('pointerenter')); fixture.detectChanges();

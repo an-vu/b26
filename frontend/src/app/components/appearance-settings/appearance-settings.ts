@@ -1,6 +1,6 @@
 import { IconComponent, IconName } from '../icon/icon';
 import { ChromeBlurService } from '../../services/chrome-blur.service';
-import { Component, inject, input, output } from '@angular/core';
+import { Component, inject, input, output, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { BoardAppearance } from '../../models/board';
@@ -18,6 +18,23 @@ export class AppearanceSettingsComponent {
   readonly disabled = input(false);
   readonly showReset = input(true);
   readonly appearanceChange = output<BoardAppearance>();
+  readonly appearancePreview = output<BoardAppearance>();
+  readonly cornerLevels = [1, 2, 3, 4, 5];
+  readonly gapLevels = [1, 2, 3];
+  private readonly sliderDraft = signal<Partial<Record<'radiusStep' | 'spacingStep', number>>>({});
+  sliderValue(field: 'radiusStep' | 'spacingStep') { return this.sliderDraft()[field] ?? this.appearance()[field] ?? 2; }
+  cornerLabel(step: number) { return ['Small', 'Medium', 'Large', 'Rounder', 'Roundest'][step - 1]; }
+  slide(field: 'radiusStep' | 'spacingStep', event: Event) {
+    if (this.disabled()) return;
+    const value = Number((event.target as HTMLInputElement).value);
+    this.sliderDraft.update(draft => ({ ...draft, [field]: value }));
+    this.appearancePreview.emit({ ...this.appearance(), [field]: value as BoardAppearance[typeof field] });
+  }
+  finishSlide(field: 'radiusStep' | 'spacingStep', event: Event) {
+    const value = Number((event.target as HTMLInputElement).value);
+    this.sliderDraft.update(draft => { const next = { ...draft }; delete next[field]; return next; });
+    this.set(field, value as BoardAppearance[typeof field]);
+  }
   readonly themes = BOARD_THEMES;
   readonly colors = BOARD_PALETTE;
   readonly patterns: (BoardAppearance['pattern'] & IconName)[] = ['none', 'stars', 'snow', 'grid', 'rainfall', 'sakura', 'wave'];

@@ -92,7 +92,11 @@ class PostgresMigrationIntegrationTest {
           assertEquals("grid", rows.getString(2));
         }
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
-            () -> statement.executeUpdate("update boards set appearance_radius_step = 4 where id = 'default'"));
+            () -> statement.executeUpdate("update boards set appearance_radius_step = 6 where id = 'default'"));
+        statement.executeUpdate("update boards set appearance_radius_step = 5 where id = 'default'");
+        statement.executeUpdate("update user_preferences set home_radius_step = 5 where user_id = 'anvu'");
+        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
+            () -> statement.executeUpdate("update user_preferences set home_radius_step = 6 where user_id = 'anvu'"));
         statement.executeUpdate("update boards set appearance_theme_family = 'frutiger-aero' where id = 'default'");
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
             () -> statement.executeUpdate("update boards set appearance_theme_family = 'unknown' where id = 'default'"));

@@ -100,7 +100,6 @@
 .page[data-theme='default'] .account-menu a { color: var(--palette-gray); transition: color 150ms ease; }
 .page[data-theme='default'] .account-menu a:hover { color: var(--palette-black); }
 
-.page[data-theme="default"] .board-identity-menu input:not([type="checkbox"]):not([type="range"]) { border: 1px solid var(--palette-light-gray); border-radius: 6px; padding: 6px 8px; }
 
 .page[data-theme="default"] .orb-button { --orb-label-color: var(--palette-black);
 }

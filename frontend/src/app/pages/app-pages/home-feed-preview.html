@@ -5,9 +5,6 @@
     *ngFor="let post of posts" [style.--feed-columns]="columns(post.widgets[0].layout)" [style.--feed-rows]="rows(post.widgets[0].layout)">
     <div class="feed-reveal widget">
       <app-widget-host [widget]="post.widgets[0]" [previewMode]="true" />
-      <button class="activity-more" type="button" disabled aria-label="Report or hide, coming soon" title="Report or hide — coming soon">
-        <app-icon name="more" />
-      </button>
       <div class="activity-overlay">
         <div class="activity-line">
           <a class="activity-author" [routerLink]="boardRoute(post.board)">
@@ -15,11 +12,12 @@
             <span class="activity-identity"><strong>{{ post.board.ownerDisplayName }}</strong><span>@{{ post.board.ownerUsername }}</span></span>
           </a>
         </div>
-        <span class="activity-time">{{ post.minutesAgo }}m ago</span>
-        <div class="activity-footer" aria-label="Preview reactions">
-          <button type="button" disabled aria-label="Like, preview only"><app-icon name="heart" /></button>
-          <button type="button" disabled aria-label="Comments, preview only"><app-icon name="comment" /></button>
-        </div>
+      </div>
+      <span class="activity-time">{{ post.minutesAgo }}m ago</span>
+      <div class="activity-controls" aria-label="Preview reactions and options">
+        <button type="button" disabled aria-label="Like, preview only"><app-icon name="heart" /></button>
+        <button type="button" disabled aria-label="Comments, preview only"><app-icon name="comment" /></button>
+        <button class="activity-more" type="button" disabled aria-label="Report or hide, coming soon" title="Report or hide — coming soon"><app-icon name="more" /></button>
       </div>
     </div>
   </article>

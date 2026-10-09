@@ -1,7 +1,8 @@
+import { PanelCloseAnimation } from '../../utils/panel-close-animation';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { ToolbarPanelAnchor } from '../../utils/toolbar-panel-anchor';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, ViewChild, HostListener, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, ViewChild, HostListener, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
@@ -19,6 +20,8 @@ type SearchState =
   styleUrl: './user-search.css',
 })
 export class UserSearchComponent {
+  private readonly exit = new PanelCloseAnimation();
+  readonly isOpen = signal(false);
   @ViewChild('dialog', { static: true }) private dialog!: ElementRef<HTMLDialogElement>;
   private readonly service = inject(UserSearchService);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -31,7 +34,7 @@ export class UserSearchComponent {
   state: SearchState = { status: 'idle', results: [] };
 
   constructor() {
-    this.destroyRef.onDestroy(() => this.anchor.disconnect());
+    this.destroyRef.onDestroy(() => { this.exit.cancel(this.dialog.nativeElement); this.anchor.disconnect(); });
     this.requests.pipe(
       // A new keystroke immediately cancels the old timer/request, preventing stale results.
       switchMap(raw => {
@@ -53,20 +56,25 @@ export class UserSearchComponent {
   }
 
   open(event?: Event): void {
-    if (this.dialog.nativeElement.open) { this.close(); return; }
+    if (this.dialog.nativeElement.open && !this.exit.closing) { this.close(); return; }
+    this.exit.cancel(this.dialog.nativeElement);
     this.opener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
     this.setQuery('');
     this.dialog.nativeElement.show();
+    this.isOpen.set(true);
     this.anchor.connect(this.opener);
 
     this.dialog.nativeElement.querySelector('input')?.focus();
   }
 
   close(restoreFocus = true): void {
-    this.dialog.nativeElement.close();
-    this.anchor.disconnect();
-    this.setQuery('');
-    if (restoreFocus) this.opener?.focus();
+    this.isOpen.set(false);
+    this.exit.close(this.dialog.nativeElement, () => {
+      if (this.dialog.nativeElement.open) this.dialog.nativeElement.close();
+      this.anchor.disconnect();
+      this.setQuery('');
+      if (restoreFocus) this.opener?.focus();
+    });
   }
 
   @HostListener('window:resize')

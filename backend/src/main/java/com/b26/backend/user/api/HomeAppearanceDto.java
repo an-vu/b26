@@ -7,7 +7,7 @@ import jakarta.validation.constraints.Pattern;
 
 /** Home appearance is independent of the public main board. */
 public record HomeAppearanceDto(
-    @NotNull @Min(1) @Max(3) Integer radiusStep,
+    @NotNull @Min(1) @Max(5) Integer radiusStep,
     @NotNull @Min(1) @Max(3) Integer spacingStep,
     @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi|lofi") String themeFamily,
     @Pattern(regexp = "light|dark") String theme,

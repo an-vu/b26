@@ -18,6 +18,12 @@ button:disabled { opacity: .5; cursor: default; }
 .board-appearance-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; align-items: start; }
 .board-appearance-row > label { grid-template-rows: 18px 32px; align-items: center; justify-items: center; text-align: center; }
 input[type='range'] { width: 82%; min-width: 0; height: 32px; padding: 0; margin: 0; }
+.stepped-slider { width: 82%; min-width: 0; display: grid; grid-template-rows: 32px 7px; }
+.stepped-slider input[type='range'] { width: 100%; }
+.slider-marks { display: flex; justify-content: space-between; padding: 0 calc(var(--range-thumb-size, 16px) / 2); pointer-events: none; }
+.slider-marks i { width: 2px; height: 4px; border-radius: 1px; background: color-mix(in srgb, var(--theme-muted) 55%, transparent); box-shadow: 0 1px 0 color-mix(in srgb, var(--theme-surface) 45%, transparent); }
+.slider-marks i.is-selected { background: var(--theme-focus); height: 6px; }
+.board-appearance-row > label:has(.stepped-slider) { grid-template-rows: 18px 39px; }
 .board-color-options, .board-pattern-options { display: flex; flex-wrap: wrap; gap: 8px; }
 :is(.board-color-options, .board-pattern-options) button {
   display: flex; align-items: center; justify-content: center; width: 24px; height: 24px; min-height: 24px;
@@ -45,8 +51,13 @@ input[type='range'] { width: 82%; min-width: 0; height: 32px; padding: 0; margin
   :is(.board-color-options, .board-pattern-options) button { width: 36px; height: 36px; min-height: 36px; flex-basis: 36px; }
   .board-color-options, .board-pattern-options { gap: 10px; }
   input[type='range'] { height: 44px; }
+  .stepped-slider { grid-template-rows: 44px 7px; }
+  .board-appearance-row > label:has(.stepped-slider) { grid-template-rows: 18px 51px; }
   .board-appearance-row > label, .board-light-row > .light-switch-label { grid-template-rows: 18px 44px; }
   .light-switch-control input { inset: -11px 0; height: calc(100% + 22px); }
 }
 
 .pattern-placeholder { opacity: .65; }
+
+.board-light-row { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
+.toggle-placeholder, .toggle-placeholder input { cursor: default; }

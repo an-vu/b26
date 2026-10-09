@@ -38,8 +38,6 @@ export function runDoneWidgetEdit(params: {
   boardDraftHeadline: string;
   boardDraftWebsite?: string;
   profileNameDraft?: string;
-  originalBoardName: string;
-  originalBoardHeadline: string;
   originalWidgetDrafts: Map<number, WidgetDraft>;
   boardService: BoardService;
   withNormalizedOrder: (drafts: WidgetDraft[]) => WidgetDraft[];
@@ -48,7 +46,6 @@ export function runDoneWidgetEdit(params: {
   setWidgetDrafts: (drafts: WidgetDraft[]) => void;
   resetDraftValidationErrors: () => void;
   setDraftValidationError: (draft: WidgetDraft, message: string) => void;
-  setNewWidgetValidationError: (message: string) => void;
   setWidgetSaveError: (message: string) => void;
   setWidgetSaving: (saving: boolean) => void;
   onSaved: () => void;
@@ -67,7 +64,6 @@ export function runDoneWidgetEdit(params: {
   const normalizedDrafts = params.withNormalizedOrder([...params.widgetDrafts]);
   params.setWidgetDrafts(normalizedDrafts);
   params.resetDraftValidationErrors();
-  params.setNewWidgetValidationError('');
 
   const trimmedName = params.boardDraftName.trim();
   const trimmedHeadline = params.boardDraftHeadline.trim();

@@ -18,7 +18,7 @@
   --theme-text: var(--palette-black);
   --theme-muted: var(--palette-gray);
   color: var(--palette-black);
-  z-index: 30;
+  z-index: 100;
 }
 
 .bottom-actions-left {
@@ -159,3 +159,16 @@
 @media (prefers-reduced-motion: reduce) {
   .toolbar-wordmark, .navigation-orb .orb-button__dot, .navigation-orb__icon { transition: none; }
 }
+
+.bottom-actions-left[data-active-panel] .navigation-orb__icon { opacity: 0; }
+.bottom-actions-left[data-active-panel='search'] .navigation-orb[aria-label='Search'] .navigation-orb__icon,
+.bottom-actions-left[data-active-panel='account'] .navigation-orb[aria-label='Account'] .navigation-orb__icon { opacity: 1; }
+
+/* The toolbar surface and controls sit above both external dialogs and its own panels. */
+.bottom-actions::before {
+  content: ''; position: absolute; inset: 0; z-index: 1;
+  border-radius: inherit; background: inherit; pointer-events: none;
+}
+.bottom-actions .toolbar-panel { z-index: 0; }
+.bottom-actions :is(.navigation-orb, .board-identity-button, .home-settings-button),
+.bottom-actions > .toolbar-wordmark { position: relative; z-index: 2; }

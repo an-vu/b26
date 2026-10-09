@@ -20,7 +20,7 @@ Application routes do not use saved system-board mappings. Legacy mapping endpoi
 
 ## Personalize Home
 
-Click the bottom-center **Home** button for the same appearance controls used by board settings: theme, background color, pattern/intensity, light switch, radius (6/12/24px), spacing (8/16/24px), and Reset to default. Settings save automatically to the signed-in viewer's account, independently of all boards and their owners. Home does not inherit the main-board theme; visitors use Berry. V33 stores layout settings and V34 adds independent theme/background/pattern fields.
+Click the bottom-center **Home** button for the same appearance controls used by board settings: theme, background color, pattern/intensity, light switch, Corner (6/12/24/36/48px), Gap (8/16/24px), and Reset to default. Settings save automatically to the signed-in viewer's account, independently of all boards and their owners. Home does not inherit the main-board theme; visitors use Berry. V33 stores layout settings and V34 adds independent theme/background/pattern fields.
 
 Feed widgets cannot be rearranged by the viewer. Hiding an item is agreed future behavior; it is not implemented yet. The localhost sample feed remains a layout preview, with fixed widget footprints and placeholder social counts.
 
@@ -60,3 +60,7 @@ Delete with the red trash button in Board Settings, then confirm. Owner/admin ac
 - Deleting the current board opens the main board (home fallback); deleting another board keeps the current page.
 
 Appearance is saved automatically. See [Appearance and panels](Board-Appearance-and-Panels) for themes, patterns, profile editing, and panel behavior.
+
+### Sidebar widget picker — local changes
+
+Entering Edit aligns the profile rail with the widget grid’s top edge, hides the username/statistics, and uses shared Name/Link textboxes with a larger Bio box. The widget library slides in below Save/Cancel; it floats at the same width as other panels independently of the profile column, preserving normal profile/grid widths, and its height fills the space to the toolbar with the shared panel gap. Only the library content scrolls; the profile stays outside the scroll area. Link, Embed, and Map each have a label and square preview rendered through the existing widget host, using the board’s measured column size, with a themed green add badge on hover/focus. Clicking anywhere on a preview appends a square draft widget and animates its jump into the board; configure it on the board, then profile Save persists the complete edit. Remove badges sit above the tiles. Search, Account, About, Board Settings, and the widget library share a slide-up entrance and slide-down exit. The picker retains its closing position while Save/Cancel moves the profile smoothly back to its view-mode placement. Reduced motion skips both animations. Cancel discards the draft. The old grid Add Widget tile is replaced by this picker. On narrow screens the panel remains beneath the profile above the grid; reduced motion disables the slide animation.

@@ -44,6 +44,7 @@
 }
 [data-theme] ::selection { background: color-mix(in srgb, var(--theme-focus) 22%, transparent); color: inherit; }
 
-/* Shared text insets; inline profile editors intentionally retain their own geometry. */
+/* Shared text insets and textbox geometry; themes supply input materials. */
 .page[data-theme] :is(input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.inline-edit), textarea, select) { padding: 8px 10px; box-sizing: border-box; }
-.page[data-theme] .profile-field textarea { padding: 0; }
+[data-theme] .app-textbox { width: 100%; min-width: 0; min-height: 36px; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px; font: inherit; font-size: 13px; box-sizing: border-box; }
+.page[data-theme] .app-textbox { padding: 8px 10px; }

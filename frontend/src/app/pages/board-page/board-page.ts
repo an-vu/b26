@@ -1,3 +1,5 @@
+import { WidgetLibraryComponent } from './widget-library/widget-library';
+import { widgetCornerRadius } from '../../utils/widget-corner.util';
 import { paperColor, foregroundColor } from '../../themes/appearance-values';
 import { BoardProfileComponent } from './board-profile/board-profile';
 import { BoardSettingsComponent } from './board-settings/board-settings';
@@ -10,12 +12,12 @@ import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
 import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { Subject, finalize } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { hasDraftChangedByOriginal } from './board-page.save-flow';
+import { hasDraftChangedByOriginal, runDoneWidgetEdit } from './board-page.save-flow';
 import { getApiErrorMessage } from '../../utils/api-error.util';
 import { Router } from '@angular/router';
 
@@ -23,7 +25,6 @@ import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
 import { InsightsService } from '../../services/insights.service';
 import { UserStoreService } from '../../services/user-store.service';
-import { AuthService } from '../../services/auth.service';
 import type { Board } from '../../models/board';
 import type { Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
@@ -31,11 +32,9 @@ import {
   buildWidgetPayload as buildWidgetPayloadHelper,
   createEmptyWidgetDraft as createEmptyWidgetDraftHelper,
   getWidgetValidationMessage as getWidgetValidationMessageHelper,
-  normalizeHttpUrl as normalizeHttpUrlHelper,
   resetWidgetConfigForType as resetWidgetConfigForTypeHelper,
   toWidgetDraft as toWidgetDraftHelper,
   type WidgetDraft,
-  type WidgetType,
   withNormalizedOrder as withNormalizedOrderHelper,
 } from './board-page.widget-edit';
 import {
@@ -51,20 +50,15 @@ import {
 } from './board-page.edit-session';
 import { getTileLayoutClass } from '../../utils/widget-layout.util';
 import {
-  applyOnNewWidgetFieldChange,
-  applyOnNewWidgetTypeChange,
   applyOnWidgetDraftFieldChange,
   applyOnWidgetTypeChange,
   getDraftValidationErrorState,
   runLoadBoardPermissions,
 } from './board-page.ui-state';
 import {
-  applyAddNewWidgetAction,
   applyDeleteWidgetAction,
   applyMoveWidgetAction,
-  applyOpenWidgetSettingsAction,
   buildWidgetPreviewFromDraft,
-  isWidgetSettingsOpenAction,
 } from './board-page.widget-actions';
 import { initializeBoardPageAccountState } from './board-page.account-state';
 import {
@@ -74,14 +68,12 @@ import {
 import {
   createPageStateStream,
   createWidgetsStream,
-  type BoardPageState,
 } from './board-page.streams';
-import { runDoneWidgetEditAdapter } from './board-page.save-flow-adapter';
 
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [BoardProfileComponent, BoardSettingsComponent, WidgetEditorComponent, IconComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, WidgetHostComponent],
+  imports: [WidgetLibraryComponent, BoardProfileComponent, BoardSettingsComponent, WidgetEditorComponent, IconComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrls: [
     './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
@@ -106,7 +98,6 @@ export class BoardPageComponent {
   }
   private insightsService = inject(InsightsService);
   private userStore = inject(UserStoreService);
-  private authService = inject(AuthService);
   private elementRef = inject<ElementRef<HTMLElement>>(ElementRef);
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
@@ -159,8 +150,6 @@ export class BoardPageComponent {
   canEditBoard = false;
   readOnlyView = false;
   widgetSaveError = '';
-  newWidgetValidationError = '';
-  isAddWidgetExpanded = false;
   boardDraftName = '';
   boardDraftHeadline = '';
   profileNameDraft = '';
@@ -176,15 +165,14 @@ export class BoardPageComponent {
     return BOARD_THEMES.find(theme => theme.id === this.boardThemeFamilyDraft) ?? BOARD_THEMES[0];
   }
   boardThemeToggleDraft = false;
-  boardRadiusStepDraft: 1 | 2 | 3 = 2;
+  boardRadiusStepDraft: BoardAppearance['radiusStep'] = 2;
   boardSpacingStepDraft: 1 | 2 | 3 = 2;
   boardBackgroundColorDraft = '#f9f8f6';
   boardPatternDraft: BoardAppearance['pattern'] = 'none';
   boardPatternIntensityDraft: NonNullable<BoardAppearance['patternIntensity']> = 'light';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
-  newWidgetDraft: WidgetDraft = createEmptyWidgetDraftHelper();
-  deletedWidgetIds: number[] = [];
+  private activeNewWidgetDraft: WidgetDraft | null = null;
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
   private persistedAppearance: BoardAppearance = this.defaultAppearance();
@@ -199,7 +187,7 @@ export class BoardPageComponent {
   get appearanceDraft(): BoardAppearance {
     return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
       spacingStep: Number(this.boardSpacingStepDraft) as 1 | 2 | 3,
-      radiusStep: Number(this.boardRadiusStepDraft) as 1 | 2 | 3,
+      radiusStep: Number(this.boardRadiusStepDraft) as BoardAppearance['radiusStep'],
       backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft, patternIntensity: this.boardPatternIntensityDraft };
   }
 
@@ -238,7 +226,7 @@ export class BoardPageComponent {
   private editingBoardUrl = '';
 
   get boardRadiusDraft() {
-    return this.boardRadiusStepDraft === 1 ? 6 : this.boardRadiusStepDraft === 3 ? 24 : 12;
+    return widgetCornerRadius(this.boardRadiusStepDraft);
   }
 
   pageState$ = createPageStateStream({
@@ -384,14 +372,7 @@ export class BoardPageComponent {
       this.boardDraftWebsite.trim() !== this.originalBoardWebsite ||
       this.profileNameDraft.trim() !== this.originalProfileName ||
       this.widgetDrafts.length !== this.originalWidgetDrafts.size ||
-      this.widgetDrafts.some(draft => hasDraftChangedByOriginal(draft, this.originalWidgetDrafts)) ||
-      this.hasPendingNewWidget;
-  }
-
-  get hasPendingNewWidget(): boolean {
-    return this.isAddWidgetExpanded && !!(this.newWidgetDraft.title.trim() ||
-      this.newWidgetDraft.embedUrl.trim() || this.newWidgetDraft.linkUrl.trim() ||
-      this.newWidgetDraft.placesText.trim());
+      this.widgetDrafts.some(draft => hasDraftChangedByOriginal(draft, this.originalWidgetDrafts));
   }
 
   canLeaveBoard(): boolean {
@@ -418,6 +399,7 @@ export class BoardPageComponent {
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {
+    this.activeNewWidgetDraft = null;
     this.profileNameDraft = this.originalProfileName = board.ownerDisplayName || board.ownerUsername || board.name;
     this.boardDraftWebsite = this.originalBoardWebsite = board.website || '';
     this.hydrateAppearance(board);
@@ -433,7 +415,6 @@ export class BoardPageComponent {
         widgets,
         activeBoardUrl: this.activeBoardUrl,
         toWidgetDraft: (widget) => toWidgetDraftHelper(widget),
-        createEmptyWidgetDraft: () => createEmptyWidgetDraftHelper(),
       })
     );
   }
@@ -668,48 +649,52 @@ export class BoardPageComponent {
   }
 
   cancelWidgetEdit() {
+    this.activeNewWidgetDraft = null;
     this.editVersion = null;
-    Object.assign(this, buildCancelWidgetEditState(() => createEmptyWidgetDraftHelper()));
+    Object.assign(this, buildCancelWidgetEditState());
   }
 
   deleteWidget(draft: WidgetDraft) {
+    if (this.activeNewWidgetDraft === draft) this.activeNewWidgetDraft = null;
     const next = applyDeleteWidgetAction({
       draft,
       activeWidgetSettingsId: this.activeWidgetSettingsId,
       widgetDrafts: this.widgetDrafts,
-      deletedWidgetIds: this.deletedWidgetIds,
       withNormalizedOrder: (drafts) => withNormalizedOrderHelper(drafts),
     });
 
     this.activeWidgetSettingsId = next.activeWidgetSettingsId;
     this.widgetDrafts = next.widgetDrafts;
-    this.deletedWidgetIds = next.deletedWidgetIds;
   }
 
-  addNewWidget() {
-    const next = applyAddNewWidgetAction({
-      newWidgetDraft: this.newWidgetDraft,
-      widgetDrafts: this.widgetDrafts,
-      getWidgetValidationMessage: (draft) => getWidgetValidationMessageHelper(draft),
-      normalizeHttpUrl: (raw) => normalizeHttpUrlHelper(raw),
-      createEmptyWidgetDraft: () => createEmptyWidgetDraftHelper(),
-    });
-
-    if (next.kind === 'invalid') {
-      this.newWidgetValidationError = next.newWidgetValidationError;
-      return;
-    }
-
-    this.widgetDrafts = next.widgetDrafts;
-    this.newWidgetDraft = next.newWidgetDraft;
-    this.widgetSaveError = next.widgetSaveError;
-    this.newWidgetValidationError = next.newWidgetValidationError;
-    this.isAddWidgetExpanded = next.isAddWidgetExpanded;
-  }
-
-  openAddWidgetForm() {
-    this.isAddWidgetExpanded = true;
-    this.newWidgetValidationError = '';
+  private readonly injector = inject(Injector);
+  addWidgetFromLibrary(selection: { type: 'link' | 'embed' | 'map'; origin: DOMRect }) {
+    if (!this.isWidgetEditMode || this.isWidgetSaving || this.isIdentitySaving) return;
+    const added: WidgetDraft = {
+      ...createEmptyWidgetDraftHelper(),
+      type: selection.type,
+      title: selection.type[0].toUpperCase() + selection.type.slice(1),
+      order: this.widgetDrafts.length,
+    };
+    this.widgetDrafts = [...this.widgetDrafts, added];
+    this.widgetSaveError = '';
+    afterNextRender(() => {
+      if (!this.isWidgetEditMode || this.widgetDrafts.at(-1) !== added) return;
+      const tiles = (this.elementRef.nativeElement as HTMLElement).querySelectorAll<HTMLElement>('.widget-edit-tile');
+      const tile = tiles.item(tiles.length - 1);
+      if (!tile) return;
+      tile.scrollIntoView?.({ block: 'nearest', behavior: 'instant' });
+      if (window.matchMedia?.('(prefers-reduced-motion: reduce)').matches || !tile.animate) return;
+      const target = tile.getBoundingClientRect();
+      const x = selection.origin.left - target.left;
+      const y = selection.origin.top - target.top;
+      const scale = target.width ? selection.origin.width / target.width : 1;
+      tile.animate([
+        { transform: `translate(${x}px, ${y}px) scale(${scale})`, opacity: .5, transformOrigin: '0 0', zIndex: '21' },
+        { transform: `translate(${x * .5}px, ${y * .5 - 50}px) scale(1.08)`, opacity: 1, offset: .55, transformOrigin: '0 0', zIndex: '21' },
+        { transform: 'translate(0, 0) scale(1)', opacity: 1, transformOrigin: '0 0', zIndex: '21' },
+      ], { duration: 480, easing: 'cubic-bezier(.2,.7,.2,1)' });
+    }, { injector: this.injector });
   }
 
   moveWidget(draft: WidgetDraft, direction: -1 | 1) {
@@ -723,24 +708,15 @@ export class BoardPageComponent {
   }
 
   openWidgetSettings(draft: WidgetDraft) {
-    const nextId = applyOpenWidgetSettingsAction({
-      draft,
-      isWidgetSaving: this.isWidgetSaving,
-    });
-
-    if (nextId === null) {
-      return;
-    }
-
-    this.activeWidgetSettingsId = nextId;
+    if (this.isWidgetSaving) return;
+    this.activeNewWidgetDraft = draft.id ? null : draft;
+    this.activeWidgetSettingsId = draft.id ?? null;
     this.draftValidationErrors.delete(draft);
   }
 
   isWidgetSettingsOpen(draft: WidgetDraft) {
-    return isWidgetSettingsOpenAction({
-      draft,
-      activeWidgetSettingsId: this.activeWidgetSettingsId,
-    });
+    if (!draft.id) return this.activeNewWidgetDraft === draft;
+    return this.activeWidgetSettingsId === draft.id;
   }
 
   widgetPreviewFromDraft(draft: WidgetDraft, index: number): Widget {
@@ -753,11 +729,7 @@ export class BoardPageComponent {
 
   doneWidgetEdit() {
     if (this.isWidgetSaving || this.isDeletingBoard) return;
-    if (this.hasPendingNewWidget) {
-      this.widgetSaveError = 'Add the new widget or clear its fields before saving.';
-      return;
-    }
-    runDoneWidgetEditAdapter({
+    runDoneWidgetEdit({
       version: this.editVersion,
       activeBoardUrl: this.activeBoardUrl,
       editingBoardUrl: this.editingBoardUrl,
@@ -766,14 +738,12 @@ export class BoardPageComponent {
       boardDraftHeadline: this.boardDraftHeadline,
       boardDraftWebsite: this.boardDraftWebsite,
       profileNameDraft: this.profileNameDraft,
-      originalBoardName: this.originalBoardName,
-      originalBoardHeadline: this.originalBoardHeadline,
       originalWidgetDrafts: this.originalWidgetDrafts,
       boardService: this.boardService,
       withNormalizedOrder: (drafts) => withNormalizedOrderHelper(drafts),
       buildWidgetPayload: (draft) => buildWidgetPayloadHelper(draft),
       getWidgetValidationMessage: (draft) => getWidgetValidationMessageHelper(draft),
-      applyWidgetDrafts: (drafts) => {
+      setWidgetDrafts: (drafts) => {
         this.widgetDrafts = drafts;
       },
       resetDraftValidationErrors: () => {
@@ -781,9 +751,6 @@ export class BoardPageComponent {
       },
       setDraftValidationError: (draft, message) => {
         this.draftValidationErrors.set(draft, message);
-      },
-      setNewWidgetValidationError: (message) => {
-        this.newWidgetValidationError = message;
       },
       setWidgetSaveError: (message) => {
         this.widgetSaveError = message;
@@ -801,13 +768,6 @@ export class BoardPageComponent {
     });
   }
 
-  onNewWidgetTypeChange() {
-    this.newWidgetValidationError = applyOnNewWidgetTypeChange({
-      newWidgetDraft: this.newWidgetDraft,
-      resetWidgetConfigForType: (draft) => resetWidgetConfigForTypeHelper(draft),
-    });
-  }
-
   onWidgetTypeChange(draft: WidgetDraft) {
     applyOnWidgetTypeChange({
       draft,
@@ -822,10 +782,6 @@ export class BoardPageComponent {
       draftValidationErrors: this.draftValidationErrors,
       widgetSaveError: this.widgetSaveError,
     });
-  }
-
-  onNewWidgetFieldChange() {
-    this.newWidgetValidationError = applyOnNewWidgetFieldChange();
   }
 
   getDraftValidationError(draft: WidgetDraft) {

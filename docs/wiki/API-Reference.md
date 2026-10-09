@@ -25,7 +25,7 @@ Some controller parameters are named `boardId` even when they accept a **slug**.
 | POST | `/api/auth/signout` | Invalidate the supplied session |
 | GET / PATCH | `/api/users/me` | Session; read/update own profile |
 | GET / PATCH | `/api/users/me/preferences` | Session; read/update preferences, including main board |
-| GET / PUT | `/api/users/me/preferences/home` | Session; read/save own Home appearance: theme family, color mode, hex background, pattern/intensity, radius and spacing (steps 1–3) |
+| GET / PUT | `/api/users/me/preferences/home` | Session; read/save own Home appearance: theme family, color mode, hex background, pattern/intensity, Corner (`radiusStep`, 1–5) and Gap (`spacingStep`, 1–3) |
 | GET | `/api/users/{username}/main-board` | Public; resolve a user's main board |
 
 Signup accepts `email`, `password`, and optional `displayName` / `username`. The password must be 8–72 characters. Signin uses `email` and `password`; local bypass behavior is explained in [Dev login and accounts](Dev-Login-and-Accounts).

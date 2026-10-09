@@ -13,7 +13,7 @@
     <p *ngIf="state.status === 'ready' && !state.results.length">No users found.</p>
     <p *ngIf="state.status === 'error'">Search is unavailable. <button class="app-button" type="button" (click)="retry()">Try again</button></p>
   </div>
-  <input id="user-search-input" type="search" autofocus autocomplete="off" spellcheck="false"
+  <input class="app-textbox" id="user-search-input" type="search" autofocus autocomplete="off" spellcheck="false"
     aria-label="Search by username" placeholder="Search" maxlength="65" [value]="query"
     (input)="setQuery($any($event.target).value)" aria-describedby="user-search-status" />
 </dialog>

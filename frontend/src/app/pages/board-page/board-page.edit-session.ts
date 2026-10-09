@@ -9,11 +9,7 @@ export type StartWidgetEditState = {
   boardDraftHeadline: string;
   originalBoardName: string;
   originalBoardHeadline: string;
-  newWidgetDraft: WidgetDraft;
-  deletedWidgetIds: number[];
   widgetSaveError: string;
-  newWidgetValidationError: string;
-  isAddWidgetExpanded: boolean;
   draftValidationErrors: WeakMap<WidgetDraft, string>;
   activeWidgetSettingsId: number | null;
   editingBoardUrl: string;
@@ -24,16 +20,12 @@ export type CancelWidgetEditState = {
   isWidgetEditMode: boolean;
   isWidgetSaving: boolean;
   widgetSaveError: string;
-  newWidgetValidationError: string;
-  isAddWidgetExpanded: boolean;
   boardDraftName: string;
   boardDraftHeadline: string;
   originalBoardName: string;
   originalBoardHeadline: string;
   widgetDrafts: WidgetDraft[];
   activeWidgetSettingsId: number | null;
-  newWidgetDraft: WidgetDraft;
-  deletedWidgetIds: number[];
   editingBoardUrl: string;
   originalWidgetDrafts: Map<number, WidgetDraft>;
   draftValidationErrors: WeakMap<WidgetDraft, string>;
@@ -44,7 +36,6 @@ export function buildStartWidgetEditState(params: {
   widgets: Widget[];
   activeBoardUrl: string;
   toWidgetDraft: (widget: Widget) => WidgetDraft;
-  createEmptyWidgetDraft: () => WidgetDraft;
 }): StartWidgetEditState {
   const widgetDrafts = params.widgets
     .map((widget) => params.toWidgetDraft(widget))
@@ -63,11 +54,7 @@ export function buildStartWidgetEditState(params: {
     boardDraftHeadline: params.board.headline,
     originalBoardName: params.board.name,
     originalBoardHeadline: params.board.headline,
-    newWidgetDraft: params.createEmptyWidgetDraft(),
-    deletedWidgetIds: [],
     widgetSaveError: '',
-    newWidgetValidationError: '',
-    isAddWidgetExpanded: false,
     draftValidationErrors: new WeakMap<WidgetDraft, string>(),
     activeWidgetSettingsId: null,
     editingBoardUrl: params.activeBoardUrl || params.board.boardUrl,
@@ -75,21 +62,17 @@ export function buildStartWidgetEditState(params: {
   };
 }
 
-export function buildCancelWidgetEditState(createEmptyWidgetDraft: () => WidgetDraft): CancelWidgetEditState {
+export function buildCancelWidgetEditState(): CancelWidgetEditState {
   return {
     isWidgetEditMode: false,
     isWidgetSaving: false,
     widgetSaveError: '',
-    newWidgetValidationError: '',
-    isAddWidgetExpanded: false,
     boardDraftName: '',
     boardDraftHeadline: '',
     originalBoardName: '',
     originalBoardHeadline: '',
     widgetDrafts: [],
     activeWidgetSettingsId: null,
-    newWidgetDraft: createEmptyWidgetDraft(),
-    deletedWidgetIds: [],
     editingBoardUrl: '',
     originalWidgetDrafts: new Map<number, WidgetDraft>(),
     draftValidationErrors: new WeakMap<WidgetDraft, string>(),

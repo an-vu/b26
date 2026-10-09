@@ -14,40 +14,26 @@
 }
 
 .widget-edit-tile {
+  overflow: visible;
   display: grid;
   position: relative;
-}
-
-.widget-edit-tile h3 {
-  margin: 0;
-  font-size: 14px;
 }
 
 .widget-delete-button {
   position: absolute;
   top: -10px;
   left: -10px;
-  z-index: 2;
+  z-index: 5;
 }
 
 .widget-edit-preview {
-  height: 100%;
+  position: absolute;
+  inset: 0;
   pointer-events: none;
 }
 
 .widget-settings-open {
   overflow: visible;
-}
-
-.add-widget-tile {
-  border-style: dashed;
-}
-
-.add-widget-tile--collapsed {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  align-content: center;
 }
 
 /* iOS-style remove controls, with each theme's surface treatment. */

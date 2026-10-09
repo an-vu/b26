@@ -1,7 +1,8 @@
-<app-page-shell [home]="true" [appearance]="appearance()">
+<app-page-shell [home]="true" [appearance]="displayedAppearance()">
   <div class="home-stage" [class.is-signed-in]="!!(auth.user$ | async)"
-    [style.--board-widget-radius.px]="appearance().radiusStep === 1 ? 6 : appearance().radiusStep === 3 ? 24 : 12"
-    [style.--feed-gap.px]="(appearance().spacingStep ?? 2) * 8">
+    [style.--board-widget-radius.px]="cornerRadius(displayedAppearance().radiusStep)"
+    [style.--feed-detail-inset.px]="cornerInset(displayedAppearance().radiusStep)"
+    [style.--feed-gap.px]="(displayedAppearance().spacingStep ?? 2) * 8">
   <ng-container *ngIf="!(auth.user$ | async)" [ngTemplateOutlet]="visitor" />
   <ng-template #visitor>
     <section class="home-intro" aria-labelledby="intro-title">
@@ -33,10 +34,10 @@
   <div page-navigation class="home-settings-anchor" appPanelBehavior [panelOpen]="settingsOpen()" (panelDismiss)="closeSettings()">
     <button type="button" class="app-button home-settings-button" [attr.aria-expanded]="settingsOpen()" aria-controls="home-settings-panel" (click)="settingsOpen.update(toggle)">Home</button>
     @if (settingsOpen()) {
-      <section id="home-settings-panel" class="home-settings utility-panel toolbar-panel toolbar-panel--center" aria-label="Home settings">
+      <section animate.leave="panel-slide-down" id="home-settings-panel" class="home-settings utility-panel toolbar-panel toolbar-panel--center" aria-label="Home settings">
         <h2 class="board-settings-heading">Home Settings</h2>
         @if (auth.user$ | async) {
-          <app-appearance-settings [appearance]="appearance()" [disabled]="loading() || saving()" (appearanceChange)="saveAppearance($event)" />
+          <app-appearance-settings [appearance]="appearance()" [disabled]="loading() || saving()" (appearancePreview)="preview.set($event)" (appearanceChange)="saveAppearance($event)" />
           <p role="status" *ngIf="loading() || saving()">{{ loading() ? 'Loading…' : 'Saving…' }}</p>
           <p class="error" role="alert" *ngIf="error()">{{ error() }}</p>
         } @else {

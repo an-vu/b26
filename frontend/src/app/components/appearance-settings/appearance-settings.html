@@ -14,12 +14,24 @@
             <hr />
             <div class="board-appearance-row">
               <label>
-                Widget Radius
-                <input [disabled]="disabled()" type="range" name="board-radius" [style.--radius-fill]="(appearance().radiusStep - 1) * 50 + '%'" [attr.aria-valuetext]="sizeLabel(appearance().radiusStep)" min="1" max="3" step="1" [ngModel]="appearance().radiusStep" (ngModelChange)="set('radiusStep', $event)" />
+                Corner
+                <span class="stepped-slider">
+                  <input [disabled]="disabled()" type="range" name="board-radius" aria-label="Corner"
+                    [style.--radius-fill]="(sliderValue('radiusStep') - 1) * 25 + '%'"
+                    [attr.aria-valuetext]="cornerLabel(sliderValue('radiusStep'))" min="1" max="5" step="1"
+                    [value]="sliderValue('radiusStep')" (input)="slide('radiusStep', $event)" (change)="finishSlide('radiusStep', $event)" />
+                  <span class="slider-marks" aria-hidden="true"><i *ngFor="let level of cornerLevels" [class.is-selected]="sliderValue('radiusStep') === level"></i></span>
+                </span>
               </label>
               <label>
-                Widget Space
-                <input [disabled]="disabled()" type="range" name="board-spacing" aria-label="Widget space" min="1" max="3" step="1" [style.--radius-fill]="((appearance().spacingStep ?? 2) - 1) * 50 + '%'" [attr.aria-valuetext]="sizeLabel(appearance().spacingStep ?? 2)" [ngModel]="appearance().spacingStep ?? 2" (ngModelChange)="set('spacingStep', $event)" />
+                Gap
+                <span class="stepped-slider">
+                  <input [disabled]="disabled()" type="range" name="board-spacing" aria-label="Gap"
+                    [style.--radius-fill]="(sliderValue('spacingStep') - 1) * 50 + '%'"
+                    [attr.aria-valuetext]="sizeLabel(sliderValue('spacingStep'))" min="1" max="3" step="1"
+                    [value]="sliderValue('spacingStep')" (input)="slide('spacingStep', $event)" (change)="finishSlide('spacingStep', $event)" />
+                  <span class="slider-marks" aria-hidden="true"><i *ngFor="let level of gapLevels" [class.is-selected]="sliderValue('spacingStep') === level"></i></span>
+                </span>
               </label>
             </div>
             <hr />
@@ -54,6 +66,21 @@
             <hr />
             <div class="board-appearance-row board-light-row">
               <label class="light-switch-label">
+                <span>Blur</span>
+                <span class="light-switch-control">
+                  <input type="checkbox" role="switch" name="chrome-blur-switch"
+                    [ngModel]="blur.enabled()" (ngModelChange)="blur.setEnabled($event)" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
+              </label>
+              <label class="light-switch-label toggle-placeholder" title="Gloss · Coming soon">
+                <span>Gloss</span>
+                <span class="light-switch-control">
+                  <input disabled type="checkbox" role="switch" name="gloss-switch" aria-label="Gloss, coming soon" />
+                  <span class="light-switch-track" aria-hidden="true"></span>
+                </span>
+              </label>
+              <label class="light-switch-label">
                 <span>Light</span>
                 <span class="light-switch-control">
                   <input [disabled]="disabled()" type="checkbox" role="switch" name="appearance-light-switch"
@@ -61,11 +88,10 @@
                   <span class="light-switch-track" aria-hidden="true"></span>
                 </span>
               </label>
-              <label class="light-switch-label">
-                <span>Blur</span>
+              <label class="light-switch-label toggle-placeholder" title="Motion · Coming soon">
+                <span>Motion</span>
                 <span class="light-switch-control">
-                  <input type="checkbox" role="switch" name="chrome-blur-switch"
-                    [ngModel]="blur.enabled()" (ngModelChange)="blur.setEnabled($event)" />
+                  <input disabled type="checkbox" role="switch" name="motion-switch" aria-label="Motion, coming soon" />
                   <span class="light-switch-track" aria-hidden="true"></span>
                 </span>
               </label>

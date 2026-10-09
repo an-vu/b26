@@ -16,14 +16,6 @@ export function runLoadBoardPermissions(params: {
   });
 }
 
-export function applyOnNewWidgetTypeChange(params: {
-  newWidgetDraft: WidgetDraft;
-  resetWidgetConfigForType: (draft: WidgetDraft) => void;
-}): string {
-  params.resetWidgetConfigForType(params.newWidgetDraft);
-  return '';
-}
-
 export function applyOnWidgetTypeChange(params: {
   draft: WidgetDraft;
   resetWidgetConfigForType: (draft: WidgetDraft) => void;
@@ -43,10 +35,6 @@ export function applyOnWidgetDraftFieldChange(params: {
     return '';
   }
   return params.widgetSaveError;
-}
-
-export function applyOnNewWidgetFieldChange(): string {
-  return '';
 }
 
 export function getDraftValidationErrorState(params: {

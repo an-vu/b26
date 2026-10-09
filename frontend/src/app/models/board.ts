@@ -6,7 +6,7 @@ export type BoardAppearance = {
   patternIntensity?: 'light' | 'medium' | 'heavy';
   // Legacy API field: this stores color mode, not the visual theme family.
   theme: BoardColorMode;
-  radiusStep: 1 | 2 | 3;
+  radiusStep: 1 | 2 | 3 | 4 | 5;
   backgroundColor: string;
   pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered' | 'rainfall' | 'stars' | 'snow' | 'sakura' | 'wave';
 };

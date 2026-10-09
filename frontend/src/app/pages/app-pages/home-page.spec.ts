@@ -37,6 +37,20 @@ describe('Home and shared navigation', () => {
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); fixture.detectChanges();
     expect(element.querySelector('.account-menu')).toBeNull();
   });
+  it('tracks only the active Search or Account icon while its panel is open', () => {
+    const fixture = TestBed.createComponent(HomePageComponent); fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+    const dialog = element.querySelector('app-user-search dialog') as HTMLDialogElement;
+    dialog.show = () => { dialog.open = true; };
+    dialog.close = () => { dialog.open = false; };
+    const nav = element.querySelector('.bottom-actions-left')!;
+    element.querySelector<HTMLButtonElement>('button[aria-label="Search"]')!.click(); fixture.detectChanges();
+    expect(nav.getAttribute('data-active-panel')).toBe('search');
+    element.querySelector<HTMLButtonElement>('button[aria-label="Account"]')!.click(); fixture.detectChanges();
+    expect(dialog.open).toBe(false); expect(nav.getAttribute('data-active-panel')).toBe('account');
+    element.querySelector<HTMLButtonElement>('button[aria-label="Account"]')!.click(); fixture.detectChanges();
+    expect(nav.hasAttribute('data-active-panel')).toBe(false);
+  });
   it('replaces visitor onboarding with the signed-in activity empty state', () => {
     const fixture = TestBed.createComponent(HomePageComponent); fixture.detectChanges();
     user.next({ id: 'owner', username: 'owner', email: 'owner@example.com', role: 'USER' } as AuthUser);
@@ -68,6 +82,22 @@ describe('Home and shared navigation', () => {
     user.next(null); fixture.detectChanges();
     expect(fixture.componentInstance.appearance()).toEqual(DEFAULT_HOME_APPEARANCE);
     expect(fixture.nativeElement.querySelector('.home-settings')).toBeNull();
+  });
+  it('previews slider changes live without saving until release and restores the saved value on failure', () => {
+    const save = vi.spyOn(TestBed.inject(BoardService), 'updateHomeAppearance').mockReturnValue(throwError(() => new Error('Unavailable')));
+    const fixture = TestBed.createComponent(HomePageComponent);
+    user.next({ id: 'owner' } as AuthUser); fixture.detectChanges();
+    fixture.nativeElement.querySelector('.home-settings-button').click(); fixture.detectChanges();
+    const slider = fixture.nativeElement.querySelector('input[aria-label="Corner"]') as HTMLInputElement;
+    for (const [level, inset] of [[1, 8], [2, 10], [3, 12], [4, 16], [5, 20]]) {
+      slider.value = String(level); slider.dispatchEvent(new Event('input')); fixture.detectChanges();
+      expect(save).not.toHaveBeenCalled(); expect(slider.disabled).toBe(false);
+      expect(fixture.nativeElement.querySelector('.home-stage').style.getPropertyValue('--feed-detail-inset')).toBe(inset + 'px');
+    }
+    expect(fixture.nativeElement.querySelector('.home-stage').style.getPropertyValue('--board-widget-radius')).toBe('48px');
+    slider.dispatchEvent(new Event('change')); fixture.detectChanges();
+    expect(save).toHaveBeenCalledOnce();
+    expect(fixture.nativeElement.querySelector('.home-stage').style.getPropertyValue('--board-widget-radius')).toBe('12px');
   });
   it('restores the saved appearance and shows an error if an update fails', () => {
     vi.spyOn(TestBed.inject(BoardService), 'updateHomeAppearance').mockReturnValue(throwError(() => new Error('Unavailable')));

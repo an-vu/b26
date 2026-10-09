@@ -7,28 +7,28 @@
   font-size: 12px;
 }
 
-:host-context(.widget-edit-tile) label {
+label {
   display: grid;
   gap: 4px;
 }
 
-:host-context(.widget-edit-tile) input,
-:host-context(.widget-edit-tile) select,
-:host-context(.widget-edit-tile) textarea {
+input,
+select,
+textarea {
   min-width: 0;
 }
 
-:host-context(.widget-edit-tile) textarea {
+textarea {
   resize: vertical;
 }
 
-:host-context(.widget-edit-tile) .checkbox {
+.checkbox {
   display: flex;
   align-items: center;
   gap: 8px;
 }
 
-:host-context(.widget-edit-tile) .checkbox input {
+.checkbox input {
   margin: 0;
 }
 

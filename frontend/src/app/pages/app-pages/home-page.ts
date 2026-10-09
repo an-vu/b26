@@ -1,7 +1,8 @@
+import { widgetCornerRadius, widgetCornerInset } from '../../utils/widget-corner.util';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { HomeFeedPreviewComponent } from './home-feed-preview';
 import { environment } from '../../../environments/environment';
-import { Component, DestroyRef, inject, signal, effect } from '@angular/core';
+import { Component, DestroyRef, inject, signal, effect, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { CommonModule } from '@angular/common';
 import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
@@ -19,12 +20,16 @@ import { AppPageShellComponent } from './app-page-shell';
   templateUrl: './home-page.html', styleUrl: './home-page.css'
 })
 export class HomePageComponent {
+  readonly cornerRadius = widgetCornerRadius;
+  readonly cornerInset = widgetCornerInset;
   readonly showPreview = !environment.production && ['localhost', '127.0.0.1'].includes(globalThis.location?.hostname);
   readonly auth = inject(AuthService);
   private readonly boards = inject(BoardService);
   private readonly siteTheme = inject(SiteThemeService);
   private readonly destroyRef = inject(DestroyRef);
   readonly appearance = signal<HomeAppearance>({ ...DEFAULT_HOME_APPEARANCE });
+  readonly preview = signal<HomeAppearance | null>(null);
+  readonly displayedAppearance = computed(() => this.preview() ?? this.appearance());
   readonly settingsOpen = signal(false);
   readonly loading = signal(false);
   readonly saving = signal(false);
@@ -33,10 +38,11 @@ export class HomePageComponent {
   private userId: string | null = null;
 
   constructor() {
-    effect(() => this.siteTheme.homeAppearance.set(this.appearance()));
+    effect(() => this.siteTheme.homeAppearance.set(this.displayedAppearance()));
     this.destroyRef.onDestroy(() => this.siteTheme.homeAppearance.set(null));
     this.auth.user$.pipe(map(user => user?.id ?? null), distinctUntilChanged(), switchMap(id => {
       this.userId = id;
+      this.preview.set(null);
       this.appearance.set({ ...DEFAULT_HOME_APPEARANCE });
       this.settingsOpen.set(false); this.error.set(''); this.loading.set(!!id);
       return id ? this.boards.getHomeAppearance().pipe(catchError(error => {
@@ -49,6 +55,7 @@ export class HomePageComponent {
   }
 
   saveAppearance(next: HomeAppearance) {
+    this.preview.set(null);
     if (!this.userId || this.loading() || this.saving()) return;
     const previous = this.appearance();
     this.appearance.set(next); this.saving.set(true); this.error.set('');

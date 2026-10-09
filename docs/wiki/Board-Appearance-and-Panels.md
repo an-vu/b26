@@ -33,7 +33,7 @@ Implementation: shared panel material in `frontend/src/themes/panels.css` plus e
 
 Saved layouts use whole-cell footprints: 1×1, 2×1, 3×1, 4×1, 1×2, 2×2, and 3×3. Grid cells are square; content scrolls or truncates inside its tile instead of growing the row. Four-column grids preserve the footprint when the viewport changes. Feed packing never changes widget dimensions.
 
-Home widgets always show an owner avatar at the bottom-left. Hover/focus scales only that card subtly (1.025×), revealing name/@username next to the avatar, time with “ago” at the bottom-right, and heart/comment icons at the bottom-center. A disabled top-right menu is a report/hide placeholder. Action phrases and counts are absent; icons are placeholders. Neighbors never shrink or move, and grid slots/saved footprints remain unchanged. Touch devices show details without hover. Missing photos use a neutral avatar. User-board widgets do not have this treatment.
+Home widgets always show an owner avatar at the bottom-left. Hover/focus scales only that card subtly (1.025×), revealing name/@username next to the avatar and time with “ago” at the top-right. Heart, comment, and more icons stack vertically at the bottom-right; more is a report/hide placeholder. Owner details and controls use insets of 8, 10, 12, 16, and 20px for Corner levels 1–5, keeping square corners tight and round corners clear. Feed widget body text and link actions share this horizontal inset; title and media spacing remain unchanged. Action phrases and counts are absent; icons are placeholders. Neighbors never shrink or move, and grid slots/saved footprints remain unchanged. Touch devices show details without hover. Missing photos use a neutral avatar. User-board widgets do not have this treatment.
 
 ## Editing
 
@@ -71,3 +71,12 @@ Routes use `loadComponent` so page code is fetched on demand. Board aliases reta
 All browser icons live in `frontend/public/favicons/`. PNGs render the Apple Color Emoji 🍱 glyph directly; ICO contains 16px and 32px variants. The HTML uses absolute, versioned icon URLs so nested routes and stale icon caches do not point to the old artwork. Touch and manifest icons use the same bento artwork.
 
 Mustache persistence is enabled for boards and Home by V35, keeping the internal `lofi` ID for saved-appearance compatibility. Its sixth preview remains on the same row; the preview grid follows the theme count. Its visual reference is the [2012 Instagram interface](https://es.wired.com/galerias/si-crees-que-recuerdas-el-instagram-de-hace-15-anos-mira-dos-veces).
+
+## Corner, Gap, and active navigation icons
+
+Corner offers five fixed levels: 6, 12, 24, 36, and 48px; the original first three levels are preserved. Gap retains 8, 16, and 24px. Both sliders show themed marks beneath their steps and save on release, so a continuous drag can cross intermediate levels without an in-flight save disabling the thumb. V36 expands board and Home corner validation/storage to five levels.
+
+While Search or Account is open, only its navigation icon is visible; the other colored orb buttons remain available. Closing the panel restores normal hover/focus icon behavior.
+
+- Corner and Gap preview live while dragging; persistence runs on release so snapping through steps does not interrupt the drag.
+- Appearance toggles appear in this order: Blur, Gloss, Light, Motion. Blur and Light work today; Gloss and Motion are disabled placeholders.

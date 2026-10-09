@@ -21,7 +21,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     request.set("version", board.get("version"));
     request.set("boardUrl", board.get("boardUrl"));
     request.put("boardName", "Appearance test");
-    request.putObject("appearance").put("theme", "dark").put("radiusStep", 3)
+    request.putObject("appearance").put("theme", "dark").put("radiusStep", 5)
         .put("backgroundColor", "#E6F0FF").put("pattern", "sakura").put("patternIntensity", "heavy").put("spacingStep", 3);
     return request;
   }
@@ -42,7 +42,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token)).andExpect(jsonPath("$.appearance.theme").value("dark"))
         .andExpect(jsonPath("$.appearance.patternIntensity").value("heavy"))
         .andExpect(jsonPath("$.appearance.spacingStep").value(3))
-        .andExpect(jsonPath("$.appearance.radiusStep").value(3)).andExpect(jsonPath("$.appearance.pattern").value("sakura"));
+        .andExpect(jsonPath("$.appearance.radiusStep").value(5)).andExpect(jsonPath("$.appearance.pattern").value("sakura"));
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(request.toString())).andExpect(status().isConflict());
     // Legacy name-only clients preserve saved appearance.
@@ -82,7 +82,7 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     String token = authAnvu(); var board = create(token);
     String url = API_BOARD + "/" + board.get("boardUrl").asText();
     for (String invalid : new String[]{"{\"theme\":\"unknown\",\"radiusStep\":2,\"backgroundColor\":\"#ffffff\",\"pattern\":\"none\"}",
-        "{\"theme\":\"dark\",\"radiusStep\":4,\"backgroundColor\":\"#ffffff\",\"pattern\":\"none\"}",
+        "{\"theme\":\"dark\",\"radiusStep\":6,\"backgroundColor\":\"#ffffff\",\"pattern\":\"none\"}",
         "{\"theme\":\"dark\",\"radiusStep\":2,\"backgroundColor\":\"url(x)\",\"pattern\":\"none\"}",
         "{\"theme\":\"dark\",\"radiusStep\":2,\"backgroundColor\":\"#ffffff\",\"pattern\":\"unknown\"}", "{}"}) {
       var request = request(board); request.set("appearance", objectMapper.readTree(invalid));

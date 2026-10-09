@@ -12,9 +12,7 @@
   position: relative; z-index: 3; height: var(--header-height);
   display: flex; align-items: center; justify-content: center;
 }
-.home-header-brand { color: inherit; font-size: 17px; }
-.home-header-brand:hover { color: inherit; opacity: .75; }
-.home-header-brand { --focus-offset: 5px; }
+.home-header-brand { font-size: 17px; --focus-offset: 5px; }
 .footer-blur {
   position: fixed; inset: auto 0 0; height: 68px;
   z-index: 29; pointer-events: none; --blur-reach: 22px;

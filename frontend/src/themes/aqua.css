@@ -50,7 +50,7 @@
   box-shadow: inset 0 1px #fff9, inset 0 -2px #ffffff70, 0 7px 18px #040a1e80;
   border-radius: 9px;
 }
-.page[data-theme='aqua'] .toolbar-wordmark { color: #344760; text-shadow: 0 1px #f6faffb3; }
+.page[data-theme='aqua'] .toolbar-wordmark { color: #eaf5ff; text-shadow: 0 1px 2px #17283fcc, 0 0 6px #b9ddff30; }
 .page[data-theme='aqua'] .toolbar-wordmark:hover { color: #f5fbff; text-shadow: 0 1px 2px #17283f, 0 0 8px #d4edff80; }
 .page[data-theme='aqua'] .navigation-orb .orb-button__dot {
   border-radius: 50%; background: radial-gradient(ellipse at 50% 8%, #ffffffb3, #ffffff30 34%, transparent 55%), linear-gradient(transparent 48%, #17295430 51%, #ffffff25), var(--orb-dot);
@@ -126,7 +126,7 @@
   --button-hover-background: linear-gradient(#6d83a2, #435b7b 48%, #354d6c 51%, #4c6689);
   --button-hover-text-shadow: 0 -1px #182638; }
 .page[data-theme='aqua'][data-color-mode='dark'] .bottom-actions { background: linear-gradient(#6a7b98b3, #35455cc9 49%, #18263bcc 51%, #52647fd9); }
-.page[data-theme='aqua'][data-color-mode='dark'] .toolbar-wordmark { color: #d2deef; text-shadow: 0 -1px #182237; }
+.page[data-theme='aqua'][data-color-mode='dark'] .toolbar-wordmark { color: #eaf5ff; text-shadow: 0 1px 2px #182237; }
 .page[data-theme='aqua'][data-color-mode='dark'] .toolbar-wordmark:hover { color: #fff; }
 @media (prefers-reduced-motion: reduce) { [data-theme='aqua'] :is(button, a).app-button { transition: none; } }
 

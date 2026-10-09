@@ -66,8 +66,7 @@ export class SignupFormComponent {
         password,
       })
       .pipe(
-        switchMap((session) => {
-          const username = session.user.username?.trim();
+        switchMap(() => {
           const fallback = '/settings';
           return this.boardService.getMyBoards().pipe(
             map((boards) => boards[0] ? boardRoute(boards[0]) : fallback),

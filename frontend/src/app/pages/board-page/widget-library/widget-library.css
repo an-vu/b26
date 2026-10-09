@@ -1,0 +1,20 @@
+:host { display: block; position: relative; z-index: 20; align-self: stretch; min-width: 0; min-height: 0; flex: 1; margin-top: var(--toolbar-panel-gap, 12px); text-align: left; }
+/* Geometry only: shared utility/toolbar panels own all surface styling. */
+.widget-library { top: 0; bottom: auto; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; height: 100%; max-height: none; overflow: hidden; }
+h2 { flex-shrink: 0; }
+.widget-library-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 10px; margin: -4px -10px -10px; }
+.widget-library-list { display: grid; gap: 12px; }
+.widget-library-entry { display: grid; gap: 20px; }
+.widget-library-entry label { font-size: 12px; }
+.widget-library-item { justify-self: center; position: relative; display: block; width: var(--library-square-size, 180px); height: var(--library-square-size, 180px); padding: 0; border: 0; background: transparent; color: inherit; text-align: left; font: inherit; cursor: pointer; }
+.widget-library-item:disabled { opacity: .5; cursor: default; }
+.widget-library-preview { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; }
+app-widget-host { display: block; width: 100%; height: 100%; }
+.widget-library-add { position: absolute; top: -10px; left: -10px; z-index: 2; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--palette-green) 65%, #143a25); background: var(--widget-add-fill, var(--palette-green)); color: #fff; box-shadow: var(--widget-add-shadow, 0 2px 4px #0002); --icon-size: 18px; opacity: 0; scale: .8; transition: opacity 160ms ease, scale 160ms ease; }
+.widget-library-item:is(:hover, :focus-visible):not(:disabled) .widget-library-add { opacity: 1; scale: 1; }
+@media (hover: none) { .widget-library-add { opacity: 1; scale: 1; } }
+@media (max-width: 1024px) { :host { flex: none; height: 360px; } }
+@media (prefers-reduced-motion: reduce) { .widget-library-add { transition: none; } }
+
+/* Keep the outgoing picker in place when the profile switches back to view mode. */
+:host(.panel-slide-down) { position: absolute; left: 0; top: var(--library-exit-offset); width: var(--library-exit-width); height: var(--library-exit-height); margin: 0; flex: none; }

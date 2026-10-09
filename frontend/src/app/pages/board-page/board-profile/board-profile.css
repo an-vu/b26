@@ -37,40 +37,27 @@
   .profile-bio { margin: 16px 0; }
 }
 
-.profile-field { display: grid; position: relative; margin: 0 0 7px; font-size: 14px; line-height: 1.6; }
-
-.profile-field > * { grid-area: 1 / 1; min-width: 0; white-space: pre-wrap; overflow-wrap: anywhere; }
-
-.profile-field-mirror { visibility: hidden; }
-
+.profile-field { display: block; margin: 0 0 7px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
 .profile-website-field { font-size: 12px; opacity: .75; }
-
 .profile-field a { color: inherit; text-underline-offset: 3px; }
-
-:host-context(.page[data-theme]) .profile-field textarea {
-  width: 100%; height: 100%; min-height: 0; box-sizing: border-box; resize: none; overflow: hidden;
-  padding: 0; margin: 0; border: 0; border-radius: 0; background: transparent; box-shadow: none;
-  color: inherit; font: inherit; line-height: inherit; letter-spacing: inherit; text-shadow: inherit;
-}
-
-.profile-field.is-editing { box-shadow: 0 1px color-mix(in srgb, currentColor 25%, transparent); }
-
-:host-context(.page[data-theme]) .profile-field textarea:focus-visible { outline-offset: 3px; }
-
-.profile-name-field { margin: 0; font-size: 26px; font-weight: 600; line-height: 1.2; }
-
-.profile-name-field .profile-name { font: inherit; }
-
 .board-rail { text-align: center; }
-
-.profile-avatar { margin-inline: auto; }
-
+.profile-avatar { margin-inline: auto; flex-shrink: 0; }
 .profile-stats, .profile-edit-actions { justify-content: center; }
-
-:host-context(.page[data-theme]) .profile-field textarea { text-align: center; }
-
+.profile-edit-fields { display: grid; gap: 8px; margin-bottom: 12px; }
+.profile-edit-fields textarea { height: 76px; resize: none; }
 @media (min-width: 1025px) {
   :host-context(.page.page-fixed-scroll) .board-rail { top: 48px; margin-top: 40px; }
 }
 .board-settings-feedback { font-size: 13px; padding: 8px; border-radius: 6px; background: var(--theme-surface); color: var(--theme-text); }
 .board-settings-feedback:empty { display: none; }
+
+.board-rail.is-editing { display: flex; flex-direction: column; gap: 0; overflow: visible; }
+.board-rail.is-editing > :not(app-widget-library) { flex-shrink: 0; }
+@media (min-width: 1025px) {
+  :host-context(.page.page-fixed-scroll) .board-rail.is-editing {
+    /* The scroll container already contributes the canvas top padding. */
+    margin-top: 0; top: 0;
+    height: calc(100dvh - var(--board-canvas-top) - var(--profile-toolbar-clearance, 81px));
+    min-height: 0; padding: 0; overflow: visible;
+  }
+}

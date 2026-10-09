@@ -12,5 +12,8 @@ import { RouterOutlet } from '@angular/router';
 })
 export class AppComponent {
   readonly theme = inject(SiteThemeService);
-  private readonly activity = inject(PageActivityService);
+  constructor() {
+    // Start visibility tracking so background tabs pause decorative animations.
+    inject(PageActivityService);
+  }
 }

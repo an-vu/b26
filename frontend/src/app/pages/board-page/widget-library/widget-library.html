@@ -1,0 +1,20 @@
+<section class="widget-library utility-panel toolbar-panel" aria-label="Widget library">
+  <h2 class="board-settings-heading">Widgets</h2>
+  <div class="widget-library-scroll">
+    <div class="widget-library-list">
+      @for (widget of widgets; track widget.type) {
+        <div class="widget-library-entry">
+          <label [attr.for]="'library-' + widget.type">{{ widget.title }}</label>
+          <button type="button" class="widget-library-item" [id]="'library-' + widget.type" [disabled]="disabled()"
+            [attr.aria-label]="'Add ' + widget.title + ' widget'" (click)="choose(widget.type, $event)">
+            <span class="widget-library-preview" aria-hidden="true" inert>
+              <app-widget-host [widget]="widget" />
+            </span>
+            <span class="widget-library-add" aria-hidden="true"><app-icon name="plus" /></span>
+          </button>
+          <hr />
+        </div>
+      }
+    </div>
+  </div>
+</section>

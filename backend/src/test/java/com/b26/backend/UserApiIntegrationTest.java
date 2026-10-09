@@ -15,10 +15,10 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
   @org.junit.jupiter.params.provider.ValueSource(strings = {"kiwi", "lofi"})
   void homeAppearance_isPersistedForViewerWithoutChangingMainBoard(String family) throws Exception {
     selectDefault();
-    mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"), "{\"radiusStep\":3,\"spacingStep\":1,\"themeFamily\":\"%s\",\"theme\":\"dark\",\"backgroundColor\":\"#3185fc\",\"pattern\":\"snow\",\"patternIntensity\":\"heavy\"}".formatted(family)))
+    mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"), "{\"radiusStep\":5,\"spacingStep\":1,\"themeFamily\":\"%s\",\"theme\":\"dark\",\"backgroundColor\":\"#3185fc\",\"pattern\":\"snow\",\"patternIntensity\":\"heavy\"}".formatted(family)))
         .andExpect(status().isOk());
     mockMvc.perform(auth(get(API_USERS_ME_PREFERENCES + "/home")))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.radiusStep").value(3))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.radiusStep").value(5))
         .andExpect(jsonPath("$.spacingStep").value(1))
         .andExpect(jsonPath("$.themeFamily").value(family))
         .andExpect(jsonPath("$.theme").value("dark"))
@@ -39,7 +39,7 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(get(API_USERS_ME_PREFERENCES + "/home")).andExpect(status().isUnauthorized());
     mockMvc.perform(put(API_USERS_ME_PREFERENCES + "/home").contentType(MediaType.APPLICATION_JSON)
         .content("{\"radiusStep\":2,\"spacingStep\":2}")).andExpect(status().isUnauthorized());
-    for (String payload : new String[] { "{\"radiusStep\":4,\"spacingStep\":2}",
+    for (String payload : new String[] { "{\"radiusStep\":6,\"spacingStep\":2}",
         "{\"radiusStep\":2,\"spacingStep\":0}", "{\"spacingStep\":2}",
         "{\"radiusStep\":2,\"spacingStep\":2,\"themeFamily\":\"invalid\"}",
         "{\"radiusStep\":2,\"spacingStep\":2,\"backgroundColor\":\"red\"}" }) {

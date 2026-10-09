@@ -19,6 +19,7 @@ export type WidgetDraft = {
   embedUrl: string;
   linkUrl: string;
   placesText: string;
+  config?: Widget['config'];
 };
 
 export function toWidgetDraft(widget: Widget): WidgetDraft {
@@ -28,6 +29,7 @@ export function toWidgetDraft(widget: Widget): WidgetDraft {
 
   return {
     id: widget.id,
+    config: { ...widget.config },
     type: normalizeWidgetType(widget.type),
     title: widget.title,
     layout: widget.layout,
@@ -61,11 +63,14 @@ export function buildWidgetPayload(draft: WidgetDraft): UpsertWidgetRequest {
     order: draft.order,
   };
 
+  const config = { ...draft.config };
+  delete config['embedUrl']; delete config['url']; delete config['places'];
+
   if (draft.type === 'embed') {
     const url = normalizeHttpUrl(draft.embedUrl);
     return {
       ...base,
-      config: url ? { embedUrl: url } : {},
+      config: { ...config, ...(url ? { embedUrl: url } : {}) },
     };
   }
 
@@ -73,7 +78,7 @@ export function buildWidgetPayload(draft: WidgetDraft): UpsertWidgetRequest {
     const url = normalizeHttpUrl(draft.linkUrl);
     return {
       ...base,
-      config: url ? { url } : {},
+      config: { ...config, ...(url ? { url } : {}) },
     };
   }
 
@@ -96,11 +101,12 @@ export function buildWidgetPayload(draft: WidgetDraft): UpsertWidgetRequest {
 
   return {
     ...base,
-    config: { places },
+    config: { ...config, places },
   };
 }
 
 export function resetWidgetConfigForType(draft: WidgetDraft): void {
+  draft.config = {};
   if (draft.type === 'embed') {
     draft.linkUrl = '';
     draft.placesText = '';

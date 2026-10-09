@@ -40,6 +40,7 @@ export class BoardSettingsComponent {
   @Output() readonly confirmDelete = new EventEmitter<void>();
   @Output() readonly boardIdentityNameDraftChange = new EventEmitter<string>();
   @Output() readonly boardIdentitySlugDraftChange = new EventEmitter<string>();
+  @Output() readonly appearancePreview = new EventEmitter<BoardAppearance>();
   @Output() readonly appearanceChange = new EventEmitter<BoardAppearance>();
   @Output() readonly switchBoard = new EventEmitter<string>();
   @Output() readonly deleteBoard = new EventEmitter<MouseEvent>();

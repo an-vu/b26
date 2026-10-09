@@ -10,7 +10,7 @@
 .board-identity-menu label { display: grid; gap: 4px; }
 .slug-input-wrap { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); align-items: center; gap: 6px; }
 .slug-input-wrap > span { max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.board-identity-menu button, .board-identity-menu input:not([type='checkbox']) { min-height: 32px; font: inherit; box-sizing: border-box; }
+.board-identity-menu button { min-height: 32px; font: inherit; box-sizing: border-box; }
 .board-identity-menu input { min-width: 0; max-width: 100%; }
 .board-settings-tools .settings-reset { order: 1; }
 .board-settings-tools .settings-delete { order: 2; }

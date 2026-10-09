@@ -4,22 +4,22 @@
             <span class="toolbar-board-name">{{ boardIdentityNameDraft || menuLabel }}</span>
             <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || board.boardUrl, ownerUsername: board.ownerUsername }) }}</span>
           </button>
-          <div class="board-identity-menu utility-panel toolbar-panel toolbar-panel--center" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
+          <div animate.leave="panel-slide-down" class="board-identity-menu utility-panel toolbar-panel toolbar-panel--center" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
             <h2 class="board-settings-heading">{{ isBoardSwitcherOpen ? 'Your Boards' : pendingDeleteBoardUrl ? 'Delete Board' : 'Board Settings' }}</h2>
             <ng-container *ngIf="!isBoardSwitcherOpen && !pendingDeleteBoardUrl">
             <label>
               Board Name
-              <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [ngModel]="boardIdentityNameDraft" (ngModelChange)="boardIdentityNameDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
+              <input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [ngModel]="boardIdentityNameDraft" (ngModelChange)="boardIdentityNameDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
             </label>
             <label>
               URL
               <div class="slug-input-wrap">
                 <span>/{{ board.ownerUsername || 'b' }}/</span>
-                <input [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [ngModel]="boardIdentitySlugDraft" (ngModelChange)="boardIdentitySlugDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
+                <input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [ngModel]="boardIdentitySlugDraft" (ngModelChange)="boardIdentitySlugDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
               </div>
             </label>
             <hr />
-            <app-appearance-settings #appearanceControls [showReset]="false" [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearanceChange)="appearanceChange.emit($event)" />
+            <app-appearance-settings #appearanceControls [showReset]="false" [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearancePreview)="appearancePreview.emit($event)" (appearanceChange)="appearanceChange.emit($event)" />
 
             </ng-container>
             <section *ngIf="isBoardSwitcherOpen" class="board-switcher board-panel-view panel-content-centered" id="board-switcher" aria-label="Your boards">

@@ -11,11 +11,11 @@ describe('Atomic board saving', () => {
     const params: Parameters<typeof runDoneWidgetEdit>[0] = {
       version: 7, activeBoardUrl: 'my-board', editingBoardUrl: 'my-board',
       widgetDrafts: [draft], boardDraftName: 'New title', boardDraftHeadline: 'New description',
-      originalBoardName: 'Old title', originalBoardHeadline: 'Old description', originalWidgetDrafts: new Map(),
+      originalWidgetDrafts: new Map(),
       boardService: { saveEditor } as unknown as BoardService,
       withNormalizedOrder, buildWidgetPayload, getWidgetValidationMessage,
       setWidgetDrafts: vi.fn(), resetDraftValidationErrors: vi.fn(), setDraftValidationError: vi.fn(),
-      setNewWidgetValidationError: vi.fn(), setWidgetSaveError: vi.fn(), setWidgetSaving: vi.fn(), onSaved: vi.fn(),
+      setWidgetSaveError: vi.fn(), setWidgetSaving: vi.fn(), onSaved: vi.fn(),
     };
     return { params, saveEditor };
   }
@@ -26,6 +26,15 @@ describe('Atomic board saving', () => {
     expect(saveEditor).toHaveBeenCalledExactlyOnceWith('my-board', expect.objectContaining({
       version: 7, name: 'New title', headline: 'New description', widgets: [expect.objectContaining({ type: 'link', order: 0 })],
     }));
+    expect(params.onSaved).toHaveBeenCalledOnce();
+  });
+
+  it('saves the remaining widgets as the full list after a deletion', () => {
+    const { params, saveEditor } = setup();
+    params.originalWidgetDrafts = new Map([[42, { ...params.widgetDrafts[0], id: 42 }]]);
+    params.widgetDrafts = [];
+    runDoneWidgetEdit(params);
+    expect(saveEditor).toHaveBeenCalledWith('my-board', expect.objectContaining({ widgets: [] }));
     expect(params.onSaved).toHaveBeenCalledOnce();
   });
 

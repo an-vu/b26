@@ -142,6 +142,47 @@ describe('BoardPageComponent', () => {
     }).compileComponents();
   });
 
+  it('opens the sidebar widget library only in Edit and adds a selected widget to the draft', () => {
+    fixture = TestBed.createComponent(BoardPageComponent);
+    component = fixture.componentInstance; fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-widget-library')).toBeNull();
+    component.canEditBoard = true;
+    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Hello', version: 1 }, []);
+    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    const rail = fixture.nativeElement.querySelector('.board-rail');
+    expect(rail.classList.contains('is-editing')).toBe(true);
+    expect(rail.querySelector('.profile-handle')).toBeNull();
+    expect(rail.querySelector('.profile-stats')).toBeNull();
+    expect(rail.querySelector('input[aria-label="Profile name"]')?.classList.contains('app-textbox')).toBe(true);
+    expect(rail.querySelector('textarea[aria-label="Profile description"]')?.getAttribute('rows')).toBe('3');
+    expect(rail.querySelector('input[aria-label="Website or social URL"]')?.getAttribute('placeholder')).toBe('Link');
+    expect(rail.querySelector('.widget-library-scroll')).not.toBeNull();
+    expect(rail.querySelectorAll('.widget-library-preview')).toHaveLength(3);
+    expect(rail.querySelectorAll('.widget-library-preview app-widget-host')).toHaveLength(3);
+    expect(rail.querySelector('app-link-widget')).not.toBeNull();
+    expect(rail.querySelector('app-embed-widget')).not.toBeNull();
+    expect(rail.querySelector('app-map-widget')).not.toBeNull();
+    expect(fixture.nativeElement.querySelector('.add-widget-tile')).toBeNull();
+    for (const label of ['Link', 'Embed', 'Map']) {
+      rail.querySelector(`button[aria-label="Add ${label} widget"]`).click(); fixture.detectChanges();
+    }
+    expect(component.widgetDrafts.map(draft => draft.type)).toEqual(['link', 'embed', 'map']);
+    expect(component.widgetDrafts.map(draft => draft.order)).toEqual([0, 1, 2]);
+    expect(component.widgetDrafts.every(draft => draft.layout === 'span-1')).toBe(true);
+    expect(rail.querySelector('.widget-library-form')).toBeNull();
+    expect(fixture.nativeElement.querySelectorAll('.widget-edit-tile')).toHaveLength(3);
+    fixture.nativeElement.querySelector('.widget-edit-tile').click(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('.widget-edit-tile .widget-settings-panel')?.textContent).toContain('Link URL');
+    expect(component.isWidgetSettingsOpen(component.widgetDrafts[0])).toBe(true);
+    expect(component.isWidgetSettingsOpen(component.widgetDrafts[1])).toBe(false);
+    component.isWidgetSaving = true; fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    rail.querySelector('button[aria-label="Add Link widget"]').click();
+    expect(component.widgetDrafts).toHaveLength(3);
+    component.isWidgetSaving = false;
+    component.cancelWidgetEdit(); fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-widget-library')).toBeNull();
+  });
+
   it('requires confirmation and keeps the board when deletion is cancelled', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
