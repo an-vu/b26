@@ -8,7 +8,7 @@ export type BoardAppearance = {
   theme: BoardColorMode;
   radiusStep: 1 | 2 | 3 | 4 | 5;
   backgroundColor: string;
-  pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered' | 'rainfall' | 'stars' | 'snow' | 'sakura' | 'wave';
+  pattern: 'none' | 'dots' | 'grid' | 'diagonal' | 'reverse-diagonal' | 'stripes' | 'checkered' | 'rainfall' | 'stars' | 'snow' | 'sakura' | 'wave' | 'lava' | 'bokeh';
 };
 
 export type Board = {

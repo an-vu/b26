@@ -49,6 +49,8 @@ export class AtmosphereParticles {
   })) };
   screenDroplets(intensity: Intensity) { return this.dropletLevels[intensity]; }
   particles(pattern: BoardAppearance['pattern'], intensity: Intensity) {
+    if (pattern === 'bokeh') return this.allAtmosphereParticles.slice(0, { light: 18, medium: 30, heavy: 44 }[intensity]).map((p, i) => ({ ...p, size: 25 + p.depth ** 2 * 150, duration: 22 + p.duration * 2, tint: ['#ffc891', '#f4a3be', '#d9b5ef', '#8dcbd8', '#b9dca5', '#f8dfb0'][i % 6] }));
+    if (pattern === 'lava') return [];
     return (pattern === 'wave' ? this.waveParticleLevels : pattern === 'rainfall' ? this.rainLevels : pattern === 'snow' ? this.snowParticleLevels : this.particleLevels)[intensity];
   }
 }

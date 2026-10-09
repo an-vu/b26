@@ -69,6 +69,10 @@ describe('Atomic board saving', () => {
     runDoneWidgetEdit(params);
     expect(saveEditor).toHaveBeenLastCalledWith('my-board', expect.objectContaining({ website: 'https://example.com/me' }));
     saveEditor.mockClear();
+    params.boardDraftWebsite = 'google.com';
+    runDoneWidgetEdit(params);
+    expect(saveEditor).toHaveBeenLastCalledWith('my-board', expect.objectContaining({ website: 'https://google.com/' }));
+    saveEditor.mockClear();
     params.boardDraftWebsite = 'javascript:alert(1)';
     runDoneWidgetEdit(params);
     expect(saveEditor).not.toHaveBeenCalled();

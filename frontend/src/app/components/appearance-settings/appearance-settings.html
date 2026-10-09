@@ -54,13 +54,7 @@
                   [disabled]="disabled()" (click)="selectPattern(pattern)">
                   <app-icon *ngIf="pattern !== 'none'" [name]="pattern" />
                 </button>
-                <button *ngFor="let pattern of placeholderPatterns" type="button" class="pattern-placeholder"
-                  [attr.data-pattern-option]="pattern" [attr.aria-label]="patternLabel(pattern) + ' pattern, coming soon'"
-                  aria-disabled="true" aria-pressed="false" [disabled]="disabled()" [title]="patternLabel(pattern) + ' · Coming soon'"
-                  (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
-                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null">
-                  <app-icon [name]="pattern" />
-                </button>
+
               </div>
             </fieldset>
             <hr />
@@ -96,5 +90,5 @@
                 </span>
               </label>
             </div>
-            <hr />
+            <hr *ngIf="showReset()" />
 <div *ngIf="showReset()" class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>

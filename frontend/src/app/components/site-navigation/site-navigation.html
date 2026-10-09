@@ -1,17 +1,24 @@
 @if (brandAtTop()) {
   <header class="home-header" aria-label="BlueBerry">
     @if (blur.enabled()) {
-      <div class="header-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+      <div class="header-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()" [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>
     }
     <div class="header-inner">
       <button class="toolbar-wordmark home-header-brand" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="closeAccount(); aboutPanel.open($event)">BlueBerry</button>
     </div>
   </header>
 }
-@if (blur.enabled()) {
-  <div class="footer-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+@if (topBlur() && !brandAtTop() && blur.enabled()) {
+  <div class="board-top-blur header-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()"
+    [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>
 }
-<nav class="bottom-actions" [class.has-top-brand]="brandAtTop()" aria-label="Main navigation">
+@if (blur.enabled()) {
+  <!-- Safari can retain the old backdrop inside a scrolling board; refresh only the glass when its canvas changes. -->
+  @for (backdrop of [theme.themeId() + theme.colorMode() + theme.background()]; track backdrop) {
+    <div class="footer-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()" [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>
+  }
+}
+<nav appBerryMaterials class="bottom-actions" [class.has-top-brand]="brandAtTop()" [class.dock-glass-enabled]="blur.enabled()" aria-label="Main navigation">
       <div class="bottom-actions-left" [attr.data-active-panel]="accountOpen() ? 'account' : userSearch.isOpen() ? 'search' : null">
         <button type="button" aria-label="Home" class="bottom-action-button orb-button navigation-orb" routerLink="/">
           <span class="orb-button__dot" aria-hidden="true"><app-icon name="home" svgClass="navigation-orb__icon" /></span>
@@ -23,9 +30,9 @@
           <button type="button" aria-label="Account" class="bottom-action-button orb-button navigation-orb" (click)="userSearch.close(false); toggleAccount()" [attr.aria-expanded]="accountOpen()">
             <span class="orb-button__dot" aria-hidden="true"><app-icon name="account" svgClass="navigation-orb__icon" /></span>
           </button>
-          <div animate.leave="panel-slide-down" class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
+          <div appPanel animate.leave="panel-slide-down" class="account-menu account-panel utility-panel toolbar-panel toolbar-panel--left" role="region" aria-label="Account" *ngIf="accountOpen()">
+            <h2 *ngIf="user$ | async as user" class="board-settings-heading account-heading">@{{ user.username }}</h2>
             <ng-container *ngIf="user$ | async as user; else signedOutMenu">
-            <h2 class="board-settings-heading account-heading">@{{ user.username }}</h2>
             <section class="account-notifications panel-content-centered" aria-label="Notifications">
               @if (accountSettingsOpen()) {
                 <div class="account-settings-list panel-content-group" aria-label="Account settings">
@@ -36,8 +43,10 @@
                 <div class="panel-content-group"><p>No new notifications</p></div>
               }
             </section>
-            <hr />
-            <div class="board-settings-tools account-tools panel-actions">
+
+            <p class="account-menu-error" role="alert" *ngIf="error()">{{ error() }}</p>
+            </ng-container>
+            <div *ngIf="user$ | async as user" panelActions class="board-settings-tools account-tools panel-actions">
               <button type="button" class="app-button nav-icon-button app-button--icon" aria-label="Insights" routerLink="/insights" (click)="closeAccount()">
                 <app-icon name="insights" />
               </button>
@@ -46,8 +55,6 @@
                 <app-icon name="more" />
               </button>
             </div>
-            <p class="account-menu-error" role="alert" *ngIf="error()">{{ error() }}</p>
-            </ng-container>
             <ng-template #signedOutMenu>
               <a class="account-link" routerLink="/signin" (click)="closeAccount()">Sign In</a>
             </ng-template>

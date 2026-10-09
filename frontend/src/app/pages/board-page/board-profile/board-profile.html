@@ -4,9 +4,9 @@
         </div>
         <ng-container *ngIf="isWidgetEditMode; else profileDetails">
           <div class="profile-edit-fields">
-            <input class="app-textbox" type="text" aria-label="Profile name" name="profile-name" [ngModel]="profileNameDraft" (ngModelChange)="profileNameDraftChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Name" />
-            <textarea class="app-textbox" aria-label="Profile description" name="board-headline" [ngModel]="boardDraftHeadline" (ngModelChange)="boardDraftHeadlineChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Bio" rows="3"></textarea>
-            <input class="app-textbox" type="text" aria-label="Website or social URL" name="board-website" [ngModel]="boardDraftWebsite" (ngModelChange)="boardDraftWebsiteChange.emit($event)" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link" />
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Name</span><input class="app-textbox" type="text" aria-label="Profile name" name="profile-name" [ngModel]="profileNameDraft" (ngModelChange)="profileNameDraftChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Name" /></span>
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Bio</span><textarea class="app-textbox" aria-label="Profile description" name="board-headline" [ngModel]="boardDraftHeadline" (ngModelChange)="boardDraftHeadlineChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Bio" rows="3"></textarea></span>
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Link</span><input class="app-textbox" type="text" aria-label="Website or social URL" name="board-website" [ngModel]="boardDraftWebsite" (ngModelChange)="boardDraftWebsiteChange.emit($event)" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link" /></span>
           </div>
         </ng-container>
         <ng-template #profileDetails>

@@ -14,6 +14,7 @@
     [attr.data-theme]="siteTheme.themeId()"
     [attr.data-color-mode]="siteTheme.colorMode()"
     [style.--board-widget-radius.px]="boardRadiusDraft"
+    [style.--widget-content-inset.px]="widgetEditorInset"
     [style.--widget-spacing.px]="boardSpacingStepDraft * 8"
     [style.--board-bg-color]="siteTheme.background()"
     [style.--board-night-bg]="siteTheme.nightBackground()"
@@ -44,13 +45,15 @@
       <section appWidgetBounce class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
         <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
-        <div class="board-grid square-grid" *ngIf="isWidgetEditMode">
+        <div class="board-grid square-grid" *ngIf="isWidgetEditMode" [class.is-editing-widget]="selectedWidgetDraft && !widgetEditorClosing" [attr.inert]="selectedWidgetDraft ? '' : null">
           <article
             *ngFor="let draft of widgetDrafts; let i = index"
             [class]="'board-tile widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
-            [class.board-card]="isWidgetSettingsOpen(draft)"
-            [class.widget-settings-open]="isWidgetSettingsOpen(draft)"
-            (click)="openWidgetSettings(draft)"
+            [class.widget-edit-source-hidden]="isWidgetSettingsOpen(draft)"
+            tabindex="0" role="button" [attr.aria-label]="'Edit widget: ' + (draft.title || draft.type)"
+            (click)="openWidgetSettings(draft, $event)"
+            (keydown.enter)="openWidgetSettings(draft, $event)"
+            (keydown.space)="$event.preventDefault(); openWidgetSettings(draft, $event)"
           >
             <button
               type="button"
@@ -62,20 +65,42 @@
               <app-icon name="minus" />
             </button>
 
-            <ng-container *ngIf="isWidgetSettingsOpen(draft); else widgetPreview">
-              <app-widget-editor [draft]="draft" [i]="i" [total]="widgetDrafts.length" [disabled]="isWidgetSaving || isIdentitySaving" [saving]="isWidgetSaving" [error]="getDraftValidationError(draft)"
-                (fieldChange)="onWidgetDraftFieldChange(draft)" (typeChange)="onWidgetTypeChange(draft)" (move)="moveWidget(draft, $event)" />
-            </ng-container>
-
-            <ng-template #widgetPreview>
-              <div class="widget-edit-preview">
-                <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)"></app-widget-host>
-              </div>
-            </ng-template>
+            <div class="widget-edit-preview">
+              <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)" />
+            </div>
           </article>
 
 
         </div>
+
+        @if (isWidgetEditMode) {
+          @if (selectedWidgetDraft; as draft) {
+            <div class="widget-editor-backdrop board-glass" aria-hidden="true" [class.is-closing]="widgetEditorClosing"
+              [style.--widget-flip-duration]="widgetFlipDuration + 'ms'"
+              [style.left.px]="widgetEditorBounds.left - 64" [style.top.px]="widgetEditorBounds.top - 64"
+              [style.width.px]="widgetEditorBounds.width + 128" [style.height.px]="widgetBackdropHeight + 128"><span class="blur-layer"></span></div>
+            <div class="widget-editor-stage" [style.left.px]="widgetEditorBounds.left" [style.top.px]="widgetEditorBounds.top"
+              [style.width.px]="widgetEditorBounds.width" [style.height.px]="widgetEditorBounds.height">
+              <div class="widget-editor-flipper" [style.width.px]="widgetEditorSize" [style.height.px]="widgetEditorSize">
+                <div class="widget-editor-front" aria-hidden="true" inert>
+                  <div class="widget-editor-front-content" [style.width.px]="widgetEditorSourceSize.width" [style.height.px]="widgetEditorSourceSize.height"
+                    [style.transform]="'scale(' + widgetEditorSize / widgetEditorSourceSize.width + ',' + widgetEditorSize / widgetEditorSourceSize.height + ')'">
+                  <app-widget-host [widget]="widgetPreviewFromDraft(draft, widgetDrafts.indexOf(draft))" />
+                  </div>
+                </div>
+              <section appPanel class="widget-editor-back utility-panel" [style.--panel-padding]="widgetEditorPanelInset" [style.border-radius]="widgetEditorRadius" role="dialog" aria-label="Widget settings"
+                (keydown.escape)="closeWidgetSettings(true); $event.stopPropagation()" (keydown.tab)="trapWidgetEditorFocus($event)"
+                >
+                <h2 class="board-settings-heading">{{ draft.type === 'link' ? 'Social' : (draft.type | titlecase) }}</h2>
+                <app-widget-editor [draft]="draft"
+                  [disabled]="isWidgetSaving || isIdentitySaving"  [error]="getDraftValidationError(draft)"
+                  (fieldChange)="onWidgetDraftFieldChange(draft)" />
+                <button panelActions class="app-button widget-editor-done" type="button" (click)="closeWidgetSettings()">Done</button>
+              </section>
+              </div>
+            </div>
+          }
+        }
 
         <ng-container *ngIf="!isWidgetEditMode">
           <p class="widgets-empty text-muted" *ngIf="widgets.length === 0">No widgets configured yet.</p>
@@ -92,7 +117,7 @@
       </section>
     </div>
 
-    <app-site-navigation [beforeSignOut]="prepareSignOut">
+    <app-site-navigation [beforeSignOut]="prepareSignOut" [topBlur]="true" [blurSuppressed]="!!selectedWidgetDraft && isWidgetEditMode && !widgetEditorClosing" [blurDuration]="widgetFlipDuration">
       <app-board-settings *ngIf="!readOnlyView && canEditBoard"
         [board]="state.board"
         [menuLabel]="boardMenuLabel(state.board.id)"

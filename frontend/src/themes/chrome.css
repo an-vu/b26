@@ -11,7 +11,7 @@
   min-height: 52px;
   box-sizing: border-box;
   padding: 8px 14px;
-  border: 1px solid var(--palette-light-gray);
+  border: var(--toolbar-border-width) solid var(--palette-light-gray);
   border-radius: 12px;
   background: var(--palette-white);
   --theme-surface: var(--palette-white);
@@ -154,7 +154,7 @@
 }
 .page[data-theme] .navigation-orb:active .orb-button__dot { transform: scale(.94); }
 
-.bottom-actions { --toolbar-panel-gap: 12px; --toolbar-panel-width: var(--panel-width); }
+.bottom-actions { --toolbar-border-width: 1px; }
 
 @media (prefers-reduced-motion: reduce) {
   .toolbar-wordmark, .navigation-orb .orb-button__dot, .navigation-orb__icon { transition: none; }

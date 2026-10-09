@@ -1,0 +1,44 @@
+/* Shared layered recipe for chrome and the board editor. */
+:root { --progressive-blur-soft: 2px; --progressive-blur-medium: 5px; --progressive-blur-strong: 9px; }
+.blur-layer {
+  position: absolute; inset: var(--blur-inset); background: transparent;
+  --edge-mask: linear-gradient(var(--blur-direction, to top), #000 calc(100% - var(--blur-reach)),
+    rgba(0, 0, 0, .85) calc(100% - var(--blur-reach) * .75), rgba(0, 0, 0, .5) calc(100% - var(--blur-reach) * .5),
+    rgba(0, 0, 0, .15) calc(100% - var(--blur-reach) * .25), transparent 100%);
+  -webkit-mask-image: var(--edge-mask); mask-image: var(--edge-mask);
+}
+@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .blur-layer {
+    background: transparent;
+    -webkit-backdrop-filter: blur(var(--progressive-blur-soft)); backdrop-filter: blur(var(--progressive-blur-soft));
+  }
+  :is(.footer-blur, .header-blur, .board-glass)::before, :is(.footer-blur, .header-blur, .board-glass)::after {
+    content: ''; position: absolute; inset: var(--blur-inset); pointer-events: none;
+    -webkit-mask-image: var(--progressive-mask); mask-image: var(--progressive-mask);
+  }
+  :is(.footer-blur, .header-blur, .board-glass)::before {
+    z-index: 1; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 55%, transparent 95%);
+    -webkit-backdrop-filter: blur(var(--progressive-blur-medium)); backdrop-filter: blur(var(--progressive-blur-medium));
+  }
+  :is(.footer-blur, .header-blur, .board-glass)::after {
+    z-index: 2; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 40%, transparent 80%);
+    -webkit-backdrop-filter: blur(var(--progressive-blur-strong)); backdrop-filter: blur(var(--progressive-blur-strong));
+  }
+}
+
+/* Board geometry feathers all four edges; chrome retains its directional masks. */
+.board-glass { --blur-inset: 0; }
+.board-glass > .blur-layer, .board-glass::before, .board-glass::after {
+  --edge-fade: 22px;
+  --board-mask-x: linear-gradient(to right, transparent, #000 var(--edge-fade), #000 calc(100% - var(--edge-fade)), transparent);
+  --board-mask-y: linear-gradient(to bottom, transparent, #000 var(--edge-fade), #000 calc(100% - var(--edge-fade)), transparent);
+  -webkit-mask-image: var(--board-mask-x), var(--board-mask-y);
+  mask-image: var(--board-mask-x), var(--board-mask-y);
+  -webkit-mask-composite: source-in; mask-composite: intersect;
+}
+.board-glass::before { --edge-fade: 45px; }
+.board-glass::after { --edge-fade: 60px; }
+@media(prefers-reduced-transparency: reduce) {
+  .blur-layer, :is(.footer-blur, .header-blur, .board-glass)::before, :is(.footer-blur, .header-blur, .board-glass)::after { display: none; }
+  .footer-blur, .header-blur, .board-glass { background: transparent; }
+}

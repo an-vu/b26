@@ -1,8 +1,9 @@
+import { PanelComponent } from '../panel/panel';
 import { PanelCloseAnimation } from '../../utils/panel-close-animation';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { ToolbarPanelAnchor } from '../../utils/toolbar-panel-anchor';
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, DestroyRef, ElementRef, ViewChild, HostListener, inject, signal } from '@angular/core';
+import { ChangeDetectorRef, Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
 import { Subject, catchError, map, of, switchMap, timer } from 'rxjs';
@@ -15,14 +16,14 @@ type SearchState =
 @Component({
   selector: 'app-user-search',
   standalone: true,
-  imports: [PanelBehaviorDirective, CommonModule, RouterLink],
+  imports: [PanelComponent, PanelBehaviorDirective, CommonModule, RouterLink],
   templateUrl: './user-search.html',
   styleUrl: './user-search.css',
 })
 export class UserSearchComponent {
   private readonly exit = new PanelCloseAnimation();
   readonly isOpen = signal(false);
-  @ViewChild('dialog', { static: true }) private dialog!: ElementRef<HTMLDialogElement>;
+  @ViewChild('dialog', { static: true, read: ElementRef }) private dialog!: ElementRef<HTMLDialogElement>;
   private readonly service = inject(UserSearchService);
   private readonly cdr = inject(ChangeDetectorRef);
   private readonly destroyRef = inject(DestroyRef);
@@ -76,11 +77,6 @@ export class UserSearchComponent {
       if (restoreFocus) this.opener?.focus();
     });
   }
-
-  @HostListener('window:resize')
-  position(): void { this.anchor.position(); }
-
-
 
   setQuery(value: string): void {
     this.query = value;

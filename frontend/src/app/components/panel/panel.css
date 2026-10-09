@@ -1,0 +1,18 @@
+[appPanel].utility-panel {
+  padding: var(--panel-padding); gap: var(--panel-content-gap);
+  font-size: 12px; overflow: hidden; box-sizing: border-box;
+}
+[appPanel]:not(dialog), dialog[appPanel][open] { display: flex; flex-direction: column; }
+[appPanel] > .board-settings-heading { flex: none; }
+.panel-body { display: flex; flex-direction: column; gap: var(--panel-content-gap); flex: 1; min-height: 0; min-width: 0; padding: 4px; margin: -4px; overflow-y: auto; overscroll-behavior: contain; }
+.panel-footer { flex: none; display: flex; flex-direction: column; gap: var(--panel-content-gap); }
+.panel-footer:not(:has([panelActions])) { display: none; }
+.panel-footer > hr { width: 100%; border: 0; border-top: 1px solid var(--theme-border); margin: 4px 0; }
+.panel-footer-actions { display: flex; align-items: center; justify-content: center; gap: var(--panel-content-gap); }
+.panel-footer-actions > .panel-actions, .panel-footer-actions > .about-actions { width: 100%; }
+.about-panel .panel-body { align-items: center; text-align: center; }
+
+/* One scroll owner and one spring per panel, including the widget library. */
+.panel-scroll-content { display: flex; flex-direction: column; gap: var(--panel-content-gap); min-width: 0; flex: 1 0 auto; }
+.about-panel .panel-scroll-content { align-items: center; }
+[appPanel] .panel-scroll-content :is(.widget-library-scroll, .board-panel-view, .account-notifications) { overflow-y: visible; }

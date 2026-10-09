@@ -1,5 +1,6 @@
 /* Shared panel surface. Themes supply materials; components supply content. */
 .utility-panel {
+  --panel-content-gap: 8px;
   border: 1px solid var(--theme-border);
   border-radius: 10px;
   background: var(--theme-surface);
@@ -8,14 +9,14 @@
 }
 .toolbar-panel {
   position: absolute;
-  bottom: calc(100% + var(--toolbar-panel-gap, 12px) + 1px);
+  bottom: calc(100% + var(--toolbar-panel-gap) + var(--toolbar-border-width));
   width: var(--toolbar-panel-width, min(320px, calc(100vw - 32px)));
   max-width: calc(100vw - 32px);
   max-height: calc(100dvh - 110px);
   padding: 12px;
   display: grid;
   align-content: start;
-  gap: 8px;
+  gap: var(--panel-content-gap);
   font-size: 12px;
   overflow-y: auto;
   overscroll-behavior: contain;

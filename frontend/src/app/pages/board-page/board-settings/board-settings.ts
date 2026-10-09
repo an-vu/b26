@@ -1,3 +1,4 @@
+import { PanelComponent } from '../../../components/panel/panel';
 import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +9,7 @@ import { AppearanceSettingsComponent } from '../../../components/appearance-sett
 import { PanelBehaviorDirective, PanelDismissReason } from '../../../directives/panel-behavior';
 import { boardRoute } from '../../../models/board-route';
 
-@Component({ selector: 'app-board-settings', standalone: true, imports: [CommonModule, FormsModule, IconComponent, AppearanceSettingsComponent, PanelBehaviorDirective], templateUrl: './board-settings.html', styleUrl: './board-settings.css' })
+@Component({ selector: 'app-board-settings', standalone: true, imports: [PanelComponent, CommonModule, FormsModule, IconComponent, AppearanceSettingsComponent, PanelBehaviorDirective], templateUrl: './board-settings.html', styleUrl: './board-settings.css' })
 export class BoardSettingsComponent {
   @Input() board: Board = undefined!;
   @Input() menuLabel: string = '';

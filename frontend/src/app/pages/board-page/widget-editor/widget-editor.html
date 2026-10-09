@@ -1,78 +1,13 @@
-  <div class="widget-settings-panel">
-    <div class="widget-editor-head">
-      <input [disabled]="disabled"
-        type="text"
-        class="widget-title-inline inline-edit"
-        [name]="isNew ? 'new-widget-title' : 'widget-title-' + draft.id"
-        [(ngModel)]="draft.title"
-        (ngModelChange)="fieldChange.emit()"
-        placeholder="Widget Name"
-      />
-    </div>
-
-    <label>
-      Type
-      <select [disabled]="disabled"
-        [name]="isNew ? 'new-widget-type' : 'widget-type-' + draft.id"
-        [(ngModel)]="draft.type"
-        (ngModelChange)="typeChange.emit()"
-      >
-        <option value="embed">Embed</option>
-        <option value="link">Link</option>
-        <option value="map">Map</option>
-      </select>
-    </label>
-    <label>
-      Layout
-      <select [disabled]="disabled"
-        [name]="isNew ? 'new-widget-layout' : 'widget-layout-' + draft.id"
-        [(ngModel)]="draft.layout"
-        (ngModelChange)="fieldChange.emit()"
-      >
-        <option value="span-1">1c x 1r</option>
-        <option value="span-2">2c x 1r</option>
-        <option value="span-3">3c x 1r</option>
-        <option value="span-4">4c x 1r</option>
-        <option value="span-1x2">1c x 2r</option>
-        <option value="span-2x2">2c x 2r</option>
-        <option value="span-3x3">3c x 3r</option>
-      </select>
-    </label>
-    <label *ngIf="draft.type === 'embed'">
-      Embed URL
-      <input [disabled]="disabled"
-        type="text"
-        [name]="isNew ? 'new-widget-embed-url' : 'widget-embed-url-' + draft.id"
-        [(ngModel)]="draft.embedUrl"
-        (ngModelChange)="fieldChange.emit()"
-      />
-    </label>
-    <label *ngIf="draft.type === 'link'">
-      Link URL
-      <input [disabled]="disabled"
-        type="text"
-        [name]="isNew ? 'new-widget-link-url' : 'widget-link-url-' + draft.id"
-        [(ngModel)]="draft.linkUrl"
-        (ngModelChange)="fieldChange.emit()"
-      />
-    </label>
-    <label *ngIf="draft.type === 'map'">
-      Places (one per line)
-      <textarea [disabled]="disabled"
-        [name]="isNew ? 'new-widget-places' : 'widget-places-' + draft.id"
-        [(ngModel)]="draft.placesText"
-        (ngModelChange)="fieldChange.emit()"
-        rows="4"
-      ></textarea>
-    </label>
-    <p class="field-error" *ngIf="!isNew && error as message">{{ message }}</p>
-    <p class="field-error" *ngIf="isNew && error">{{ error }}</p>
-    <div class="widget-editor-actions" *ngIf="!isNew">
-      <button class="app-button" type="button" (click)="move.emit(-1); $event.stopPropagation()" [disabled]="saving || i === 0">Up</button>
-      <button class="app-button" type="button" (click)="move.emit(1); $event.stopPropagation()" [disabled]="saving || i === total - 1">Down</button>
-    </div>
-    <div class="widget-editor-actions" *ngIf="isNew">
-      <button class="app-button" type="button" (click)="add.emit()" [disabled]="saving">Add</button>
-    </div>
-  </div>
-
+<div class="widget-settings-panel">
+  <p class="widget-description" *ngIf="draft.type === 'link'">Give people a place to connect with you on social media.</p>
+  <label *ngIf="draft.type === 'link'">
+    <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Social media link</span><input class="app-textbox" type="url" [disabled]="disabled" name="widget-url" aria-label="Social media link" placeholder="Social media link" [(ngModel)]="draft.linkUrl" (ngModelChange)="fieldChange.emit()" /></span>
+  </label>
+  <label *ngIf="draft.type === 'embed'">
+    <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">URL</span><input class="app-textbox" type="url" [disabled]="disabled" name="widget-embed-url" aria-label="URL" placeholder="URL" [(ngModel)]="draft.embedUrl" (ngModelChange)="fieldChange.emit()" /></span>
+  </label>
+  <label *ngIf="draft.type === 'map'">
+    <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Places (one per line)</span><textarea class="app-textbox" [disabled]="disabled" name="widget-places" aria-label="Places (one per line)" placeholder="Places (one per line)" [(ngModel)]="draft.placesText" (ngModelChange)="fieldChange.emit()" rows="4"></textarea></span>
+  </label>
+  <p class="field-error" *ngIf="error">{{ error }}</p>
+</div>

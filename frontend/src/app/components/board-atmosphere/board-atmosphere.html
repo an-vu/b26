@@ -1,9 +1,10 @@
     <div class="board-atmosphere" aria-hidden="true" *ngIf="appearance().pattern !== 'none'">
-      <ng-container *ngIf="appearance().pattern !== 'grid'">
+      <ng-container *ngIf="appearance().pattern !== 'grid' && appearance().pattern !== 'lava'">
         <span *ngFor="let particle of atmosphereParticles()" [style.left.%]="particle.x" [style.top.%]="particle.y"
           [style.--particle-delay]="particle.delay + 's'" [style.--particle-duration]="particle.duration + 's'"
           [style.--particle-tint]="particle.tint" [style.--particle-size]="particle.size + 'px'" [style.--drift]="particle.drift + 'px'" [style.--depth]="particle.depth" [style.--turn]="particle.turn + 'deg'"></span>
       </ng-container>
+      <app-lava-atmosphere *ngIf="appearance().pattern === 'lava'" [intensity]="appearance().patternIntensity ?? 'light'"></app-lava-atmosphere>
       <app-grid-atmosphere *ngIf="appearance().pattern === 'grid'" [intensity]="appearance().patternIntensity ?? 'light'" [darkInk]="darkInk()"></app-grid-atmosphere>
       <div *ngIf="appearance().pattern === 'wave'" class="wave-sheets" aria-hidden="true"><div class="wave-sheet"></div><div class="wave-sheet wave-sheet-back"></div></div>
       <div *ngIf="appearance().pattern === 'rainfall'" class="screen-droplets" aria-hidden="true">

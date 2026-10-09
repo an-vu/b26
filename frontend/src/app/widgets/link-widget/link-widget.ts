@@ -1,3 +1,4 @@
+import { detectSocialProfile } from '../../utils/social-profile.util';
 import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InsightsService } from '../../services/insights.service';
@@ -27,11 +28,20 @@ export class LinkWidgetComponent {
     return typeof value === 'string' && (value.startsWith('https://') || (value.startsWith('/') && !value.startsWith('//'))) ? value : null;
   }
 
+  get followerCount(): string {
+    const count = this.widget?.config?.['followersCount'];
+    return typeof count === 'number' && Number.isSafeInteger(count) && count >= 0
+      ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(count) : '—';
+  }
+
+  get socialProfile() { return detectSocialProfile(String(this.widget?.config?.['url'] ?? '')); }
+
   get url(): string | null {
-    const maybeUrl = this.widget?.config?.['url'];
-    if (typeof maybeUrl !== 'string' || !maybeUrl.startsWith('http')) {
-      return null;
-    }
-    return maybeUrl;
+    const value = this.widget?.config?.['url'];
+    if (typeof value !== 'string' || !value.trim()) return null;
+    try {
+      const parsed = new URL(/^[a-z][a-z\d+.-]*:/i.test(value.trim()) ? value.trim() : `https://${value.trim()}`);
+      return ['http:', 'https:'].includes(parsed.protocol) && !parsed.username && !parsed.password ? parsed.href : null;
+    } catch { return null; }
   }
 }

@@ -32,9 +32,36 @@
   pointer-events: none;
 }
 
-.widget-settings-open {
-  overflow: visible;
+.board-grid.is-editing-widget { pointer-events: none; }
+/* One glass layer includes the wallpaper and bleeds past the outer tiles.
+   Fade opacity rather than recalculating the blur radius throughout the flip. */
+.widget-editor-backdrop {
+  position: fixed; z-index: calc(var(--board-editor-layer) - 1); pointer-events: none;
 }
+.widget-editor-backdrop > .blur-layer, .widget-editor-backdrop::before, .widget-editor-backdrop::after {
+  animation: widget-backdrop-in var(--widget-flip-duration) ease-in-out both;
+}
+.widget-editor-backdrop.is-closing > .blur-layer, .widget-editor-backdrop.is-closing::before, .widget-editor-backdrop.is-closing::after { animation-name: widget-backdrop-out; }
+@keyframes widget-backdrop-in { from { opacity: 0; } to { opacity: 1; } }
+@keyframes widget-backdrop-out { from { opacity: 1; } to { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .widget-editor-backdrop > .blur-layer, .widget-editor-backdrop::before, .widget-editor-backdrop::after { animation: none; } }
+.widget-editor-stage { position: fixed; z-index: var(--board-editor-layer); display: grid; place-items: center; padding: 12px; box-sizing: border-box; perspective: 1200px; pointer-events: none; }
+.widget-edit-source-hidden { visibility: hidden; }
+.widget-editor-flipper { position: relative; transform-style: preserve-3d; transform: rotateY(180deg); }
+.widget-editor-front, .widget-editor-back.utility-panel {
+  position: absolute; inset: 0; width: 100%; height: 100%; box-sizing: border-box;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+.widget-editor-front { pointer-events: none; visibility: hidden; }
+/* Lay out the front at its real tile size; its scale cancels the flight scale at landing. */
+.widget-editor-front-content { transform-origin: top left; }
+.widget-editor-front app-widget-host { display: block; height: 100%; }
+.widget-editor-back.utility-panel {
+  transform: rotateY(180deg); pointer-events: auto; min-height: 0; animation: none;
+  border-radius: var(--board-widget-radius, 12px); overflow: hidden;
+}
+.widget-editor-back app-widget-editor { display: block; flex: 1; min-height: 0; overflow-y: auto; }
+
 
 /* iOS-style remove controls, with each theme's surface treatment. */
 .page[data-theme] { --remove-fill: var(--palette-red); --remove-edge: #b52c27; --remove-shadow: 0 2px 4px #0002; }
@@ -55,3 +82,5 @@
   :host .page[data-theme] button.app-button.widget-delete-button { width: 32px; height: 32px; min-height: 32px; }
 }
 @media (prefers-reduced-motion: reduce) { :host .page[data-theme] button.app-button.widget-delete-button { transition: none; } }
+
+.widget-editor-back > .board-settings-heading { flex-shrink: 0; border-radius: 0; }

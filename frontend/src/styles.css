@@ -1,3 +1,4 @@
+@import "./themes/blur.css";
 @import "./themes/palette.css";
 @import "./themes/panels.css";
 @import "./themes/default.css";
@@ -176,11 +177,5 @@ html[data-chrome-blur-off] .bottom-actions {
   backdrop-filter: none !important; -webkit-backdrop-filter: none !important;
 }
 
-/* Feed body copy shares the owner/control inset; titles and media keep their current layout. */
-.feed-post app-widget-host .widget > :is(p, ul, ol) {
-  padding-inline: var(--feed-detail-inset, 10px);
-  box-sizing: border-box;
-}
-.feed-post app-widget-host .widget > a.link {
-  margin-inline: var(--feed-detail-inset, 10px);
-}
+/* Real widget content uses the same corner-dependent inset on boards, previews, and Home. */
+app-widget-host .widget { padding: var(--widget-content-inset, 12px); }

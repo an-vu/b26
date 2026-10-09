@@ -3,3 +3,5 @@
 .app-page.home-page { padding-top: 76px; }
 @media(max-width: 760px) { .app-page.home-page { padding-top: 72px; } }
 @media(max-width: 600px) { .app-page { padding: 28px 16px 112px; } }
+/* Shared page scroll owner lets Home and dedicated pages use the board spring. */
+.app-page { height: 100dvh; overflow-y: auto; overflow-x: hidden; overscroll-behavior: none; }

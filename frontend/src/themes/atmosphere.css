@@ -156,3 +156,20 @@
 .page[data-theme='default'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
   background: radial-gradient(circle, #fff 0 8%, var(--particle-tint, #edf6ff) 18%, transparent 65%);
 }
+/* Vintage lens bokeh: luminous discs at different focus depths, not solid dots. */
+.page[data-pattern='bokeh'] .board-atmosphere span {
+  width: var(--particle-size); height: var(--particle-size);
+  background: radial-gradient(circle, color-mix(in srgb, var(--particle-tint) 45%, transparent) 0 48%, color-mix(in srgb, var(--particle-tint) 65%, transparent) 62%, transparent 73%);
+  border: 1px solid color-mix(in srgb, var(--particle-tint) 25%, transparent);
+  box-shadow: inset 0 0 16px color-mix(in srgb, var(--particle-tint) 30%, transparent);
+  filter: blur(calc((1 - var(--depth)) * 7px));
+  opacity: calc(var(--effect-opacity) * var(--depth));
+  animation: bokeh-float var(--particle-duration) ease-in-out var(--particle-delay) infinite alternate;
+}
+@keyframes bokeh-float {
+  from { transform: translate3d(-15px, 25px, 0) scale(.92); }
+  to { transform: translate3d(var(--drift), -65px, 0) scale(1.12); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .page[data-pattern='bokeh'] .board-atmosphere span { animation: none; }
+}

@@ -12,6 +12,6 @@ public record HomeAppearanceDto(
     @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi|lofi") String themeFamily,
     @Pattern(regexp = "light|dark") String theme,
     @Pattern(regexp = "#[0-9a-fA-F]{6}") String backgroundColor,
-    @Pattern(regexp = "none|dots|grid|diagonal|reverse-diagonal|stripes|checkered|rainfall|stars|snow|sakura|wave") String pattern,
+    @Pattern(regexp = "none|dots|grid|diagonal|reverse-diagonal|stripes|checkered|rainfall|stars|snow|sakura|wave|lava|bokeh") String pattern,
     @Pattern(regexp = "light|medium|heavy") String patternIntensity
 ) {}

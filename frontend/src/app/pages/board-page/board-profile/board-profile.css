@@ -9,6 +9,8 @@
 
 .board-rail {
   min-width: 0;
+  /* Keep the profile and its picker above the board editor's bleeding blur. */
+  z-index: var(--board-editor-layer);
 }
 
 .profile-avatar { width: 88px; height: 88px; border-radius: 50%; overflow: hidden; display: grid; place-items: center; margin-bottom: 18px; border: 1px solid color-mix(in srgb, currentColor 25%, transparent); background: linear-gradient(145deg, color-mix(in srgb, currentColor 12%, transparent), transparent); }
@@ -57,7 +59,7 @@
   :host-context(.page.page-fixed-scroll) .board-rail.is-editing {
     /* The scroll container already contributes the canvas top padding. */
     margin-top: 0; top: 0;
-    height: calc(100dvh - var(--board-canvas-top) - var(--profile-toolbar-clearance, 81px));
+    height: calc(100dvh - var(--board-canvas-top) - var(--profile-toolbar-clearance, 68px) - var(--toolbar-panel-gap));
     min-height: 0; padding: 0; overflow: visible;
   }
 }

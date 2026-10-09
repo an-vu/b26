@@ -1,8 +1,8 @@
-<dialog class="utility-panel" appPanelBehavior [panelOpener]="panelOpener" (panelDismiss)="close($event !== 'outside')" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()">
+<dialog appPanel class="utility-panel about-panel" appPanelBehavior [panelOpener]="panelOpener" (panelDismiss)="close($event !== 'outside')" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()">
   <img class="about-icon" src="/brand/blueberry-about.png?v=5" width="132" height="132" alt="BlueBerry" draggable="false" />
   <h2 class="about-name">BlueBerry</h2>
   <p class="about-version">Version {{ release.version }}</p>
-  <div class="about-actions">
+  <div panelActions class="about-actions">
     <button *ngIf="release.contactUrl; else contactPlaceholder" class="app-button" type="button" (click)="contact()">Contact</button>
     <ng-template #contactPlaceholder><button class="app-button" type="button" disabled title="Contact details coming soon">Contact</button></ng-template>
     <a *ngIf="release.legalUrl; else legalPlaceholder" class="app-button" [href]="release.legalUrl">Legal</a>

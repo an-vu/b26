@@ -7,40 +7,40 @@
       <p class="settings-section-title">Account Information</p>
 
       <label class="settings-field">
-        <span>Name</span>
+
         <div class="settings-input-status-row">
-          <input
+          <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Name</span><input
             type="text"
             [ngModel]="vm.displayName"
             (ngModelChange)="onProfileFieldChanged('displayName', $event)"
-            placeholder="Enter your name"
-          />
+            placeholder="Name" aria-label="Name"
+          /></span>
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'displayName'">Saved</em>
         </div>
       </label>
 
       <label class="settings-field">
-        <span>Username</span>
+
         <div class="settings-input-status-row">
-          <input
+          <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Username</span><input
             type="text"
             [ngModel]="vm.username"
             (ngModelChange)="onProfileFieldChanged('username', $event)"
-            placeholder="Enter your username"
-          />
+            placeholder="Username" aria-label="Username"
+          /></span>
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'username'">Saved</em>
         </div>
       </label>
 
       <label class="settings-field">
-        <span>Email</span>
+
         <div class="settings-input-status-row">
-          <input
+          <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Email</span><input
             type="email"
             [ngModel]="vm.email"
             (ngModelChange)="onProfileFieldChanged('email', $event)"
-            placeholder="Enter your email"
-          />
+            placeholder="Email" aria-label="Email"
+          /></span>
           <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'email'">Saved</em>
         </div>
       </label>

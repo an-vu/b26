@@ -6,7 +6,7 @@ import { WidgetBounceDirective } from './widget-bounce';
 @Component({ standalone: true, imports: [WidgetBounceDirective], template: '<main class="page-fixed-scroll"><section appWidgetBounce></section></main>' })
 class BounceHost {}
 
-describe('Widget bottom-edge bounce', () => {
+describe.each(['page-fixed-scroll', 'app-page', 'panel-body'])('Shared bottom-edge bounce: %s', scrollerClass => {
   let time: number;
   let next: FrameRequestCallback | undefined;
   let main: HTMLElement;
@@ -17,6 +17,7 @@ describe('Widget bottom-edge bounce', () => {
     vi.spyOn(performance, 'now').mockImplementation(() => time);
     vi.stubGlobal('requestAnimationFrame', (callback: FrameRequestCallback) => { next = callback; return 1; });
     vi.stubGlobal('cancelAnimationFrame', () => { next = undefined; });
+    TestBed.overrideComponent(BounceHost, { set: { template: scrollerClass === 'panel-body' ? `<dialog open><main class="panel-body"><section appWidgetBounce></section></main></dialog>` : `<main class="${scrollerClass}"><section appWidgetBounce></section></main>` } });
     const fixture = TestBed.createComponent(BounceHost);
     fixture.detectChanges();
     main = fixture.nativeElement.querySelector('main');

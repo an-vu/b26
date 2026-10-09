@@ -2,7 +2,7 @@ import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 import type { BoardService } from '../../services/board.service';
 import type { UpsertWidgetRequest } from '../../models/widget';
 import { getApiErrorMessage } from '../../utils/api-error.util';
-import type { WidgetDraft } from './board-page.widget-edit';
+import { normalizeHttpUrl, type WidgetDraft } from './board-page.widget-edit';
 
 export function hasDraftChangedByOriginal(
   draft: WidgetDraft,
@@ -106,10 +106,11 @@ export function runDoneWidgetEdit(params: {
   if (profileName !== undefined && (!profileName || profileName.length > 255)) {
     params.setWidgetSaveError('Enter a name of 1–255 characters.'); return;
   }
-  const website = params.boardDraftWebsite?.trim();
-  if (website) {
-    try { const url = new URL(website); if (!['http:', 'https:'].includes(url.protocol) || website.length > 2048) throw new Error(); }
-    catch { params.setWidgetSaveError('Enter a complete website URL starting with https:// or http://.'); return; }
+  const rawWebsite = params.boardDraftWebsite?.trim();
+  const website = rawWebsite ? normalizeHttpUrl(rawWebsite) : rawWebsite;
+  if (rawWebsite && (!website || website.length > 2048)) {
+    params.setWidgetSaveError('Enter a valid website address, such as example.com.');
+    return;
   }
   params.setWidgetSaving(true);
   params.setWidgetSaveError('');
@@ -119,7 +120,7 @@ export function runDoneWidgetEdit(params: {
     name: trimmedName,
     headline: trimmedHeadline,
     ...(profileName !== undefined ? { ownerDisplayName: profileName } : {}),
-    ...(website !== undefined ? { website } : {}),
+    ...(website != null ? { website } : {}),
     widgets: widgetPayload.widgets,
   })
     .pipe(takeUntil(params.cancel$ ?? NEVER), finalize(() => params.setWidgetSaving(false)))

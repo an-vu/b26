@@ -48,3 +48,24 @@
 .page[data-theme] :is(input:not([type='range']):not([type='checkbox']):not([type='radio']):not([type='file']):not(.inline-edit), textarea, select) { padding: 8px 10px; box-sizing: border-box; }
 [data-theme] .app-textbox { width: 100%; min-width: 0; min-height: 36px; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px; font: inherit; font-size: 13px; box-sizing: border-box; }
 .page[data-theme] .app-textbox { padding: 8px 10px; }
+
+/* Shared inset label: value stays beside its label for every text field. */
+.page .app-text-field, dialog .app-text-field {
+  display: flex; align-items: baseline; gap: 10px; width: 100%; min-width: 0;
+  box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px;
+  background: var(--aqua-field, var(--mustache-field, var(--theme-surface))); color: var(--theme-text);
+  text-align: left; font-size: 13px; font-weight: 400; text-shadow: none;
+}
+.app-text-field-label { flex: 0 1 auto; max-width: 45%; color: var(--theme-muted); line-height: 1.4; }
+.page[data-theme] .app-text-field > :is(input, textarea), dialog .app-text-field > :is(input, textarea) {
+  flex: 1; width: 0; min-width: 0; min-height: 0; margin: 0; color: inherit; font: inherit;
+  /* The wrapper is the textbox surface; theme/native field rules must not draw a second box. */
+  padding: 0 !important; border: 0 !important; border-radius: 0 !important;
+  background: transparent !important; box-shadow: none !important; outline: none !important;
+  appearance: none; -webkit-appearance: none;
+}
+.app-text-field > :is(input, textarea)::placeholder { color: transparent !important; opacity: 0; }
+.app-text-field:has(> :focus-visible) { border-color: var(--theme-focus); }
+.app-text-field:has(:disabled) { opacity: .6; }
+
+.app-text-field-label { font-weight: 400; text-shadow: none; }

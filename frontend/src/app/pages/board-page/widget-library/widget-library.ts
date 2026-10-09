@@ -1,10 +1,11 @@
+import { PanelComponent } from '../../../components/panel/panel';
 import { Component, input, output, afterNextRender, inject, ElementRef, DestroyRef } from '@angular/core';
 import { WidgetHostComponent } from '../../../widgets/widget-host/widget-host';
 import { IconComponent } from '../../../components/icon/icon';
 import type { Widget } from '../../../models/widget';
 
 @Component({
-  selector: 'app-widget-library', standalone: true, imports: [WidgetHostComponent, IconComponent],
+  selector: 'app-widget-library', standalone: true, imports: [PanelComponent, WidgetHostComponent, IconComponent],
   templateUrl: './widget-library.html', styleUrl: './widget-library.css',
 })
 export class WidgetLibraryComponent {
@@ -12,7 +13,7 @@ export class WidgetLibraryComponent {
   readonly selectWidget = output<{ type: 'link' | 'embed' | 'map'; origin: DOMRect }>();
   readonly widgets: (Widget & { type: 'link' | 'embed' | 'map' })[] = ['link', 'embed', 'map'].map((type, index) => ({
     id: -(index + 1), type: type as 'link' | 'embed' | 'map',
-    title: type[0].toUpperCase() + type.slice(1), layout: 'span-1', config: {}, enabled: true, order: index,
+    title: type === 'link' ? 'Social' : type[0].toUpperCase() + type.slice(1), layout: 'span-1', config: {}, enabled: true, order: index,
   }));
 
   constructor() {

@@ -21,7 +21,7 @@ export class WidgetBounceDirective implements AfterViewInit, OnDestroy {
   private touch?: { x: number; y: number; eligible: boolean };
   private motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
   ngAfterViewInit() {
-    this.scroller = this.element.closest<HTMLElement>('.page-fixed-scroll') ?? undefined;
+    this.scroller = this.element.parentElement?.closest<HTMLElement>('.panel-body, .page-fixed-scroll, .app-page') ?? undefined;
     this.zone.runOutsideAngular(() => {
       this.scroller?.addEventListener('wheel', this.wheel, { passive: false });
       this.scroller?.addEventListener('touchstart', this.touchStart, { passive: true });
@@ -40,7 +40,9 @@ export class WidgetBounceDirective implements AfterViewInit, OnDestroy {
   }
   private accepts(target: EventTarget | null) {
     if (!this.activity.visible || this.motion?.matches || !(target instanceof Element)) return false;
-    if (target.closest('.bottom-actions, input, textarea, select, dialog, [contenteditable="true"]')) return false;
+    if (target.closest('input, textarea, select, [contenteditable="true"]')) return false;
+    const overlay = target.closest('.bottom-actions, dialog');
+    if (overlay && !overlay.contains(this.scroller ?? null)) return false;
     // Leave independently scrollable widget content to the browser.
     for (let node: Element | null = target; node && node !== this.scroller; node = node.parentElement) {
       if (node.scrollHeight > node.clientHeight + 2 && /auto|scroll/.test(getComputedStyle(node).overflowY)) return false;

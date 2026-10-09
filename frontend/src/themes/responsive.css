@@ -3,6 +3,7 @@
   --page-gutter: clamp(16px, 3vw, 32px);
   --panel-width: min(320px, calc(100vw - 2 * var(--page-gutter)));
   --panel-padding: clamp(12px, 2vw, 16px);
+  --toolbar-panel-gap: 12px;
   --toolbar-panel-width: var(--panel-width);
 }
 .toolbar-panel { padding: var(--panel-padding); max-width: var(--panel-width); }

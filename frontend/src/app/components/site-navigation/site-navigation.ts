@@ -1,3 +1,5 @@
+import { BerryMaterialsDirective } from '../../directives/berry-materials';
+import { PanelComponent } from '../panel/panel';
 import { PanelBehaviorDirective, PanelDismissReason } from '../../directives/panel-behavior';
 import { IconComponent } from '../icon/icon';
 import { ChromeBlurService } from '../../services/chrome-blur.service';
@@ -16,7 +18,7 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 
 @Component({
   selector: 'app-site-navigation', standalone: true,
-  imports: [PanelBehaviorDirective, IconComponent, CommonModule, RouterLink, UserSearchComponent, AboutPanelComponent],
+  imports: [BerryMaterialsDirective, PanelComponent, PanelBehaviorDirective, IconComponent, CommonModule, RouterLink, UserSearchComponent, AboutPanelComponent],
   templateUrl: './site-navigation.html',
   styleUrls: ['./account-panel.css', './site-navigation.css']
 })
@@ -24,6 +26,9 @@ export class SiteNavigationComponent {
   readonly blur = inject(ChromeBlurService);
   readonly theme = inject(SiteThemeService);
   readonly brandAtTop = input(false);
+  readonly topBlur = input(false);
+  readonly blurSuppressed = input(false);
+  readonly blurDuration = input(520);
   readonly beforeSignOut = input<() => boolean>(() => true);
   private readonly auth = inject(AuthService);
   private readonly users = inject(UserStoreService);

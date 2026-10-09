@@ -45,68 +45,164 @@
   --theme-muted: var(--palette-light-gray);
   --theme-error: var(--palette-red);
 }
-.page[data-theme="default"][data-pattern] .widget,
-.page[data-theme="default"][data-pattern] .board-card { background-color: var(--theme-surface); }
-.page[data-theme="default"][data-color-mode="dark"] .widget,
-.page[data-theme="default"][data-color-mode="dark"] .board-card {
-  background-color: var(--theme-surface);
-  border-color: var(--theme-border);
+/* Quiet pearlescent folds give translucent surfaces something to catch.
+   Separate from the pattern layer: selected colours still tint the canvas. */
+.page[data-theme='default']::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    radial-gradient(ellipse 90% 95% at 110% 110%, transparent 48%, #ffffff65 49%, #c5c1e638 51%, transparent 59%),
+    radial-gradient(ellipse 105% 100% at -15% -30%, transparent 55%, #ffffff80 56%, #adcbdc40 58%, transparent 67%),
+    radial-gradient(ellipse at 82% 84%, #b8d9e873, transparent 58%),
+    radial-gradient(ellipse at 12% 70%, #e4c4d666, transparent 52%),
+    radial-gradient(ellipse at 64% 12%, #c7c4ea66, transparent 58%),
+    radial-gradient(ellipse at 30% 18%, #f7dec85c, transparent 50%);
 }
-/* Menus keep a neutral paper surface over any selected board background. */
-[data-theme="default"] .utility-panel {
-  color-scheme: light;
-  font-family: Georgia, "Times New Roman", serif;
-  border-color: color-mix(in srgb, var(--theme-text) 25%, transparent);
-  box-shadow: 0 5px 20px #30302e0d;
-  --theme-surface: var(--palette-white);
-  --theme-text: var(--palette-black);
-  --theme-muted: var(--palette-gray);
-  --theme-error: color-mix(in srgb, var(--palette-red) 65%, var(--palette-black));
-  color: var(--theme-text);
+.page[data-theme='default'][data-color-mode='dark']::before {
+  background:
+    radial-gradient(ellipse 90% 95% at 110% 110%, transparent 48%, #acc4e51c 49%, #66639526 51%, transparent 59%),
+    radial-gradient(ellipse 105% 100% at -15% -30%, transparent 55%, #a6cde724 56%, #557da62e 58%, transparent 67%),
+    radial-gradient(ellipse at 82% 84%, #365d7566, transparent 58%),
+    radial-gradient(ellipse at 12% 70%, #7549604d, transparent 52%),
+    radial-gradient(ellipse at 64% 12%, #58517c66, transparent 58%);
 }
-.page[data-theme="default"] a { color: inherit; }
-.page[data-theme="default"] .bottom-action-pill { color: var(--palette-black); }
-.page[data-theme="default"] :is(.text-muted, .meta-label, .subtitle) { color: var(--theme-muted); opacity: 1; }
-.page[data-theme="default"] :is(input:not([type='checkbox']):not([type='range']), textarea, select) {
-  background-color: var(--theme-surface);
-  color: var(--theme-text);
-  border-color: var(--theme-border);
-}
-.page[data-theme="default"] .inline-edit { background: transparent; }
-.page[data-theme="default"] .inline-edit:focus { border-bottom-color: var(--theme-focus); }
-
-/* Berry: vHuman's warm paper, Georgia typography, and quiet editorial spacing. */
-[data-theme='default'] { font-family: Georgia, "Times New Roman", serif;
+/* Berry: one material vocabulary for every surface, with inverse controls. */
+[data-theme='default'] {
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Segoe UI', sans-serif;
   --focus-width: 2px;
   --focus-color: var(--theme-focus);
-  --focus-offset: 2px; }
-.page[data-theme='default'] :is(.title, .board-header-stack h1) { font-weight: 400; letter-spacing: -.035em; }
-.page[data-theme='default'] .subtitle { line-height: 1.6; }
-.page[data-theme='default'] :is(.widget, .board-card) {
-  border-color: color-mix(in srgb, var(--theme-text) 23%, transparent);
-  box-shadow: none;
+  --focus-offset: 2px;
+  --berry-tint: rgb(255 255 255 / 22%);
+  --berry-glass-background: linear-gradient(#ffffff1f, #ffffff1f), var(--berry-tint);
+  --berry-frost-background: var(--berry-tint);
+  --berry-glass-filter: blur(5px) saturate(.95);
+  --berry-frost-filter: blur(24px) saturate(1.15);
+  --berry-glass-light: inset 0 1px 0 #ffffff9a, inset 0 0 0 1px #ffffff22, inset 1px 1px 2px #ffffff80, inset -1px -1px 2px #ffffff10;
+  --berry-frost-light: inset 0 1px 0 #ffffff62, inset 0 0 0 1px #ffffff15, inset 1px 1px 2px #ffffff73;
+  --berry-shadow: 0 6px 20px #0000001f, 0 1px 3px #00000014;
+  --berry-control-text: #202128;
+  --berry-field: #ffffff45;
+  --berry-muted: #565964;
 }
-.page[data-theme='default'] .widget h3 { font-family: Georgia, "Times New Roman", serif; font-size: 19px; font-weight: 400; letter-spacing: -.02em; }
-.page[data-theme='default'] :is(button, a).app-button,
-[data-theme='default'] dialog :is(button, a).app-button {
-  font-family: Georgia, "Times New Roman", serif;
-  font-weight: 400;
-  border-color: color-mix(in srgb, var(--theme-text) 30%, transparent);
-  background: var(--theme-surface);
-  box-shadow: none;
+[data-theme='default'][data-color-mode='dark'] {
+  --berry-tint: rgb(120 124 134 / 30%);
+  --berry-glass-background: linear-gradient(#00000033, #00000033), var(--berry-tint);
+  --berry-frost-background: linear-gradient(#0000000d, #0000000d), var(--berry-tint);
+  --berry-glass-filter: blur(4px) saturate(1.15);
+  --berry-glass-light: inset 0 1px 0 #ffffffb6, inset 0 0 0 1px #ffffff28, inset 1px 1px 2px #ffffffb3, inset -1px -1px 2px #ffffff14;
+  --berry-frost-light: var(--berry-glass-light);
+  --berry-shadow: 0 6px 20px #0000004d, 0 1px 3px #00000033;
+  --berry-control-text: #f5f5fa;
+  --berry-field: #00000024;
+  --berry-muted: #c7c9d2;
 }
-.page[data-theme='default'] .bottom-actions { background: var(--palette-white); border-color: var(--palette-light-gray); box-shadow: none; }
-.page[data-theme='default'] .toolbar-wordmark { font-family: Georgia, "Times New Roman", serif; letter-spacing: -.04em; }
-.page[data-theme='default'] .account-menu a { color: var(--palette-gray); transition: color 150ms ease; }
-.page[data-theme='default'] .account-menu a:hover { color: var(--palette-black); }
-
-
-.page[data-theme="default"] .orb-button { --orb-label-color: var(--palette-black);
+/* Recompute the aliases at each theme root, including separately hosted dialogs. */
+[data-theme='default'] {
+  --berry-surface-background: var(--berry-frost-background);
+  --berry-surface-filter: var(--berry-frost-filter);
+  --berry-surface-light: var(--berry-frost-light);
+  --berry-surface-refractive: 0;
+  --berry-button-background: var(--berry-glass-background);
+  --berry-button-filter: var(--berry-glass-filter);
+  --berry-button-light: var(--berry-glass-light);
+  --berry-button-refractive: 1;
 }
-
-.page.page-fixed-scroll[data-theme='default'] { --header-title-font-size: clamp(30px, 3.5vw, 48px); --header-title-line-height: 1.08;
+html[data-chrome-blur-off] [data-theme='default'] {
+  --berry-surface-background: var(--berry-glass-background);
+  --berry-surface-filter: var(--berry-glass-filter);
+  --berry-surface-light: var(--berry-glass-light);
+  --berry-surface-refractive: 1;
+  --berry-button-background: var(--berry-frost-background);
+  --berry-button-filter: var(--berry-frost-filter);
+  --berry-button-light: var(--berry-frost-light);
+  --berry-button-refractive: 0;
 }
-
-.page[data-theme='default'] :is(button, a).app-button, [data-theme='default'] dialog :is(button, a).app-button {
-  --button-rest-shadow: none;
+[data-theme='default'] :is(.utility-panel, .widget, .board-card, .bottom-actions) {
+  --berry-refraction: brightness(1);
+  --berry-refractive: var(--berry-surface-refractive);
+  --theme-text: var(--berry-control-text);
+  --theme-muted: var(--berry-muted);
+  color: var(--theme-text);
+  border-color: #ffffff33;
+  background: var(--berry-surface-background);
+  box-shadow: var(--berry-surface-light), var(--berry-shadow);
+  -webkit-backdrop-filter: var(--berry-surface-filter) var(--berry-refraction);
+  backdrop-filter: var(--berry-surface-filter) var(--berry-refraction);
+}
+/* Keep filtering on the dock's existing cover layer, above closing panels. */
+.page[data-theme='default'] .bottom-actions {
+  border-radius: 999px;
+  background: transparent;
+  box-shadow: var(--berry-shadow);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.page[data-theme='default'] .bottom-actions::before {
+  background: var(--berry-surface-background);
+  box-shadow: var(--berry-surface-light);
+  -webkit-backdrop-filter: var(--berry-surface-filter) var(--berry-refraction);
+  backdrop-filter: var(--berry-surface-filter) var(--berry-refraction);
+}
+[data-theme='default'] .utility-panel {
+  color-scheme: light;
+  border-radius: 20px;
+  --theme-surface: var(--berry-field);
+  --theme-border: color-mix(in srgb, var(--berry-control-text) 16%, transparent);
+}
+[data-theme='default'][data-color-mode='dark'] .utility-panel { color-scheme: dark; }
+[data-theme='default'] :is(button, a).app-button {
+  --berry-refraction: brightness(1);
+  --berry-refractive: var(--berry-button-refractive);
+  --button-rest-shadow: var(--berry-button-light);
+  --button-hover-background: var(--berry-button-background);
+  --button-active-background: var(--berry-button-background);
+  --button-hover-shadow: var(--berry-button-light), 0 2px 8px #00000016;
+  background: var(--berry-button-background);
+  box-shadow: var(--berry-button-light);
+  border-color: color-mix(in srgb, var(--berry-control-text) 16%, transparent);
+  color: var(--berry-control-text);
+  -webkit-backdrop-filter: var(--berry-button-filter) var(--berry-refraction);
+  backdrop-filter: var(--berry-button-filter) var(--berry-refraction);
+  font-family: inherit;
+  font-weight: 500;
+}
+.page[data-theme='default'] .app-text-field,
+[data-theme='default'] dialog .app-text-field {
+  background: var(--berry-field);
+  color: var(--berry-control-text);
+  border-color: color-mix(in srgb, var(--berry-control-text) 18%, transparent);
+  box-shadow: inset 0 1px 2px #0000000a;
+}
+.page[data-theme='default'] .app-text-field:has(> :focus-visible),
+[data-theme='default'] dialog .app-text-field:has(> :focus-visible) { border-color: var(--theme-focus); }
+[data-theme='default'] .app-text-field-label { color: var(--berry-muted); }
+.page[data-theme='default'] :is(.title, .board-header-stack h1) { font-weight: 600; letter-spacing: -.035em; }
+.page[data-theme='default'] .widget h3 { font-family: inherit; font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+.page[data-theme='default'] .toolbar-wordmark { color: var(--berry-muted); }
+.page[data-theme='default'] .toolbar-wordmark:hover { color: var(--berry-control-text); }
+.page[data-theme='default'] :is(.board-identity-button, .home-settings-button) { color: var(--berry-control-text); }
+[data-theme='default'] .app-button--danger { color: var(--theme-error, #c12e49); }
+@media (prefers-reduced-transparency: reduce) {
+  [data-theme='default'] :is(.utility-panel, .widget, .board-card, button.app-button, a.app-button),
+  .page[data-theme='default'] .bottom-actions::before {
+    background: var(--palette-white);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+  [data-theme='default'][data-color-mode='dark'] :is(.utility-panel, .widget, .board-card, button.app-button, a.app-button),
+  .page[data-theme='default'][data-color-mode='dark'] .bottom-actions::before { background: #23242b; }
+}
+/* Berry's signature navigation colours become small polished glass lenses. */
+.page[data-theme='default'] .navigation-orb .orb-button__dot {
+  background: radial-gradient(ellipse at 30% 15%, #ffffffcc, #ffffff15 40%, transparent 65%),
+    linear-gradient(155deg, color-mix(in srgb, var(--orb-dot) 65%, transparent), color-mix(in srgb, var(--orb-dot) 90%, #252039));
+  border-color: color-mix(in srgb, var(--orb-dot) 50%, #ffffff80);
+  box-shadow: inset 0 1px 1px #ffffffd9, inset 0 -1px 2px #00000030, 0 2px 4px #00000020;
+  color: #171b29;
+}
+.page[data-theme='default'] .navigation-orb {
+  --nav-hover-shadow: inset 0 1px 2px #ffffffed, inset 0 -1px 2px #00000020, 0 3px 7px #00000024, 0 0 10px var(--nav-halo);
 }

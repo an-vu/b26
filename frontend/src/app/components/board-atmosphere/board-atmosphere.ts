@@ -1,3 +1,4 @@
+import { LavaAtmosphereComponent } from '../lava-atmosphere/lava-atmosphere';
 import { Component, computed, input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import type { BoardAppearance } from '../../models/board';
@@ -5,7 +6,7 @@ import { AtmosphereParticles } from '../../themes/atmosphere-particles';
 import { GridAtmosphereComponent } from '../grid-atmosphere/grid-atmosphere';
 
 @Component({
-  selector: 'app-board-atmosphere', standalone: true, imports: [CommonModule, GridAtmosphereComponent],
+  selector: 'app-board-atmosphere', standalone: true, imports: [CommonModule, GridAtmosphereComponent, LavaAtmosphereComponent],
   templateUrl: './board-atmosphere.html', styles: [':host { display: contents; }'],
 })
 export class BoardAtmosphereComponent {

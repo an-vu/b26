@@ -34,7 +34,7 @@
   box-shadow: inset 0 0 0 1px var(--aqua-rim), 0 1px 3px #0005, 0 12px 28px var(--aqua-shadow);
 }
 .page[data-theme='aqua'] .widget h3 {
-  margin: -12px -12px 12px; padding: 10px 14px;
+  margin: calc(-1 * var(--widget-content-inset, 12px)) calc(-1 * var(--widget-content-inset, 12px)) 12px; padding: var(--widget-content-inset, 12px);
   background: var(--aqua-metal); color: var(--theme-text); border-bottom: 1px solid #8e98a5;
   border-radius: calc(var(--board-widget-radius, 12px) - 1px) calc(var(--board-widget-radius, 12px) - 1px) 0 0;
   box-shadow: inset 0 1px var(--aqua-rim), 0 1px #fff8;
@@ -74,7 +74,7 @@
 }
 .page[data-theme='aqua'] app-appearance-settings fieldset { border-radius: 7px; }
 .page[data-theme='aqua'] app-appearance-settings legend { padding: 0 5px; color: var(--theme-muted); font-size: 11px; font-weight: 600; }
-.page[data-theme='aqua'] .toolbar-panel hr { border-color: #a2adba; box-shadow: 0 1px #fff9; }
+.page[data-theme='aqua'] [appPanel] hr { border-color: #a2adba; box-shadow: 0 1px #fff9; }
 /* Convex silver controls, blue default actions, and physically depressed states. */
 [data-theme='aqua'] :is(button, a).app-button {
   color: var(--button-rest-color); background: linear-gradient(#fff, #f8f9fb 44%, #e7eaf0 50%, #d9dee6);

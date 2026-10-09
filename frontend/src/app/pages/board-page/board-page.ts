@@ -1,5 +1,6 @@
+import { PanelComponent } from '../../components/panel/panel';
 import { WidgetLibraryComponent } from './widget-library/widget-library';
-import { widgetCornerRadius } from '../../utils/widget-corner.util';
+import { widgetCornerRadius, widgetCornerInset } from '../../utils/widget-corner.util';
 import { paperColor, foregroundColor } from '../../themes/appearance-values';
 import { BoardProfileComponent } from './board-profile/board-profile';
 import { BoardSettingsComponent } from './board-settings/board-settings';
@@ -73,7 +74,7 @@ import {
 @Component({
   selector: 'app-board-page',
   standalone: true,
-  imports: [WidgetLibraryComponent, BoardProfileComponent, BoardSettingsComponent, WidgetEditorComponent, IconComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, WidgetHostComponent],
+  imports: [PanelComponent, WidgetLibraryComponent, BoardProfileComponent, BoardSettingsComponent, WidgetEditorComponent, IconComponent, SiteNavigationComponent, WidgetBounceDirective, BoardAtmosphereComponent, CommonModule, WidgetHostComponent],
   templateUrl: './board-page.html',
   styleUrls: [
     './board-page.layout.css', './board-page.grid.css', './board-page.widget-edit.css',
@@ -233,6 +234,8 @@ export class BoardPageComponent {
   private boardIdentityPersistedUrl = '';
   private activeBoardUrl = '';
   private editingBoardUrl = '';
+
+  get widgetEditorInset() { return widgetCornerInset(this.boardRadiusStepDraft); }
 
   get boardRadiusDraft() {
     return widgetCornerRadius(this.boardRadiusStepDraft);
@@ -692,7 +695,7 @@ export class BoardPageComponent {
     const added: WidgetDraft = {
       ...createEmptyWidgetDraftHelper(),
       type: selection.type,
-      title: selection.type[0].toUpperCase() + selection.type.slice(1),
+      title: selection.type === 'link' ? 'Social' : selection.type[0].toUpperCase() + selection.type.slice(1),
       order: this.widgetDrafts.length,
     };
     this.widgetDrafts = [...this.widgetDrafts, added];
@@ -727,8 +730,142 @@ export class BoardPageComponent {
     });
   }
 
-  openWidgetSettings(draft: WidgetDraft) {
+  widgetEditorBounds = { left: 0, top: 0, width: 0, height: 0 };
+  widgetEditorOrigin = { x: 0, y: 0 };
+  private widgetEditorOpener?: HTMLElement;
+  widgetEditorSize = 440;
+  widgetBackdropHeight = 0;
+  readonly widgetFlipDuration = 520;
+  widgetEditorSourceSize = { width: 220, height: 220 };
+  private widgetFlipAnimation?: Animation;
+  private widgetFrontAnimation?: Animation;
+  get widgetEditorPanelInset() {
+    const inset = this.widgetEditorInset;
+    const x = inset * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.width);
+    const y = inset * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.height);
+    return `${y}px ${x}px`;
+  }
+  get widgetEditorRadius() {
+    const radius = this.boardRadiusDraft;
+    return `${radius * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.width)}px / ${radius * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.height)}px`;
+  }
+  private animateWidgetFront(closing: boolean) {
+    const front = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-front');
+    this.widgetFrontAnimation?.cancel();
+    // Backdrop filters may sample the reverse face even with backface-visibility.
+    // Remove it from painting at the edge-on point, without changing either material.
+    this.widgetFrontAnimation = front?.animate([
+      { visibility: closing ? 'hidden' : 'visible', offset: 0 },
+      { visibility: closing ? 'hidden' : 'visible', offset: .499 },
+      { visibility: closing ? 'visible' : 'hidden', offset: .5 },
+      { visibility: closing ? 'visible' : 'hidden', offset: 1 },
+    ], { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+  }
+  widgetEditorClosing = false;
+  private widgetEditorSnapshot?: WidgetDraft;
+  private widgetEditorInitialIndex = 0;
+
+  private widgetFlipFrames(closing = false): Keyframe[] {
+    const { x, y } = this.widgetEditorOrigin;
+    const slot = (angle: number) => ({ transform: `translate(${x}px, ${y}px) rotateY(${angle}deg) scale(${this.widgetEditorSourceSize.width / this.widgetEditorSize}, ${this.widgetEditorSourceSize.height / this.widgetEditorSize})` });
+    const back = { transform: 'translate(0, 0) rotateY(180deg) scale(1)' };
+    return closing ? [back, slot(360)] : [slot(0), back];
+  }
+
+  get selectedWidgetDraft(): WidgetDraft | undefined {
+    return this.widgetDrafts.find(draft => this.isWidgetSettingsOpen(draft));
+  }
+
+  @HostListener('window:resize')
+  positionWidgetEditor() {
+    const host = this.elementRef.nativeElement;
+    const board = host.querySelector<HTMLElement>('.board-content');
+    if (!board) return;
+    const bounds = board.getBoundingClientRect();
+    const dockTop = host.querySelector('.bottom-actions')?.getBoundingClientRect().top ?? window.innerHeight;
+    const top = Math.max(12, bounds.top);
+    this.widgetBackdropHeight = window.innerHeight - top;
+    this.widgetEditorBounds = { left: bounds.left, top, width: bounds.width, height: Math.max(0, dockTop - 12 - top) };
+    const grid = board.querySelector<HTMLElement>('.board-grid');
+    const style = grid ? getComputedStyle(grid) : null;
+    const column = Number.parseFloat(style?.gridTemplateColumns ?? '') || 212;
+    const gap = Number.parseFloat(style?.columnGap ?? '') || 16;
+    // A 2×2 footprint, constrained only when the visible board cannot contain it.
+    this.widgetEditorSize = Math.max(1, Math.min(column * 2 + gap, bounds.width - 24, this.widgetEditorBounds.height - 24));
+  }
+
+  @HostListener('document:pointerdown', ['$event'])
+  dismissWidgetEditorOutside(event: PointerEvent) {
+    if (this.selectedWidgetDraft && event.target instanceof Element && !event.target.closest('.widget-editor-flipper')) {
+      this.closeWidgetSettings(true);
+    }
+  }
+
+  closeWidgetSettings(cancel = false) {
+    if (this.widgetEditorClosing) return;
+    const draft = this.selectedWidgetDraft;
+    if (cancel && draft && this.widgetEditorSnapshot) {
+      Object.assign(draft, structuredClone(this.widgetEditorSnapshot));
+      const remaining = this.widgetDrafts.filter(item => item !== draft);
+      remaining.splice(this.widgetEditorInitialIndex, 0, draft);
+      remaining.forEach((item, index) => item.order = index);
+      this.widgetDrafts = remaining;
+      this.draftValidationErrors.delete(draft);
+    }
+    const finish = () => {
+      this.activeWidgetSettingsId = null;
+      this.activeNewWidgetDraft = null;
+      this.widgetEditorClosing = false;
+      this.cdr.markForCheck();
+      afterNextRender(() => this.widgetEditorOpener?.focus(), { injector: this.injector });
+    };
+    // Layout or order may have changed while the back was open.
+    this.cdr.detectChanges();
+    const destination = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-edit-source-hidden')?.getBoundingClientRect();
+    if (destination && destination.width > 0 && destination.height > 0) {
+      this.widgetEditorSourceSize = { width: destination.width, height: destination.height };
+      this.widgetEditorOrigin = {
+        x: destination.left + destination.width / 2 - this.widgetEditorBounds.left - this.widgetEditorBounds.width / 2,
+        y: destination.top + destination.height / 2 - this.widgetEditorBounds.top - this.widgetEditorBounds.height / 2,
+      };
+    }
+    const flipper = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-flipper');
+    if (!flipper?.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    this.widgetEditorClosing = true;
+    this.widgetFlipAnimation?.cancel();
+    this.animateWidgetFront(true);
+    this.widgetFlipAnimation = flipper.animate(this.widgetFlipFrames(true), { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
+    this.widgetFlipAnimation.finished.then(finish, finish);
+  }
+
+  trapWidgetEditorFocus(event: Event) {
+    const keyboard = event as KeyboardEvent;
+    const panel = event.currentTarget as HTMLElement;
+    const controls = Array.from(panel.querySelectorAll<HTMLElement>('button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled)'));
+    const first = controls[0], last = controls.at(-1);
+    if (keyboard.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+    else if (!keyboard.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+  }
+
+  openWidgetSettings(draft: WidgetDraft, event?: Event) {
     if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode || this.isWidgetSaving) return;
+    this.widgetEditorSnapshot = structuredClone(draft);
+    this.widgetEditorInitialIndex = this.widgetDrafts.indexOf(draft);
+    this.positionWidgetEditor();
+    this.widgetEditorOpener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
+    const origin = this.widgetEditorOpener?.getBoundingClientRect();
+    const bounds = this.widgetEditorBounds;
+    this.widgetEditorOrigin = origin ? { x: origin.left + origin.width / 2 - bounds.left - bounds.width / 2,
+      y: origin.top + origin.height / 2 - bounds.top - bounds.height / 2 } : { x: 0, y: 0 };
+    this.widgetEditorSourceSize = origin ? { width: origin.width, height: origin.height } : { width: this.widgetEditorSize, height: this.widgetEditorSize };
+    afterNextRender(() => {
+      const flipper = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-flipper');
+      if (flipper?.animate && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
+        this.animateWidgetFront(false);
+        this.widgetFlipAnimation = flipper.animate(this.widgetFlipFrames(), { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)' });
+      }
+      this.elementRef.nativeElement.querySelector<HTMLInputElement>('.widget-editor-back input')?.focus({ preventScroll: true });
+    }, { injector: this.injector });
     this.activeNewWidgetDraft = draft.id ? null : draft;
     this.activeWidgetSettingsId = draft.id ?? null;
     this.draftValidationErrors.delete(draft);

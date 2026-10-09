@@ -3,44 +3,44 @@
 
   <form class="auth-form" (ngSubmit)="onSignupSubmit()">
     <label class="auth-field">
-      <span>Email</span>
-      <input
+
+      <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Email</span><input
         type="email"
         name="email"
         [(ngModel)]="email"
-        placeholder="Enter your email"
+        placeholder="Email" aria-label="Email"
         autocomplete="email"
         [disabled]="isSubmitting"
         required
-      />
+      /></span>
     </label>
 
     <label class="auth-field">
-      <span>Password</span>
-      <input
+
+      <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Password</span><input
         type="password"
         name="password"
         minlength="8"
         maxlength="72"
         [(ngModel)]="password"
-        placeholder="Create a password"
+        placeholder="Password" aria-label="Password"
         autocomplete="new-password"
         [disabled]="isSubmitting"
         required
-      />
+      /></span>
     </label>
 
     <label class="auth-field">
-      <span>Confirm Password</span>
-      <input
+
+      <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Confirm Password</span><input
         type="password"
         name="confirmPassword"
         [(ngModel)]="confirmPassword"
-        placeholder="Re-enter password"
+        placeholder="Confirm Password" aria-label="Confirm Password"
         autocomplete="new-password"
         [disabled]="isSubmitting"
         required
-      />
+      /></span>
     </label>
 
     <button class="app-button" type="submit" [disabled]="isSubmitting">

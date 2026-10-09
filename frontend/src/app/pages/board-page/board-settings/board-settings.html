@@ -4,19 +4,14 @@
             <span class="toolbar-board-name">{{ boardIdentityNameDraft || menuLabel }}</span>
             <span class="toolbar-board-path">{{ boardRoute({ boardUrl: boardIdentitySlugDraft || board.boardUrl, ownerUsername: board.ownerUsername }) }}</span>
           </button>
-          <div animate.leave="panel-slide-down" class="board-identity-menu utility-panel toolbar-panel toolbar-panel--center" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
+          <div appPanel animate.leave="panel-slide-down" class="board-identity-menu utility-panel toolbar-panel toolbar-panel--center" id="board-settings-panel" role="region" aria-label="Board settings" [attr.aria-busy]="isIdentitySaving" *ngIf="isBoardIdentityMenuOpen">
             <h2 class="board-settings-heading">{{ isBoardSwitcherOpen ? 'Your Boards' : pendingDeleteBoardUrl ? 'Delete Board' : 'Board Settings' }}</h2>
             <ng-container *ngIf="!isBoardSwitcherOpen && !pendingDeleteBoardUrl">
             <label>
-              Board Name
-              <input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" [ngModel]="boardIdentityNameDraft" (ngModelChange)="boardIdentityNameDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
+              <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Board name</span><input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-name" placeholder="Board name" aria-label="Board name" [ngModel]="boardIdentityNameDraft" (ngModelChange)="boardIdentityNameDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" /></span>
             </label>
             <label>
-              URL
-              <div class="slug-input-wrap">
-                <span>/{{ board.ownerUsername || 'b' }}/</span>
-                <input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" [ngModel]="boardIdentitySlugDraft" (ngModelChange)="boardIdentitySlugDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" />
-              </div>
+                <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">{{ board.ownerUsername || 'b' }}/</span><input class="app-textbox" [disabled]="isWidgetSaving || isIdentitySaving" type="text" name="board-identity-slug" placeholder="URL" aria-label="Board URL" [ngModel]="boardIdentitySlugDraft" (ngModelChange)="boardIdentitySlugDraftChange.emit($event)" (blur)="save.emit()" (keydown.enter)="save.emit()" /></span>
             </label>
             <hr />
             <app-appearance-settings #appearanceControls [showReset]="false" [appearance]="appearanceDraft" [disabled]="isWidgetSaving || isIdentitySaving" (appearancePreview)="appearancePreview.emit($event)" (appearanceChange)="appearanceChange.emit($event)" />
@@ -44,7 +39,7 @@
               </div>
               </div>
             </section>
-            <div class="board-settings-tools panel-actions">
+            <div panelActions class="board-settings-tools panel-actions">
               <button class="app-button settings-reset panel-action-main" type="button" [disabled]="isWidgetSaving || isIdentitySaving || isDeletingBoard" (click)="reset.emit()">Reset to default</button>
               <button class="app-button settings-icon-button app-button--icon settings-delete app-button--danger" type="button"
                 aria-label="Delete board" title="Delete board" (click)="deleteBoard.emit($event)"

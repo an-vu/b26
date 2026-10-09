@@ -18,39 +18,10 @@
   z-index: 29; pointer-events: none; --blur-reach: 22px;
   --blur-inset: calc(-1 * var(--blur-reach)) 0 0;
 }
-.blur-layer {
-  position: absolute; inset: var(--blur-inset); background: transparent;
-  --edge-mask: linear-gradient(var(--blur-direction, to top), #000 calc(100% - var(--blur-reach)),
-    rgba(0, 0, 0, .85) calc(100% - var(--blur-reach) * .75), rgba(0, 0, 0, .5) calc(100% - var(--blur-reach) * .5),
-    rgba(0, 0, 0, .15) calc(100% - var(--blur-reach) * .25), transparent 100%);
-  -webkit-mask-image: var(--edge-mask); mask-image: var(--edge-mask);
-}
-@supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .blur-layer {
-    background: transparent;
-    -webkit-backdrop-filter: blur(2px); backdrop-filter: blur(2px);
-  }
-  .footer-blur::before, .footer-blur::after, .header-blur::before, .header-blur::after {
-    content: ''; position: absolute; inset: var(--blur-inset); pointer-events: none;
-    -webkit-mask-image: var(--progressive-mask); mask-image: var(--progressive-mask);
-  }
-  .footer-blur::before, .header-blur::before {
-    z-index: 1; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 55%, transparent 95%);
-    -webkit-backdrop-filter: blur(5px); backdrop-filter: blur(5px);
-  }
-  .footer-blur::after, .header-blur::after {
-    z-index: 2; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 40%, transparent 80%);
-    -webkit-backdrop-filter: blur(9px); backdrop-filter: blur(9px);
-  }
-}
 @media(max-width: 760px) {
   .home-header { --header-height: 48px; }
   .home-header-brand { font-size: 19px; }
   .footer-blur { height: 62px; }
-}
-@media(prefers-reduced-transparency: reduce) {
-  .blur-layer, .footer-blur::before, .footer-blur::after, .header-blur::before, .header-blur::after { display: none; }
-  .footer-blur, .header-blur { background: transparent; }
 }
 
 .nav-icon-button { --button-icon-size: 18px; }
@@ -60,8 +31,20 @@
 
 .header-blur {
   position: absolute; inset: 0; z-index: 2; pointer-events: none;
-  --blur-reach: 22px; --blur-inset: 0 0 calc(-1 * var(--blur-reach));
+  --blur-reach: 10px; --blur-inset: 0 0 calc(-1 * var(--blur-reach));
   --blur-direction: to bottom;
 }
 
 .account-settings-list button { min-height: 32px; }
+
+.board-top-blur.header-blur { position: fixed; inset: 0 0 auto; height: 44px; z-index: 29; }
+.chrome-glass > .blur-layer, .chrome-glass::before, .chrome-glass::after {
+  transition: opacity var(--chrome-fade-duration, 520ms) ease-in-out;
+}
+.chrome-glass-off > .blur-layer, .chrome-glass-off::before, .chrome-glass-off::after { opacity: 0; }
+/* Stop painting hidden chrome after the crossfade, while keeping its geometry. */
+.chrome-glass { visibility: visible; transition: visibility 0s; }
+.chrome-glass-off { visibility: hidden; transition-delay: var(--chrome-fade-duration, 520ms); }
+@media (prefers-reduced-motion: reduce) {
+  .chrome-glass, .chrome-glass > .blur-layer, .chrome-glass::before, .chrome-glass::after { transition: none; }
+}

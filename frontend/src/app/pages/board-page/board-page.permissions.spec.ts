@@ -35,6 +35,29 @@ function setup(readOnly = false, role = 'USER') {
 }
 
 describe('Board permissions across navigation and sessions', () => {
+  it.each(['save', 'cancel'])('keeps the board mounted while %s refreshes the view', action => {
+    const { page, fixture, service } = setup();
+    const profile = fixture.nativeElement.querySelector('app-board-profile');
+    page.startWidgetEdit(board, []);
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    const refresh = new Subject<Board>();
+    service.getBoard.mockReturnValue(refresh);
+    service.saveEditor.mockReturnValue(of({ board, widgets: [] }));
+    if (action === 'save') page.doneWidgetEdit();
+    else page.discardWidgetEdit();
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(page.isWidgetEditMode).toBe(false);
+    expect(fixture.nativeElement.querySelector('app-board-profile')).toBe(profile);
+    expect(fixture.nativeElement.textContent).not.toContain('Loading');
+    refresh.next({ ...board, headline: 'Refreshed description' });
+    fixture.changeDetectorRef.markForCheck();
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-board-profile')).toBe(profile);
+    expect(fixture.nativeElement.textContent).toContain('Refreshed description');
+  });
+
   it('revokes editing and hides old content immediately while another board loads', () => {
     const { page, fixture, service, params } = setup();
     expect(page.canEditBoard).toBe(true);

@@ -1,3 +1,4 @@
+import { PanelComponent } from '../../components/panel/panel';
 import { widgetCornerRadius, widgetCornerInset } from '../../utils/widget-corner.util';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { HomeFeedPreviewComponent } from './home-feed-preview';
@@ -16,7 +17,7 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 import { AppPageShellComponent } from './app-page-shell';
 
 @Component({
-  standalone: true, imports: [PanelBehaviorDirective, CommonModule, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
+  standalone: true, imports: [PanelComponent, PanelBehaviorDirective, CommonModule, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
   templateUrl: './home-page.html', styleUrl: './home-page.css'
 })
 export class HomePageComponent {

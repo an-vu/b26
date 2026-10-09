@@ -11,6 +11,7 @@
 
 - [Pages and editing](Pages-and-Editing)
 - [Appearance and panels](Board-Appearance-and-Panels)
+- [Social widget](Social-Widget)
 - [Feature status](Features)
 - [Release roadmap](Release-Roadmap)
 - [Phone / LAN access](How-to-Access-From-Another-Device-%28Same-Network%29)

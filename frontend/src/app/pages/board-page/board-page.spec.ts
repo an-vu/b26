@@ -149,7 +149,7 @@ describe('BoardPageComponent', () => {
     expect(rail.querySelector('app-embed-widget')).not.toBeNull();
     expect(rail.querySelector('app-map-widget')).not.toBeNull();
     expect(fixture.nativeElement.querySelector('.add-widget-tile')).toBeNull();
-    for (const label of ['Link', 'Embed', 'Map']) {
+    for (const label of ['Social', 'Embed', 'Map']) {
       rail.querySelector(`button[aria-label="Add ${label} widget"]`).click(); fixture.detectChanges();
     }
     expect(component.widgetDrafts.map(draft => draft.type)).toEqual(['link', 'embed', 'map']);
@@ -158,11 +158,40 @@ describe('BoardPageComponent', () => {
     expect(rail.querySelector('.widget-library-form')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.widget-edit-tile')).toHaveLength(3);
     fixture.nativeElement.querySelector('.widget-edit-tile').click(); fixture.detectChanges();
-    expect(fixture.nativeElement.querySelector('.widget-edit-tile .widget-settings-panel')?.textContent).toContain('Link URL');
+    expect(fixture.nativeElement.querySelector('.widget-editor-back input')?.getAttribute('placeholder')).toBe('Social media link');
     expect(component.isWidgetSettingsOpen(component.widgetDrafts[0])).toBe(true);
+    // The enlarged back preserves the front's proportions, including rectangular sources.
+    component.widgetEditorSize = 440;
+    component.widgetEditorSourceSize = { width: 220, height: 110 };
+    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    expect(component.widgetEditorRadius).toBe(`${component.boardRadiusDraft * 2}px / ${component.boardRadiusDraft * 4}px`);
+    expect(component.widgetEditorPanelInset).toBe(`${component.widgetEditorInset * 4}px ${component.widgetEditorInset * 2}px`);
+    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.getPropertyValue('--panel-padding')).toBe(component.widgetEditorPanelInset);
+    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.borderRadius).toBe(component.widgetEditorRadius);
+
     expect(component.isWidgetSettingsOpen(component.widgetDrafts[1])).toBe(false);
+    const grid = fixture.nativeElement.querySelector('.board-grid');
+    expect(grid.classList.contains('is-editing-widget')).toBe(true);
+    expect(fixture.nativeElement.querySelectorAll('.widget-editor-backdrop')).toHaveLength(1);
+    expect(grid.querySelector('.widget-editor-backdrop')).toBeNull();
+    expect(grid.hasAttribute('inert')).toBe(true);
+    expect(rail.hasAttribute('inert')).toBe(false);
+    component.widgetDrafts[0].title = 'Edited draft';
+    fixture.nativeElement.querySelector('.widget-editor-done').click(); fixture.detectChanges();
+    expect(component.selectedWidgetDraft).toBeUndefined();
+    expect(component.isWidgetEditMode).toBe(true);
+    expect(component.widgetDrafts[0].title).toBe('Edited draft');
+    expect(grid.hasAttribute('inert')).toBe(false);
+    fixture.nativeElement.querySelector('.widget-edit-tile').click(); fixture.detectChanges();
+    component.widgetDrafts[0].title = 'Discard this change';
+    document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
+    fixture.detectChanges();
+    expect(component.selectedWidgetDraft).toBeUndefined();
+    expect(component.widgetDrafts[0].title).toBe('Edited draft');
+
+
     component.isWidgetSaving = true; fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
-    rail.querySelector('button[aria-label="Add Link widget"]').click();
+    rail.querySelector('button[aria-label="Add Social widget"]').click();
     expect(component.widgetDrafts).toHaveLength(3);
     component.isWidgetSaving = false;
     component.cancelWidgetEdit(); fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();

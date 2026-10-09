@@ -1,7 +1,26 @@
-:host { display: block; position: relative; z-index: 20; align-self: stretch; min-width: 0; min-height: 0; flex: 1; margin-top: var(--toolbar-panel-gap, 12px); text-align: left; }
+:host { display: block; position: relative; z-index: 20; align-self: stretch; min-width: 0; min-height: 0; flex: 1; margin-top: var(--toolbar-panel-gap); text-align: left; }
 /* Geometry only: shared utility/toolbar panels own all surface styling. */
-.widget-library { top: 0; bottom: auto; left: 50%; transform: translateX(-50%); display: flex; flex-direction: column; height: 100%; max-height: none; overflow: hidden; }
-h2 { flex-shrink: 0; }
+/* Capture board colors before the panel applies its own menu palette. */
+:host {
+  --preview-surface: var(--theme-surface);
+  --preview-text: var(--theme-text);
+  --preview-muted: var(--theme-muted);
+  --preview-border: var(--theme-border);
+  --preview-error: var(--theme-error);
+  --preview-color-scheme: normal;
+}
+:host-context([data-color-mode='dark']) { --preview-color-scheme: dark; }
+.widget-library-preview {
+  --theme-surface: var(--preview-surface);
+  --theme-text: var(--preview-text);
+  --theme-muted: var(--preview-muted);
+  --theme-border: var(--preview-border);
+  --theme-error: var(--preview-error);
+  color: var(--theme-text);
+  color-scheme: var(--preview-color-scheme);
+}
+.widget-library { top: 0; bottom: auto; left: 50%; transform: translateX(-50%); height: 100%; max-height: none; overflow: hidden; }
+
 .widget-library-scroll { min-height: 0; flex: 1; overflow-y: auto; overscroll-behavior: contain; scrollbar-width: thin; padding: 10px; margin: -4px -10px -10px; }
 .widget-library-list { display: grid; gap: 12px; }
 .widget-library-entry { display: grid; gap: 20px; }

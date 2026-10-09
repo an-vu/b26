@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, afterNextRender, inject, ElementRef, DestroyRef, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { observeToolbarBounds } from '../../../utils/toolbar-panel-anchor';
 import type { Board } from '../../../models/board';
 
 @Component({ selector: 'app-board-profile', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './board-profile.html', styleUrl: './board-profile.css' })
@@ -11,15 +12,10 @@ export class BoardProfileComponent {
     afterNextRender(() => {
       const toolbar = host.closest('.page')?.querySelector<HTMLElement>('.bottom-actions');
       if (!toolbar) return;
-      const updateClearance = () => {
-        const gap = Number.parseFloat(getComputedStyle(toolbar).getPropertyValue('--toolbar-panel-gap')) || 12;
-        host.style.setProperty('--profile-toolbar-clearance', `${window.innerHeight - toolbar.getBoundingClientRect().top + gap + 1}px`);
-      };
-      const observer = typeof ResizeObserver === 'undefined' ? null : new ResizeObserver(updateClearance);
-      observer?.observe(toolbar);
-      window.addEventListener('resize', updateClearance);
-      updateClearance();
-      destroyRef.onDestroy(() => { observer?.disconnect(); window.removeEventListener('resize', updateClearance); });
+      const disconnect = observeToolbarBounds(toolbar, bounds => {
+        host.style.setProperty('--profile-toolbar-clearance', `${window.innerHeight - bounds.top}px`);
+      });
+      destroyRef.onDestroy(disconnect);
     });
   }
 

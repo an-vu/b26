@@ -1,11 +1,25 @@
+@if (socialProfile; as profile) {
+  <article class="widget social-profile" [style.--social-accent]="profile.accent">
+    <span class="social-logo-badge" [class.instagram-badge]="profile.platform === 'Instagram'">
+    <img class="social-brand-logo" [class.monochrome-brand]="profile.platform === 'GitHub' || profile.platform === 'TikTok'"
+      [src]="'/brand/social/' + (profile.icon === 'social-x' ? 'twitter' : profile.icon) + '.svg'"
+      [alt]="profile.platform === 'X' ? 'Twitter' : profile.platform" width="28" height="28" />
+    </span>
+    <strong class="social-handle">{{ profile.handle }}</strong>
+    <div class="social-follow-row">
+      <a class="link app-button" [href]="profile.url" target="_blank" rel="noopener noreferrer" (click)="recordClick()" [attr.aria-label]="'Follow ' + profile.handle + ' on ' + profile.platform" title="Opens the profile to follow">Follow <span class="social-followers" [title]="followerCount === '—' ? 'Follower count not connected yet' : 'Followers'">{{ followerCount }}</span></a>
+    </div>
+  </article>
+} @else {
 <article class="widget">
-  <h3>{{ widget.title }}</h3>
   <img *ngIf="imageUrl" [src]="imageUrl" [alt]="widget.title" loading="lazy" />
   <p *ngIf="description" class="description">{{ description }}</p>
   <a *ngIf="url; else invalid" class="link app-button" (click)="recordClick()" [href]="url" target="_blank" rel="noreferrer noopener">
     Visit
   </a>
   <ng-template #invalid>
-    <p class="fallback">Link URL is missing or invalid.</p>
+    <p class="fallback">Add a social profile URL.</p>
   </ng-template>
 </article>
+
+}

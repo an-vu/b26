@@ -126,7 +126,8 @@ class PostgresMigrationIntegrationTest {
           rows.next();
           assertEquals("rainfall", rows.getString(1));
         }
-        for (String pattern : new String[]{"stars", "snow", "sakura", "wave"}) {
+        for (String pattern : new String[]{"stars", "snow", "sakura", "wave", "lava", "bokeh"}) {
+          statement.executeUpdate("update user_preferences set home_pattern = '" + pattern + "' where user_id = 'anvu'");
           statement.executeUpdate("update boards set appearance_pattern = '" + pattern + "', appearance_pattern_intensity = 'heavy' where id = 'default'");
         }
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,

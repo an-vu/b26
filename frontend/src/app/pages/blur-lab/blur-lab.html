@@ -1,0 +1,53 @@
+<app-page-shell>
+  <div class="lab">
+    <h1>Blur Lab</h1>
+    <p>Scroll either window to move both. The left uses the site’s unchanged header and footer blur. Controls affect only the right.</p>
+    <div class="comparisons">
+      <section>
+        <h2>Current header &amp; footer</h2>
+        <p class="caption">Fixed reference · original layers and masks</p>
+        <div class="scene">
+          <div class="text-scroll" #reference (scroll)="syncScroll($event, experiment)">
+            @for (line of lines; track line) {
+              <article class="type-sample">
+                <span class="sample-caption">{{ line }} · SMALL CAPTION · 11px</span>
+                <h3>Make room<br />for your world.</h3>
+                <p class="sample-medium">Your favorite people.<br />Your everyday moments.</p>
+                <p class="sample-body">A little text, a favorite song, a place to remember. Small details make a space feel like yours.</p>
+                <p class="sample-fine">Small print, fine edges, and quiet details. Updated 9 minutes ago.</p>
+                <p class="sample-numbers">0123456789 <span>Aa Bb Cc</span></p>
+              </article>
+            }
+          </div>
+          <div class="reference-header" aria-hidden="true"><div class="header-blur"><span class="blur-layer"></span></div></div>
+          <div class="footer-blur" aria-hidden="true"><span class="blur-layer"></span></div>
+        </div>
+      </section>
+      <section>
+        <h2>Single-layer experiment</h2>
+        <p class="caption">Adjustable strength, bleed, and outer fade</p>
+        <div class="scene" [style.--strength]="strength + 'px'" [style.--bleed]="bleed + 'px'" [style.--fade]="fade + 'px'">
+          <div class="text-scroll" #experiment (scroll)="syncScroll($event, reference)">
+            @for (line of lines; track line) {
+              <article class="type-sample">
+                <span class="sample-caption">{{ line }} · SMALL CAPTION · 11px</span>
+                <h3>Make room<br />for your world.</h3>
+                <p class="sample-medium">Your favorite people.<br />Your everyday moments.</p>
+                <p class="sample-body">A little text, a favorite song, a place to remember. Small details make a space feel like yours.</p>
+                <p class="sample-fine">Small print, fine edges, and quiet details. Updated 9 minutes ago.</p>
+                <p class="sample-numbers">0123456789 <span>Aa Bb Cc</span></p>
+              </article>
+            }
+          </div>
+          <div class="single-glass single-header" aria-hidden="true"></div>
+          <div class="single-glass single-footer" aria-hidden="true"></div>
+        </div>
+        <div class="controls">
+          <label>Blur strength: {{ strength }}px <input type="range" min="0" max="32" [(ngModel)]="strength" /></label>
+          <label>Bleed: {{ bleed }}px <input type="range" min="0" max="120" [(ngModel)]="bleed" /></label>
+          <label>Outer fade: {{ fade }}px <input type="range" min="1" max="160" [(ngModel)]="fade" /></label>
+        </div>
+      </section>
+    </div>
+  </div>
+</app-page-shell>
