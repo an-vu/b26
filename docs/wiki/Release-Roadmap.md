@@ -1,6 +1,6 @@
 # Release roadmap
 
-**Current release: 1.5.9.** Consolidates backend session/widget logic, paginates public board listings, and makes click throttling atomic and bounded. Link widgets now record clicks; V37 archives legacy cards and system-route mappings, and retired endpoints return 410. About remains Version 26.1. Hosted deployment status is tracked separately in [Deployment](Deployment).
+**Current release: 1.6.0.** This pass completes the existing public/private and owner/admin permission rules, including matching frontend state. About remains Version 26.1. Hosted deployment status is tracked separately in [Deployment](Deployment).
 
 | Version | Scope | Status |
 | --- | --- | --- |
@@ -21,8 +21,8 @@
 | 1.5.6 | Frontend consolidation, About, favicons, and responsive panels | Committed |
 | 1.5.7 | Mustache, shared icons, pattern placeholders, and production samples | Committed |
 | 1.5.8 | Widget picker, panel animations, appearance controls, and editor cleanup | Committed |
-| 1.5.9 | Backend consolidation, paginated boards, widget analytics, and legacy retirement | Current release |
-| 1.6.0 | Admin permissions enforcement | Later |
+| 1.5.9 | Backend consolidation, paginated boards, widget analytics, and legacy retirement | Committed as `edbb620` |
+| 1.6.0 | Public/private, owner/admin, and visitor permission enforcement | Implemented and tested locally; committed |
 | 1.7.0 | Widget library expansion I | Later |
 | 1.8.0 | Widget library expansion II | Later |
 | 1.9.0 | Insights I | Later |
@@ -38,10 +38,19 @@ See [Pages and editing](Pages-and-Editing), [API reference](API-Reference), [ver
 
 ## 1.2.1 documentation notes
 
-README, wiki, and Obsidian tracking now reflect the URL implementation and one-command Docker preview. Existing wiki page names remain so bookmarks work. Search and appearance persistence have since been implemented; permissions and full insights remain unfinished.
+README, wiki, and Obsidian tracking now reflect the URL implementation and one-command Docker preview. Existing wiki page names remain so bookmarks work. Search and appearance persistence have since been implemented; 1.6.0 completes the current access rules, while richer insights remain planned.
+
+## 1.6.0 scope
+
+- Declare access on API handlers and deny undeclared application endpoints. Resolve matched path variables so reserved-looking slugs, encoded paths, and context paths cannot skip access checks.
+- Share owner/admin checks across board reads, writes, widgets, editor snapshots, and insights. Keep account preferences scoped to their owner and main-board selection restricted to owned public boards.
+- Clear permissions and personal data when the account or board changes; cancel stale loads and keep edit actions disabled until authorized. Limit automatic bearer headers to same-origin API requests.
+- Verify allowed and denied actions, unchanged data after denied writes, and expired/revoked sessions. See [Permissions](Permissions) and [Testing](Testing).
+
+The old configurable page/widget permission matrix belonged to retired system boards. It is outside this release; no new admin page, migration, or permission schema is required.
 
 ## Current work and rollout
 
-The 1.5.0–1.5.9 features are implemented and tested locally. Before the next hosted rollout, verify current provider state, pending migrations, production settings, backups, and the authenticated user journey. See [Development reference](Development-Reference).
+The 1.6.0 implementation passed 119 backend tests (including PostgreSQL), 141 frontend tests, and both package/production builds. The release contains these verified changes; hosted rollout is tracked separately. Before the next hosted rollout, verify current provider state, pending migrations, production settings, backups, and the authenticated user journey. See [Development reference](Development-Reference).
 
 Committed in 1.5.3: sidebar profile editing, settings autosave, board switching, Search/Account/About redesigns, Meteor and scroll refinements, shared panel materials, and hidden-tab animation suspension. Details: [Appearance and panels](Board-Appearance-and-Panels).

@@ -22,6 +22,7 @@
 - [Tech stack](Tech-Stack)
 - [Why this stack](Why-This-Stack)
 - [API reference](API-Reference)
+- [Permissions](Permissions)
 
 ### Maintain it
 

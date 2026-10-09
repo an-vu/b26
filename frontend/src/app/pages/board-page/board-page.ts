@@ -15,7 +15,7 @@ import { BoardAppearance } from '../../models/board';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { Subject, finalize } from 'rxjs';
+import { Subject, Subscription, combineLatest, distinctUntilChanged, finalize, map, takeUntil } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { hasDraftChangedByOriginal, runDoneWidgetEdit } from './board-page.save-flow';
 import { getApiErrorMessage } from '../../utils/api-error.util';
@@ -25,6 +25,7 @@ import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
 import { InsightsService } from '../../services/insights.service';
 import { UserStoreService } from '../../services/user-store.service';
+import { AuthService } from '../../services/auth.service';
 import type { Board } from '../../models/board';
 import type { Widget } from '../../models/widget';
 import { WidgetHostComponent } from '../../widgets/widget-host/widget-host';
@@ -53,7 +54,6 @@ import {
   applyOnWidgetDraftFieldChange,
   applyOnWidgetTypeChange,
   getDraftValidationErrorState,
-  runLoadBoardPermissions,
 } from './board-page.ui-state';
 import {
   applyDeleteWidgetAction,
@@ -81,6 +81,7 @@ import {
 })
 export class BoardPageComponent {
   onAppearanceChange(appearance: BoardAppearance) {
+    if (!this.canEditBoard || this.readOnlyView) return;
     this.applyAppearance(appearance);
     this.saveSettingsAutomatically();
   }
@@ -102,7 +103,14 @@ export class BoardPageComponent {
   private destroyRef = inject(DestroyRef);
   private cdr = inject(ChangeDetectorRef);
   private reload$ = new Subject<void>();
-  private boardPermissionsRequestId = 0;
+  private readonly accessReset$ = new Subject<void>();
+  private permissionsRequest?: Subscription;
+  private readonly routeContext$ = combineLatest([
+    this.route.paramMap,
+    inject(AuthService).user$.pipe(
+      map(user => user ? `${user.id}:${user.role}` : ''), distinctUntilChanged()
+    ),
+  ]).pipe(map(([params]) => params));
 
   identitySaveError = '';
   isIdentitySaving = false;
@@ -216,6 +224,7 @@ export class BoardPageComponent {
   }
 
   resetAppearance() {
+    if (!this.canEditBoard || this.readOnlyView) return;
     if (!this.isIdentitySaving) { this.applyAppearance(this.defaultAppearance()); this.saveSettingsAutomatically(); }
   }
 
@@ -231,7 +240,7 @@ export class BoardPageComponent {
 
   pageState$ = createPageStateStream({
     reload$: this.reload$,
-    routeParamMap$: this.route.paramMap,
+    routeParamMap$: this.routeContext$,
     resolveBoardId$: (routeParamBoardId, routeParamUsername) =>
       this.resolveBoardId$(routeParamBoardId, routeParamUsername),
     loadBoard: (boardId) => this.boardService.getBoard(boardId),
@@ -243,7 +252,7 @@ export class BoardPageComponent {
       if (state.status === 'ready') {
         this.loadBoardPermissions(state.board.boardUrl);
       } else {
-        this.canEditBoard = false;
+        this.revokeBoardAccess();
         this.activeBoardUrl = '';
       }
 
@@ -266,7 +275,7 @@ export class BoardPageComponent {
 
   widgets$ = createWidgetsStream({
     reload$: this.reload$,
-    routeParamMap$: this.route.paramMap,
+    routeParamMap$: this.routeContext$,
     resolveBoardId$: (routeParamBoardId, routeParamUsername) =>
       this.resolveBoardId$(routeParamBoardId, routeParamUsername),
     loadWidgets: (boardId) => this.boardService.getWidgets(boardId),
@@ -287,7 +296,7 @@ export class BoardPageComponent {
   accountMainBoardId = '';
 
   constructor() {
-    this.destroyRef.onDestroy(() => clearTimeout(this.noticeTimer));
+    this.destroyRef.onDestroy(() => { clearTimeout(this.noticeTimer); this.accessReset$.next(); });
     initializeBoardPageAccountState({
       destroyRef: this.destroyRef,
       boardStore: this.boardStore,
@@ -325,6 +334,7 @@ export class BoardPageComponent {
   }
 
   requestWidgetEdit(board: Board) {
+    if (!this.canEditBoard || this.readOnlyView) return;
     if (this.isSettingsReloading || this.isWidgetLoading || this.isWidgetSaving || this.isIdentitySaving || this.isDeletingBoard) return;
     if (this.hasUnsavedChanges) {
       this.widgetSaveError = 'Save or cancel the board settings changes before editing widgets.';
@@ -334,7 +344,7 @@ export class BoardPageComponent {
     this.widgetSaveError = '';
     const slug = board.boardUrl;
     this.boardService.getEditor(slug)
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      .pipe(takeUntil(this.accessReset$), takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.isWidgetLoading = false;
         this.cdr.markForCheck();
       }))
@@ -399,6 +409,7 @@ export class BoardPageComponent {
   }
 
   startWidgetEdit(board: Board, widgets: Widget[]) {
+    if (!this.canEditBoard || this.readOnlyView) return;
     this.activeNewWidgetDraft = null;
     this.profileNameDraft = this.originalProfileName = board.ownerDisplayName || board.ownerUsername || board.name;
     this.boardDraftWebsite = this.originalBoardWebsite = board.website || '';
@@ -445,11 +456,12 @@ export class BoardPageComponent {
   onAccountBoardSetMain(boardId: string, event: MouseEvent) {
     event.stopPropagation();
     event.preventDefault();
+    if (!this.canEditBoard || this.readOnlyView) return;
     if (this.isSettingMainBoard || this.isMainBoard(boardId)) return;
     this.isSettingMainBoard = true;
     this.accountActionError = '';
     this.boardService.updateMyPreferences({ mainBoardId: boardId })
-      .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+      .pipe(takeUntil(this.accessReset$), takeUntilDestroyed(this.destroyRef), finalize(() => {
         this.isSettingMainBoard = false;
         this.cdr.markForCheck();
       }))
@@ -468,6 +480,7 @@ export class BoardPageComponent {
   onAccountBoardDelete(boardUrl: string, event: MouseEvent) {
     event.stopPropagation();
     event.preventDefault();
+    if (!this.canEditBoard || this.readOnlyView) return;
 
     if (this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
     this.pendingDeleteBoardUrl = boardUrl;
@@ -478,6 +491,7 @@ export class BoardPageComponent {
   }
 
   confirmBoardDelete() {
+    if (!this.canEditBoard || this.readOnlyView) return;
     const boardUrl = this.pendingDeleteBoardUrl;
     if (!boardUrl || this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
     const label = this.pendingDeleteBoardLabel;
@@ -486,6 +500,7 @@ export class BoardPageComponent {
       this.accountBoards.find((board) => board.id === this.accountMainBoardId && board.boardUrl !== boardUrl)?.route ?? '/';
 
     runDeleteBoardAction({
+      cancel$: this.accessReset$,
       boardUrl,
       activeBoardUrl: this.activeBoardUrl,
       fallbackRoute,
@@ -521,6 +536,7 @@ export class BoardPageComponent {
     this.cancelWidgetEdit();
     this.resetIdentityDraft();
     runCreateNewBoardAction({
+      cancel$: this.accessReset$,
       isCreatingBoard: this.isCreatingBoard,
       setAccountActionError: (message) => {
         this.accountActionError = message;
@@ -544,6 +560,7 @@ export class BoardPageComponent {
   };
 
   toggleBoardIdentityMenu() {
+    if (!this.canEditBoard || this.readOnlyView) return;
     if (this.isSettingsReloading) return;
     if (this.isBoardIdentityMenuOpen) {
       this.closeBoardIdentityMenu(true);
@@ -587,6 +604,7 @@ export class BoardPageComponent {
   }
 
   saveIdentity(automatic = false) {
+    if (!this.canEditBoard || this.readOnlyView) return;
     if (this.isSettingsReloading || this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
     const prepared = prepareBoardIdentityUpdate({
       draftName: this.boardIdentityNameDraft,
@@ -610,7 +628,7 @@ export class BoardPageComponent {
       boardName: prepared.kind === 'update' ? prepared.boardName : this.boardIdentityPersistedName,
       boardUrl: prepared.kind === 'update' ? prepared.boardUrl : this.boardIdentityPersistedUrl,
       version: this.identityVersion, appearance: this.appearanceDraft,
-    }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {
+    }).pipe(takeUntil(this.accessReset$), takeUntilDestroyed(this.destroyRef), finalize(() => {
       this.isIdentitySaving = false;
       this.cdr.markForCheck();
     })).subscribe({
@@ -655,6 +673,7 @@ export class BoardPageComponent {
   }
 
   deleteWidget(draft: WidgetDraft) {
+    if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode || this.isWidgetSaving) return;
     if (this.activeNewWidgetDraft === draft) this.activeNewWidgetDraft = null;
     const next = applyDeleteWidgetAction({
       draft,
@@ -669,7 +688,7 @@ export class BoardPageComponent {
 
   private readonly injector = inject(Injector);
   addWidgetFromLibrary(selection: { type: 'link' | 'embed' | 'map'; origin: DOMRect }) {
-    if (!this.isWidgetEditMode || this.isWidgetSaving || this.isIdentitySaving) return;
+    if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode || this.isWidgetSaving || this.isIdentitySaving) return;
     const added: WidgetDraft = {
       ...createEmptyWidgetDraftHelper(),
       type: selection.type,
@@ -698,6 +717,7 @@ export class BoardPageComponent {
   }
 
   moveWidget(draft: WidgetDraft, direction: -1 | 1) {
+    if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode) return;
     this.widgetDrafts = applyMoveWidgetAction({
       draft,
       direction,
@@ -708,7 +728,7 @@ export class BoardPageComponent {
   }
 
   openWidgetSettings(draft: WidgetDraft) {
-    if (this.isWidgetSaving) return;
+    if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode || this.isWidgetSaving) return;
     this.activeNewWidgetDraft = draft.id ? null : draft;
     this.activeWidgetSettingsId = draft.id ?? null;
     this.draftValidationErrors.delete(draft);
@@ -728,8 +748,9 @@ export class BoardPageComponent {
   }
 
   doneWidgetEdit() {
-    if (this.isWidgetSaving || this.isDeletingBoard) return;
+    if (!this.canEditBoard || this.readOnlyView || !this.isWidgetEditMode || this.isWidgetSaving || this.isDeletingBoard) return;
     runDoneWidgetEdit({
+      cancel$: this.accessReset$,
       version: this.editVersion,
       activeBoardUrl: this.activeBoardUrl,
       editingBoardUrl: this.editingBoardUrl,
@@ -792,18 +813,30 @@ export class BoardPageComponent {
   }
 
   private loadBoardPermissions(boardUrl: string) {
-    const requestId = ++this.boardPermissionsRequestId;
-    runLoadBoardPermissions({
-      boardService: this.boardService,
-      boardUrl,
-      onCanEditChange: (canEdit) => {
-        if (requestId !== this.boardPermissionsRequestId) {
-          return;
-        }
-        this.canEditBoard = canEdit;
+    this.permissionsRequest?.unsubscribe();
+    this.canEditBoard = false;
+    this.permissionsRequest = this.boardService.getBoardPermissions(boardUrl)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: permissions => {
+        this.canEditBoard = !!permissions.canEdit;
+        this.cdr.markForCheck();
+      },
+      error: () => {
+        this.revokeBoardAccess();
         this.cdr.markForCheck();
       },
     });
+  }
+
+  private revokeBoardAccess() {
+    this.permissionsRequest?.unsubscribe();
+    this.canEditBoard = false;
+    this.accessReset$.next();
+    this.cancelWidgetEdit();
+    this.resetIdentityDraft();
+    this.closeBoardIdentityMenu();
+    this.profileNameDraft = this.originalProfileName = '';
+    this.boardDraftWebsite = this.originalBoardWebsite = '';
   }
 
   private resolveBoardId$(routeParamBoardId: string | null, routeParamUsername: string | null) {

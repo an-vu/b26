@@ -25,9 +25,9 @@
             <section *ngIf="isBoardSwitcherOpen" class="board-switcher board-panel-view panel-content-centered" id="board-switcher" aria-label="Your boards">
               <div class="panel-content-group">
               <button class="app-button panel-back" type="button" aria-label="Back to Board Settings" (click)="dismiss.emit('back')">← Back</button>
-              <div class="board-switcher-row" *ngFor="let board of accountBoards">
-                <button class="app-button board-switcher-link" type="button" (click)="switchBoard.emit(board.route)" [attr.aria-current]="board.boardUrl === board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ board.label }}</button>
-                <button class="app-button" type="button" [attr.aria-label]="'Set ' + board.label + ' as main board'" [attr.aria-pressed]="accountMainBoardId === board.id" [disabled]="accountMainBoardId === board.id || isSettingMainBoard || board.visibility === 'private'" (click)="setMain.emit({ id: board.id, event: $event })">{{ accountMainBoardId === board.id ? 'Main' : 'Set main' }}</button>
+              <div class="board-switcher-row" *ngFor="let item of accountBoards">
+                <button class="app-button board-switcher-link" type="button" (click)="switchBoard.emit(item.route)" [attr.aria-current]="item.boardUrl === board.boardUrl ? 'page' : null" [disabled]="isIdentitySaving || isSettingMainBoard">{{ item.label }}</button>
+                <button class="app-button" type="button" [attr.aria-label]="'Set ' + item.label + ' as main board'" [attr.aria-pressed]="accountMainBoardId === item.id" [disabled]="accountMainBoardId === item.id || isSettingMainBoard || item.visibility === 'private'" (click)="setMain.emit({ id: item.id, event: $event })">{{ accountMainBoardId === item.id ? 'Main' : 'Set main' }}</button>
               </div>
               <p *ngIf="!accountBoards.length">No boards yet.</p>
               <p class="error" role="alert" *ngIf="accountActionError">{{ accountActionError }}</p>

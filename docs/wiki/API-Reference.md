@@ -32,7 +32,7 @@ Signup accepts `email`, `password`, and optional `displayName` / `username`. The
 
 ## Boards
 
-“Owner/admin” below means a bearer session belonging to the board owner or an administrator. The server enforces authorization; a hidden frontend control is not the access check.
+“Owner/admin” below means a bearer session belonging to the board owner or an administrator. The server enforces authorization; a hidden frontend control is not the access check. See [Permissions](Permissions) for the complete access rules.
 
 | Method | Path | Access / purpose |
 |---|---|---|
@@ -41,12 +41,13 @@ Signup accepts `email`, `password`, and optional `displayName` / `username`. The
 | GET | `/api/board/mine` | Session; list own boards |
 | GET | `/api/board/{slug}` | Public board, or owner/admin for private board |
 | GET | `/api/board/by-owner/{username}/{slug}` | Same visibility policy; username must own the board, otherwise 404 |
-| GET | `/api/board/{slug}/permissions` | Optional session; returns `canEdit` |
+| GET | `/api/board/{slug}/permissions` | Same board visibility rules; returns `canEdit` for the optional session |
 | GET | `/api/board/{slug}/editor` | Owner/admin; board + widgets snapshot |
 | PUT | `/api/board/{slug}/editor` | Owner/admin; atomic editor save with required version |
 | PATCH | `/api/board/{slug}/identity` | Owner/admin; board name and URL slug |
 | PATCH | `/api/board/{slug}/meta` | Owner/admin; display name and headline |
 | PATCH | `/api/board/{slug}/url` | Owner/admin; URL slug |
+| PATCH | `/api/board/{slug}/visibility` | Owner/admin; public/private, subject to main-board safeguards |
 | PUT | `/api/board/{slug}` | Retired; 410 Gone |
 | DELETE | `/api/board/{slug}` | Owner/admin; delete; reject last or main boards; success returns 204 |
 

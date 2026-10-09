@@ -18,8 +18,6 @@ export function createPageStateStream(params: {
   recordBoardView: (boardId: string) => void;
   onState: (state: BoardPageState) => void;
 }): Observable<BoardPageState> {
-  let hasLoadedPageStateOnce = false;
-
   return params.reload$.pipe(
     startWith(undefined),
     switchMap(() =>
@@ -39,14 +37,10 @@ export function createPageStateStream(params: {
               )
             );
 
-          return hasLoadedPageStateOnce
-            ? boardState$
-            : boardState$.pipe(startWith<BoardPageState>({ status: 'loading' }));
+          // Never carry a previous board/account's content into a pending read.
+          return boardState$.pipe(startWith<BoardPageState>({ status: 'loading' }));
         }),
         tap((state) => {
-          if (state.status !== 'loading') {
-            hasLoadedPageStateOnce = true;
-          }
           params.onState(state);
         })
       )
@@ -76,7 +70,8 @@ export function createWidgetsStream(params: {
                 catchError(() => of<Widget[]>([])),
                 startWith<Widget[]>([])
               )
-            )
+            ),
+            startWith<Widget[]>([])
           )
         )
       )

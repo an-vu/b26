@@ -1,6 +1,6 @@
 # What works, and what is unfinished
 
-Use this page to distinguish an application problem from an unfinished feature. Status reflects 1.5.9 local implementation and verification; this does not establish a hosted release.
+Use this page to distinguish an application problem from an unfinished feature. Status reflects the local 1.6.0 implementation; see [Testing](Testing) for verification. A release commit does not establish a hosted deployment.
 
 ## Implemented
 
@@ -8,6 +8,8 @@ Use this page to distinguish an application problem from an unfinished feature. 
 - Signup, password sign-in, sign-out, and bearer sessions.
 - Signup creates a private owned starter board; choosing a public main board is optional.
 - Board creation/deletion, owner/admin checks, confirmation, and predictable post-delete navigation.
+- Explicit API access policies, default denial for undeclared application endpoints, and shared private-read/owner/admin checks. See [Permissions](Permissions).
+- Account and route changes clear stale permissions, personal data, and pending requests; bearer headers stay on recognized same-origin API routes.
 - Deletion safeguards for the last board, main board, and concurrent deletes.
 - Set Main Board through the board switcher in Board Settings.
 - Link, embed, and places-list widgets; tile sizes and manual ordering.

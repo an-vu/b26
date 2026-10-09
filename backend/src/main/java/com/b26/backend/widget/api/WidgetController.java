@@ -1,6 +1,8 @@
 package com.b26.backend.widget.api;
 
 import com.b26.backend.widget.domain.WidgetService;
+import com.b26.backend.common.config.ApiAccess;
+import static com.b26.backend.common.config.ApiAccess.Policy.*;
 import jakarta.validation.Valid;
 import java.util.List;
 import org.springframework.http.HttpStatus;
@@ -15,6 +17,7 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@ApiAccess(BOARD_WRITE)
 @RequestMapping("/api/board")
 public class WidgetController {
   private final WidgetService widgetService;
@@ -24,6 +27,7 @@ public class WidgetController {
   }
 
   @GetMapping("/{boardId}/widgets")
+  @ApiAccess(BOARD_READ)
   public List<WidgetDto> getWidgets(@PathVariable String boardId) {
     return widgetService.getWidgetsForBoard(boardId);
   }

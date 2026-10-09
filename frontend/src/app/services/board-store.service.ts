@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject } from 'rxjs';
+import { BehaviorSubject, Subscription } from 'rxjs';
 import { BoardService } from './board.service';
 import type { Board } from '../models/board';
 import type { BoardIdentity } from '../models/board-identity';
@@ -15,17 +15,20 @@ export class BoardStoreService {
 
   private boardsSubject = new BehaviorSubject<BoardIdentity[]>([]);
   readonly boards$ = this.boardsSubject.asObservable();
+  private refreshRequest?: Subscription;
 
   constructor(private boardService: BoardService) {}
 
   refreshBoards() {
-    this.boardService.getMyBoards().subscribe({
+    this.refreshRequest?.unsubscribe();
+    this.refreshRequest = this.boardService.getMyBoards().subscribe({
       next: (boards) => this.boardsSubject.next(boards.map((board) => this.toIdentity(board))),
       error: () => this.boardsSubject.next([]),
     });
   }
 
   clearBoards() {
+    this.refreshRequest?.unsubscribe();
     this.setNotice('');
     this.boardsSubject.next([]);
   }

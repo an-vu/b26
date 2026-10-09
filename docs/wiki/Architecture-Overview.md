@@ -26,7 +26,7 @@ Home, settings, insights, and sign-in are dedicated application pages. User boar
 
 ## Backend responsibilities
 
-The Java packages are organized by feature: `auth`, `board`, `widget`, `user`, `system`, and `insights`. Each generally separates controllers/DTOs (`api`), behavior (`domain`), and entities/repositories (`persistence`). `common` holds shared errors and request configuration.
+The Java packages are organized by feature: `auth`, `board`, `widget`, `user`, and `insights`. Each generally separates controllers/DTOs (`api`), behavior (`domain`), and entities/repositories (`persistence`). `common` holds shared errors and request configuration.
 
 Authentication uses BCrypt password hashes and opaque bearer tokens. The server stores token hashes in `auth_sessions`; the browser stores the bearer token in local storage. Board writes require an owner/admin session. System-route APIs return 410; the admin-token bypass is retired.
 
@@ -46,4 +46,10 @@ Session validation and widget request mapping are consolidated; unused queries/D
 
 Legacy cards and mappings are retained as archives by V37. The frontend route picker and old API callers are removed; old clients receive 410 responses. Migration tests cover fresh installs, upgrades, archived data, historical clicks, and detached constraints. Authorization, pagination, click permissions, and concurrent throttling have regression tests.
 
-Two deployment boundaries remain: click suppression is per instance, and V37 needs the matching backend/frontend release. Historical migrations remain untouched. Authorization still uses URI checks in the interceptor; any new endpoint must include access-policy tests.
+Two deployment boundaries remain: click suppression is per instance, and V37 needs the matching backend/frontend release. Historical migrations remain untouched.
+
+## 1.6.0 permission enforcement
+
+Controllers declare `@ApiAccess` policies. The interceptor checks the matched handler and resolved path variables; it no longer parses raw URI strings to infer access. Undeclared application handlers are denied. `BoardAccessService` centralizes owner/admin checks, while event controllers check validated body-supplied board IDs before recording events. Tests cover declarations and allowed/denied access. See [Permissions](Permissions).
+
+Frontend permissions reset on route/account changes. Board libraries, insights, and user/board stores cancel stale loads and clear old account data. The auth interceptor attaches bearer headers only to recognized same-origin API routes.

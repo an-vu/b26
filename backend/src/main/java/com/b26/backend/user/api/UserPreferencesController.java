@@ -2,6 +2,8 @@ package com.b26.backend.user.api;
 
 import com.b26.backend.user.domain.UserPreferencesService;
 import com.b26.backend.user.domain.UserProfileService;
+import com.b26.backend.common.config.ApiAccess;
+import static com.b26.backend.common.config.ApiAccess.Policy.*;
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
@@ -13,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
+@ApiAccess(AUTHENTICATED)
 @RequestMapping("/api/users")
 public class UserPreferencesController {
   private final UserPreferencesService userPreferencesService;
@@ -52,6 +55,7 @@ public class UserPreferencesController {
   }
 
   @GetMapping("/{username}/main-board")
+  @ApiAccess(PUBLIC)
   public UserMainBoardDto getUserMainBoard(@PathVariable String username) {
     return userPreferencesService.getMainBoardByUsername(username);
   }

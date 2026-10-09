@@ -1,4 +1,5 @@
 import type { Router } from '@angular/router';
+import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 
 import type { AuthService } from '../../services/auth.service';
 import type { BoardService } from '../../services/board.service';
@@ -8,6 +9,7 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 import { runCreateBoardFlow, runSignOutFlow } from './board-page.account';
 
 export function runCreateNewBoardAction(params: {
+  cancel$?: Observable<unknown>;
   isCreatingBoard: boolean;
   setAccountActionError: (message: string) => void;
   setCreatingBoard: (isCreating: boolean) => void;
@@ -23,6 +25,7 @@ export function runCreateNewBoardAction(params: {
 
   params.setAccountActionError('');
   runCreateBoardFlow({
+    cancel$: params.cancel$,
     boardService: params.boardService,
     boardStore: params.boardStore,
     userStore: params.userStore,
@@ -41,6 +44,7 @@ export function runCreateNewBoardAction(params: {
 }
 
 export function runDeleteBoardAction(params: {
+  cancel$?: Observable<unknown>;
   boardUrl: string;
   activeBoardUrl: string;
   fallbackRoute: string;
@@ -61,10 +65,18 @@ export function runDeleteBoardAction(params: {
 
   params.setAccountActionError('');
   params.setDeletingBoard(true, params.boardUrl);
+  let deleting = true;
+  const stopDeleting = () => {
+    if (!deleting) return;
+    deleting = false;
+    params.setDeletingBoard(false, '');
+  };
 
-  params.boardService.deleteBoard(params.boardUrl).subscribe({
+  params.boardService.deleteBoard(params.boardUrl).pipe(
+    takeUntil(params.cancel$ ?? NEVER), finalize(stopDeleting)
+  ).subscribe({
     next: () => {
-      params.setDeletingBoard(false, '');
+      stopDeleting();
       params.onDeleted?.();
       params.closeAccountBoardActionsMenu();
       params.closeBoardIdentityMenu();
@@ -76,7 +88,7 @@ export function runDeleteBoardAction(params: {
       }
     },
     error: (error) => {
-      params.setDeletingBoard(false, '');
+      stopDeleting();
       params.setAccountActionError(getApiErrorMessage(error, 'Unable to delete board.'));
     },
   });

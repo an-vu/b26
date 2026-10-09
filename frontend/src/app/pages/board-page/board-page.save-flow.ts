@@ -1,4 +1,4 @@
-import { finalize } from 'rxjs';
+import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 import type { BoardService } from '../../services/board.service';
 import type { UpsertWidgetRequest } from '../../models/widget';
 import { getApiErrorMessage } from '../../utils/api-error.util';
@@ -30,6 +30,7 @@ export function hasDraftChangedByOriginal(
 }
 
 export function runDoneWidgetEdit(params: {
+  cancel$?: Observable<unknown>;
   version: number | null;
   activeBoardUrl: string;
   editingBoardUrl: string;
@@ -121,7 +122,7 @@ export function runDoneWidgetEdit(params: {
     ...(website !== undefined ? { website } : {}),
     widgets: widgetPayload.widgets,
   })
-    .pipe(finalize(() => params.setWidgetSaving(false)))
+    .pipe(takeUntil(params.cancel$ ?? NEVER), finalize(() => params.setWidgetSaving(false)))
     .subscribe({
       next: () => {
         params.onSaved();

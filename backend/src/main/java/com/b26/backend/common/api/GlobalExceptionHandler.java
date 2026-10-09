@@ -1,6 +1,7 @@
 package com.b26.backend.common.api;
 
 import com.b26.backend.auth.domain.AuthConflictException;
+import com.b26.backend.auth.domain.AuthForbiddenException;
 import com.b26.backend.auth.domain.AuthUnauthorizedException;
 import com.b26.backend.auth.domain.InvalidAuthRequestException;
 import com.b26.backend.board.domain.BoardNotFoundException;
@@ -112,6 +113,12 @@ public class GlobalExceptionHandler {
   @ExceptionHandler(AuthConflictException.class)
   @ResponseStatus(HttpStatus.CONFLICT)
   public ApiError handleAuthConflict(AuthConflictException exception) {
+    return new ApiError(exception.getMessage());
+  }
+
+  @ExceptionHandler(AuthForbiddenException.class)
+  @ResponseStatus(HttpStatus.FORBIDDEN)
+  public ApiError handleAuthForbidden(AuthForbiddenException exception) {
     return new ApiError(exception.getMessage());
   }
 }

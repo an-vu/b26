@@ -6,7 +6,7 @@ import { getApiErrorMessage } from '../../utils/api-error.util';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatest, of, Subject, timer } from 'rxjs';
-import { catchError, debounceTime, map, switchMap } from 'rxjs/operators';
+import { catchError, finalize, map, switchMap, takeUntil } from 'rxjs/operators';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import type { Widget } from '../../models/widget';
 import { BoardStoreService } from '../../services/board-store.service';
@@ -40,16 +40,22 @@ export class AccountSettingsFormComponent implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   readonly boards$;
   isSigningOut = false;
-  private readonly state$ = new BehaviorSubject<UserSettingsState>({
-    displayName: '',
-    username: 'username',
-    email: '',
-    profileSavedField: null,
-    mainBoardId: '',
-    saved: false,
-    errorMessage: '',
-    isHydrating: true,
-  });
+  private readonly state$ = new BehaviorSubject<UserSettingsState>(this.emptyState());
+  private readonly accountReset$ = new Subject<void>();
+  private accountId: string | null = null;
+
+  private emptyState(): UserSettingsState {
+    return {
+      displayName: '',
+      username: '',
+      email: '',
+      profileSavedField: null,
+      mainBoardId: '',
+      saved: false,
+      errorMessage: '',
+      isHydrating: false,
+    };
+  }
   private readonly saveRequests$ = new Subject<string>();
   private readonly saveProfileRequests$ = new Subject<void>();
   private lastEditedProfileField: 'displayName' | 'username' | 'email' | null = null;
@@ -71,6 +77,7 @@ export class AccountSettingsFormComponent implements OnInit {
       .pipe(
         switchMap((mainBoardId) =>
           this.boardService.updateMyPreferences({ mainBoardId }).pipe(
+            takeUntil(this.accountReset$),
             map((preferences) => ({ ok: true as const, preferences })),
             catchError((error) => of({ ok: false as const, error }))
           )
@@ -90,9 +97,7 @@ export class AccountSettingsFormComponent implements OnInit {
         }
 
         this.state$.next({
-          username: result.preferences.username,
-          displayName: this.state$.value.displayName,
-          email: this.state$.value.email,
+          ...this.state$.value,
           profileSavedField: null,
           mainBoardId: result.preferences.mainBoardId,
           saved: true,
@@ -103,7 +108,7 @@ export class AccountSettingsFormComponent implements OnInit {
         this.userStore.setMainBoardId(result.preferences.mainBoardId);
         this.boardStore.refreshBoards();
         timer(1200)
-          .pipe(takeUntilDestroyed(this.destroyRef))
+          .pipe(takeUntil(this.accountReset$), takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
             const current = this.state$.value;
             if (current.saved) {
@@ -114,7 +119,8 @@ export class AccountSettingsFormComponent implements OnInit {
 
     this.saveProfileRequests$
       .pipe(
-        debounceTime(600),
+        // Keep the request stream alive, but discard a queued edit when its account changes.
+        switchMap(() => timer(600).pipe(takeUntil(this.accountReset$))),
         map(() => {
           const current = this.state$.value;
           return {
@@ -131,6 +137,7 @@ export class AccountSettingsFormComponent implements OnInit {
             });
           }
           return this.userStore.updateMyProfile(payload).pipe(
+            takeUntil(this.accountReset$),
             map((profile) => ({ ok: true as const, profile })),
             catchError((error) => of({ ok: false as const, error }))
           );
@@ -160,7 +167,7 @@ export class AccountSettingsFormComponent implements OnInit {
         });
 
         timer(1200)
-          .pipe(takeUntilDestroyed(this.destroyRef))
+          .pipe(takeUntil(this.accountReset$), takeUntilDestroyed(this.destroyRef))
           .subscribe(() => {
             const current = this.state$.value;
             if (current.profileSavedField) {
@@ -171,64 +178,43 @@ export class AccountSettingsFormComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.boardStore.refreshBoards();
-    this.userStore.refreshMyProfile();
-    const currentProfile = this.userStore.getCurrentProfile();
-    if (currentProfile) {
-      const current = this.state$.value;
-      this.state$.next({
-        ...current,
-        displayName: currentProfile.displayName,
-        username: currentProfile.username,
-        email: currentProfile.email ?? '',
-      });
-    }
     this.userStore.profile$
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe((profile) => {
-        if (!profile) {
-          return;
+        const id = profile?.userId ?? null;
+        const changed = id !== this.accountId;
+        if (changed || !profile) {
+          this.accountReset$.next();
+          this.accountId = id;
+          this.lastEditedProfileField = null;
+          this.state$.next(this.emptyState());
         }
-        const current = this.state$.value;
+        if (!profile) return;
         this.state$.next({
-          ...current,
+          ...this.state$.value,
           displayName: profile.displayName,
           username: profile.username,
           email: profile.email ?? '',
           isHydrating: false,
         });
+        if (changed) this.userStore.refreshMyPreferences();
       });
-    this.boardService
-      .getMyPreferences()
+    this.userStore.mainBoardId$
       .pipe(takeUntilDestroyed(this.destroyRef))
-      .subscribe({
-        next: (preferences) => {
-          const current = this.state$.value;
-          this.state$.next({
-            ...current,
-            username: preferences.username,
-            mainBoardId: preferences.mainBoardId,
-            saved: false,
-            profileSavedField: null,
-            isHydrating: false,
-          });
-          this.userStore.setMainBoardId(preferences.mainBoardId);
-        },
-        error: () => {
-          const current = this.state$.value;
-          this.state$.next({
-            ...current,
-            isHydrating: false,
-          });
-        },
+      .subscribe(mainBoardId => {
+        this.state$.next({ ...this.state$.value, mainBoardId: this.accountId ? mainBoardId : '' });
       });
+    this.boardStore.refreshBoards();
+    this.userStore.refreshMyProfile();
   }
 
   signOut(): void {
     if (this.isSigningOut) return;
     this.isSigningOut = true;
     this.state$.next({ ...this.state$.value, errorMessage: '' });
-    this.authService.signout().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+    this.authService.signout().pipe(
+      takeUntilDestroyed(this.destroyRef), finalize(() => { this.isSigningOut = false; })
+    ).subscribe({
       next: () => {
         this.isSigningOut = false;
         this.userStore.clearProfile();
@@ -246,6 +232,7 @@ export class AccountSettingsFormComponent implements OnInit {
   }
 
   onMainBoardChanged(mainBoardId: string) {
+    if (!this.accountId) return;
     const current = this.state$.value;
     this.state$.next({ ...current, mainBoardId, saved: false, errorMessage: '' });
 
@@ -256,6 +243,7 @@ export class AccountSettingsFormComponent implements OnInit {
   }
 
   onProfileFieldChanged(field: 'displayName' | 'username' | 'email', value: string) {
+    if (!this.accountId) return;
     this.lastEditedProfileField = field;
     const current = this.state$.value;
     this.state$.next({

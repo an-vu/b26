@@ -13,7 +13,7 @@ npm --prefix frontend run build
 
 Tests use Vitest through Angular. The production output is `frontend/dist/b26`, not `dist/b26/browser`.
 
-The 1.5.9 production frontend build passed. See [Troubleshooting](Troubleshooting) for build issues.
+The local 1.6.0 production frontend build passed. See [Troubleshooting](Troubleshooting) for build issues.
 
 ## Backend: fast suite
 
@@ -55,6 +55,17 @@ Without `POSTGRES_TEST_URL`, those tests are skipped. They cover fresh migration
 10. Delete an extra board from both menu flows; check confirmation, safeguards, draft retention on failure, and the active-board redirect.
 
 ## Recorded local verification
+
+### 1.6.0 — October 9, 2026
+
+- **119 backend tests passed**, with no failures or skips, including PostgreSQL migrations and concurrency tests. `mvn verify` also built the backend package.
+- The 37 new permission tests cover every board/widget mutation for owners and admins, denied writes with unchanged data, private/public GET and HEAD reads, editor/insights restrictions, and self-scoped account preferences.
+- Routing regressions cover `mine` / `by-owner` board slugs, context paths, percent-encoded segments, and matrix parameters. Tests also check missing policies, missing policy variables, declared coverage of all application handlers, and OPTIONS/CORS behavior.
+- Expired/revoked sessions lose private access. Anonymous public reads, event access checks, and main-board restrictions retain their existing behavior.
+- **141 frontend tests passed** across 29 files, and the production build passed. Regression coverage includes immediate permission clearing, account switching/sign-out, canceled late responses and queued profile saves, same-origin bearer headers, admin/read-only controls, username-renamed board links, and the active board indicator.
+- The local Docker backend was rebuilt and became healthy. Live checks returned 200 for public board/permissions reads, 404 for a visitor's editor read, 401 for an unauthenticated write, and 410 for retired system routes.
+
+No new migration is required. These are local checks, not a hosted rollout. Git publication and hosted deployment are tracked separately.
 
 ### 1.5.9 — October 9, 2026
 

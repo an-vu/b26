@@ -1,20 +1,4 @@
-import type { BoardService } from '../../services/board.service';
 import type { WidgetDraft } from './board-page.widget-edit';
-
-export function runLoadBoardPermissions(params: {
-  boardService: BoardService;
-  boardUrl: string;
-  onCanEditChange: (canEdit: boolean) => void;
-}): void {
-  params.boardService.getBoardPermissions(params.boardUrl).subscribe({
-    next: (permissions) => {
-      params.onCanEditChange(!!permissions.canEdit);
-    },
-    error: () => {
-      params.onCanEditChange(false);
-    },
-  });
-}
 
 export function applyOnWidgetTypeChange(params: {
   draft: WidgetDraft;

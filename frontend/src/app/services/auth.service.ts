@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { BehaviorSubject, Observable, Subject, takeUntil, tap } from 'rxjs';
 import type {
   AuthMeResponse,
   AuthSessionResponse,
@@ -15,6 +15,7 @@ const ACCESS_TOKEN_KEY = 'b26_access_token';
 export class AuthService {
   private readonly userSubject = new BehaviorSubject<AuthUser | null>(null);
   readonly user$ = this.userSubject.asObservable();
+  private readonly sessionChanged$ = new Subject<void>();
 
   constructor(private http: HttpClient) {}
 
@@ -33,7 +34,7 @@ export class AuthService {
   me(): Observable<AuthMeResponse> {
     return this.http
       .get<AuthMeResponse>(`/api/auth/me`)
-      .pipe(tap((response) => this.userSubject.next(response.user)));
+      .pipe(takeUntil(this.sessionChanged$), tap((response) => this.userSubject.next(response.user)));
   }
 
   signout(): Observable<void> {
@@ -61,15 +62,17 @@ export class AuthService {
   }
 
   clearSession(): void {
-    this.userSubject.next(null);
     try {
       localStorage.removeItem(ACCESS_TOKEN_KEY);
     } catch {
       // ignore storage failures
     }
+    this.sessionChanged$.next();
+    this.userSubject.next(null);
   }
 
   private applySession(response: AuthSessionResponse): void {
+    this.sessionChanged$.next();
     this.setAccessToken(response.accessToken);
     this.userSubject.next(response.user);
   }

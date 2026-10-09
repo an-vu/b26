@@ -1,23 +1,23 @@
 import { TestBed } from '@angular/core/testing';
-import { provideHttpClient, withInterceptors, HttpClient } from '@angular/common/http';
-import { provideHttpClientTesting, HttpTestingController } from '@angular/common/http/testing';
+import { HttpRequest, HttpResponse } from '@angular/common/http';
+import { of } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { authInterceptor } from './auth.interceptor';
 
-describe('Authenticated board analytics', () => {
-  it('includes the session on summaries and private-board view tracking', () => {
-    TestBed.configureTestingModule({providers: [
-      provideHttpClient(withInterceptors([authInterceptor])), provideHttpClientTesting(),
-      {provide: AuthService, useValue: {getAccessToken: () => 'local-test-token'}}
-    ]});
-    const http = TestBed.inject(HttpClient), requests = TestBed.inject(HttpTestingController);
-    http.get('/api/insights/board-id/summary').subscribe();
-    const summary = requests.expectOne('/api/insights/board-id/summary');
-    expect(summary.request.headers.get('Authorization')).toBe('Bearer local-test-token');
-    summary.flush({});
-    http.post('/api/insights/view', {boardId: 'board-id'}).subscribe();
-    const view = requests.expectOne('/api/insights/view');
-    expect(view.request.headers.get('Authorization')).toBe('Bearer local-test-token');
-    view.flush(null); requests.verify();
+describe('API bearer token scope', () => {
+  beforeEach(() => TestBed.configureTestingModule({
+    providers: [{ provide: AuthService, useValue: { getAccessToken: () => 'session-token' } }],
+  }));
+
+  it.each(['/api/board/mine', '/api/board?page=0', '/api/users/me/profile', '/api/auth/me', '/api/auth/signout', '/api/insights/one', `${window.location.origin}/api/board/one`])('authenticates the local API %s', url => {
+    const next = vi.fn((_request: HttpRequest<unknown>) => of(new HttpResponse()));
+    TestBed.runInInjectionContext(() => authInterceptor(new HttpRequest('GET', url), next));
+    expect(next.mock.calls[0][0].headers.get('Authorization')).toBe('Bearer session-token');
+  });
+
+  it.each(['https://external.example/api/board/one', '//external.example/api/users/me', '/api/board-other', '/api/users/member', '/api/auth/signin', '/images/api/board/one'])('withholds the token from %s', url => {
+    const next = vi.fn((_request: HttpRequest<unknown>) => of(new HttpResponse()));
+    TestBed.runInInjectionContext(() => authInterceptor(new HttpRequest('GET', url), next));
+    expect(next.mock.calls[0][0].headers.has('Authorization')).toBe(false);
   });
 });

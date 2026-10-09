@@ -1,145 +1,57 @@
 package com.b26.backend.common.config;
 
+import com.b26.backend.auth.domain.AuthForbiddenException;
 import com.b26.backend.auth.domain.AuthService;
-import com.b26.backend.auth.domain.AuthUnauthorizedException;
-import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.domain.BoardAccessService;
-import com.b26.backend.board.persistence.BoardEntity;
-import com.b26.backend.board.persistence.BoardRepository;
-import com.b26.backend.user.persistence.AppUserEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import java.util.Map;
+import org.springframework.core.annotation.AnnotatedElementUtils;
 import org.springframework.stereotype.Component;
+import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
+import org.springframework.web.servlet.HandlerMapping;
 
 @Component
 public class ApiAuthorizationInterceptor implements HandlerInterceptor {
   private final AuthService authService;
-  private final BoardRepository boardRepository;
   private final BoardAccessService boardAccess;
 
-  public ApiAuthorizationInterceptor(AuthService authService, BoardRepository boardRepository, BoardAccessService boardAccess) {
+  public ApiAuthorizationInterceptor(AuthService authService, BoardAccessService boardAccess) {
     this.authService = authService;
-    this.boardRepository = boardRepository;
     this.boardAccess = boardAccess;
   }
 
   @Override
-  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
-      throws Exception {
-    if (handler instanceof org.springframework.web.method.HandlerMethod method
-        && method.getBeanType() == com.b26.backend.common.api.RetiredApiController.class) return true;
-    if ("GET".equalsIgnoreCase(request.getMethod()) || "HEAD".equalsIgnoreCase(request.getMethod())) return authorizeRead(request, response);
-    if (!isWriteMethod(request.getMethod())) return true;
+  public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+    // Preflight, missing routes and framework endpoints keep their normal MVC behavior.
+    if (!(handler instanceof HandlerMethod method)) return true;
+    String packageName = method.getBeanType().getPackageName();
+    if (!packageName.equals("com.b26.backend") && !packageName.startsWith("com.b26.backend.")) return true;
 
-    String uri = request.getRequestURI();
-    if (uri == null || !uri.startsWith("/api/")) {
-      return true;
+    ApiAccess access = AnnotatedElementUtils.findMergedAnnotation(method.getMethod(), ApiAccess.class);
+    if (access == null) {
+      access = AnnotatedElementUtils.findMergedAnnotation(method.getBeanType(), ApiAccess.class);
     }
+    // New application endpoints must explicitly choose a policy.
+    if (access == null) throw new AuthForbiddenException();
 
-    if (uri.startsWith("/api/auth")) {
-      return true;
+    String authorization = request.getHeader("Authorization");
+    switch (access.value()) {
+      case PUBLIC -> { }
+      case AUTHENTICATED -> authService.getAuthenticatedUser(authorization);
+      case BOARD_READ, BOARD_OWNER_READ -> boardAccess.requireRead(
+          boardKey(request, access), access.byId(),
+          access.value() == ApiAccess.Policy.BOARD_OWNER_READ, authorization);
+      case BOARD_WRITE -> boardAccess.requireWrite(boardKey(request, access), access.byId(), authorization);
     }
-
-    if (uri.startsWith("/api/users/me")) {
-      return requireAuthenticatedUser(request, response) != null;
-    }
-
-    if (uri.startsWith("/api/board")) {
-      return authorizeBoardWrite(request, response, uri);
-    }
-
     return true;
   }
 
-  private boolean authorizeRead(HttpServletRequest request, HttpServletResponse response) throws Exception {
-    String uri = request.getRequestURI();
-    String slug = null;
-    boolean editor = false;
-    boolean insights = false;
-    if (uri.startsWith("/api/board/by-owner/")) {
-      String[] parts = uri.substring("/api/board/by-owner/".length()).split("/");
-      if (parts.length == 2) slug = parts[1];
-    } else if (uri.startsWith("/api/board/")) {
-      slug = extractBoardUrlSlug(uri);
-      if ("mine".equals(slug)) return true;
-      editor = uri.endsWith("/editor");
-    } else if (uri.startsWith("/api/insights/")) {
-      slug = uri.substring("/api/insights/".length()).split("/")[0];
-      insights = true;
-    }
-    if (slug == null) return true;
-    boardAccess.requireRead(slug, insights, editor || insights, request.getHeader("Authorization"));
-    return true;
-  }
-
-  private boolean authorizeBoardWrite(
-      HttpServletRequest request, HttpServletResponse response, String uri) throws Exception {
-    AppUserEntity user = requireAuthenticatedUser(request, response);
-    if (user == null) {
-      return false;
-    }
-
-    String boardUrl = extractBoardUrlSlug(uri);
-    if (boardUrl == null) {
-      return true;
-    }
-
-    BoardEntity board =
-        boardRepository
-            .findByBoardUrl(boardUrl)
-            .orElseThrow(() -> new BoardNotFoundException(boardUrl));
-
-    if (isAdmin(user) || user.getId().equals(board.getOwnerUserId())) {
-      return true;
-    }
-
-    writeError(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-    return false;
-  }
-
-  private AppUserEntity requireAuthenticatedUser(
-      HttpServletRequest request, HttpServletResponse response) throws Exception {
-    try {
-      return authService.getAuthenticatedUser(request.getHeader("Authorization"));
-    } catch (AuthUnauthorizedException exception) {
-      writeError(response, HttpServletResponse.SC_UNAUTHORIZED, exception.getMessage());
-      return null;
-    }
-  }
-
-  private static boolean isWriteMethod(String method) {
-    return method != null
-        && !"GET".equalsIgnoreCase(method)
-        && !"OPTIONS".equalsIgnoreCase(method);
-  }
-
-  private static boolean isAdmin(AppUserEntity user) {
-    return user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().trim());
-  }
-
-  private static String extractBoardUrlSlug(String uri) {
-    String prefix = "/api/board/";
-    if (!uri.startsWith(prefix)) {
-      return null;
-    }
-    String remainder = uri.substring(prefix.length());
-    if (remainder.isBlank()) {
-      return null;
-    }
-    int nextSlash = remainder.indexOf('/');
-    String slug = nextSlash >= 0 ? remainder.substring(0, nextSlash) : remainder;
-    return slug.isBlank() ? null : slug;
-  }
-
-  private static void writeError(HttpServletResponse response, int status, String message)
-      throws Exception {
-    response.setStatus(status);
-    response.setContentType("application/json");
-    response.getWriter().write("{\"message\":\"" + escapeJson(message) + "\"}");
-  }
-
-  private static String escapeJson(String value) {
-    return value == null ? "" : value.replace("\\", "\\\\").replace("\"", "\\\"");
+  private static String boardKey(HttpServletRequest request, ApiAccess access) {
+    Object variables = request.getAttribute(HandlerMapping.URI_TEMPLATE_VARIABLES_ATTRIBUTE);
+    if (variables instanceof Map<?, ?> paths
+        && paths.get(access.boardVariable()) instanceof String key && !key.isBlank()) return key;
+    throw new AuthForbiddenException();
   }
 }

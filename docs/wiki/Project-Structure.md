@@ -52,7 +52,7 @@ b26/
 | Add a widget renderer | `frontend/src/app/widgets/widget-registry.ts` |
 | Understand saving/conflicts | `BoardService.java`, `SaveBoardEditRequest.java`, `board-page.save-flow.ts` |
 | Understand signup/dev login | `AuthService.java`, `backend/.env.example` |
-| Understand permissions | `ApiAuthorizationInterceptor.java` |
+| Understand permissions | Controller `@ApiAccess` declarations, `ApiAuthorizationInterceptor.java`, and `BoardAccessService.java` |
 | Change the database | `backend/src/main/resources/db/migration/` |
 
 Wiki sources live in `docs/wiki/` in this repository. A push to main that changes them triggers the Sync Wiki workflow, which publishes them to GitHub Wiki using a temporary runner checkout. No second local checkout is needed.

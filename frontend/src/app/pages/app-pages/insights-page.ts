@@ -2,7 +2,8 @@ import { ChangeDetectorRef, Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { BehaviorSubject, catchError, of, switchMap } from 'rxjs';
+import { BehaviorSubject, catchError, distinctUntilChanged, map, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
+import { AuthService } from '../../services/auth.service';
 import { BoardService } from '../../services/board.service';
 import { InsightsService } from '../../services/insights.service';
 import { AppPageShellComponent } from './app-page-shell';
@@ -19,7 +20,7 @@ import { AppPageShellComponent } from './app-page-shell';
             <option *ngFor="let board of boards" [value]="board.id">{{board.boardName}}</option>
           </select>
         </label>
-        <p *ngIf="!boards.length">No boards available. <a routerLink="/signin">Sign in</a> to view your insights.</p>
+        <p *ngIf="!boards.length && !error">No boards available. <ng-container *ngIf="!(signedIn$ | async)"><a routerLink="/signin">Sign in</a> to view your insights.</ng-container></p>
       </ng-container>
       <ng-container *ngIf="summary$ | async as summary">
         <dl>
@@ -37,17 +38,28 @@ export class InsightsPageComponent {
   private readonly boardService = inject(BoardService);
   private readonly insights = inject(InsightsService);
   private readonly cdr = inject(ChangeDetectorRef);
-  readonly boards$ = this.boardService.getMyBoards().pipe(catchError(() => of([])));
+  private readonly account$ = inject(AuthService).user$.pipe(
+    map(user => user?.id ?? ''), distinctUntilChanged(),
+    tap(() => { this.selected = ''; this.error = ''; this.selection.next(''); }),
+    shareReplay({ bufferSize: 1, refCount: true })
+  );
+  readonly signedIn$ = this.account$.pipe(map(Boolean));
+  readonly boards$ = this.account$.pipe(switchMap(id => id ? this.boardService.getMyBoards().pipe(
+    catchError(() => { this.error = 'Unable to load your boards. Please retry.'; this.cdr.markForCheck(); return of([]); }),
+    startWith([])
+  ) : of([])));
   private readonly selection = new BehaviorSubject<string>('');
   selected = '';
   error = '';
-  readonly summary$ = this.selection.pipe(switchMap(id => id ? this.insights.getSummary(id).pipe(
-    catchError(() => {
-      this.error = 'Unable to load insights. Please retry.';
-      this.cdr.markForCheck();
-      return of(null);
-    })
-  ) : of(null)));
+  readonly summary$ = this.account$.pipe(switchMap(accountId => {
+    return accountId ? this.selection.pipe(switchMap(id => id ? this.insights.getSummary(id).pipe(
+      catchError(() => {
+        this.error = 'Unable to load insights. Please retry.';
+        this.cdr.markForCheck();
+        return of(null);
+      }), startWith(null)
+    ) : of(null))) : of(null);
+  }));
   select(id: string) {
     this.selected = id;
     this.error = '';

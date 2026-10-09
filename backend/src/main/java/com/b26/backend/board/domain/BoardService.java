@@ -123,16 +123,6 @@ public class BoardService {
         .toList();
   }
 
-  @Transactional(readOnly = true)
-  public boolean canEditBoard(String boardId, AppUserEntity user) {
-    if (user == null) {
-      return false;
-    }
-
-    BoardEntity board = findBoardByUrl(boardId);
-    return isAdmin(user) || user.getId().equals(board.getOwnerUserId());
-  }
-
   @Transactional
   public BoardDto createBoardForOwner(AppUserEntity user) {
     int nextNumber = boardRepository.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(user.getId()).size() + 1;
@@ -287,10 +277,6 @@ public class BoardService {
     } catch (JpaSystemException exception) {
       throw new InvalidBoardUpdateException("board update failed due to persistence state");
     }
-  }
-
-  private static boolean isAdmin(AppUserEntity user) {
-    return user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().trim());
   }
 
   private static String normalizeBoardUrl(String rawBoardUrl) {

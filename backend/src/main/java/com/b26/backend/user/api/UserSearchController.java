@@ -1,6 +1,7 @@
 package com.b26.backend.user.api;
 
 import com.b26.backend.user.persistence.AppUserRepository;
+import com.b26.backend.common.config.ApiAccess;
 import java.util.List;
 import java.util.Locale;
 import org.springframework.data.domain.PageRequest;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
 @RestController
+@ApiAccess(ApiAccess.Policy.PUBLIC)
 public class UserSearchController {
   private final AppUserRepository users;
 

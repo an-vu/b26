@@ -1,6 +1,8 @@
 package com.b26.backend.auth.api;
 
 import com.b26.backend.auth.domain.AuthService;
+import com.b26.backend.common.config.ApiAccess;
+import static com.b26.backend.common.config.ApiAccess.Policy.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -21,22 +23,26 @@ public class AuthController {
   }
 
   @PostMapping("/signup")
+  @ApiAccess(PUBLIC)
   @ResponseStatus(HttpStatus.CREATED)
   public AuthSessionResponse signup(@Valid @RequestBody SignupRequest request) {
     return authService.signup(request);
   }
 
   @PostMapping("/signin")
+  @ApiAccess(PUBLIC)
   public AuthSessionResponse signin(@Valid @RequestBody SigninRequest request) {
     return authService.signin(request);
   }
 
   @GetMapping("/me")
+  @ApiAccess(AUTHENTICATED)
   public AuthMeResponse me(@RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
     return authService.me(authorizationHeader);
   }
 
   @PostMapping("/signout")
+  @ApiAccess(AUTHENTICATED)
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void signout(
       @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {

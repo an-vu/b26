@@ -1,9 +1,11 @@
 package com.b26.backend.common.api;
 
+import com.b26.backend.common.config.ApiAccess;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
+@ApiAccess(ApiAccess.Policy.PUBLIC)
 public class RetiredApiController {
   @RequestMapping("/api/system/routes")
   @ResponseStatus(HttpStatus.GONE)

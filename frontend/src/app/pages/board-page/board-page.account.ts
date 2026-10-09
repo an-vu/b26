@@ -1,5 +1,5 @@
 import { boardRoute } from '../../models/board-route';
-import { finalize } from 'rxjs';
+import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 import type { Router } from '@angular/router';
 import type { BoardStoreService } from '../../services/board-store.service';
 import type { UserStoreService } from '../../services/user-store.service';
@@ -50,6 +50,7 @@ export function mapAccountUser(profile: UserProfile | null): {
 }
 
 export function runCreateBoardFlow(options: {
+  cancel$?: Observable<unknown>;
   boardService: BoardService;
   boardStore: BoardStoreService;
   userStore: UserStoreService;
@@ -63,7 +64,7 @@ export function runCreateBoardFlow(options: {
 
   options.boardService
     .createBoard()
-    .pipe(finalize(options.onFinalize))
+    .pipe(takeUntil(options.cancel$ ?? NEVER), finalize(options.onFinalize))
     .subscribe({
       next: (board) => {
         options.closeAccountMenu();
