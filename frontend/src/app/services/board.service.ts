@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import type {
   Board,
+  BoardPage,
   BoardEdit,
   SaveBoardEditRequest,
-  SystemRoutes,
   UpdateBoardIdentityRequest,
   UpdateBoardMetaRequest,
-  UpdateBoardRequest,
   UpdateBoardUrlRequest,
-  UpdateSystemRoutesRequest,
   UserMainBoard,
   UserProfile,
   UpdateUserPreferencesRequest,
@@ -20,7 +18,6 @@ import type {
 } from '../models/board';
 import type { SyncWidgetsRequest, UpsertWidgetRequest, Widget } from '../models/widget';
 import type { HomeAppearance } from '../models/home-appearance';
-import { environment } from '../../environments/environment';
 
 @Injectable({ providedIn: 'root' })
 export class BoardService {
@@ -42,8 +39,8 @@ export class BoardService {
     return this.http.get<Board>(`/api/board/${boardId}`);
   }
 
-  getBoards(): Observable<Board[]> {
-    return this.http.get<Board[]>(`/api/board`);
+  getBoards(page = 0, size = 20): Observable<BoardPage> {
+    return this.http.get<BoardPage>('/api/board', { params: { page, size } });
   }
 
   getMyBoards(): Observable<Board[]> {
@@ -51,38 +48,31 @@ export class BoardService {
   }
 
   createBoard(): Observable<Board> {
-    return this.http.post<Board>(`/api/board`, {}, this.withAdminHeader());
+    return this.http.post<Board>(`/api/board`, {});
   }
 
   deleteBoard(boardId: string): Observable<void> {
-    return this.http.delete<void>(`/api/board/${boardId}`, this.withAdminHeader());
-  }
-
-  updateBoard(boardId: string, payload: UpdateBoardRequest): Observable<Board> {
-    return this.http.put<Board>(`/api/board/${boardId}`, payload, this.withAdminHeader());
+    return this.http.delete<void>(`/api/board/${boardId}`);
   }
 
   updateBoardMeta(boardId: string, payload: UpdateBoardMetaRequest): Observable<Board> {
     return this.http.patch<Board>(
       `/api/board/${boardId}/meta`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
   updateBoardUrl(boardId: string, payload: UpdateBoardUrlRequest): Observable<Board> {
     return this.http.patch<Board>(
       `/api/board/${boardId}/url`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
   updateBoardIdentity(boardId: string, payload: UpdateBoardIdentityRequest): Observable<Board> {
     return this.http.patch<Board>(
       `/api/board/${boardId}/identity`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
@@ -101,43 +91,27 @@ export class BoardService {
   createWidget(boardId: string, payload: UpsertWidgetRequest): Observable<Widget> {
     return this.http.post<Widget>(
       `/api/board/${boardId}/widgets`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
   updateWidget(boardId: string, widgetId: number, payload: UpsertWidgetRequest): Observable<Widget> {
     return this.http.put<Widget>(
       `/api/board/${boardId}/widgets/${widgetId}`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
   deleteWidget(boardId: string, widgetId: number): Observable<void> {
     return this.http.delete<void>(
-      `/api/board/${boardId}/widgets/${widgetId}`,
-      this.withAdminHeader()
+      `/api/board/${boardId}/widgets/${widgetId}`
     );
   }
 
   syncWidgets(boardId: string, payload: SyncWidgetsRequest): Observable<Widget[]> {
     return this.http.put<Widget[]>(
       `/api/board/${boardId}/widgets/sync`,
-      payload,
-      this.withAdminHeader()
-    );
-  }
-
-  getSystemRoutes(): Observable<SystemRoutes> {
-    return this.http.get<SystemRoutes>(`/api/system/routes`);
-  }
-
-  updateSystemRoutes(payload: UpdateSystemRoutesRequest): Observable<SystemRoutes> {
-    return this.http.patch<SystemRoutes>(
-      `/api/system/routes`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
@@ -156,8 +130,7 @@ export class BoardService {
   updateMyPreferences(payload: UpdateUserPreferencesRequest): Observable<UserPreferences> {
     return this.http.patch<UserPreferences>(
       `/api/users/me/preferences`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
@@ -172,28 +145,8 @@ export class BoardService {
   updateMyProfile(payload: UpdateUserProfileRequest): Observable<UserProfile> {
     return this.http.patch<UserProfile>(
       `/api/users/me`,
-      payload,
-      this.withAdminHeader()
+      payload
     );
   }
 
-  private withAdminHeader() {
-    const token = this.resolveAdminToken();
-    if (!token) {
-      return {};
-    }
-    return { headers: new HttpHeaders({ 'X-Admin-Token': token }) };
-  }
-
-  private resolveAdminToken(): string {
-    if (environment.adminToken && environment.adminToken.trim()) {
-      return environment.adminToken.trim();
-    }
-
-    try {
-      return localStorage.getItem('b26_admin_token')?.trim() ?? '';
-    } catch {
-      return '';
-    }
-  }
 }

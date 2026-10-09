@@ -8,11 +8,11 @@ Browser → Angular frontend → /api/* → Spring Boot → PostgreSQL
 
 The `/api` hop uses Angular's development proxy locally, Nginx in the Docker frontend, or Vercel rewrites in the configured hosted frontend. Browser API requests use relative URLs.
 
-## The central idea: screens are boards
+## Boards and application pages
 
 A board has a stable ID, a changeable URL slug, an owner, an internal name, a displayed title/description, and a revision. Widgets belong to boards and store their type, configuration, tile layout, order, and enabled flag.
 
-Home, settings, insights, and sign-in are also boards. `system_settings` maps those routes to board IDs. `user_preferences` maps a user to their main board. This lets the app reuse the same renderer for user content and system screens.
+Home, settings, insights, and sign-in are dedicated application pages. User boards use the widget renderer; Home has its own feed and appearance preferences. `user_preferences` stores an optional public main board. Legacy route mappings are archived; retired admin widgets show an explanation instead of route controls.
 
 ## Frontend responsibilities
 
@@ -28,7 +28,7 @@ Home, settings, insights, and sign-in are also boards. `system_settings` maps th
 
 The Java packages are organized by feature: `auth`, `board`, `widget`, `user`, `system`, and `insights`. Each generally separates controllers/DTOs (`api`), behavior (`domain`), and entities/repositories (`persistence`). `common` holds shared errors and request configuration.
 
-Authentication uses BCrypt password hashes and opaque bearer tokens. The server stores token hashes in `auth_sessions`; the browser stores the bearer token in local storage. Board writes require an owner/admin session. System route writes require admin authorization.
+Authentication uses BCrypt password hashes and opaque bearer tokens. The server stores token hashes in `auth_sessions`; the browser stores the bearer token in local storage. Board writes require an owner/admin session. System-route APIs return 410; the admin-token bypass is retired.
 
 The editor uses a transaction and a board lock to check the submitted revision before writing. Concurrent saves with the same revision produce one accepted save and one HTTP 409 conflict, rather than silently overwriting changes.
 
@@ -36,6 +36,14 @@ The editor uses a transaction and a board lock to check the submitted revision b
 
 PostgreSQL is the application database. Flyway manages schema changes; Hibernate validates the application schema. Fast backend tests use an H2-generated schema, and separate PostgreSQL tests cover migrations and real-database behavior.
 
-The legacy `cards` table still exists alongside widgets. Click analytics uses those card IDs; widget-link click tracking has not yet been connected. See [Feature status](Features).
+V37 archives legacy cards and system settings, detaches their foreign keys, and namespaces historical click targets. New clicks use link widget IDs. Historical totals remain available. See [API reference](API-Reference).
 
 [Project structure](Project-Structure) · [API reference](API-Reference) · [Database and backups](Dev-Data-Safety)
+
+## Backend review — October 9, 2026
+
+Session validation and widget request mapping are consolidated; unused queries/DTOs and the live system-route subsystem are removed. Public board listing uses bounded database pagination and joined owner data. Click duplicate suppression is atomic, expires old entries, and has a fixed capacity.
+
+Legacy cards and mappings are retained as archives by V37. The frontend route picker and old API callers are removed; old clients receive 410 responses. Migration tests cover fresh installs, upgrades, archived data, historical clicks, and detached constraints. Authorization, pagination, click permissions, and concurrent throttling have regression tests.
+
+Two deployment boundaries remain: click suppression is per instance, and V37 needs the matching backend/frontend release. Historical migrations remain untouched. Authorization still uses URI checks in the interceptor; any new endpoint must include access-policy tests.

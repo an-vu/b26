@@ -33,6 +33,30 @@ class ProductionAuthIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(post(API_BOARD).header(AUTHORIZATION_HEADER, token)).andExpect(status().isUnauthorized());
   }
 
+  @org.springframework.beans.factory.annotation.Autowired
+  com.b26.backend.auth.persistence.AuthSessionRepository sessions;
+
+  @Test
+  void expiredSessionsCannotAuthenticateOrSignOut() throws Exception {
+    String email = "expired-" + UUID.randomUUID() + "@example.com";
+    var signup = mockMvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(Map.of("email", email, "password", "correct-password-123"))))
+        .andExpect(status().isCreated()).andReturn();
+    var body = objectMapper.readTree(signup.getResponse().getContentAsString());
+    String token = "Bearer " + body.get("accessToken").asText();
+    String userId = body.get("user").get("id").asText();
+    var session = sessions.findAll().stream().filter(item -> userId.equals(item.getUserId())).findFirst().orElseThrow();
+    session.setExpiresAt(java.time.Instant.now().minusSeconds(60));
+    sessions.saveAndFlush(session);
+
+    mockMvc.perform(get("/api/auth/me").header(AUTHORIZATION_HEADER, token))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.message").value("Invalid or expired session"));
+    mockMvc.perform(post("/api/auth/signout").header(AUTHORIZATION_HEADER, token))
+        .andExpect(status().isUnauthorized())
+        .andExpect(jsonPath("$.message").value("Invalid or expired session"));
+  }
+
   @Test
   void passwordlessSeedAccountCannotSignInAndManagementDetailsStayPrivate() throws Exception {
     mockMvc.perform(post("/api/auth/signin").contentType(MediaType.APPLICATION_JSON)

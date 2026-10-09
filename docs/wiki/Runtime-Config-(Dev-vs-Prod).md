@@ -33,7 +33,6 @@ The older `docker-compose.yml` explicitly overrides `SPRING_PROFILES_ACTIVE` to 
 | `SPRING_PROFILES_ACTIVE` | Optional profile override; default is `postgres` outside Compose |
 | `APP_AUTH_REQUIRE_PASSWORD` | `true` by default; `false` skips password verification for existing users |
 | `APP_CORS_ALLOWED_ORIGINS` | Comma-separated allowed origins; defaults to localhost:4200 |
-| `APP_ADMIN_TOKEN` | Optional alternate credential for system-route writes |
 | `SPRING_JPA_HIBERNATE_DDL_AUTO` | Prod override; leave `validate` for migration-managed databases |
 
 Session lifetime defaults to 720 hours in `AuthService`; the Spring property is `app.auth.session-ttl-hours`.
@@ -46,11 +45,11 @@ Session lifetime defaults to 720 hours in `AuthService`; the Spring property is 
 | Running in either supplied Docker workflow | `postgres:5432` |
 | Hosted | Provider-supplied hostname and any required TLS options |
 
-## Authentication and the admin token
+## Authentication
 
-Board/widget writes require a bearer session belonging to the owner or an admin. Setting `APP_ADMIN_TOKEN` does not replace this requirement.
+Board/widget writes require a bearer session belonging to the owner or an admin.
 
-For system route updates, an admin session or a matching `X-Admin-Token` is accepted. The frontend still has legacy admin-token lookup support, but a secret embedded in a frontend environment file is exposed in the browser bundle. For ordinary local use, sign in as the local admin as described in [Dev login](Dev-Login-and-Accounts).
+System-route updates and the `APP_ADMIN_TOKEN` / `X-Admin-Token` bypass are retired. Board and widget writes use bearer sessions. For local use, see [Dev login](Dev-Login-and-Accounts).
 
 ## API routing
 

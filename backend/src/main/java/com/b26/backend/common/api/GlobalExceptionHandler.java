@@ -5,7 +5,6 @@ import com.b26.backend.auth.domain.AuthUnauthorizedException;
 import com.b26.backend.auth.domain.InvalidAuthRequestException;
 import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.domain.InvalidBoardUpdateException;
-import com.b26.backend.insights.domain.CardNotFoundForBoardException;
 import com.b26.backend.insights.domain.ClickRateLimitedException;
 import com.b26.backend.user.domain.InvalidUserPreferencesException;
 import com.b26.backend.user.domain.InvalidUserProfileException;
@@ -57,12 +56,6 @@ public class GlobalExceptionHandler {
   public ValidationErrorResponse handleInvalidUpdate(InvalidBoardUpdateException exception) {
     return new ValidationErrorResponse(
         "Validation failed", List.of(new ValidationFieldError("board", exception.getMessage())));
-  }
-
-  @ExceptionHandler(CardNotFoundForBoardException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ApiError handleCardNotInBoard(CardNotFoundForBoardException exception) {
-    return new ApiError(exception.getMessage());
   }
 
   @ExceptionHandler(ClickRateLimitedException.class)

@@ -111,7 +111,7 @@ public class WidgetService {
         widget.setBoard(board);
       }
 
-      applyRequest(widget, item);
+      applyRequest(widget, item.toUpsertRequest());
       WidgetEntity saved = widgetRepository.save(widget);
       keptIds.add(saved.getId());
     }
@@ -143,26 +143,18 @@ public class WidgetService {
     widget.setSortOrder(request.order());
   }
 
-  private void applyRequest(WidgetEntity widget, UpsertWidgetWithIdRequest request) {
-    widget.setType(request.type().trim());
-    widget.setTitle(request.title().trim());
-    widget.setLayout(request.layout().trim());
-    widget.setConfigJson(request.config().toString());
-    widget.setEnabled(request.enabled());
-    widget.setSortOrder(request.order());
-  }
-
   private static void validateConfig(String type, JsonNode config) {
     if (!config.isObject() || config.toString().length() > 4000) {
       throw new InvalidWidgetConfigException("Widget configuration must be an object of at most 4000 characters");
     }
-    if ("embed".equals(type)) {
-      JsonNode embedUrl = config.get("embedUrl");
-      if (embedUrl == null || embedUrl.isNull() || (embedUrl.isTextual() && embedUrl.asText().isBlank())) {
+    if ("embed".equals(type) || "link".equals(type)) {
+      String field = "embed".equals(type) ? "embedUrl" : "url";
+      JsonNode url = config.get(field);
+      if (url == null || url.isNull() || (url.isTextual() && url.asText().isBlank())) {
         return;
       }
-      if (!embedUrl.isTextual() || !isHttpUrl(embedUrl.asText())) {
-        throw new InvalidWidgetConfigException("embed config requires a valid http embedUrl");
+      if (!url.isTextual() || !isHttpUrl(url.asText())) {
+        throw new InvalidWidgetConfigException(type + " config requires a valid http " + field);
       }
       return;
     }
@@ -183,24 +175,10 @@ public class WidgetService {
       return;
     }
 
-    if ("link".equals(type)) {
-      JsonNode url = config.get("url");
-      if (url == null || url.isNull() || (url.isTextual() && url.asText().isBlank())) {
-        return;
-      }
-      if (!url.isTextual() || !isHttpUrl(url.asText())) {
-        throw new InvalidWidgetConfigException("link config requires a valid http url");
-      }
-      return;
-    }
-
     if ("user-settings".equals(type)
         || "admin-settings".equals(type)
         || "signin".equals(type)
         || "signup".equals(type)) {
-      if (!config.isObject()) {
-        throw new InvalidWidgetConfigException(type + " config must be a JSON object");
-      }
       return;
     }
 

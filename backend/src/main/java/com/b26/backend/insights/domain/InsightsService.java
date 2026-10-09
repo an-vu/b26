@@ -2,13 +2,14 @@ package com.b26.backend.insights.domain;
 
 import com.b26.backend.insights.api.InsightsResponse;
 import com.b26.backend.insights.api.InsightsSummaryResponse;
-import com.b26.backend.insights.api.CardInsightsDto;
+import com.b26.backend.insights.api.ClickTargetDto;
 import com.b26.backend.insights.persistence.ClickEventEntity;
 import com.b26.backend.insights.persistence.ClickEventRepository;
 import com.b26.backend.insights.persistence.ViewEventEntity;
 import com.b26.backend.insights.persistence.ViewEventRepository;
 import com.b26.backend.board.domain.BoardNotFoundException;
-import com.b26.backend.board.persistence.CardRepository;
+import com.b26.backend.widget.persistence.WidgetRepository;
+import com.b26.backend.widget.domain.WidgetNotFoundForBoardException;
 import com.b26.backend.board.persistence.BoardRepository;
 import java.time.Instant;
 import java.time.LocalDate;
@@ -22,37 +23,38 @@ public class InsightsService {
   private final ClickEventRepository clickEventRepository;
   private final ViewEventRepository viewEventRepository;
   private final BoardRepository boardRepository;
-  private final CardRepository cardRepository;
+  private final WidgetRepository widgetRepository;
   private final ClickAbuseGuard clickAbuseGuard;
 
   public InsightsService(
       ClickEventRepository clickEventRepository,
       ViewEventRepository viewEventRepository,
       BoardRepository boardRepository,
-      CardRepository cardRepository,
+      WidgetRepository widgetRepository,
       ClickAbuseGuard clickAbuseGuard) {
     this.clickEventRepository = clickEventRepository;
     this.viewEventRepository = viewEventRepository;
     this.boardRepository = boardRepository;
-    this.cardRepository = cardRepository;
+    this.widgetRepository = widgetRepository;
     this.clickAbuseGuard = clickAbuseGuard;
   }
 
   @Transactional
-  public void recordClick(String boardId, String cardId, String sourceIp) {
+  public void recordClick(String boardId, long widgetId, String sourceIp) {
     if (!boardRepository.existsById(boardId)) {
       throw new BoardNotFoundException(boardId);
     }
-    if (!cardRepository.existsByBoard_IdAndId(boardId, cardId)) {
-      throw new CardNotFoundForBoardException(boardId, cardId);
-    }
-    if (!clickAbuseGuard.shouldAccept(sourceIp, boardId, cardId)) {
+    var widget = widgetRepository.findByIdAndBoard_Id(widgetId, boardId)
+        .filter(item -> item.isEnabled() && "link".equals(item.getType()))
+        .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
+    String targetId = "widget:" + widget.getId();
+    if (!clickAbuseGuard.shouldAccept(sourceIp, boardId, targetId)) {
       throw new ClickRateLimitedException();
     }
 
     ClickEventEntity event = new ClickEventEntity();
     event.setBoardId(boardId);
-    event.setCardId(cardId);
+    event.setTargetId(targetId);
     event.setOccurredAt(Instant.now());
     event.setSourceIp(sourceIp);
     clickEventRepository.save(event);
@@ -79,11 +81,11 @@ public class InsightsService {
       throw new BoardNotFoundException(boardId);
     }
     long total = clickEventRepository.countByBoardId(boardId);
-    List<CardInsightsDto> byCard =
-        clickEventRepository.countByCardForBoard(boardId).stream()
-            .map(row -> new CardInsightsDto(row.getCardId(), row.getClickCount()))
+    List<ClickTargetDto> byTarget =
+        clickEventRepository.countByTargetForBoard(boardId).stream()
+            .map(row -> new ClickTargetDto(row.getTargetId(), row.getClickCount()))
             .toList();
-    return new InsightsResponse(boardId, total, byCard);
+    return new InsightsResponse(boardId, total, byTarget);
   }
 
   @Transactional(readOnly = true)
@@ -102,10 +104,10 @@ public class InsightsService {
     long visitsToday =
         viewEventRepository.countByBoardIdAndOccurredAtGreaterThanEqual(boardId, startOfTodayUtc);
     long totalClicks = clickEventRepository.countByBoardId(boardId);
-    List<CardInsightsDto> topClickedLinks =
-        clickEventRepository.countByCardForBoard(boardId).stream()
+    List<ClickTargetDto> topClickedLinks =
+        clickEventRepository.countByTargetForBoard(boardId).stream()
             .limit(5)
-            .map(row -> new CardInsightsDto(row.getCardId(), row.getClickCount()))
+            .map(row -> new ClickTargetDto(row.getTargetId(), row.getClickCount()))
             .toList();
 
     return new InsightsSummaryResponse(
@@ -121,14 +123,14 @@ public class InsightsService {
     if (source == null || source.isBlank()) {
       return "direct";
     }
-    return source.trim().toLowerCase();
+    return source.trim().toLowerCase(java.util.Locale.ROOT);
   }
 
   private static String resolveDeviceType(String userAgent) {
     if (userAgent == null || userAgent.isBlank()) {
       return "unknown";
     }
-    String normalized = userAgent.toLowerCase();
+    String normalized = userAgent.toLowerCase(java.util.Locale.ROOT);
     if (normalized.contains("ipad") || normalized.contains("tablet")) {
       return "tablet";
     }

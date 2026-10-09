@@ -26,9 +26,9 @@ class BoardApiIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc
         .perform(get(API_BOARD))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$").isArray())
-        .andExpect(jsonPath("$[0].boardName").isNotEmpty())
-        .andExpect(jsonPath("$[0].boardUrl").isNotEmpty());
+        .andExpect(jsonPath("$.items").isArray())
+        .andExpect(jsonPath("$.items[0].boardName").isNotEmpty())
+        .andExpect(jsonPath("$.items[0].boardUrl").isNotEmpty());
   }
 
   @Test
@@ -55,35 +55,6 @@ class BoardApiIntegrationTest extends ApiIntegrationTestSupport {
         .perform(get(API_BOARD_NOT_HERE))
         .andExpect(status().isNotFound())
         .andExpect(jsonPath("$.message").value("Board not found: not-here"));
-  }
-
-  @Test
-  void putBoard_valid_returns200AndPersists() throws Exception {
-    String payload =
-        """
-        {
-          "name": "Updated Name",
-          "headline": "Updated Headline",
-          "cards": [
-            { "id": "github", "label": "GitHub", "href": "https://github.com/" },
-            { "id": "linkedin", "label": "LinkedIn", "href": "https://linkedin.com/" }
-          ]
-        }
-        """;
-
-    mockMvc
-        .perform(
-            put(API_BOARD_DEFAULT)
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Updated Name"));
-
-    mockMvc
-        .perform(get(API_BOARD_DEFAULT))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.name").value("Updated Name"));
   }
 
   @Test
@@ -156,28 +127,6 @@ class BoardApiIntegrationTest extends ApiIntegrationTestSupport {
         .perform(auth(get("/api/board/default/permissions")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.canEdit").value(true));
-  }
-
-  @Test
-  void putBoard_invalid_returns400WithStructuredErrors() throws Exception {
-    String payload =
-        """
-        {
-          "name": "",
-          "headline": "",
-          "cards": []
-        }
-        """;
-
-    mockMvc
-        .perform(
-            put(API_BOARD_DEFAULT)
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"))
-        .andExpect(jsonPath("$.errors").isArray());
   }
 
   @Test

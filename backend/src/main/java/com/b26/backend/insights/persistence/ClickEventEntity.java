@@ -18,8 +18,8 @@ public class ClickEventEntity {
   @Column(nullable = false)
   private String boardId;
 
-  @Column(nullable = false)
-  private String cardId;
+  @Column(nullable = false, length = 512)
+  private String targetId;
 
   @Column(nullable = false)
   private Instant occurredAt;
@@ -39,12 +39,12 @@ public class ClickEventEntity {
     this.boardId = boardId;
   }
 
-  public String getCardId() {
-    return cardId;
+  public String getTargetId() {
+    return targetId;
   }
 
-  public void setCardId(String cardId) {
-    this.cardId = cardId;
+  public void setTargetId(String targetId) {
+    this.targetId = targetId;
   }
 
   public Instant getOccurredAt() {

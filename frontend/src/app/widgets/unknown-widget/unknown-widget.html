@@ -1,4 +1,4 @@
 <article class="widget">
   <h3>{{ widget.title }}</h3>
-  <p class="fallback">Unsupported widget type: {{ widget.type }}</p>
+  <p class="fallback">{{ widget.type === 'admin-settings' ? 'Page route settings have been retired. Home, Settings, Insights, and Sign In use dedicated pages.' : 'Unsupported widget type: ' + widget.type }}</p>
 </article>

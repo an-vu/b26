@@ -11,6 +11,10 @@ export class InsightsService {
     return this.http.post<void>(`/api/insights/view`, { boardId, source });
   }
 
+  recordWidgetClick(boardId: string, widgetId: number): Observable<void> {
+    return this.http.post<void>(`/api/insights/widgets/${widgetId}/click`, { boardId });
+  }
+
   getSummary(boardId: string): Observable<InsightsSummary> {
     return this.http.get<InsightsSummary>(`/api/insights/${boardId}/summary`);
   }

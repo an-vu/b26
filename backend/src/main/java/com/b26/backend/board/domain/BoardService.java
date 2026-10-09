@@ -4,25 +4,19 @@ import com.b26.backend.board.api.BoardDto;
 import com.b26.backend.board.api.BoardEditDto;
 import com.b26.backend.board.api.SaveBoardEditRequest;
 import com.b26.backend.widget.api.SyncWidgetsRequest;
-import com.b26.backend.board.api.UpdateCardRequest;
 import com.b26.backend.board.api.UpdateBoardMetaRequest;
-import com.b26.backend.board.api.UpdateBoardRequest;
 import com.b26.backend.board.api.UpdateBoardIdentityRequest;
 import com.b26.backend.board.api.UpdateBoardUrlRequest;
-import com.b26.backend.board.persistence.CardEntity;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
-import com.b26.backend.system.persistence.SystemSettingsRepository;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
 import com.b26.backend.widget.api.UpsertWidgetRequest;
 import com.b26.backend.widget.domain.WidgetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
@@ -37,21 +31,18 @@ public class BoardService {
   private final WidgetService widgetService;
   private final ObjectMapper objectMapper;
   private final AppUserRepository appUserRepository;
-  private final SystemSettingsRepository systemSettingsRepository;
 
   public BoardService(
       BoardRepository boardRepository,
       UserPreferenceRepository userPreferenceRepository,
       WidgetService widgetService,
       ObjectMapper objectMapper,
-      AppUserRepository appUserRepository,
-      SystemSettingsRepository systemSettingsRepository) {
+      AppUserRepository appUserRepository) {
     this.boardRepository = boardRepository;
     this.userPreferenceRepository = userPreferenceRepository;
     this.widgetService = widgetService;
     this.objectMapper = objectMapper;
     this.appUserRepository = appUserRepository;
-    this.systemSettingsRepository = systemSettingsRepository;
   }
 
   @Transactional
@@ -100,12 +91,15 @@ public class BoardService {
   }
 
   @Transactional(readOnly = true)
-  public List<BoardDto> getBoards() {
-    return boardRepository.findAll().stream()
-        .filter(board -> "public".equals(board.getVisibility()))
-        .map(this::toDto)
-        .sorted((a, b) -> a.boardName().compareToIgnoreCase(b.boardName()))
-        .toList();
+  public com.b26.backend.board.api.BoardPageDto getBoards(int page, int size) {
+    if (page < 0 || size < 1 || size > 100) {
+      throw new org.springframework.web.server.ResponseStatusException(
+          org.springframework.http.HttpStatus.BAD_REQUEST, "Use page >= 0 and size between 1 and 100");
+    }
+    var result = boardRepository.findPublicBoards(org.springframework.data.domain.PageRequest.of(page, size));
+    return new com.b26.backend.board.api.BoardPageDto(
+        result.getContent().stream().map(row -> toDto(row.getBoard(), row.getOwner())).toList(),
+        page, size, result.getTotalElements(), result.getTotalPages());
   }
 
   @Transactional(readOnly = true)
@@ -192,27 +186,6 @@ public class BoardService {
   }
 
   @Transactional
-  public BoardDto updateBoard(String boardId, UpdateBoardRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-
-    validateNoDuplicateCardIds(request.cards());
-
-    board.setName(request.name());
-    board.setHeadline(request.headline());
-    board.getCards().clear();
-    for (UpdateCardRequest requestCard : request.cards()) {
-      CardEntity card = new CardEntity();
-      card.setId(requestCard.id());
-      card.setLabel(requestCard.label());
-      card.setHref(requestCard.href());
-      card.setBoard(board);
-      board.getCards().add(card);
-    }
-
-    return persist(board);
-  }
-
-  @Transactional
   public BoardDto updateBoardMeta(String boardId, UpdateBoardMetaRequest request) {
     BoardEntity board = findBoardByUrl(boardId);
 
@@ -273,17 +246,11 @@ public class BoardService {
 
   @Transactional
   public void deleteBoard(String boardId) {
-    var settings = systemSettingsRepository.lockSettings();
     BoardEntity candidate = findBoardByUrl(boardId);
     appUserRepository.lockById(candidate.getOwnerUserId())
         .orElseThrow(() -> new BoardNotFoundException(boardId));
     BoardEntity board = boardRepository.findForEditing(boardId)
         .orElseThrow(() -> new BoardNotFoundException(boardId));
-    if (settings.filter(value -> board.getId().equals(value.getGlobalHomepageBoardId())
-        || board.getId().equals(value.getGlobalInsightsBoardId()) || board.getId().equals(value.getGlobalSettingsBoardId())
-        || board.getId().equals(value.getGlobalSigninBoardId())).isPresent()) {
-      throw new InvalidBoardUpdateException("This board is still referenced by a legacy system route; it cannot be deleted yet.");
-    }
     if (boardRepository.countByOwnerUserId(board.getOwnerUserId()) <= 1) {
       throw new InvalidBoardUpdateException(
           "Cannot delete the owner's only board. Create another board first.");
@@ -322,21 +289,12 @@ public class BoardService {
     }
   }
 
-  private static void validateNoDuplicateCardIds(List<UpdateCardRequest> cards) {
-    Set<String> ids = new HashSet<>();
-    for (UpdateCardRequest card : cards) {
-      if (!ids.add(card.id())) {
-        throw new InvalidBoardUpdateException("cards contain duplicate id: " + card.id());
-      }
-    }
-  }
-
   private static boolean isAdmin(AppUserEntity user) {
     return user.getRole() != null && "ADMIN".equalsIgnoreCase(user.getRole().trim());
   }
 
   private static String normalizeBoardUrl(String rawBoardUrl) {
-    String normalized = rawBoardUrl.trim().toLowerCase();
+    String normalized = rawBoardUrl.trim().toLowerCase(java.util.Locale.ROOT);
     if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
       throw new InvalidBoardUpdateException(
           "board_url must use lowercase letters, numbers, and single hyphens");
@@ -351,7 +309,10 @@ public class BoardService {
   }
 
   private BoardDto toDto(BoardEntity board) {
-    var owner = appUserRepository.findById(board.getOwnerUserId()).orElseThrow();
+    return toDto(board, appUserRepository.findById(board.getOwnerUserId()).orElseThrow());
+  }
+
+  private BoardDto toDto(BoardEntity board, AppUserEntity owner) {
     return new BoardDto(
         board.getId(), board.getBoardName(), board.getBoardUrl(), board.getName(), board.getHeadline(), board.getVersion(),
         owner.getUsername(),

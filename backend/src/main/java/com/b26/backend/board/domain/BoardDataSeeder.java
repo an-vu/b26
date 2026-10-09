@@ -1,6 +1,5 @@
 package com.b26.backend.board.domain;
 
-import com.b26.backend.board.persistence.CardEntity;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.widget.persistence.WidgetEntity;
@@ -22,10 +21,11 @@ public class BoardDataSeeder {
         return;
       }
 
+      var links = new java.util.HashMap<String, List<LinkSeed>>();
       List<BoardEntity> boards =
           boardRepository.saveAll(
               List.of(
-                  buildBoard(
+                  buildBoard(links,
                       "default",
                       "anvu",
                       "Default",
@@ -33,11 +33,11 @@ public class BoardDataSeeder {
                       "An Vu",
                       "Software Engineer - Angular + Java",
                       List.of(
-                          new CardSeed("github", "GitHub", "https://github.com/"),
-                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                          new CardSeed("resume", "Resume", "#"),
-                          new CardSeed("projects", "Projects", "#"))),
-                  buildBoard(
+                          new LinkSeed("GitHub", "https://github.com/"),
+                          new LinkSeed("LinkedIn", "https://linkedin.com/"),
+                          new LinkSeed("Resume", "#"),
+                          new LinkSeed("Projects", "#"))),
+                  buildBoard(links,
                       "berkshire",
                       "anvu",
                       "Berkshire",
@@ -45,11 +45,11 @@ public class BoardDataSeeder {
                       "An Vu",
                       "Software Engineering - Angular + Spring Boot",
                       List.of(
-                          new CardSeed("github", "GitHub", "https://github.com/"),
-                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                          new CardSeed("resume", "Resume", "#"),
-                          new CardSeed("projects", "Projects", "#"))),
-                  buildBoard(
+                          new LinkSeed("GitHub", "https://github.com/"),
+                          new LinkSeed("LinkedIn", "https://linkedin.com/"),
+                          new LinkSeed("Resume", "#"),
+                          new LinkSeed("Projects", "#"))),
+                  buildBoard(links,
                       "union-pacific",
                       "anvu",
                       "Union Pacific",
@@ -57,19 +57,19 @@ public class BoardDataSeeder {
                       "An Vu",
                       "Software Engineering - Angular + Java",
                       List.of(
-                          new CardSeed("github", "GitHub", "https://github.com/"),
-                          new CardSeed("linkedin", "LinkedIn", "https://linkedin.com/"),
-                          new CardSeed("resume", "Resume", "#"),
-                          new CardSeed("projects", "Projects", "#"))),
-                  buildBoard(
+                          new LinkSeed("GitHub", "https://github.com/"),
+                          new LinkSeed("LinkedIn", "https://linkedin.com/"),
+                          new LinkSeed("Resume", "#"),
+                          new LinkSeed("Projects", "#"))),
+                  buildBoard(links,
                       "home",
                       "anvu",
                       "Home",
                       "home",
                       "B26",
                       "Angular x Java",
-                      List.of(new CardSeed("home", "Home", "https://anvu.tech/"))),
-                  buildBoard(
+                      List.of(new LinkSeed("Home", "https://anvu.tech/"))),
+                  buildBoard(links,
                       "insights",
                       "anvu",
                       "Insights",
@@ -77,7 +77,7 @@ public class BoardDataSeeder {
                       "Insights",
                       "Overview of your profile performance",
                       List.of()),
-                  buildBoard(
+                  buildBoard(links,
                       "settings",
                       "anvu",
                       "Settings",
@@ -85,7 +85,7 @@ public class BoardDataSeeder {
                       "Settings",
                       "Manage your account and app configuration",
                       List.of()),
-                  buildBoard(
+                  buildBoard(links,
                       "signin",
                       "anvu",
                       "Sign In",
@@ -128,14 +128,7 @@ public class BoardDataSeeder {
                 "span-2",
                 "{}",
                 0));
-        widgets.add(
-            buildWidget(
-                settingsBoard,
-                "admin-settings",
-                "Admin Settings",
-                "span-2",
-                "{}",
-                1));
+
       }
 
       BoardEntity signinBoard = byId.get("signin");
@@ -153,14 +146,14 @@ public class BoardDataSeeder {
       for (BoardEntity board : boards) {
         int baseOrder = "default".equals(board.getId()) ? 2 : 0;
         int offset = 0;
-        for (CardEntity card : board.getCards()) {
+        for (LinkSeed card : links.getOrDefault(board.getId(), List.of())) {
           widgets.add(
               buildWidget(
                   board,
                   "link",
-                  card.getLabel(),
+                  card.label(),
                   "span-1",
-                  "{\"url\":\"" + card.getHref() + "\"}",
+                  "{\"url\":\"" + card.href() + "\"}",
                   baseOrder + offset));
           offset++;
         }
@@ -171,13 +164,14 @@ public class BoardDataSeeder {
   }
 
   private static BoardEntity buildBoard(
+      java.util.Map<String, List<LinkSeed>> links,
       String id,
       String ownerUserId,
       String boardName,
       String boardUrl,
       String name,
       String headline,
-      List<CardSeed> cardSeeds) {
+      List<LinkSeed> linkSeeds) {
     BoardEntity board = new BoardEntity();
     board.setId(id);
     board.setOwnerUserId(ownerUserId);
@@ -187,14 +181,7 @@ public class BoardDataSeeder {
     board.setHeadline(headline);
     board.setUpdatedAt(OffsetDateTime.now());
 
-    for (CardSeed seed : cardSeeds) {
-      CardEntity card = new CardEntity();
-      card.setId(seed.id());
-      card.setLabel(seed.label());
-      card.setHref(seed.href());
-      card.setBoard(board);
-      board.getCards().add(card);
-    }
+    links.put(id, linkSeeds);
     return board;
   }
 
@@ -216,5 +203,5 @@ public class BoardDataSeeder {
     return widget;
   }
 
-  private record CardSeed(String id, String label, String href) {}
+  private record LinkSeed(String label, String href) {}
 }

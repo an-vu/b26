@@ -51,8 +51,10 @@ public class BoardController {
   }
 
   @GetMapping
-  public List<BoardDto> getBoards() {
-    return boardService.getBoards();
+  public BoardPageDto getBoards(
+      @org.springframework.web.bind.annotation.RequestParam(defaultValue = "0") int page,
+      @org.springframework.web.bind.annotation.RequestParam(defaultValue = "20") int size) {
+    return boardService.getBoards(page, size);
   }
 
   @GetMapping("/mine")
@@ -82,12 +84,6 @@ public class BoardController {
     }
 
     return new BoardPermissionsResponse(boardService.canEditBoard(boardId, user));
-  }
-
-  @PutMapping("/{boardId}")
-  public BoardDto updateBoard(
-      @PathVariable String boardId, @Valid @RequestBody UpdateBoardRequest request) {
-    return boardService.updateBoard(boardId, request);
   }
 
   @PatchMapping("/{boardId}/meta")

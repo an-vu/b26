@@ -25,17 +25,7 @@ export type Board = {
   headline: string;
 };
 
-export type Card = {
-  id: string;
-  label: string;
-  href: string;
-};
-
-export type UpdateBoardRequest = {
-  name: string;
-  headline: string;
-  cards: Card[];
-};
+export type BoardPage = { items: Board[]; page: number; size: number; totalElements: number; totalPages: number };
 
 export type UpdateBoardMetaRequest = {
   name: string;
@@ -51,27 +41,6 @@ export type UpdateBoardIdentityRequest = {
   version?: number;
   boardName: string;
   boardUrl: string;
-};
-
-export type SystemRoutes = {
-  globalHomepageBoardId: string;
-  globalHomepageBoardUrl: string;
-  globalInsightsBoardId: string;
-  globalInsightsBoardUrl: string;
-  globalSettingsBoardId: string;
-  globalSettingsBoardUrl: string;
-  globalSigninBoardId?: string;
-  globalSigninBoardUrl?: string;
-  globalLoginBoardId?: string;
-  globalLoginBoardUrl?: string;
-};
-
-export type UpdateSystemRoutesRequest = {
-  globalHomepageBoardId: string;
-  globalInsightsBoardId: string;
-  globalSettingsBoardId: string;
-  globalSigninBoardId?: string;
-  globalLoginBoardId?: string;
 };
 
 export type UserPreferences = {

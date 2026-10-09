@@ -84,7 +84,7 @@ public class AuthService {
     user.setRole("USER");
 
     AppUserEntity savedUser = appUserRepository.save(user);
-    var board = boardService.createStarterBoardForOwner(savedUser);
+    boardService.createStarterBoardForOwner(savedUser);
     UserPreferenceEntity preference = new UserPreferenceEntity();
     preference.setUserId(savedUser.getId());
     preference.setMainBoardId(null);
@@ -126,15 +126,7 @@ public class AuthService {
 
   @Transactional
   public void signout(String bearerToken) {
-    String tokenHash = sha256(requireToken(bearerToken));
-    AuthSessionEntity session =
-        authSessionRepository
-            .findByTokenHashAndRevokedAtIsNull(tokenHash)
-            .orElseThrow(() -> new AuthUnauthorizedException("Invalid or expired session"));
-
-    if (session.getExpiresAt().isBefore(Instant.now())) {
-      throw new AuthUnauthorizedException("Invalid or expired session");
-    }
+    AuthSessionEntity session = requireActiveSession(bearerToken);
 
     session.setRevokedAt(Instant.now());
     authSessionRepository.save(session);
@@ -142,10 +134,13 @@ public class AuthService {
 
   @Transactional(readOnly = true)
   public AppUserEntity getAuthenticatedUser(String bearerToken) {
-    return resolveUserByToken(bearerToken);
+    AuthSessionEntity session = requireActiveSession(bearerToken);
+    return appUserRepository
+        .findById(session.getUserId())
+        .orElseThrow(() -> new AuthUnauthorizedException("Session user no longer exists"));
   }
 
-  private AppUserEntity resolveUserByToken(String bearerToken) {
+  private AuthSessionEntity requireActiveSession(String bearerToken) {
     String tokenHash = sha256(requireToken(bearerToken));
 
     AuthSessionEntity session =
@@ -157,9 +152,7 @@ public class AuthService {
       throw new AuthUnauthorizedException("Invalid or expired session");
     }
 
-    return appUserRepository
-        .findById(session.getUserId())
-        .orElseThrow(() -> new AuthUnauthorizedException("Session user no longer exists"));
+    return session;
   }
 
   private AuthSessionResponse createSession(AppUserEntity user) {

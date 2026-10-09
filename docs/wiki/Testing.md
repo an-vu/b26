@@ -13,7 +13,7 @@ npm --prefix frontend run build
 
 Tests use Vitest through Angular. The production output is `frontend/dist/b26`, not `dist/b26/browser`.
 
-The current board-layout CSS warning does not fail the build. See [Troubleshooting](Troubleshooting).
+The 1.5.9 production frontend build passed. See [Troubleshooting](Troubleshooting) for build issues.
 
 ## Backend: fast suite
 
@@ -55,6 +55,19 @@ Without `POSTGRES_TEST_URL`, those tests are skipped. They cover fresh migration
 10. Delete an extra board from both menu flows; check confirmation, safeguards, draft retention on failure, and the active-board redirect.
 
 ## Recorded local verification
+
+### 1.5.9 — October 9, 2026
+
+- **82 backend tests passed**, with no failures or skips, including PostgreSQL migrations and concurrency tests.
+- **108 frontend tests passed**, including real board link tracking and suppression in previews. Tests for the retired admin route picker were removed.
+- Frontend production build and backend package build passed.
+- V37 tests preserve archived cards, route mappings, and historical click targets on fresh/historical migration paths.
+- Pagination tests cover private-board exclusion, stable ordering, page size, and invalid bounds. Click tests cover simultaneous requests, expiry, capacity, target ownership, visibility, and enabled state.
+- The local database was backed up before V37; the rebuilt local backend became healthy. Live API checks confirmed the paginated board response and 410 for retired system routes.
+
+These are local checks, not proof of a hosted deployment.
+
+### Historical 1.2.0 verification
 
 On October 6, 2026, implementation `b8deab3` passed **57 frontend tests**, **51 fast backend tests**, **4 PostgreSQL tests**, and a production build. Browser checks covered canonical/legacy links, saving, renaming, creation, deletion redirects, and a 320px layout. The CSS-size warning remains.
 

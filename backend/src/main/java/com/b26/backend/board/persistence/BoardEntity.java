@@ -1,16 +1,11 @@
 package com.b26.backend.board.persistence;
 
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
-import jakarta.persistence.OrderColumn;
 import jakarta.persistence.Table;
 import jakarta.persistence.Version;
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
 
 @Entity
 @Table(name = "boards")
@@ -91,10 +86,6 @@ public class BoardEntity {
 
   @Version private Long version;
 
-  @OneToMany(mappedBy = "board", cascade = CascadeType.ALL, orphanRemoval = true)
-  @OrderColumn(name = "position")
-  private List<CardEntity> cards = new ArrayList<>();
-
   public String getId() {
     return id;
   }
@@ -155,11 +146,4 @@ public class BoardEntity {
     return version;
   }
 
-  public List<CardEntity> getCards() {
-    return cards;
-  }
-
-  public void setCards(List<CardEntity> cards) {
-    this.cards = cards;
-  }
 }

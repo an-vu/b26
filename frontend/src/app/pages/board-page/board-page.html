@@ -85,7 +85,7 @@
               *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
               [class]="'board-tile widget-tile ' + tileLayoutClass(widget.layout)"
             >
-              <app-widget-host [widget]="widget"></app-widget-host>
+              <app-widget-host [widget]="widget" [boardId]="state.board.id"></app-widget-host>
             </div>
           </div>
         </ng-container>

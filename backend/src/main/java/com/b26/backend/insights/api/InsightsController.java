@@ -24,15 +24,15 @@ public class InsightsController {
     this.boardAccess = boardAccess;
   }
 
-  @PostMapping("/click/{cardId}")
+  @PostMapping("/insights/widgets/{widgetId}/click")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void recordClick(
-      @PathVariable String cardId,
+      @PathVariable long widgetId,
       @Valid @RequestBody RecordClickRequest request,
       HttpServletRequest servletRequest) {
     String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
     boardAccess.requireRead(request.boardId(), true, false, servletRequest.getHeader("Authorization"));
-    insightsService.recordClick(request.boardId(), cardId, sourceIp);
+    insightsService.recordClick(request.boardId(), widgetId, sourceIp);
   }
 
   @GetMapping("/insights/{boardId}")

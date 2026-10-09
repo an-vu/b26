@@ -13,12 +13,10 @@ describe('BoardPageComponent', () => {
   let component: BoardPageComponent;
   let fixture: ComponentFixture<BoardPageComponent>;
   let boardServiceStub: {
-    getBoards: BoardService['getBoards'];
     getMyBoards: BoardService['getMyBoards'];
     getBoard: BoardService['getBoard'];
     getMyProfile: BoardService['getMyProfile'];
     getMyPreferences: BoardService['getMyPreferences'];
-    updateBoard: BoardService['updateBoard'];
     updateBoardMeta: BoardService['updateBoardMeta'];
     updateBoardUrl: BoardService['updateBoardUrl'];
     updateBoardIdentity: BoardService['updateBoardIdentity'];
@@ -43,10 +41,6 @@ describe('BoardPageComponent', () => {
   beforeEach(async () => {
     updateWidgetCalls = [];
     boardServiceStub = {
-      getBoards: () =>
-        of([
-          { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' },
-        ]),
       getMyBoards: () =>
         of([
           { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' },
@@ -72,14 +66,6 @@ describe('BoardPageComponent', () => {
           username: 'anvu',
           mainBoardId: 'default',
           mainBoardUrl: 'default',
-        }),
-      updateBoard: () =>
-        of({
-          id: 'default',
-          boardName: 'Default',
-          boardUrl: 'default',
-          name: 'An Vu',
-          headline: 'Software Engineer',
         }),
       updateBoardMeta: () =>
         of({

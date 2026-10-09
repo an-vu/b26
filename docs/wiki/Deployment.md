@@ -59,3 +59,9 @@ Repository sources: [frontend deployment config](https://github.com/an-vu/b26/bl
 ## Production sample profiles — 1.5.7
 
 Added @vhuman, @vi, @moka, @sol, and @pixel to Neon production on October 8, 2026. Each has a public main board and five widgets. These sample profiles have no email or password and cannot sign in. The reviewed, repeatable SQL is in `scripts/seed-production-samples-1.5.7.sql`; it refuses username/URL conflicts and preserves existing accounts and edits. It is an explicit data operation, not an automatic migration or local database upload. Find the profiles through Search or `/vhuman/sample-vhuman` (and equivalent username/slug pairs). Home still uses its fixed preview collection.
+
+## V37 coordinated rollout
+
+Deploy the matching frontend and backend together. The public board list changes to a paginated envelope; retired card/system-route APIs return 410. V37 renames `cards` and `system_settings` to archives, removes their foreign keys, and changes `click_events.card_id` to namespaced `target_id`. Existing card records, route mappings, and click counts are retained.
+
+Take the normal database backup before rollout. Do not roll an old backend binary back onto V37: it expects the old tables and column. Use a forward fix or restore the pre-migration database with the corresponding old release. The cleanup has only been tested locally; no hosted rollout is implied.

@@ -12,4 +12,8 @@ public record UpsertWidgetWithIdRequest(
     @NotBlank(message = "layout is required") String layout,
     @NotNull(message = "config is required") JsonNode config,
     @NotNull(message = "enabled is required") Boolean enabled,
-    @NotNull(message = "order is required") @Min(value = 0, message = "order must be >= 0") Integer order) {}
+    @NotNull(message = "order is required") @Min(value = 0, message = "order must be >= 0") Integer order) {
+  public UpsertWidgetRequest toUpsertRequest() {
+    return new UpsertWidgetRequest(type, title, layout, config, enabled, order);
+  }
+}

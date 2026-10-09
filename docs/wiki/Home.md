@@ -17,9 +17,9 @@ BlueBerry 26 (B26) is a board builder: users create pages, arrange widgets, and 
 - Open Docker Desktop and run `./setup.sh`. The website is at **http://localhost:4200**; API/database ports stay internal in this workflow.
 - Application data lives in **PostgreSQL**. H2 is used by the fast backend tests.
 - The local password-bypass switch is `APP_AUTH_REQUIRE_PASSWORD=false`; it requires a backend restart/recreation. See the dev-login page before using it.
-- `/settings`, `/insights`, `/signin`, `/`, and `/<username>` are read-only board views. Open `/<username>/<board-slug>` to edit as an owner or admin. Legacy `/b/<slug>` links still work.
+- `/settings`, `/insights`, `/signin`, and `/` are dedicated application pages. `/<username>` displays the optional public main board or a minimal profile. Open `/<username>/<board-slug>` to edit as an owner or admin. Legacy `/b/<slug>` links still work.
 - No env-file copy is needed for `./setup.sh`. The separate host-development workflow still uses `backend/.env.dev`.
-- **Latest local release commit: 1.5.3 (`93a2e2b`).** Profile, panel, and animation refinements are documented in [Appearance and panels](Board-Appearance-and-Panels); hosted status is unverified.
+- **Current release: 1.5.9.** Backend cleanup, paginated boards, widget click analytics, and archived legacy routes are covered in [Architecture](Architecture-Overview) and [API reference](API-Reference). Hosted status is tracked separately.
 
 ## Understand or maintain the project
 
@@ -27,4 +27,4 @@ BlueBerry 26 (B26) is a board builder: users create pages, arrange widgets, and 
 
 [Configuration](Runtime-Config-%28Dev-vs-Prod%29) · [API reference](API-Reference) · [Database and backups](Dev-Data-Safety) · [Testing](Testing) · [Deployment](Deployment) · [Phone / LAN access](How-to-Access-From-Another-Device-%28Same-Network%29)
 
-Updated setup and current UI notes: October 7, 2026. Some older reference pages still describe earlier milestones; use [Development and operations](Development-Reference) for the migrated README details and dated hosting audit.
+Updated release and architecture notes: October 9, 2026. Some older reference pages still describe earlier milestones; use [Development and operations](Development-Reference) for the migrated README details and dated hosting audit.

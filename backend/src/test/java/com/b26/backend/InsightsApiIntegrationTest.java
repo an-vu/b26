@@ -8,19 +8,63 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
+  private long firstLink;
+  private long secondLink;
+
+  @org.junit.jupiter.api.BeforeEach
+  void createLinkTargets() throws Exception {
+    firstLink = createLink();
+    secondLink = createLink();
+  }
+
+  private long createLink() throws Exception {
+    var result = mockMvc.perform(authJson(post(API_BOARD_DEFAULT_WIDGETS),
+        "{\"type\":\"link\",\"title\":\"Link\",\"layout\":\"span-1\",\"config\":{\"url\":\"https://example.com\"},\"enabled\":true,\"order\":0}"))
+        .andExpect(status().isCreated()).andReturn();
+    return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+  }
+
+  private String clickPath(long id) {
+    return "/api/insights/widgets/" + id + "/click";
+  }
+
+
+  @org.springframework.beans.factory.annotation.Autowired
+  com.b26.backend.widget.persistence.WidgetRepository widgets;
+
+  @Test
+  @org.springframework.transaction.annotation.Transactional
+  void clicksRespectBoardVisibilityWidgetOwnershipAndEnabledState() throws Exception {
+    var widget = widgets.findById(firstLink).orElseThrow();
+    widget.setEnabled(false); widgets.saveAndFlush(widget);
+    mockMvc.perform(post(clickPath(firstLink)).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        .content(DEFAULT_CLICK_PAYLOAD)).andExpect(status().isNotFound());
+    widget.setEnabled(true); widgets.saveAndFlush(widget);
+    mockMvc.perform(post(clickPath(firstLink)).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+        .content("{\"boardId\":\"berkshire\"}")).andExpect(status().isNotFound());
+    var board = boardRepository.findById("default").orElseThrow();
+    try {
+      board.setVisibility("private"); boardRepository.saveAndFlush(board);
+      mockMvc.perform(post(clickPath(firstLink)).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+          .content(DEFAULT_CLICK_PAYLOAD)).andExpect(status().isNotFound());
+      mockMvc.perform(authJson(post(clickPath(firstLink)), DEFAULT_CLICK_PAYLOAD)).andExpect(status().isNoContent());
+    } finally {
+      board.setVisibility("public"); boardRepository.saveAndFlush(board);
+    }
+  }
 
   @Test
   void postClick_andGetInsights_work() throws Exception {
     mockMvc
         .perform(
-            post("/api/click/github")
+            post(clickPath(firstLink))
                 .content(DEFAULT_CLICK_PAYLOAD)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
         .andExpect(status().isNoContent());
 
     mockMvc
         .perform(
-            post("/api/click/linkedin")
+            post(clickPath(secondLink))
                 .content(DEFAULT_CLICK_PAYLOAD)
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON))
         .andExpect(status().isNoContent());
@@ -30,33 +74,33 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalClicks").value(2))
-        .andExpect(jsonPath("$.byCard.length()").value(2));
+        .andExpect(jsonPath("$.byTarget.length()").value(2));
   }
 
   @Test
-  void postClick_invalidCard_returns400() throws Exception {
+  void postClick_missingWidget_returns404() throws Exception {
     mockMvc
         .perform(
-            post("/api/click/not-a-card")
+            post(clickPath(Long.MAX_VALUE))
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(DEFAULT_CLICK_PAYLOAD))
-        .andExpect(status().isBadRequest())
+        .andExpect(status().isNotFound())
         .andExpect(
-            jsonPath("$.message").value("Card 'not-a-card' does not belong to board 'default'"));
+            jsonPath("$.message").value("Widget '" + Long.MAX_VALUE + "' not found for board 'default'"));
   }
 
   @Test
   void postClick_rateLimited_returns429() throws Exception {
     mockMvc
         .perform(
-            post("/api/click/github")
+            post(clickPath(firstLink))
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
 
     mockMvc
         .perform(
-            post("/api/click/github")
+            post(clickPath(firstLink))
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isTooManyRequests())
@@ -75,7 +119,7 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
 
     mockMvc
         .perform(
-            post("/api/click/github")
+            post(clickPath(firstLink))
                 .contentType(org.springframework.http.MediaType.APPLICATION_JSON)
                 .content(DEFAULT_CLICK_PAYLOAD))
         .andExpect(status().isNoContent());
@@ -88,7 +132,7 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(jsonPath("$.visitsLast30Days").value(1))
         .andExpect(jsonPath("$.visitsToday").value(1))
         .andExpect(jsonPath("$.totalClicks").value(1))
-        .andExpect(jsonPath("$.topClickedLinks[0].cardId").value("github"))
+        .andExpect(jsonPath("$.topClickedLinks[0].targetId").value("widget:" + firstLink))
         .andExpect(jsonPath("$.topClickedLinks[0].clickCount").value(1));
   }
 

@@ -23,14 +23,14 @@ Open Sign In → **Don't Have an Account?** Signup creates an account, session, 
 | --- | --- |
 | Signed out | Public boards and public read endpoints |
 | Signed-in user | Create boards, edit/delete owned boards, edit own profile/preferences |
-| Administrator | Edit any board and change system-route mappings; deletion safeguards still apply |
+| Administrator | Edit any board; deletion safeguards still apply |
 
 New accounts have the `USER` role. Sign Out works in the account menu and settings. Password reset/change and account deletion remain unfinished.
 
 ## Common confusion
 
 - **No Edit button?** Open `/<username>/<slug>` (or legacy `/b/<slug>`) as owner/admin. System routes and `/<username>` are read-only board views.
-- **Admin token?** It authorizes system-route writes; it does not sign you in or replace a board-editing session.
+- **Admin token?** Retired with the system-route API; use a bearer session.
 - **Remember Me?** The checkbox does not yet alter session behavior. The token is stored in local storage.
 - **Phone/LAN or hosted app?** Use normal accounts with `APP_AUTH_REQUIRE_PASSWORD=true`. The setup-script preview is loopback-only.
 

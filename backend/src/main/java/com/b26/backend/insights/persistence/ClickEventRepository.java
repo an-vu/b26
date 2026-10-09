@@ -10,16 +10,16 @@ public interface ClickEventRepository extends JpaRepository<ClickEventEntity, Lo
 
   @Query(
       """
-      select c.cardId as cardId, count(c) as clickCount
+      select c.targetId as targetId, count(c) as clickCount
       from ClickEventEntity c
       where c.boardId = :boardId
-      group by c.cardId
-      order by count(c) desc, c.cardId asc
+      group by c.targetId
+      order by count(c) desc, c.targetId asc
       """)
-  List<CardClickCountView> countByCardForBoard(@Param("boardId") String boardId);
+  List<TargetClickCountView> countByTargetForBoard(@Param("boardId") String boardId);
 
-  interface CardClickCountView {
-    String getCardId();
+  interface TargetClickCountView {
+    String getTargetId();
 
     long getClickCount();
   }

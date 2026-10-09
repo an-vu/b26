@@ -1,5 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { InsightsService } from '../../services/insights.service';
 import type { Widget } from '../../models/widget';
 
 @Component({
@@ -11,6 +12,14 @@ import type { Widget } from '../../models/widget';
 })
 export class LinkWidgetComponent {
   @Input({ required: true }) widget!: Widget;
+  @Input() boardId?: string;
+  private readonly insights = inject(InsightsService);
+
+  recordClick() {
+    if (this.boardId && this.widget.id > 0) {
+      this.insights.recordWidgetClick(this.boardId, this.widget.id).subscribe({ error: () => {} });
+    }
+  }
 
   get description(): string { return typeof this.widget?.config?.['description'] === 'string' ? this.widget.config['description'] as string : ''; }
   get imageUrl(): string | null {

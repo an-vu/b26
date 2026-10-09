@@ -39,7 +39,7 @@ public class UserPreferencesService {
     AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
-    return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
+    return toDto(user, board);
   }
 
   @Transactional
@@ -86,12 +86,12 @@ public class UserPreferencesService {
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     preference.setMainBoardId(board == null ? null : board.getId());
     userPreferenceRepository.save(preference);
-    return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
+    return toDto(user, board);
   }
 
   @Transactional
   public UserMainBoardDto getMainBoardByUsername(String username) {
-    String normalized = username.trim().toLowerCase();
+    String normalized = username.trim().toLowerCase(java.util.Locale.ROOT);
     if (normalized.isEmpty()) {
       throw new UserNotFoundException(username);
     }
@@ -101,6 +101,10 @@ public class UserPreferencesService {
     String mainId = userPreferenceRepository.findById(user.getId()).map(UserPreferenceEntity::getMainBoardId).orElse(null);
     BoardEntity board = resolveUserMainBoard(user.getId(), mainId);
     return new UserMainBoardDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl(), user.getDisplayName());
+  }
+
+  private static UserPreferencesDto toDto(AppUserEntity user, BoardEntity board) {
+    return new UserPreferencesDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl());
   }
 
   private BoardEntity resolveUserMainBoard(String userId, String configuredBoardId) {

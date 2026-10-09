@@ -88,10 +88,10 @@ class PostgresOnboardingIntegrationTest {
   }
 
   @Test
-  void migratedDatabaseServesSystemRoutesAndFirstBoard() throws Exception {
+  void migratedDatabaseRetiresSystemRoutesAndCreatesFirstBoard() throws Exception {
     // Exercises default creation under PostgreSQL transaction rules and JPA schema validation.
     mockMvc.perform(get("/api/system/routes"))
-        .andExpect(status().isOk()).andExpect(jsonPath("$.globalHomepageBoardUrl").value("home"));
+        .andExpect(status().isGone());
     var result = mockMvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
         .content("{\"email\":\"first@example.com\",\"password\":\"test-password-123\"}"))
         .andExpect(status().isCreated()).andReturn();

@@ -3,7 +3,6 @@ import { EmbedWidgetComponent } from './embed-widget/embed-widget';
 import { LinkWidgetComponent } from './link-widget/link-widget';
 import { MapWidgetComponent } from './map-widget/map-widget';
 import { AccountSettingsFormComponent } from '../components/account-settings-form/account-settings-form';
-import { AdminSettingsWidgetComponent } from './admin-settings-widget/admin-settings-widget';
 import { SigninFormComponent } from '../components/signin-form/signin-form';
 import { SignupFormComponent } from '../components/signup-form/signup-form';
 import { UnknownWidgetComponent } from './unknown-widget/unknown-widget';
@@ -14,7 +13,6 @@ export const WIDGET_COMPONENT_REGISTRY: Record<string, Type<unknown>> = {
   map: MapWidgetComponent,
   // Compatibility for saved system-board widgets; new app pages use these forms directly.
   'user-settings': AccountSettingsFormComponent,
-  'admin-settings': AdminSettingsWidgetComponent,
   signin: SigninFormComponent,
   signup: SignupFormComponent,
 };

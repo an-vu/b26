@@ -9,7 +9,6 @@ import com.b26.backend.board.persistence.BoardRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -18,9 +17,6 @@ public class ApiAuthorizationInterceptor implements HandlerInterceptor {
   private final AuthService authService;
   private final BoardRepository boardRepository;
   private final BoardAccessService boardAccess;
-
-  @Value("${app.security.admin-token:}")
-  private String adminToken;
 
   public ApiAuthorizationInterceptor(AuthService authService, BoardRepository boardRepository, BoardAccessService boardAccess) {
     this.authService = authService;
@@ -31,6 +27,8 @@ public class ApiAuthorizationInterceptor implements HandlerInterceptor {
   @Override
   public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler)
       throws Exception {
+    if (handler instanceof org.springframework.web.method.HandlerMethod method
+        && method.getBeanType() == com.b26.backend.common.api.RetiredApiController.class) return true;
     if ("GET".equalsIgnoreCase(request.getMethod()) || "HEAD".equalsIgnoreCase(request.getMethod())) return authorizeRead(request, response);
     if (!isWriteMethod(request.getMethod())) return true;
 
@@ -45,10 +43,6 @@ public class ApiAuthorizationInterceptor implements HandlerInterceptor {
 
     if (uri.startsWith("/api/users/me")) {
       return requireAuthenticatedUser(request, response) != null;
-    }
-
-    if (uri.startsWith("/api/system")) {
-      return authorizeSystemWrite(request, response);
     }
 
     if (uri.startsWith("/api/board")) {
@@ -97,28 +91,6 @@ public class ApiAuthorizationInterceptor implements HandlerInterceptor {
             .orElseThrow(() -> new BoardNotFoundException(boardUrl));
 
     if (isAdmin(user) || user.getId().equals(board.getOwnerUserId())) {
-      return true;
-    }
-
-    writeError(response, HttpServletResponse.SC_FORBIDDEN, "Forbidden");
-    return false;
-  }
-
-  private boolean authorizeSystemWrite(HttpServletRequest request, HttpServletResponse response)
-      throws Exception {
-    String providedAdminToken = request.getHeader("X-Admin-Token");
-    if (adminToken != null
-        && !adminToken.isBlank()
-        && adminToken.equals(providedAdminToken)) {
-      return true;
-    }
-
-    AppUserEntity user = requireAuthenticatedUser(request, response);
-    if (user == null) {
-      return false;
-    }
-
-    if (isAdmin(user)) {
       return true;
     }
 

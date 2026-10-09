@@ -13,6 +13,7 @@ import { DEFAULT_WIDGET_COMPONENT, WIDGET_COMPONENT_REGISTRY } from '../widget-r
 export class WidgetHostComponent implements OnChanges {
   @Input({ required: true }) widget!: Widget;
   @Input() previewMode = false;
+  @Input() boardId?: string;
   @HostBinding('class.widget-host-preview') get isPreviewMode() {
     return this.previewMode;
   }
@@ -22,6 +23,9 @@ export class WidgetHostComponent implements OnChanges {
 
   ngOnChanges() {
     this.component = WIDGET_COMPONENT_REGISTRY[this.widget.type] ?? DEFAULT_WIDGET_COMPONENT;
-    this.componentInputs = { widget: this.widget };
+    this.componentInputs = {
+      widget: this.widget,
+      ...(this.widget.type === 'link' ? { boardId: this.previewMode ? undefined : this.boardId } : {}),
+    };
   }
 }

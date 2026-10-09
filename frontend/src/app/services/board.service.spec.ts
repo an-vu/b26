@@ -32,23 +32,9 @@ describe('BoardService', () => {
   it('should call backend GET boards endpoint', () => {
     service.getBoards().subscribe();
 
-    const req = httpMock.expectOne('/api/board');
+    const req = httpMock.expectOne('/api/board?page=0&size=20');
     expect(req.request.method).toBe('GET');
-    req.flush([{ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An', headline: 'H' }]);
-  });
-
-  it('should call backend PUT board endpoint', () => {
-    service
-      .updateBoard('default', {
-        name: 'An Updated',
-        headline: 'Updated',
-        cards: [{ id: 'github', label: 'GitHub', href: 'https://github.com/' }],
-      })
-      .subscribe();
-
-    const req = httpMock.expectOne('/api/board/default');
-    expect(req.request.method).toBe('PUT');
-    req.flush({});
+    req.flush({ items: [], page: 0, size: 20, totalElements: 0, totalPages: 0 });
   });
 
   it('should call backend GET widgets endpoint', () => {

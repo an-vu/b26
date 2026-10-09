@@ -16,7 +16,7 @@ Append these paths to `http://localhost:4200`:
 | User profile/main board | `/<username>` | Public main board, or minimal profile without a main selection |
 | Specific board | `/<username>/<slug>` | Public read, private owner/admin access, and owner/admin editing |
 
-Application routes do not use saved system-board mappings. Legacy mapping endpoints and seeded boards remain for compatibility. Home's publishing/feed features are planned; making a board public does not publish a Home entry.
+Application routes do not use saved system-board mappings. Legacy mapping endpoints return 410; mappings and cards are archived, while existing boards remain. Home's publishing/feed features are planned; making a board public does not publish a Home entry.
 
 ## Personalize Home
 
@@ -55,7 +55,7 @@ Delete with the red trash button in Board Settings, then confirm. Owner/admin ac
 
 - The owner's only board cannot be deleted.
 - Choose another main board before deleting the current main board.
-- Remap a system route before deleting its board. Admins follow these safeguards too.
+- Retired system-route mappings no longer block deletion. Admins still follow last-board and main-board safeguards.
 - Failure shows an error and keeps drafts.
 - Deleting the current board opens the main board (home fallback); deleting another board keeps the current page.
 

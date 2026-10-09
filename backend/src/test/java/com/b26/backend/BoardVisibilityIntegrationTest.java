@@ -47,7 +47,7 @@ class BoardVisibilityIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isNotFound());
     var publicList = objectMapper.readTree(mockMvc.perform(get(API_BOARD)).andExpect(status().isOk())
         .andReturn().getResponse().getContentAsString());
-    assertFalse(java.util.stream.StreamSupport.stream(publicList.spliterator(), false)
+    assertFalse(java.util.stream.StreamSupport.stream(publicList.get("items").spliterator(), false)
         .anyMatch(entry -> id.equals(entry.get("id").asText())));
     mockMvc.perform(get(API_BOARD + "/mine").header("Authorization", owner))
         .andExpect(jsonPath("$[0].visibility").value("private"));

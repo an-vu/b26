@@ -191,7 +191,7 @@ Edit in the left sidebar loads a consistent board/widget snapshot with its revis
 
 Board Settings uses a separate automatic-save flow for board name, URL, and appearance. The board switcher in that panel changes boards and sets the main board after server acceptance. Existing writes advance the board revision.
 
-Deletion requires owner/admin access and confirmation. The last board, main board, and system-route boards are protected. Choose replacements before deleting a main/system board. Failure keeps drafts; deleting the active board redirects to the main board or home fallback.
+Deletion requires owner/admin access and confirmation. The last board and main board are protected. Remove or replace the main selection before deleting that board. Archived route mappings do not block deletion. Failure keeps drafts; deleting the active board redirects to the main board or home fallback.
 
 ## Verification
 

@@ -44,8 +44,7 @@ class BoardDeletionIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @Test
-  void permissionsAndSystemRoutesAreProtected() throws Exception {
-    mockMvc.perform(get(API_SYSTEM_ROUTES)).andExpect(status().isOk());
+  void deletionRequiresOwnerOrAdmin() throws Exception {
     String owner = signup();
     var extra = objectMapper.readTree(mockMvc.perform(post(API_BOARD).header("Authorization", owner)
         .contentType(MediaType.APPLICATION_JSON).content("{}"))
@@ -56,9 +55,6 @@ class BoardDeletionIntegrationTest extends ApiIntegrationTestSupport {
     org.junit.jupiter.api.Assertions.assertFalse(widgets.findByBoard_IdOrderBySortOrderAsc(extra.get("id").asText()).isEmpty());
     mockMvc.perform(delete(path).header("Authorization", authAnvu())).andExpect(status().isNoContent());
     org.junit.jupiter.api.Assertions.assertTrue(widgets.findByBoard_IdOrderBySortOrderAsc(extra.get("id").asText()).isEmpty());
-    mockMvc.perform(delete("/api/board/home").header("Authorization", authAnvu()))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.errors[0].message", org.hamcrest.Matchers.containsString("system route")));
     mockMvc.perform(delete(API_BOARD_NOT_HERE).header("Authorization", owner)).andExpect(status().isNotFound());
   }
 

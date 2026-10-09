@@ -1,5 +1,5 @@
-export type CardInsights = {
-  cardId: string;
+export type ClickTargetInsights = {
+  targetId: string;
   clickCount: number;
 };
 
@@ -9,5 +9,5 @@ export type InsightsSummary = {
   visitsLast30Days: number;
   visitsToday: number;
   totalClicks: number;
-  topClickedLinks: CardInsights[];
+  topClickedLinks: ClickTargetInsights[];
 };

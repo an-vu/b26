@@ -4,12 +4,13 @@
 b26/
 ├── frontend/
 │   ├── src/app/
-│   │   ├── pages/board-page/      Board rendering, editing, menus, navigation
+│   │   ├── pages/app-pages/       Home, Settings, Insights, Sign In, profiles
+│   │   ├── pages/board-page/      Board rendering, editing, widget picker
 │   │   ├── widgets/               Widget components, registry, dynamic host
 │   │   ├── services/              API clients and board/user stores
 │   │   ├── models/                TypeScript API/data types
 │   │   ├── interceptors/          Bearer-token request handling
-│   │   ├── components/            Header and legacy card components
+│   │   ├── components/            Shared navigation, panels, forms, appearance controls
 │   │   └── app.routes.ts          Browser routes and navigation guards
 │   ├── angular.json              Build/test configuration and output path
 │   ├── proxy.conf.json           Local API proxy
@@ -22,8 +23,7 @@ b26/
 │   │   ├── board/                Board ownership, identity, atomic editing
 │   │   ├── widget/               Widget validation and persistence
 │   │   ├── user/                 Profiles and main-board preferences
-│   │   ├── system/               Global page-to-board mappings
-│   │   ├── insights/             Views and legacy card-click analytics
+│   │   ├── insights/             Views, widget clicks, historical click totals
 │   │   └── common/               Authorization, CORS, error responses
 │   ├── src/main/resources/
 │   │   ├── application*.properties
@@ -52,7 +52,7 @@ b26/
 | Add a widget renderer | `frontend/src/app/widgets/widget-registry.ts` |
 | Understand saving/conflicts | `BoardService.java`, `SaveBoardEditRequest.java`, `board-page.save-flow.ts` |
 | Understand signup/dev login | `AuthService.java`, `backend/.env.example` |
-| Understand permissions | `ApiWriteAuthorizationInterceptor.java` |
+| Understand permissions | `ApiAuthorizationInterceptor.java` |
 | Change the database | `backend/src/main/resources/db/migration/` |
 
-The old wiki listed `docker/` and `docs/` directories; those are not part of the current tracked layout. This wiki itself is stored in GitHub's separate `b26.wiki.git` repository.
+Wiki sources live in `docs/wiki/` in this repository. A push to main that changes them triggers the Sync Wiki workflow, which publishes them to GitHub Wiki using a temporary runner checkout. No second local checkout is needed.

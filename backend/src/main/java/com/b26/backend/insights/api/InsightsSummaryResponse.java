@@ -8,4 +8,4 @@ public record InsightsSummaryResponse(
     long visitsLast30Days,
     long visitsToday,
     long totalClicks,
-    List<CardInsightsDto> topClickedLinks) {}
+    List<ClickTargetDto> topClickedLinks) {}

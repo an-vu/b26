@@ -60,11 +60,27 @@ class PostgresMigrationIntegrationTest {
         }
         statement.execute("set search_path to " + schema);
         statement.executeUpdate("update boards set name = 'Preserved title' where id = 'default'");
+        statement.executeUpdate("insert into cards (id, label, href, board_id, position) values ('archive-test', 'Saved link', 'https://example.com', 'default', 99)");
+        statement.executeUpdate("insert into click_events (board_id, card_id, occurred_at, source_ip) values ('default', 'archive-test', now(), '127.0.0.1')");
+        Flyway.configure().dataSource(url, user, password).schemas(schema).defaultSchema(schema)
+            .target("36").load().migrate();
+        statement.executeUpdate("insert into system_settings "
+            + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "
+            + "values (1, 'home', 'insights', 'settings', 'signin')");
         Flyway flyway = Flyway.configure().dataSource(url, user, password)
             .schemas(schema).defaultSchema(schema).load();
         flyway.migrate();
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
+        try (var rows = statement.executeQuery("select label from legacy_cards where id = 'archive-test'")) {
+          rows.next(); assertEquals("Saved link", rows.getString(1));
+        }
+        try (var rows = statement.executeQuery("select target_id from click_events where target_id = 'card:archive-test'")) {
+          rows.next(); assertEquals("card:archive-test", rows.getString(1));
+        }
+        try (var rows = statement.executeQuery("select count(*) from pg_constraint where contype = 'f' and conrelid in ('legacy_cards'::regclass, 'legacy_system_settings'::regclass)")) {
+          rows.next(); assertEquals(0, rows.getInt(1));
+        }
         try (var rows = statement.executeQuery("select home_radius_step, home_spacing_step from user_preferences where user_id = 'anvu'")) {
           rows.next();
           assertEquals(2, rows.getInt(1));
@@ -134,10 +150,9 @@ class PostgresMigrationIntegrationTest {
         statement.executeUpdate("update boards set visibility = 'private' where id = 'default'");
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
             () -> statement.executeUpdate("update boards set visibility = 'unknown' where id = 'default'"));
-        // Matches the current entity: no obsolete required signup-route column.
-        statement.executeUpdate("insert into system_settings "
-            + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "
-            + "values (1, 'home', 'insights', 'settings', 'signin')");
+        try (var rows = statement.executeQuery("select global_homepage_board_id from legacy_system_settings where id = 1")) {
+          rows.next(); assertEquals("home", rows.getString(1));
+        }
         try (var rows = statement.executeQuery("select count(*) from user_preferences p join boards b on b.id = p.main_board_id")) {
           rows.next();
           assertEquals(1, rows.getInt(1));
