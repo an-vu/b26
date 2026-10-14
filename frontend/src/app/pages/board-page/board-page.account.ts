@@ -3,7 +3,6 @@ import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 import type { Router } from '@angular/router';
 import type { BoardStoreService } from '../../services/board-store.service';
 import type { UserStoreService } from '../../services/user-store.service';
-import type { AuthService } from '../../services/auth.service';
 import type { BoardService } from '../../services/board.service';
 import type { BoardIdentity } from '../../models/board-identity';
 import type { UserProfile } from '../../models/board';
@@ -74,37 +73,6 @@ export function runCreateBoardFlow(options: {
       },
       error: (error) => {
         options.onError(error);
-      },
-    });
-}
-
-export function runSignOutFlow(options: {
-  authService: AuthService;
-  userStore: UserStoreService;
-  boardStore: BoardStoreService;
-  router: Router;
-  closeAccountMenu: () => void;
-  onStart: () => void;
-  onComplete: () => void;
-}): void {
-  options.onStart();
-
-  options.authService
-    .signout()
-    .pipe(finalize(options.onComplete))
-    .subscribe({
-      next: () => {
-        options.closeAccountMenu();
-        options.userStore.clearProfile();
-        options.boardStore.clearBoards();
-        void options.router.navigateByUrl('/');
-      },
-      error: () => {
-        options.authService.clearSession();
-        options.userStore.clearProfile();
-        options.boardStore.clearBoards();
-        options.closeAccountMenu();
-        void options.router.navigateByUrl('/');
       },
     });
 }

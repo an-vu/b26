@@ -9,13 +9,13 @@
   <main
     class="page page-fixed-scroll"
     *ngIf="state.status === 'ready'"
-    [attr.data-pattern]="boardPatternDraft"
-    [attr.data-intensity]="boardPatternIntensityDraft"
+    [attr.data-pattern]="settings.pattern"
+    [attr.data-intensity]="settings.intensity"
     [attr.data-theme]="siteTheme.themeId()"
     [attr.data-color-mode]="siteTheme.colorMode()"
     [style.--board-widget-radius.px]="boardRadiusDraft"
     [style.--widget-content-inset.px]="widgetEditorInset"
-    [style.--widget-spacing.px]="boardSpacingStepDraft * 8"
+    [style.--widget-spacing.px]="settings.gap * 8"
     [style.--board-bg-color]="siteTheme.background()"
     [style.--board-night-bg]="siteTheme.nightBackground()"
     [style.--board-foreground]="siteTheme.foreground()"
@@ -23,7 +23,7 @@
     [style.--board-accent]="siteTheme.background() === '#f9f8f6' ? '#00b2d7' : siteTheme.background()"
     [style.--board-muted]="siteTheme.background() === '#f9f8f6' ? '#62625e' : siteTheme.foreground()"
   >
-    <app-board-atmosphere [appearance]="appearanceDraft" [darkInk]="boardTheme.id === 'default' && !boardThemeToggleDraft && boardDisplayText === '#30302e'" />
+    <app-board-atmosphere [appearance]="settings.appearance" [darkInk]="settings.theme.id === 'default' && !settings.dark && settings.foreground === '#30302e'" />
     <div class="board-shell">
       <app-board-profile
         [board]="state.board"
@@ -42,7 +42,9 @@
         <app-widget-library animate.leave="panel-slide-down" *ngIf="isWidgetEditMode" [disabled]="isWidgetSaving || isIdentitySaving" (selectWidget)="addWidgetFromLibrary($event)" />
       </app-board-profile>
 
-      <section appWidgetBounce class="board-content widgets-section" *ngIf="widgets$ | async as widgets">
+      <section appWidgetBounce class="board-content widgets-section" *ngIf="widgetsState$ | async as widgetState">
+        <p role="status" *ngIf="widgetState.status === 'loading'">Loading widgets…</p>
+        <p class="error" role="alert" *ngIf="widgetState.status === 'error'">Unable to load widgets. <button class="app-button" type="button" (click)="retryLoad()">Retry</button></p>
         <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
 
         <div class="board-grid square-grid" *ngIf="isWidgetEditMode" [class.is-editing-widget]="selectedWidgetDraft && !widgetEditorClosing" [attr.inert]="selectedWidgetDraft ? '' : null">
@@ -76,19 +78,19 @@
         @if (isWidgetEditMode) {
           @if (selectedWidgetDraft; as draft) {
             <div class="widget-editor-backdrop board-glass" aria-hidden="true" [class.is-closing]="widgetEditorClosing"
-              [style.--widget-flip-duration]="widgetFlipDuration + 'ms'"
-              [style.left.px]="widgetEditorBounds.left - 64" [style.top.px]="widgetEditorBounds.top - 64"
-              [style.width.px]="widgetEditorBounds.width + 128" [style.height.px]="widgetBackdropHeight + 128"><span class="blur-layer"></span></div>
-            <div class="widget-editor-stage" [style.left.px]="widgetEditorBounds.left" [style.top.px]="widgetEditorBounds.top"
-              [style.width.px]="widgetEditorBounds.width" [style.height.px]="widgetEditorBounds.height">
-              <div class="widget-editor-flipper" [style.width.px]="widgetEditorSize" [style.height.px]="widgetEditorSize">
+              [style.--widget-flip-duration]="editorMotion.duration + 'ms'"
+              [style.left.px]="editorMotion.bounds.left - 64" [style.top.px]="editorMotion.bounds.top - 64"
+              [style.width.px]="editorMotion.bounds.width + 128" [style.height.px]="editorMotion.backdropHeight + 128"><span class="blur-layer"></span></div>
+            <div class="widget-editor-stage" [style.left.px]="editorMotion.bounds.left" [style.top.px]="editorMotion.bounds.top"
+              [style.width.px]="editorMotion.bounds.width" [style.height.px]="editorMotion.bounds.height">
+              <div class="widget-editor-flipper" [style.width.px]="editorMotion.size" [style.height.px]="editorMotion.size">
                 <div class="widget-editor-front" aria-hidden="true" inert>
-                  <div class="widget-editor-front-content" [style.width.px]="widgetEditorSourceSize.width" [style.height.px]="widgetEditorSourceSize.height"
-                    [style.transform]="'scale(' + widgetEditorSize / widgetEditorSourceSize.width + ',' + widgetEditorSize / widgetEditorSourceSize.height + ')'">
+                  <div class="widget-editor-front-content" [style.width.px]="editorMotion.sourceSize.width" [style.height.px]="editorMotion.sourceSize.height"
+                    [style.transform]="'scale(' + editorMotion.size / editorMotion.sourceSize.width + ',' + editorMotion.size / editorMotion.sourceSize.height + ')'">
                   <app-widget-host [widget]="widgetPreviewFromDraft(draft, widgetDrafts.indexOf(draft))" />
                   </div>
                 </div>
-              <section appPanel class="widget-editor-back utility-panel" [style.--panel-padding]="widgetEditorPanelInset" [style.border-radius]="widgetEditorRadius" role="dialog" aria-label="Widget settings"
+              <section appPanel class="widget-editor-back utility-panel" [style.--panel-padding]="editorMotion.panelInset" [style.border-radius]="editorMotion.radius" role="dialog" aria-label="Widget settings"
                 (keydown.escape)="closeWidgetSettings(true); $event.stopPropagation()" (keydown.tab)="trapWidgetEditorFocus($event)"
                 >
                 <h2 class="board-settings-heading">{{ draft.type === 'link' ? 'Social' : (draft.type | titlecase) }}</h2>
@@ -103,11 +105,11 @@
         }
 
         <ng-container *ngIf="!isWidgetEditMode">
-          <p class="widgets-empty text-muted" *ngIf="widgets.length === 0">No widgets configured yet.</p>
-          <div class="board-grid square-grid" *ngIf="widgets.length > 0">
+          <p class="widgets-empty text-muted" *ngIf="widgetState.status === 'ready' && widgetState.widgets.length === 0">No widgets configured yet.</p>
+          <div class="board-grid square-grid" *ngIf="widgetState.widgets.length > 0">
             <div
               class="board-tile widget-tile"
-              *ngFor="let widget of widgets; let i = index; trackBy: trackWidget"
+              *ngFor="let widget of widgetState.widgets; let i = index; trackBy: trackWidget"
               [class]="'board-tile widget-tile ' + tileLayoutClass(widget.layout)"
             >
               <app-widget-host [widget]="widget" [boardId]="state.board.id"></app-widget-host>
@@ -117,13 +119,13 @@
       </section>
     </div>
 
-    <app-site-navigation [beforeSignOut]="prepareSignOut" [topBlur]="true" [blurSuppressed]="!!selectedWidgetDraft && isWidgetEditMode && !widgetEditorClosing" [blurDuration]="widgetFlipDuration">
+    <app-site-navigation [beforeSignOut]="prepareSignOut" [topBlur]="true" [blurSuppressed]="!!selectedWidgetDraft && isWidgetEditMode && !widgetEditorClosing" [blurDuration]="editorMotion.duration">
       <app-board-settings *ngIf="!readOnlyView && canEditBoard"
         [board]="state.board"
         [menuLabel]="boardMenuLabel(state.board.id)"
-        [(boardIdentityNameDraft)]="boardIdentityNameDraft"
-        [(boardIdentitySlugDraft)]="boardIdentitySlugDraft"
-        [appearanceDraft]="appearanceDraft"
+        [(boardIdentityNameDraft)]="settings.name"
+        [(boardIdentitySlugDraft)]="settings.slug"
+        [appearanceDraft]="settings.appearance"
         [accountBoards]="accountBoards"
         [accountMainBoardId]="accountMainBoardId"
         [pendingDeleteBoardUrl]="pendingDeleteBoardUrl"
@@ -143,7 +145,7 @@
         [hasUnsavedChanges]="hasUnsavedChanges"
         [isDeletingBoard]="isDeletingBoard"
         (toggle)="toggleBoardIdentityMenu()" (save)="saveSettingsAutomatically()" (reset)="resetAppearance()"
-        (appearancePreview)="applyAppearance($event)" (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
+        (appearancePreview)="settings.applyAppearance($event)" (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
         (deleteBoard)="onAccountBoardDelete(state.board.boardUrl, $event)" (setMain)="onAccountBoardSetMain($event.id, $event.event)"
         (toggleSwitcher)="toggleBoardSwitcher()" (confirmDelete)="confirmBoardDelete()" (dismiss)="dismissBoardSettings($event)" />
     </app-site-navigation>
@@ -155,5 +157,11 @@
     <p>Board not found.</p>
   </main>
 
+  @if (state.status === 'error' || state.status === 'denied') {
+    <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none">
+      <p role="alert">{{ state.status === 'denied' ? 'This board is private or your session has expired.' : 'Unable to load this board. Please try again.' }}</p>
+      <button type="button" class="app-button" (click)="retryLoad()">Retry</button>
+    </main>
+  }
   <app-site-navigation *ngIf="state.status !== 'ready'" />
 </ng-container>

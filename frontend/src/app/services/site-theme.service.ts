@@ -1,3 +1,4 @@
+import { BERRY_APPEARANCE } from '../themes/appearance-values';
 import { paperColor, nightColor, foregroundColor } from '../themes/appearance-values';
 import { computed, DestroyRef, inject, Injectable, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -7,11 +8,6 @@ import { BOARD_THEMES } from '../themes/board-theme';
 import { AuthService } from './auth.service';
 import { BoardStoreService } from './board-store.service';
 import { UserStoreService } from './user-store.service';
-
-export const BERRY_APPEARANCE: BoardAppearance = {
-  themeFamily: 'default', theme: 'light', backgroundColor: '#f9f8f6',
-  radiusStep: 2, spacingStep: 2, pattern: 'none', patternIntensity: 'light',
-};
 
 @Injectable({ providedIn: 'root' })
 export class SiteThemeService {

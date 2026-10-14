@@ -1,6 +1,6 @@
 # Release roadmap
 
-**Current release: 1.6.0.** This pass completes the existing public/private and owner/admin permission rules, including matching frontend state. About remains Version 26.1. Hosted deployment status is tracked separately in [Deployment](Deployment).
+**Current release: 1.6.3.** It consolidates board loading and editor state, optimizes widget rendering and Instagram caching, and records local Safari performance. About remains Version 26.1; hosted deployment status is tracked separately in [Deployment](Deployment).
 
 | Version | Scope | Status |
 | --- | --- | --- |
@@ -23,6 +23,9 @@
 | 1.5.8 | Widget picker, panel animations, appearance controls, and editor cleanup | Committed |
 | 1.5.9 | Backend consolidation, paginated boards, widget analytics, and legacy retirement | Committed as `edbb620` |
 | 1.6.0 | Public/private, owner/admin, and visitor permission enforcement | Implemented and tested locally; committed |
+| 1.6.1 | Berry glass/frost materials, Social widgets, and widget editing refinements | Committed as `5d8653d` |
+| 1.6.2 | Instagram follower/posts integration and visitor homepage | Committed as `e293ea9` |
+| 1.6.3 | Board/editor consolidation, rendering and cache optimization, and Safari measurements | Committed; tested locally |
 | 1.7.0 | Widget library expansion I | Later |
 | 1.8.0 | Widget library expansion II | Later |
 | 1.9.0 | Insights I | Later |
@@ -50,6 +53,10 @@ README, wiki, and Obsidian tracking now reflect the URL implementation and one-c
 The old configurable page/widget permission matrix belonged to retired system boards. It is outside this release; no new admin page, migration, or permission schema is required.
 
 ## Current work and rollout
+
+The 1.6.3 cleanup shares board loading, separates settings draft ownership, improves loading/retry errors, preserves widget render inputs, pauses hidden-tab Instagram polling, and adds bounded image caching. No new migration is required.
+
+Home's local sample activity and suggested profiles are a development preview, gated to localhost outside production. A real community activity API, following, publishing, reactions, and comments remain planned. Instagram counts/recent posts are implemented; other social platforms still use URL-only detection.
 
 The 1.6.0 implementation passed 119 backend tests (including PostgreSQL), 141 frontend tests, and both package/production builds. The release contains these verified changes; hosted rollout is tracked separately. Before the next hosted rollout, verify current provider state, pending migrations, production settings, backups, and the authenticated user journey. See [Development reference](Development-Reference).
 

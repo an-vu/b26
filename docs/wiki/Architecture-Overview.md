@@ -16,7 +16,8 @@ Home, settings, insights, and sign-in are dedicated application pages. User boar
 
 ## Frontend responsibilities
 
-- `BoardPageComponent` coordinates board loading, draft state, permissions, and saves; profile, settings, and widget-editor components own their feature views.
+- `BoardPageComponent` coordinates board loading, permissions, and saves; `BoardSettingsState` owns settings drafts, the revision, and the saved baseline; profile, settings, and widget-editor components own their feature views. `WidgetEditorMotion` owns flip geometry, corner/inset scaling, and animation cleanup.
+- `themes/appearance-values.ts` owns the shared Berry defaults and color rendering helpers. Board, Home, and appearance controls consume those values directly.
 - `SiteNavigationComponent` owns shared navigation and Account. Panel dismissal and internal-view height preservation use one shared directive.
 - Page routes load their components on demand, with board navigation guards retained.
 - A widget registry selects the component for each widget type.
@@ -31,6 +32,10 @@ The Java packages are organized by feature: `auth`, `board`, `widget`, `user`, a
 Authentication uses BCrypt password hashes and opaque bearer tokens. The server stores token hashes in `auth_sessions`; the browser stores the bearer token in local storage. Board writes require an owner/admin session. System-route APIs return 410; the admin-token bypass is retired.
 
 The editor uses a transaction and a board lock to check the submitted revision before writing. Concurrent saves with the same revision produce one accepted save and one HTTP 409 conflict, rather than silently overwriting changes.
+
+Instagram integration lives in `widget/social`: the controller validates the saved widget, the service schedules bounded refreshes, the provider handles external requests, and `InstagramCacheRepository` owns cache, refresh-lease, and daily-budget SQL. Profile lookups select the requested widget by its ID and board ID rather than loading the entire board's widget list.
+
+Board and Home DTOs share `AppearanceRules` for accepted themes, colors, patterns, and intensities; their required/optional fields remain distinct.
 
 ## Data and migration boundaries
 
@@ -53,3 +58,19 @@ Two deployment boundaries remain: click suppression is per instance, and V37 nee
 Controllers declare `@ApiAccess` policies. The interceptor checks the matched handler and resolved path variables; it no longer parses raw URI strings to infer access. Undeclared application handlers are denied. `BoardAccessService` centralizes owner/admin checks, while event controllers check validated body-supplied board IDs before recording events. Tests cover declarations and allowed/denied access. See [Permissions](Permissions).
 
 Frontend permissions reset on route/account changes. Board libraries, insights, and user/board stores cancel stale loads and clear old account data. The auth interceptor attaches bearer headers only to recognized same-origin API routes.
+
+## Cleanup review — October 14, 2026
+
+- Removed the unused board-era sign-out flow; shared navigation owns sign-out.
+- Extracted editor motion from the large board page and consolidated duplicated origin calculations.
+- Draft previews retain their object identity until their fields change, avoiding unnecessary child updates. Draft config metadata is replaced as a whole; editable URL/place fields remain mutable.
+- Embed widgets reuse trusted URLs between renders. Social widgets reuse parsed profiles and a shared follower formatter; Instagram requests/photos survive title and order edits, while board, profile, or photo-layout changes cancel stale work and refresh the data.
+- Reused one Berry default appearance and one backend appearance-validation vocabulary.
+- Share one board-loading stream across page and widget consumers. Owner-qualified requests reuse their board response; account/route changes clear stale content and cancel pending loads. Failed loads display distinct missing/access/error states with retry.
+- `BoardSettingsState` owns name, slug, appearance and revision together; appearance inputs remain stable between changes.
+- Separated Instagram persistence from scheduling and reused its CDN URL checks.
+- Instagram polling pauses in hidden tabs. A per-instance JPEG cache reuses concurrent image fetches, expires entries after five minutes, and is capped at 16 MiB / 64 entries with four upstream fetch slots. Board/widget authorization is checked before every cache read.
+- The Instagram cache integration test executes V39 rather than duplicating its table definitions.
+- Routing tests create their required owner explicitly, eliminating reliance on execution order.
+
+The main remaining concentration is `BoardPageComponent`: save lifecycles, access revocation, and edit-session state still share a coordinator; settings drafts and flip motion now have separate owners. A later extraction should move complete state ownership together, rather than adding more callback wrappers or splitting methods solely to reduce line counts. Historical Flyway migrations and archived data remain intact. No schema migration is needed for this cleanup.

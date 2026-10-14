@@ -56,6 +56,39 @@ Without `POSTGRES_TEST_URL`, those tests are skipped. They cover fresh migration
 
 ## Recorded local verification
 
+### 1.6.3 — October 14, 2026
+
+- **222 frontend tests passed** across 38 files. Production build and TypeScript unused-local/parameter checks passed.
+- **130 backend tests passed**, with zero failures or skips, including PostgreSQL migrations/concurrency and `mvn verify` packaging.
+- Loading tests verify one owner-qualified resolution shared by board/widgets, immediate route/account clearing, cancellation of old requests, retained mounted content during refresh, and Retry recovery. Missing boards, access failures, server failures, and widget failures are distinct.
+- Widget tests cover stable previews/embed URLs, retained Instagram photos through unrelated edits, context/size refresh, and polling suspension in hidden tabs. Settings tests preserve saved baselines and newer appearance edits during automatic saves.
+- JPEG cache tests cover expiry, byte-budget LRU eviction, failed/oversized fetches, concurrent request reuse, and widget revalidation before serving a warm cache. Existing private-board endpoint tests still pass.
+- Local backend rebuilt successfully; frontend-proxied `/actuator/health` returned HTTP 200.
+- Safari performance samples were subsequently captured on October 14; see the measurement record below. No before/after FPS gain is claimed.
+
+#### Safari performance measurement — October 14, 2026
+
+Safari 27.0.1 / macOS 27.0.1, arm64 Mac17,7 (18 CPUs, 128 GiB RAM), local Angular development build, 1324 × 888 CSS-pixel viewport at DPR 2. Measurements describe animation callback cadence, not presented GPU frames; they are short samples on this Mac, not a production/mobile guarantee or a before/after improvement claim. Machine-readable measurements are kept in the main repository at `docs/performance/2026-10-14-safari.json`.
+
+| Scene | Sample | Callback rate | p95 gap | Largest gap |
+| --- | --- | --- | --- | --- |
+| Home → intro | 2.5 s | 60.0/s | 18 ms | 21 ms |
+| Intro → Home | 2.5 s | 60.0/s | 18 ms | 24 ms |
+| Editor opens, 12 drafts | 1.2 s | 59.3/s | 18 ms | 32 ms |
+| Editor closes, 12 drafts | 1.2 s | 60.1/s | 18 ms | 26 ms |
+| Editor warm reopen | 1.2 s | 59.6/s | 18 ms | 26 ms |
+| Editor blur held open | 5.0 s | 60.0/s | 18 ms | 26 ms |
+| Heavy Lava + Frost | 6.0 s | 60.0/s | 18 ms | 21 ms |
+| Heavy Bokeh + Frost | 6.0 s | 60.0/s | 18 ms | 26 ms |
+
+No captured gap exceeded 33.34 ms. Some samples contained one estimated missed 60 Hz callback; that estimate is based on interval spacing, not measured GPU presentation. The editor fixture has 12 empty drafts (6 Social, 2 Embed, 4 Map), plus picker previews; Home has seven preview widgets with one paused YouTube embed. Home transitions and editor surfaces used device Blur off / Glass; the editor's board progressive blur remains active independently. Lava/Bokeh used device Blur on / Frost. A Frost editor crossfade and dense live-media board remain separate follow-up scenarios.
+
+An exported Safari timeline isolates 2.5 seconds after `home-return-trace` at a 1324 × 638 inspector viewport: the largest recorded JavaScript operation was 1.476 ms; the largest rendering operation was an 11.965 ms composite (another was 10.093 ms). Compositing was the largest single recorded operation in that window. This trace is separate from the full-height callback samples.
+
+Lava's WebGL draws averaged 28.2/s against its approximate 30/s cap. Across 120 captured draw intervals, median spacing was 33 ms, p95 was 49 ms, and 11 gaps exceeded 45 ms (maximum 50 ms). The current `now - last >= 33` / `last = now` limiter is a candidate for steadier timing. The page callback sample remained at 60/s, so this finding concerns wallpaper draw cadence rather than an observed page-wide stall.
+
+Local read-only API timings (25 warm sequential samples each, via the frontend proxy): owner-qualified board median 4.00 ms / p95 5.48 ms; widgets median 4.11 ms / p95 5.53 ms. This small public-board sample excludes hosted network latency and external Instagram delivery. No blur/material recipe was changed by the measurement pass.
+
 ### 1.6.0 — October 9, 2026
 
 - **119 backend tests passed**, with no failures or skips, including PostgreSQL migrations and concurrency tests. `mvn verify` also built the backend package.

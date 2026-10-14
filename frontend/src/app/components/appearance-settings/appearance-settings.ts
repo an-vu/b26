@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import type { BoardAppearance } from '../../models/board';
 import { BOARD_THEMES } from '../../themes/board-theme';
 import { BOARD_PALETTE } from '../../themes/board-palette';
-import { BERRY_APPEARANCE } from '../../services/site-theme.service';
+import { BERRY_APPEARANCE } from '../../themes/appearance-values';
 
 @Component({
   selector: 'app-appearance-settings', standalone: true, imports: [IconComponent, CommonModule, FormsModule],

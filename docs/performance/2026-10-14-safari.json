@@ -1,0 +1,217 @@
+{
+  "date": "2026-10-14",
+  "commit": "e293ea9",
+  "workingTree": "uncommitted cleanup/optimization changes",
+  "environment": {
+    "browser": "Safari 27.0.1",
+    "os": "macOS 27.0.1",
+    "architecture": "arm64",
+    "model": "Mac17,7",
+    "cpuCount": 18,
+    "memoryGiB": 128,
+    "frontend": "Angular development build on localhost:4200",
+    "dpr": 2
+  },
+  "method": "requestAnimationFrame callback intervals; captures start on the interaction or after viewport resize settles. These are not presented-frame/GPU FPS measurements. No before-change comparison.",
+  "samples": [
+    {
+      "label": "home-return-full",
+      "durationMs": 2500,
+      "frames": 150,
+      "callbackFps": 60,
+      "p95Ms": 18,
+      "maxMs": 21,
+      "over33ms": 0,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "widgets": 7
+    },
+    {
+      "label": "home-enter-full",
+      "durationMs": 2500,
+      "frames": 150,
+      "callbackFps": 60,
+      "p95Ms": 18,
+      "maxMs": 24,
+      "over33ms": 0,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "widgets": 7
+    },
+    {
+      "label": "editor-open-12",
+      "durationMs": 1215,
+      "frames": 72,
+      "callbackFps": 59.3,
+      "p95Ms": 18,
+      "p99Ms": 32,
+      "maxMs": 32,
+      "over33ms": 0,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "boardProgressiveBlur": true,
+      "draftWidgets": 12,
+      "widgetHostsIncludingPickerAndEditor": 16
+    },
+    {
+      "label": "editor-close-12",
+      "durationMs": 1214,
+      "frames": 73,
+      "callbackFps": 60.1,
+      "p95Ms": 18,
+      "p99Ms": 26,
+      "maxMs": 26,
+      "over25ms": 1,
+      "estimatedMissed": 1,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "boardProgressiveBlur": true,
+      "draftWidgets": 12
+    },
+    {
+      "label": "editor-open-warm-12",
+      "durationMs": 1209,
+      "frames": 72,
+      "callbackFps": 59.6,
+      "p95Ms": 18,
+      "p99Ms": 26,
+      "maxMs": 26,
+      "over25ms": 1,
+      "estimatedMissed": 1,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "boardProgressiveBlur": true,
+      "draftWidgets": 12
+    },
+    {
+      "label": "editor-held-blur-12",
+      "durationMs": 5014,
+      "frames": 301,
+      "callbackFps": 60,
+      "p95Ms": 18,
+      "p99Ms": 18,
+      "maxMs": 26,
+      "over25ms": 1,
+      "estimatedMissed": 1,
+      "viewport": [
+        1324,
+        888
+      ],
+      "deviceBlur": false,
+      "boardProgressiveBlur": true,
+      "draftWidgets": 12
+    },
+    {
+      "label": "lava-heavy-frost",
+      "durationMs": 6000,
+      "frames": 360,
+      "canvasFps": 28.2,
+      "callbackFps": 60,
+      "medianMs": 17,
+      "p95Ms": 18,
+      "p99Ms": 18,
+      "over25ms": 0,
+      "estimatedMissed": 0,
+      "over33ms": 0,
+      "maxMs": 21,
+      "viewport": [
+        1324,
+        888
+      ],
+      "dpr": 2,
+      "widgets": 7,
+      "visibility": "visible",
+      "deviceBlur": true
+    },
+    {
+      "label": "bokeh-heavy-frost",
+      "durationMs": 6012,
+      "frames": 361,
+      "callbackFps": 60,
+      "medianMs": 17,
+      "p95Ms": 18,
+      "p99Ms": 18,
+      "over25ms": 1,
+      "estimatedMissed": 1,
+      "over33ms": 0,
+      "maxMs": 26,
+      "viewport": [
+        1324,
+        888
+      ],
+      "dpr": 2,
+      "widgets": 7,
+      "visibility": "visible",
+      "deviceBlur": true
+    }
+  ],
+  "lavaDrawCadence": {
+    "intervals": 120,
+    "medianMs": 33,
+    "p95Ms": 49,
+    "over45ms": 11,
+    "maxMs": 50,
+    "method": "temporary counter around the existing WebGL context drawArrays; restored before leaving Lava"
+  },
+  "homeTimeline": {
+    "rawTrace": "/private/tmp/b26-safari-home.json",
+    "gestureMarker": "home-return-trace",
+    "clipSeconds": 2.5,
+    "inspectorViewport": [
+      1324,
+      638
+    ],
+    "deviceBlur": false,
+    "recordedDurationNote": "Summed event durations may overlap; not an exclusive CPU utilization measure.",
+    "events": {
+      "script": {
+        "records": 85,
+        "sumRecordedDurationMs": 5.894,
+        "maxRecordedDurationMs": 1.476
+      },
+      "layout": {
+        "records": 50,
+        "sumRecordedDurationMs": 25.949,
+        "maxRecordedDurationMs": 11.965
+      }
+    }
+  },
+  "api": {
+    "board": {
+      "samples": 25,
+      "medianMs": 4.0,
+      "p95Ms": 5.48,
+      "maxMs": 5.97,
+      "responseBytes": 420
+    },
+    "widgets": {
+      "samples": 25,
+      "medianMs": 4.11,
+      "p95Ms": 5.53,
+      "maxMs": 6.32,
+      "responseBytes": 240
+    }
+  },
+  "limitations": [
+    "One powerful Mac; no mobile or low-power hardware comparison.",
+    "Editor fixture uses 12 empty draft widgets (6 Social, 2 Embed, 4 Map) and 3 picker previews; no 12-video/media stress test.",
+    "Home uses 7 local preview widgets with one paused YouTube embed.",
+    "Home transition captures use Glass/device Blur off; Lava/Bokeh use Frost/device Blur on. Editor board progressive blur remains enabled independently.",
+    "Hosted Render/Neon latency and paid Instagram media delivery were not benchmarked."
+  ]
+}

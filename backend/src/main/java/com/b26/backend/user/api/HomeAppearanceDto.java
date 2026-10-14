@@ -1,5 +1,7 @@
 package com.b26.backend.user.api;
 
+import com.b26.backend.board.api.AppearanceRules;
+
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
@@ -9,9 +11,9 @@ import jakarta.validation.constraints.Pattern;
 public record HomeAppearanceDto(
     @NotNull @Min(1) @Max(5) Integer radiusStep,
     @NotNull @Min(1) @Max(3) Integer spacingStep,
-    @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi|lofi") String themeFamily,
-    @Pattern(regexp = "light|dark") String theme,
-    @Pattern(regexp = "#[0-9a-fA-F]{6}") String backgroundColor,
-    @Pattern(regexp = "none|dots|grid|diagonal|reverse-diagonal|stripes|checkered|rainfall|stars|snow|sakura|wave|lava|bokeh") String pattern,
-    @Pattern(regexp = "light|medium|heavy") String patternIntensity
+    @Pattern(regexp = AppearanceRules.THEME) String themeFamily,
+    @Pattern(regexp = AppearanceRules.COLOR_MODE) String theme,
+    @Pattern(regexp = AppearanceRules.HEX_COLOR) String backgroundColor,
+    @Pattern(regexp = AppearanceRules.PATTERN) String pattern,
+    @Pattern(regexp = AppearanceRules.INTENSITY) String patternIntensity
 ) {}

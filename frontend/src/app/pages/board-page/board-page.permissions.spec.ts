@@ -35,6 +35,37 @@ function setup(readOnly = false, role = 'USER') {
 }
 
 describe('Board permissions across navigation and sessions', () => {
+  it('uses the owner-qualified board response once for both page and widget loading', () => {
+    const { fixture, service, params } = setup();
+    params.next(convertToParamMap({ username: 'alice', boardId: 'one' }));
+    fixture.detectChanges();
+    expect(service.getBoardForUsername).toHaveBeenCalledExactlyOnceWith('alice', 'one');
+    expect(service.getBoard).toHaveBeenCalledTimes(1); // Only the initial legacy route.
+    expect(service.getWidgets).toHaveBeenCalledTimes(2); // Once per context.
+  });
+
+  it('renders a retryable server failure and recovers through its Retry button', () => {
+    const { fixture, service, params } = setup();
+    service.getBoard.mockReturnValue(throwError(() => ({ status: 503 })));
+    params.next(convertToParamMap({ boardId: 'one' })); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Unable to load this board');
+    expect(fixture.nativeElement.textContent).not.toContain('Board not found');
+    service.getBoard.mockReturnValue(of(board));
+    const root: HTMLElement = fixture.nativeElement;
+    Array.from(root.querySelectorAll('button')).find(button => button.textContent?.trim() === 'Retry')!
+      .dispatchEvent(new MouseEvent('click'));
+    fixture.detectChanges();
+    expect(fixture.nativeElement.querySelector('app-board-profile')).not.toBeNull();
+  });
+
+  it('shows widget load errors separately from a successful empty board', () => {
+    const { fixture, service, params } = setup();
+    service.getWidgets.mockReturnValue(throwError(() => ({ status: 500 })));
+    params.next(convertToParamMap({ boardId: 'one' })); fixture.detectChanges();
+    expect(fixture.nativeElement.textContent).toContain('Unable to load widgets');
+    expect(fixture.nativeElement.textContent).not.toContain('No widgets configured yet');
+  });
+
   it.each(['save', 'cancel'])('keeps the board mounted while %s refreshes the view', action => {
     const { page, fixture, service } = setup();
     const profile = fixture.nativeElement.querySelector('app-board-profile');

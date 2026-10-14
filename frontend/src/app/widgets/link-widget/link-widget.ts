@@ -1,9 +1,10 @@
 import { HttpClient } from '@angular/common/http';
-import { Subscription, timer, exhaustMap, takeWhile, take, catchError, of } from 'rxjs';
+import { Subscription, timer, exhaustMap, takeWhile, take, catchError, of, EMPTY, switchMap } from 'rxjs';
 import { detectSocialProfile } from '../../utils/social-profile.util';
 import { Component, Input, inject, OnChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { InsightsService } from '../../services/insights.service';
+import { PageActivityService } from '../../services/page-activity.service';
 import type { Widget } from '../../models/widget';
 
 interface InstagramData {
@@ -11,6 +12,8 @@ interface InstagramData {
   followersCount: number | null;
   posts: { url: string; imageUrl: string; timestamp: string }[];
 }
+
+const followerFormatter = new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 });
 
 @Component({
   selector: 'app-link-widget',
@@ -25,7 +28,11 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
   private readonly insights = inject(InsightsService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly activity = inject(PageActivityService);
   private request?: Subscription;
+  private requestKey = '';
+  private profileUrl?: string;
+  private parsedProfile: ReturnType<typeof detectSocialProfile> = null;
   instagram?: InstagramData;
   private images = new Subscription();
   private imageUrls: string[] = [];
@@ -34,20 +41,29 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
     this.imageUrls.forEach(url => URL.revokeObjectURL(url)); this.imageUrls = [];
   }
   ngOnChanges() {
-    this.request?.unsubscribe(); this.clearImages(); this.instagram = undefined;
     const profile = this.socialProfile;
-    if (profile?.platform !== 'Instagram' || !this.boardId || this.widget.id <= 0) return;
-    const endpoint = `/api/board/${encodeURIComponent(this.boardId)}/widgets/${this.widget.id}/instagram`;
-    this.request = timer(0, 3000).pipe(
-      exhaustMap(() => this.http.get<InstagramData>(endpoint, { params: { expectedUsername: profile.handle.replace(/^@/, '') } })
-        .pipe(catchError(() => of<InstagramData>({ status: 'unavailable', followersCount: null, posts: [] })))),
+    const endpoint = profile?.platform === 'Instagram' && this.boardId && this.widget.id > 0
+      ? `/api/board/${encodeURIComponent(this.boardId)}/widgets/${this.widget.id}/instagram` : null;
+    const count = this.widget.layout === 'span-1' ? 1 : 9;
+    const username = profile?.handle.replace(/^@/, '') ?? '';
+    const key = endpoint ? JSON.stringify([endpoint, username, count]) : '';
+    // Title/order edits and repeated renders must not restart polling or discard loaded photos.
+    if (key === this.requestKey) return;
+    this.requestKey = key;
+    this.request?.unsubscribe(); this.clearImages(); this.instagram = undefined;
+    if (!endpoint) return;
+    this.request = this.activity.visible$.pipe(
+      switchMap(visible => visible ? timer(0, 3000).pipe(
+        exhaustMap(() => this.http.get<InstagramData>(endpoint, { params: { expectedUsername: username } })
+          .pipe(catchError(() => of<InstagramData>({ status: 'unavailable', followersCount: null, posts: [] }))))
+      ) : EMPTY),
       takeWhile(data => data.status === 'loading', true), take(31),
     ).subscribe(data => {
+      this.clearImages();
       this.instagram = { ...data, posts: data.posts.map(post => ({ ...post, imageUrl: '' })) };
-      const count = this.widget.layout === 'span-1' ? 1 : 9;
-      data.posts.slice(0, count).forEach((post, index) => {
+      data.posts.slice(0, count).forEach((_, index) => {
         this.images.add(this.http.get(`${endpoint}/images/${index}`, {
-          params: { expectedUsername: profile.handle.replace(/^@/, '') }, responseType: 'blob',
+          params: { expectedUsername: username }, responseType: 'blob',
         }).subscribe({ next: blob => {
           const url = URL.createObjectURL(blob); this.imageUrls.push(url);
           this.instagram!.posts[index].imageUrl = url; this.cdr.markForCheck();
@@ -80,10 +96,17 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
   get followerCount(): string {
     const count = this.socialProfile?.platform === 'Instagram' ? this.instagram?.followersCount : this.widget?.config?.['followersCount'];
     return typeof count === 'number' && Number.isSafeInteger(count) && count >= 0
-      ? new Intl.NumberFormat('en', { notation: 'compact', maximumFractionDigits: 1 }).format(count) : '—';
+      ? followerFormatter.format(count) : '—';
   }
 
-  get socialProfile() { return detectSocialProfile(String(this.widget?.config?.['url'] ?? '')); }
+  get socialProfile() {
+    const url = String(this.widget?.config?.['url'] ?? '');
+    if (url !== this.profileUrl) {
+      this.profileUrl = url;
+      this.parsedProfile = detectSocialProfile(url);
+    }
+    return this.parsedProfile;
+  }
 
   get url(): string | null {
     const value = this.widget?.config?.['url'];

@@ -1,7 +1,9 @@
+import { WidgetEditorMotion } from './widget-editor-motion';
 import { PanelComponent } from '../../components/panel/panel';
 import { WidgetLibraryComponent } from './widget-library/widget-library';
 import { widgetCornerRadius, widgetCornerInset } from '../../utils/widget-corner.util';
-import { paperColor, foregroundColor } from '../../themes/appearance-values';
+import { BERRY_APPEARANCE } from '../../themes/appearance-values';
+import { BoardSettingsState } from './board-settings-state';
 import { BoardProfileComponent } from './board-profile/board-profile';
 import { BoardSettingsComponent } from './board-settings/board-settings';
 import { WidgetEditorComponent } from './widget-editor/widget-editor';
@@ -11,7 +13,6 @@ import { SiteNavigationComponent } from '../../components/site-navigation/site-n
 import { SiteThemeService } from '../../services/site-theme.service';
 import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
-import { BOARD_THEMES, BoardThemeId } from '../../themes/board-theme';
 import { BoardAppearance } from '../../models/board';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, HostListener, inject, afterNextRender, Injector } from '@angular/core';
 import { CommonModule } from '@angular/common';
@@ -44,7 +45,7 @@ import {
   type AccountMenuUser,
 } from './board-page.account';
 import { boardRoute } from '../../models/board-route';
-import { resolveBoardId$ as resolveBoardIdHelper$ } from './board-page.routing';
+import { resolveBoard$ as resolveBoardHelper$ } from './board-page.routing';
 import { prepareBoardIdentityUpdate } from './board-page.routing';
 import {
   buildCancelWidgetEditState,
@@ -59,7 +60,7 @@ import {
 import {
   applyDeleteWidgetAction,
   applyMoveWidgetAction,
-  buildWidgetPreviewFromDraft,
+  WidgetPreviewCache,
 } from './board-page.widget-actions';
 import { initializeBoardPageAccountState } from './board-page.account-state';
 import {
@@ -83,7 +84,7 @@ import {
 export class BoardPageComponent {
   onAppearanceChange(appearance: BoardAppearance) {
     if (!this.canEditBoard || this.readOnlyView) return;
-    this.applyAppearance(appearance);
+    this.settings.applyAppearance(appearance);
     this.saveSettingsAutomatically();
   }
   readonly boardRoute = boardRoute;
@@ -115,7 +116,6 @@ export class BoardPageComponent {
 
   identitySaveError = '';
   isIdentitySaving = false;
-  private identityVersion: number | undefined;
   isWidgetLoading = false;
   isSettingMainBoard = false;
   private editVersion: number | null = null;
@@ -167,125 +167,67 @@ export class BoardPageComponent {
   private originalBoardWebsite = '';
   originalBoardName = '';
   originalBoardHeadline = '';
-  boardIdentityNameDraft = '';
-  boardIdentitySlugDraft = '';
-  boardThemeFamilyDraft: BoardThemeId = 'default';
-  get boardTheme() {
-    return BOARD_THEMES.find(theme => theme.id === this.boardThemeFamilyDraft) ?? BOARD_THEMES[0];
-  }
-  boardThemeToggleDraft = false;
-  boardRadiusStepDraft: BoardAppearance['radiusStep'] = 2;
-  boardSpacingStepDraft: 1 | 2 | 3 = 2;
-  boardBackgroundColorDraft = '#f9f8f6';
-  boardPatternDraft: BoardAppearance['pattern'] = 'none';
-  boardPatternIntensityDraft: NonNullable<BoardAppearance['patternIntensity']> = 'light';
   widgetDrafts: WidgetDraft[] = [];
   activeWidgetSettingsId: number | null = null;
   private activeNewWidgetDraft: WidgetDraft | null = null;
   private originalWidgetDrafts = new Map<number, WidgetDraft>();
+  private readonly widgetPreviews = new WidgetPreviewCache();
   private draftValidationErrors = new WeakMap<WidgetDraft, string>();
-  private persistedAppearance: BoardAppearance = this.defaultAppearance();
-
-  defaultAppearance(): BoardAppearance {
-    return { spacingStep: 2, patternIntensity: 'light', themeFamily: 'default', theme: 'light', radiusStep: 2, backgroundColor: '#f9f8f6', pattern: 'none' };
-  }
-
-  get boardDisplayBackground(): string { return paperColor(this.boardBackgroundColorDraft); }
-  get boardDisplayText(): string { return foregroundColor(this.boardBackgroundColorDraft); }
-
-  get appearanceDraft(): BoardAppearance {
-    return { themeFamily: this.boardThemeFamilyDraft, theme: this.boardThemeToggleDraft ? 'dark' : 'light',
-      spacingStep: Number(this.boardSpacingStepDraft) as 1 | 2 | 3,
-      radiusStep: Number(this.boardRadiusStepDraft) as BoardAppearance['radiusStep'],
-      backgroundColor: this.boardBackgroundColorDraft, pattern: this.boardPatternDraft, patternIntensity: this.boardPatternIntensityDraft };
-  }
-
-  get appearanceChanged(): boolean {
-    const draft = this.appearanceDraft;
-    const saved = this.persistedAppearance;
-    return draft.spacingStep !== (saved.spacingStep ?? 2) || draft.themeFamily !== (saved.themeFamily ?? 'default') || draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep ||
-      draft.backgroundColor !== saved.backgroundColor || draft.pattern !== saved.pattern ||
-      draft.patternIntensity !== (saved.patternIntensity ?? 'light');
-  }
-
-  applyAppearance(appearance: BoardAppearance) {
-    this.boardThemeFamilyDraft = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
-    this.boardThemeToggleDraft = appearance.theme === 'dark';
-    this.boardRadiusStepDraft = appearance.radiusStep;
-    this.boardSpacingStepDraft = appearance.spacingStep ?? 2;
-    this.boardBackgroundColorDraft = appearance.backgroundColor;
-    this.boardPatternDraft = appearance.pattern;
-    this.boardPatternIntensityDraft = appearance.patternIntensity ?? 'light';
-  }
-
-  hydrateAppearance(board: Board) {
-    this.persistedAppearance = { ...this.defaultAppearance(), ...board.appearance };
-    if (this.persistedAppearance.pattern === 'dots') this.persistedAppearance.pattern = 'stars';
-    this.applyAppearance(this.persistedAppearance);
-  }
-
-  resetAppearance() {
-    if (!this.canEditBoard || this.readOnlyView) return;
-    if (!this.isIdentitySaving) { this.applyAppearance(this.defaultAppearance()); this.saveSettingsAutomatically(); }
-  }
-
-  private boardIdentitySourceId = '';
-  private boardIdentityPersistedName = '';
-  private boardIdentityPersistedUrl = '';
+  readonly settings = new BoardSettingsState();
   private activeBoardUrl = '';
   private editingBoardUrl = '';
 
-  get widgetEditorInset() { return widgetCornerInset(this.boardRadiusStepDraft); }
+  resetAppearance() {
+    if (!this.canEditBoard || this.readOnlyView || this.isIdentitySaving) return;
+    this.settings.applyAppearance({ ...BERRY_APPEARANCE });
+    this.saveSettingsAutomatically();
+  }
+
+  get widgetEditorInset() { return widgetCornerInset(this.settings.radius); }
 
   get boardRadiusDraft() {
-    return widgetCornerRadius(this.boardRadiusStepDraft);
+    return widgetCornerRadius(this.settings.radius);
   }
 
   pageState$ = createPageStateStream({
     reload$: this.reload$,
     routeParamMap$: this.routeContext$,
-    resolveBoardId$: (routeParamBoardId, routeParamUsername) =>
-      this.resolveBoardId$(routeParamBoardId, routeParamUsername),
-    loadBoard: (boardId) => this.boardService.getBoard(boardId),
+    resolveBoard$: (boardId, username) => resolveBoardHelper$({
+      boardService: this.boardService, routeParamBoardId: boardId, routeParamUsername: username,
+      dataBoardId: this.route.snapshot?.data?.['boardId'],
+      userMainRoute: !!this.route.snapshot?.data?.['userMainRoute'],
+    }),
     recordBoardView: (boardId) => {
       this.insightsService.recordView(boardId, 'direct').subscribe({ error: () => { } });
     },
     onState: (state) => {
       if (state.status !== 'loading') this.isSettingsReloading = false;
       if (state.status === 'ready') {
+        this.activeBoardUrl = state.board.boardUrl;
         this.loadBoardPermissions(state.board.boardUrl);
       } else {
         this.revokeBoardAccess();
         this.activeBoardUrl = '';
       }
 
-      if (state.status === 'ready' && (state.board.id !== this.boardIdentitySourceId || !this.hasUnsavedChanges)) {
+      if (state.status === 'ready' && (state.board.id !== this.settings.boardId || !this.hasUnsavedChanges)) {
         if (this.isWidgetEditMode) {
           this.cancelWidgetEdit();
         }
-        if (state.board.id !== this.boardIdentitySourceId) this.settingsNotice = '';
-        this.hydrateAppearance(state.board);
-        this.boardIdentitySourceId = state.board.id;
-        this.identityVersion = state.board.version;
+        if (state.board.id !== this.settings.boardId) this.settingsNotice = '';
+        this.settings.hydrate(state.board);
         this.identitySaveError = '';
-        this.boardIdentityNameDraft = state.board.boardName || this.boardMenuLabel(state.board.id);
-        this.boardIdentityPersistedName = this.boardIdentityNameDraft;
-        this.boardIdentitySlugDraft = state.board.boardUrl;
-        this.boardIdentityPersistedUrl = state.board.boardUrl;
       }
     },
   });
 
-  widgets$ = createWidgetsStream({
-    reload$: this.reload$,
-    routeParamMap$: this.routeContext$,
-    resolveBoardId$: (routeParamBoardId, routeParamUsername) =>
-      this.resolveBoardId$(routeParamBoardId, routeParamUsername),
-    loadWidgets: (boardId) => this.boardService.getWidgets(boardId),
-    onBoardResolved: (boardId) => {
-      this.activeBoardUrl = boardId;
-    },
+  widgetsState$ = createWidgetsStream({
+    pageState$: this.pageState$,
+    loadWidgets: boardUrl => this.boardService.getWidgets(boardUrl),
+    onAccessDenied: () => this.revokeBoardAccess(),
   });
+
+  retryLoad() { this.reload$.next(); }
 
   trackWidget(index: number, widget: Widget) {
     return widget.id ?? index;
@@ -299,7 +241,7 @@ export class BoardPageComponent {
   accountMainBoardId = '';
 
   constructor() {
-    this.destroyRef.onDestroy(() => { clearTimeout(this.noticeTimer); this.accessReset$.next(); });
+    this.destroyRef.onDestroy(() => { clearTimeout(this.noticeTimer); this.accessReset$.next(); this.editorMotion.destroy(); });
     initializeBoardPageAccountState({
       destroyRef: this.destroyRef,
       boardStore: this.boardStore,
@@ -362,23 +304,18 @@ export class BoardPageComponent {
       });
   }
 
-  get settingsChanged(): boolean {
-    return this.appearanceChanged || this.boardIdentityNameDraft !== this.boardIdentityPersistedName ||
-      this.boardIdentitySlugDraft !== this.boardIdentityPersistedUrl;
-  }
-
   get settingsFeedback(): string {
     if (this.isIdentitySaving) return 'Saving board settings…';
     if (this.isSettingsReloading) return 'Loading saved settings…';
     if (this.identitySaveError) return this.isBoardIdentityMenuOpen
       ? 'Settings were not saved. Your changes have been kept.'
       : 'Settings were not saved. Reopen settings to review the error.';
-    if (this.settingsChanged) return 'Unsaved board settings';
+    if (this.settings.changed) return 'Unsaved board settings';
     return this.settingsNotice;
   }
 
   get hasUnsavedChanges(): boolean {
-    const identityChanged = this.settingsChanged;
+    const identityChanged = this.settings.changed;
     if (!this.isWidgetEditMode) return identityChanged;
     return identityChanged || this.boardDraftName.trim() !== this.originalBoardName.trim() ||
       this.boardDraftHeadline.trim() !== this.originalBoardHeadline.trim() ||
@@ -416,11 +353,8 @@ export class BoardPageComponent {
     this.activeNewWidgetDraft = null;
     this.profileNameDraft = this.originalProfileName = board.ownerDisplayName || board.ownerUsername || board.name;
     this.boardDraftWebsite = this.originalBoardWebsite = board.website || '';
-    this.hydrateAppearance(board);
+    this.settings.hydrate(board);
     this.editVersion = board.version ?? null;
-    this.identityVersion = board.version;
-    this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
-    this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
     this.isBoardIdentityMenuOpen = false;
     Object.assign(
       this,
@@ -428,7 +362,7 @@ export class BoardPageComponent {
         board,
         widgets,
         activeBoardUrl: this.activeBoardUrl,
-        toWidgetDraft: (widget) => toWidgetDraftHelper(widget),
+        toWidgetDraft: toWidgetDraftHelper,
       })
     );
   }
@@ -487,7 +421,7 @@ export class BoardPageComponent {
 
     if (this.isDeletingBoard || this.isWidgetSaving || this.isIdentitySaving || this.isWidgetLoading) return;
     this.pendingDeleteBoardUrl = boardUrl;
-    this.pendingDeleteBoardLabel = this.accountBoards.find(board => board.boardUrl === boardUrl)?.label ?? this.boardIdentityPersistedName ?? boardUrl;
+    this.pendingDeleteBoardLabel = this.accountBoards.find(board => board.boardUrl === boardUrl)?.label ?? this.settings.savedName ?? boardUrl;
     this.isBoardSwitcherOpen = false;
     this.isBoardIdentityMenuOpen = true;
     this.boardDeleteError = '';
@@ -585,10 +519,7 @@ export class BoardPageComponent {
   }
 
   resetIdentityDraft() {
-    if (this.persistedAppearance.pattern === 'dots') this.persistedAppearance.pattern = 'stars';
-    this.applyAppearance(this.persistedAppearance);
-    this.boardIdentityNameDraft = this.boardIdentityPersistedName;
-    this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl;
+    this.settings.reset();
     this.identitySaveError = '';
   }
 
@@ -602,7 +533,7 @@ export class BoardPageComponent {
   }
 
   saveSettingsAutomatically() {
-    if (!this.canEditBoard || this.readOnlyView || !this.settingsChanged) return;
+    if (!this.canEditBoard || this.readOnlyView || !this.settings.changed) return;
     this.saveIdentity(true);
   }
 
@@ -610,16 +541,16 @@ export class BoardPageComponent {
     if (!this.canEditBoard || this.readOnlyView) return;
     if (this.isSettingsReloading || this.isIdentitySaving || this.isWidgetEditMode || this.isDeletingBoard) return;
     const prepared = prepareBoardIdentityUpdate({
-      draftName: this.boardIdentityNameDraft,
-      draftUrl: this.boardIdentitySlugDraft,
-      persistedName: this.boardIdentityPersistedName,
-      persistedUrl: this.boardIdentityPersistedUrl,
+      draftName: this.settings.name,
+      draftUrl: this.settings.slug,
+      persistedName: this.settings.savedName,
+      persistedUrl: this.settings.savedSlug,
     });
     if (prepared.kind === 'reset') {
       this.identitySaveError = 'Enter a board name and a URL using letters, numbers, and single hyphens.';
       return;
     }
-    if (prepared.kind === 'noop' && !this.appearanceChanged) {
+    if (prepared.kind === 'noop' && !this.settings.appearanceChanged) {
       if (!automatic) this.cancelIdentityEdit();
       this.settingsNotice = 'No changes to save';
       return;
@@ -627,20 +558,16 @@ export class BoardPageComponent {
     this.identitySaveError = '';
     this.settingsNotice = '';
     this.isIdentitySaving = true;
-    this.boardService.updateBoardIdentity(this.boardIdentityPersistedUrl, {
-      boardName: prepared.kind === 'update' ? prepared.boardName : this.boardIdentityPersistedName,
-      boardUrl: prepared.kind === 'update' ? prepared.boardUrl : this.boardIdentityPersistedUrl,
-      version: this.identityVersion, appearance: this.appearanceDraft,
+    this.boardService.updateBoardIdentity(this.settings.savedSlug, {
+      boardName: prepared.kind === 'update' ? prepared.boardName : this.settings.savedName,
+      boardUrl: prepared.kind === 'update' ? prepared.boardUrl : this.settings.savedSlug,
+      version: this.settings.version, appearance: this.settings.appearance,
     }).pipe(takeUntil(this.accessReset$), takeUntilDestroyed(this.destroyRef), finalize(() => {
       this.isIdentitySaving = false;
       this.cdr.markForCheck();
     })).subscribe({
       next: (board) => {
-        if (automatic) this.persistedAppearance = { ...this.defaultAppearance(), ...board.appearance };
-        else this.hydrateAppearance(board);
-        this.identityVersion = board.version;
-        this.boardIdentityNameDraft = this.boardIdentityPersistedName = board.boardName;
-        this.boardIdentitySlugDraft = this.boardIdentityPersistedUrl = board.boardUrl;
+        this.settings.hydrate(board, automatic);
         this.activeBoardUrl = board.boardUrl;
         this.isIdentitySaving = false;
         this.settingsNotice = 'Board settings saved';
@@ -682,7 +609,7 @@ export class BoardPageComponent {
       draft,
       activeWidgetSettingsId: this.activeWidgetSettingsId,
       widgetDrafts: this.widgetDrafts,
-      withNormalizedOrder: (drafts) => withNormalizedOrderHelper(drafts),
+      withNormalizedOrder: withNormalizedOrderHelper,
     });
 
     this.activeWidgetSettingsId = next.activeWidgetSettingsId;
@@ -726,73 +653,22 @@ export class BoardPageComponent {
       direction,
       isWidgetSaving: this.isWidgetSaving,
       widgetDrafts: this.widgetDrafts,
-      withNormalizedOrder: (drafts) => withNormalizedOrderHelper(drafts),
+      withNormalizedOrder: withNormalizedOrderHelper,
     });
   }
 
-  widgetEditorBounds = { left: 0, top: 0, width: 0, height: 0 };
-  widgetEditorOrigin = { x: 0, y: 0 };
+  readonly editorMotion = new WidgetEditorMotion(this.elementRef.nativeElement, () => this.settings.radius);
   private widgetEditorOpener?: HTMLElement;
-  widgetEditorSize = 440;
-  widgetBackdropHeight = 0;
-  readonly widgetFlipDuration = 520;
-  widgetEditorSourceSize = { width: 220, height: 220 };
-  private widgetFlipAnimation?: Animation;
-  private widgetFrontAnimation?: Animation;
-  get widgetEditorPanelInset() {
-    const inset = this.widgetEditorInset;
-    const x = inset * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.width);
-    const y = inset * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.height);
-    return `${y}px ${x}px`;
-  }
-  get widgetEditorRadius() {
-    const radius = this.boardRadiusDraft;
-    return `${radius * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.width)}px / ${radius * this.widgetEditorSize / Math.max(1, this.widgetEditorSourceSize.height)}px`;
-  }
-  private animateWidgetFront(closing: boolean) {
-    const front = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-front');
-    this.widgetFrontAnimation?.cancel();
-    // Backdrop filters may sample the reverse face even with backface-visibility.
-    // Remove it from painting at the edge-on point, without changing either material.
-    this.widgetFrontAnimation = front?.animate([
-      { visibility: closing ? 'hidden' : 'visible', offset: 0 },
-      { visibility: closing ? 'hidden' : 'visible', offset: .499 },
-      { visibility: closing ? 'visible' : 'hidden', offset: .5 },
-      { visibility: closing ? 'visible' : 'hidden', offset: 1 },
-    ], { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
-  }
   widgetEditorClosing = false;
   private widgetEditorSnapshot?: WidgetDraft;
   private widgetEditorInitialIndex = 0;
-
-  private widgetFlipFrames(closing = false): Keyframe[] {
-    const { x, y } = this.widgetEditorOrigin;
-    const slot = (angle: number) => ({ transform: `translate(${x}px, ${y}px) rotateY(${angle}deg) scale(${this.widgetEditorSourceSize.width / this.widgetEditorSize}, ${this.widgetEditorSourceSize.height / this.widgetEditorSize})` });
-    const back = { transform: 'translate(0, 0) rotateY(180deg) scale(1)' };
-    return closing ? [back, slot(360)] : [slot(0), back];
-  }
 
   get selectedWidgetDraft(): WidgetDraft | undefined {
     return this.widgetDrafts.find(draft => this.isWidgetSettingsOpen(draft));
   }
 
   @HostListener('window:resize')
-  positionWidgetEditor() {
-    const host = this.elementRef.nativeElement;
-    const board = host.querySelector<HTMLElement>('.board-content');
-    if (!board) return;
-    const bounds = board.getBoundingClientRect();
-    const dockTop = host.querySelector('.bottom-actions')?.getBoundingClientRect().top ?? window.innerHeight;
-    const top = Math.max(12, bounds.top);
-    this.widgetBackdropHeight = window.innerHeight - top;
-    this.widgetEditorBounds = { left: bounds.left, top, width: bounds.width, height: Math.max(0, dockTop - 12 - top) };
-    const grid = board.querySelector<HTMLElement>('.board-grid');
-    const style = grid ? getComputedStyle(grid) : null;
-    const column = Number.parseFloat(style?.gridTemplateColumns ?? '') || 212;
-    const gap = Number.parseFloat(style?.columnGap ?? '') || 16;
-    // A 2×2 footprint, constrained only when the visible board cannot contain it.
-    this.widgetEditorSize = Math.max(1, Math.min(column * 2 + gap, bounds.width - 24, this.widgetEditorBounds.height - 24));
-  }
+  positionWidgetEditor() { this.editorMotion.position(); }
 
   @HostListener('document:pointerdown', ['$event'])
   dismissWidgetEditorOutside(event: PointerEvent) {
@@ -813,6 +689,7 @@ export class BoardPageComponent {
       this.draftValidationErrors.delete(draft);
     }
     const finish = () => {
+      if (this.destroyRef.destroyed) return;
       this.activeWidgetSettingsId = null;
       this.activeNewWidgetDraft = null;
       this.widgetEditorClosing = false;
@@ -823,19 +700,12 @@ export class BoardPageComponent {
     this.cdr.detectChanges();
     const destination = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-edit-source-hidden')?.getBoundingClientRect();
     if (destination && destination.width > 0 && destination.height > 0) {
-      this.widgetEditorSourceSize = { width: destination.width, height: destination.height };
-      this.widgetEditorOrigin = {
-        x: destination.left + destination.width / 2 - this.widgetEditorBounds.left - this.widgetEditorBounds.width / 2,
-        y: destination.top + destination.height / 2 - this.widgetEditorBounds.top - this.widgetEditorBounds.height / 2,
-      };
+      this.editorMotion.setOrigin(destination);
     }
-    const flipper = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-flipper');
-    if (!flipper?.animate || window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) { finish(); return; }
+    const animation = this.editorMotion.flip(true);
+    if (!animation) { finish(); return; }
     this.widgetEditorClosing = true;
-    this.widgetFlipAnimation?.cancel();
-    this.animateWidgetFront(true);
-    this.widgetFlipAnimation = flipper.animate(this.widgetFlipFrames(true), { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)', fill: 'both' });
-    this.widgetFlipAnimation.finished.then(finish, finish);
+    animation.finished.then(finish, finish);
   }
 
   trapWidgetEditorFocus(event: Event) {
@@ -854,16 +724,9 @@ export class BoardPageComponent {
     this.positionWidgetEditor();
     this.widgetEditorOpener = event?.currentTarget instanceof HTMLElement ? event.currentTarget : undefined;
     const origin = this.widgetEditorOpener?.getBoundingClientRect();
-    const bounds = this.widgetEditorBounds;
-    this.widgetEditorOrigin = origin ? { x: origin.left + origin.width / 2 - bounds.left - bounds.width / 2,
-      y: origin.top + origin.height / 2 - bounds.top - bounds.height / 2 } : { x: 0, y: 0 };
-    this.widgetEditorSourceSize = origin ? { width: origin.width, height: origin.height } : { width: this.widgetEditorSize, height: this.widgetEditorSize };
+    this.editorMotion.setOrigin(origin);
     afterNextRender(() => {
-      const flipper = this.elementRef.nativeElement.querySelector<HTMLElement>('.widget-editor-flipper');
-      if (flipper?.animate && !window.matchMedia?.('(prefers-reduced-motion: reduce)').matches) {
-        this.animateWidgetFront(false);
-        this.widgetFlipAnimation = flipper.animate(this.widgetFlipFrames(), { duration: this.widgetFlipDuration, easing: 'cubic-bezier(.4,0,.2,1)' });
-      }
+      this.editorMotion.flip();
       this.elementRef.nativeElement.querySelector<HTMLInputElement>('.widget-editor-back input')?.focus({ preventScroll: true });
     }, { injector: this.injector });
     this.activeNewWidgetDraft = draft.id ? null : draft;
@@ -877,11 +740,7 @@ export class BoardPageComponent {
   }
 
   widgetPreviewFromDraft(draft: WidgetDraft, index: number): Widget {
-    return buildWidgetPreviewFromDraft({
-      draft,
-      index,
-      buildWidgetPayload: (item) => buildWidgetPayloadHelper(item),
-    });
+    return this.widgetPreviews.get(draft, index);
   }
 
   doneWidgetEdit() {
@@ -898,9 +757,9 @@ export class BoardPageComponent {
       profileNameDraft: this.profileNameDraft,
       originalWidgetDrafts: this.originalWidgetDrafts,
       boardService: this.boardService,
-      withNormalizedOrder: (drafts) => withNormalizedOrderHelper(drafts),
-      buildWidgetPayload: (draft) => buildWidgetPayloadHelper(draft),
-      getWidgetValidationMessage: (draft) => getWidgetValidationMessageHelper(draft),
+      withNormalizedOrder: withNormalizedOrderHelper,
+      buildWidgetPayload: buildWidgetPayloadHelper,
+      getWidgetValidationMessage: getWidgetValidationMessageHelper,
       setWidgetDrafts: (drafts) => {
         this.widgetDrafts = drafts;
       },
@@ -929,7 +788,7 @@ export class BoardPageComponent {
   onWidgetTypeChange(draft: WidgetDraft) {
     applyOnWidgetTypeChange({
       draft,
-      resetWidgetConfigForType: (item) => resetWidgetConfigForTypeHelper(item),
+      resetWidgetConfigForType: resetWidgetConfigForTypeHelper,
       draftValidationErrors: this.draftValidationErrors,
     });
   }
@@ -974,16 +833,6 @@ export class BoardPageComponent {
     this.closeBoardIdentityMenu();
     this.profileNameDraft = this.originalProfileName = '';
     this.boardDraftWebsite = this.originalBoardWebsite = '';
-  }
-
-  private resolveBoardId$(routeParamBoardId: string | null, routeParamUsername: string | null) {
-    return resolveBoardIdHelper$({
-      boardService: this.boardService,
-      routeParamBoardId,
-      routeParamUsername,
-      dataBoardId: this.route.snapshot?.data?.["boardId"],
-      userMainRoute: !!this.route.snapshot?.data?.["userMainRoute"],
-    });
   }
 
 }

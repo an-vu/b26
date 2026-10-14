@@ -161,13 +161,13 @@ describe('BoardPageComponent', () => {
     expect(fixture.nativeElement.querySelector('.widget-editor-back input')?.getAttribute('placeholder')).toBe('Social media link');
     expect(component.isWidgetSettingsOpen(component.widgetDrafts[0])).toBe(true);
     // The enlarged back preserves the front's proportions, including rectangular sources.
-    component.widgetEditorSize = 440;
-    component.widgetEditorSourceSize = { width: 220, height: 110 };
+    component.editorMotion.size = 440;
+    component.editorMotion.sourceSize = { width: 220, height: 110 };
     fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
-    expect(component.widgetEditorRadius).toBe(`${component.boardRadiusDraft * 2}px / ${component.boardRadiusDraft * 4}px`);
-    expect(component.widgetEditorPanelInset).toBe(`${component.widgetEditorInset * 4}px ${component.widgetEditorInset * 2}px`);
-    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.getPropertyValue('--panel-padding')).toBe(component.widgetEditorPanelInset);
-    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.borderRadius).toBe(component.widgetEditorRadius);
+    expect(component.editorMotion.radius).toBe(`${component.boardRadiusDraft * 2}px / ${component.boardRadiusDraft * 4}px`);
+    expect(component.editorMotion.panelInset).toBe(`${component.widgetEditorInset * 4}px ${component.widgetEditorInset * 2}px`);
+    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.getPropertyValue('--panel-padding')).toBe(component.editorMotion.panelInset);
+    expect(fixture.nativeElement.querySelector('.widget-editor-back').style.borderRadius).toBe(component.editorMotion.radius);
 
     expect(component.isWidgetSettingsOpen(component.widgetDrafts[1])).toBe(false);
     const grid = fixture.nativeElement.querySelector('.board-grid');
@@ -222,7 +222,7 @@ describe('BoardPageComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.isBoardIdentityMenuOpen = true;
-    component.boardIdentityNameDraft = 'Unsaved name';
+    component.settings.name = 'Unsaved name';
     component.onAccountBoardDelete('default', new MouseEvent('click'));
     expect(remove).not.toHaveBeenCalled();
     component.confirmBoardDelete();
@@ -234,7 +234,7 @@ describe('BoardPageComponent', () => {
     await fixture.whenStable();
     expect(component.isDeletingBoard).toBe(false);
     expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.boardIdentityNameDraft).toBe('Unsaved name');
+    expect(component.settings.name).toBe('Unsaved name');
     expect(component.pendingDeleteBoardUrl).toBe('default');
     expect(fixture.nativeElement.textContent).toContain('Choose another main board first.');
     confirm.mockRestore();
@@ -266,7 +266,7 @@ describe('BoardPageComponent', () => {
   });
 
   it('should render missing state when board request fails', () => {
-    boardServiceStub.getBoard = () => throwError(() => new Error('boom'));
+    boardServiceStub.getBoard = () => throwError(() => ({ status: 404 }));
 
     fixture = TestBed.createComponent(BoardPageComponent);
     fixture.detectChanges();
@@ -384,9 +384,9 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.boardIdentitySlugDraft = 'taken-url';
+    component.settings.slug = 'taken-url';
     component.saveIdentity();
-    expect(component.boardIdentitySlugDraft).toBe('taken-url');
+    expect(component.settings.slug).toBe('taken-url');
     expect(component.identitySaveError).toBe('URL already in use');
     expect(component.hasUnsavedChanges).toBe(true);
   });
@@ -427,9 +427,9 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.boardThemeToggleDraft = true;
-    component.boardPatternDraft = 'grid';
-    component.boardRadiusStepDraft = 3;
+    component.settings.dark = true;
+    component.settings.pattern = 'grid';
+    component.settings.radius = 3;
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
@@ -446,9 +446,9 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.onAppearanceChange({ ...component.appearanceDraft, themeFamily: family });
+    component.onAppearanceChange({ ...component.settings.appearance, themeFamily: family });
     fixture.detectChanges();
-    expect(component.boardTheme.id).toBe(family);
+    expect(component.settings.theme.id).toBe(family);
     expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe('default');
     expect(component.hasUnsavedChanges).toBe(false);
     expect(save).toHaveBeenCalledTimes(1);
@@ -467,16 +467,16 @@ describe('BoardPageComponent', () => {
     const controls = fixture.debugElement.query(By.directive(AppearanceSettingsComponent)).componentInstance as AppearanceSettingsComponent;
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.boardPatternIntensityDraft).toBe('light');
+    expect(component.settings.intensity).toBe('light');
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.boardPatternIntensityDraft).toBe('medium');
+    expect(component.settings.intensity).toBe('medium');
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.boardPatternIntensityDraft).toBe('heavy');
+    expect(component.settings.intensity).toBe('heavy');
     controls.selectPattern('sakura');
     fixture.detectChanges();
-    expect(component.boardPatternIntensityDraft).toBe('light');
+    expect(component.settings.intensity).toBe('light');
   });
 
   it('keeps a failed appearance preview and restores saved values on Cancel', () => {
@@ -486,15 +486,15 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    expect(component.appearanceDraft).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
+    expect(component.settings.appearance).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     component.resetAppearance();
     expect(component.hasUnsavedChanges).toBe(true);
     component.saveIdentity();
-    expect(component.appearanceDraft.theme).toBe('light');
+    expect(component.settings.appearance.theme).toBe('light');
     expect(component.hasUnsavedChanges).toBe(true);
     expect(component.identitySaveError).toContain('another tab');
     component.cancelIdentityEdit();
-    expect(component.appearanceDraft).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
+    expect(component.settings.appearance).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
@@ -502,7 +502,7 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.boardPatternDraft = 'checkered';
+    component.settings.pattern = 'checkered';
     component.closeBoardIdentityMenu();
     expect(component.hasUnsavedChanges).toBe(true);
     component.requestWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '' });
@@ -519,7 +519,7 @@ describe('BoardPageComponent', () => {
     fixture.detectChanges();
     const reload = new Subject<import('../../models/board').Board>();
     boardServiceStub.getBoard = () => reload;
-    component.boardPatternDraft = 'grid';
+    component.settings.pattern = 'grid';
     component.cancelIdentityEdit();
     expect(component.isSettingsReloading).toBe(true);
     component.toggleBoardIdentityMenu();
@@ -529,8 +529,8 @@ describe('BoardPageComponent', () => {
     expect(component.isSettingsReloading).toBe(false);
     component.toggleBoardIdentityMenu();
     expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.boardIdentityNameDraft).toBe('Latest name');
-    expect(component.appearanceDraft.pattern).toBe('stars');
+    expect(component.settings.name).toBe('Latest name');
+    expect(component.settings.appearance.pattern).toBe('stars');
     expect(component.hasUnsavedChanges).toBe(false);
   });
 
@@ -542,12 +542,12 @@ describe('BoardPageComponent', () => {
     fixture.detectChanges();
     component.toggleBoardIdentityMenu();
     expect(document.activeElement?.getAttribute('name')).toBe('board-identity-name');
-    component.boardPatternDraft = 'grid';
+    component.settings.pattern = 'grid';
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
     expect(document.activeElement?.classList.contains('board-identity-button')).toBe(true);
     expect(component.settingsFeedback).toBe('Unsaved board settings');
-    expect(component.boardPatternDraft).toBe('grid');
+    expect(component.settings.pattern).toBe('grid');
   });
 
   it('announces pending, saved, and failed settings without clearing failed drafts', () => {
@@ -556,18 +556,18 @@ describe('BoardPageComponent', () => {
     fixture = TestBed.createComponent(BoardPageComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
-    component.boardPatternDraft = 'grid';
+    component.settings.pattern = 'grid';
     component.saveIdentity();
     expect(component.settingsFeedback).toBe('Saving board settings…');
     saved.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2,
-      appearance: component.appearanceDraft });
+      appearance: component.settings.appearance });
     saved.complete();
     expect(component.settingsFeedback).toBe('Board settings saved');
     boardServiceStub.updateBoardIdentity = () => throwError(() => ({ error: { message: 'Connection failed' } }));
-    component.boardPatternDraft = 'dots';
+    component.settings.pattern = 'dots';
     component.saveIdentity();
     expect(component.settingsFeedback).toContain('not saved');
-    expect(component.boardPatternDraft).toBe('dots');
+    expect(component.settings.pattern).toBe('dots');
   });
 
 
@@ -581,15 +581,15 @@ describe('BoardPageComponent', () => {
     fixture.detectChanges();
     component.canEditBoard = true;
     component.isBoardIdentityMenuOpen = true;
-    component.onAppearanceChange({ ...component.appearanceDraft, pattern: 'snow', patternIntensity: 'light' });
+    component.onAppearanceChange({ ...component.settings.appearance, pattern: 'snow', patternIntensity: 'light' });
     expect(update).toHaveBeenCalledTimes(1);
     component.saveSettingsAutomatically();
     expect(update).toHaveBeenCalledTimes(1);
-    pending.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: '', version: 7, appearance: component.appearanceDraft });
+    pending.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: '', version: 7, appearance: component.settings.appearance });
     pending.complete();
     expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.settingsChanged).toBe(false);
-    component.boardBackgroundColorDraft = '#a64ce6';
+    expect(component.settings.changed).toBe(false);
+    component.settings.background = '#a64ce6';
     component.saveSettingsAutomatically();
     expect(update.mock.calls[1]?.[1]).toMatchObject({ version: 7, appearance: { backgroundColor: '#a64ce6' } });
   });
@@ -600,10 +600,10 @@ describe('BoardPageComponent', () => {
     component = fixture.componentInstance;
     fixture.detectChanges();
     component.canEditBoard = true;
-    component.onAppearanceChange({ ...component.appearanceDraft, pattern: 'rainfall', patternIntensity: 'light' });
+    component.onAppearanceChange({ ...component.settings.appearance, pattern: 'rainfall', patternIntensity: 'light' });
     expect(component.identitySaveError).toBeTruthy();
-    expect(component.boardPatternDraft).toBe('rainfall');
-    expect(component.settingsChanged).toBe(true);
+    expect(component.settings.pattern).toBe('rainfall');
+    expect(component.settings.changed).toBe(true);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Retry saving');
   });

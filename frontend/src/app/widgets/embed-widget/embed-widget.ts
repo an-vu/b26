@@ -12,14 +12,18 @@ import type { Widget } from '../../models/widget';
 })
 export class EmbedWidgetComponent {
   private sanitizer = inject(DomSanitizer);
+  private lastEmbedUrl: unknown;
+  private trustedEmbedUrl: SafeResourceUrl | null = null;
 
   @Input({ required: true }) widget!: Widget;
 
   get safeEmbedUrl(): SafeResourceUrl | null {
     const embedUrl = this.widget?.config?.['embedUrl'];
-    if (typeof embedUrl !== 'string' || !embedUrl.startsWith('http')) {
-      return null;
+    if (embedUrl !== this.lastEmbedUrl) {
+      this.lastEmbedUrl = embedUrl;
+      this.trustedEmbedUrl = typeof embedUrl === 'string' && embedUrl.startsWith('http')
+        ? this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl) : null;
     }
-    return this.sanitizer.bypassSecurityTrustResourceUrl(embedUrl);
+    return this.trustedEmbedUrl;
   }
 }

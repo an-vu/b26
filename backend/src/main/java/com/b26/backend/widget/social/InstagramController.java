@@ -13,14 +13,18 @@ import org.springframework.web.server.ResponseStatusException;
 @ApiAccess(value = ApiAccess.Policy.BOARD_READ, byId = true)
 @RequestMapping("/api/board/{boardId}/widgets/{widgetId}/instagram")
 public class InstagramController {
-  private final com.b26.backend.board.persistence.BoardRepository boards;
   private final WidgetService widgets;
   private final InstagramService instagram;
-  public InstagramController(WidgetService widgets, InstagramService instagram, com.b26.backend.board.persistence.BoardRepository boards) { this.boards = boards; this.widgets = widgets; this.instagram = instagram; }
+  private final InstagramImageCache images;
+  public InstagramController(WidgetService widgets, InstagramService instagram, InstagramImageCache images) {
+    this.widgets = widgets;
+    this.instagram = instagram;
+    this.images = images;
+  }
   @GetMapping
   public InstagramProfile get(@PathVariable String boardId, @PathVariable long widgetId, @RequestParam String expectedUsername) {
-    var widget = widgets.getWidgetsForBoard(boards.findById(boardId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)).getBoardUrl()).stream().filter(w -> w.id() == widgetId && w.enabled() && w.type().equals("link")).findFirst()
-        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    var widget = widgets.getWidgetByBoardId(boardId, widgetId);
+    if (!widget.enabled() || !widget.type().equals("link")) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     String username = username(widget.config().path("url").asText());
     if (username == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
     if (!username.equalsIgnoreCase(expectedUsername)) return InstagramProfile.state("unavailable");
@@ -35,7 +39,7 @@ public class InstagramController {
         .header("Cache-Control", "private, max-age=300")
         .header("X-Content-Type-Options", "nosniff")
         .contentType(org.springframework.http.MediaType.IMAGE_JPEG)
-        .body(InstagramProvider.image(profile.posts().get(index).imageUrl()));
+        .body(images.get(profile.posts().get(index).imageUrl()));
   }
 
   static String username(String url) {

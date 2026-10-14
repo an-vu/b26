@@ -1,5 +1,5 @@
 import type { Widget } from '../../models/widget';
-import type { WidgetDraft } from './board-page.widget-edit';
+import { buildWidgetPayload, type WidgetDraft } from './board-page.widget-edit';
 
 export function applyDeleteWidgetAction(params: {
   draft: WidgetDraft;
@@ -47,19 +47,30 @@ export function applyMoveWidgetAction(params: {
   return params.withNormalizedOrder(nextDrafts);
 }
 
-export function buildWidgetPreviewFromDraft(params: {
-  draft: WidgetDraft;
-  index: number;
-  buildWidgetPayload: (draft: WidgetDraft) => { config: Record<string, unknown> };
-}): Widget {
-  const payload = params.buildWidgetPayload(params.draft);
-  return {
-    id: params.draft.id ?? -(params.index + 1),
-    type: params.draft.type,
-    title: params.draft.title,
-    layout: params.draft.layout,
-    config: payload.config ?? {},
-    enabled: params.draft.enabled,
-    order: params.draft.order,
-  };
+const previewFields: readonly (keyof WidgetDraft)[] = [
+  'id', 'type', 'title', 'layout', 'enabled', 'order',
+  'embedUrl', 'linkUrl', 'placesText', 'config',
+];
+
+/** Keep child inputs stable between edits. Draft config metadata is replaced, not mutated. */
+export class WidgetPreviewCache {
+  private readonly entries = new WeakMap<WidgetDraft, { index: number; snapshot: WidgetDraft; widget: Widget }>();
+
+  get(draft: WidgetDraft, index: number): Widget {
+    const cached = this.entries.get(draft);
+    if (cached?.index === index && previewFields.every(field => cached.snapshot[field] === draft[field])) {
+      return cached.widget;
+    }
+    const widget: Widget = {
+      id: draft.id ?? -(index + 1),
+      type: draft.type,
+      title: draft.title,
+      layout: draft.layout,
+      config: buildWidgetPayload(draft).config,
+      enabled: draft.enabled,
+      order: draft.order,
+    };
+    this.entries.set(draft, { index, snapshot: { ...draft }, widget });
+    return widget;
+  }
 }

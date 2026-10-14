@@ -1,3 +1,10 @@
+import type { BoardAppearance } from '../models/board';
+
+export const BERRY_APPEARANCE: BoardAppearance = {
+  themeFamily: 'default', theme: 'light', backgroundColor: '#f9f8f6',
+  radiusStep: 2, spacingStep: 2, pattern: 'none', patternIntensity: 'light',
+};
+
 /** Rendering values shared by Board and the site theme; persisted colors stay untouched. */
 export function paperColor(color: string): string {
   return color.toLowerCase() === '#ffffff' ? '#f9f8f6' : color;

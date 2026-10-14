@@ -3,10 +3,10 @@ package com.b26.backend.board.api;
 import jakarta.validation.constraints.*;
 
 public record BoardAppearance(
-    @NotNull @Pattern(regexp = "light|dark") String theme,
+    @NotNull @Pattern(regexp = AppearanceRules.COLOR_MODE) String theme,
     @NotNull @Min(1) @Max(5) Integer radiusStep,
-    @NotNull @Pattern(regexp = "#[0-9a-fA-F]{6}") String backgroundColor,
-    @NotNull @Pattern(regexp = "none|dots|grid|diagonal|reverse-diagonal|stripes|checkered|rainfall|stars|snow|sakura|wave|lava|bokeh") String pattern,
-    @Pattern(regexp = "default|frutiger-aero|aqua|omahakase|kiwi|lofi") String themeFamily,
-    @Pattern(regexp = "light|medium|heavy") String patternIntensity,
+    @NotNull @Pattern(regexp = AppearanceRules.HEX_COLOR) String backgroundColor,
+    @NotNull @Pattern(regexp = AppearanceRules.PATTERN) String pattern,
+    @Pattern(regexp = AppearanceRules.THEME) String themeFamily,
+    @Pattern(regexp = AppearanceRules.INTENSITY) String patternIntensity,
     @Min(1) @Max(3) Integer spacingStep) {}

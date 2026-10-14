@@ -2,7 +2,7 @@ import { firstValueFrom, of, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import type { BoardService } from '../../services/board.service';
-import { resolveBoardId$ } from './board-page.routing';
+import { resolveBoard$ } from './board-page.routing';
 import { mapAccountBoards, runCreateBoardFlow } from './board-page.account';
 import { boardRoute } from '../../models/board-route';
 
@@ -10,7 +10,7 @@ const board = { id: 'id-1', boardName: 'Portfolio', boardUrl: 'portfolio', owner
 
 describe('Owner-qualified board routes', () => {
   function resolve(username: string | null, slug: string | null, service: object) {
-    return firstValueFrom(resolveBoardId$({
+    return firstValueFrom(resolveBoard$({
       boardService: service as BoardService, routeParamBoardId: slug, routeParamUsername: username,
       dataBoardId: undefined, userMainRoute: !slug,
     }));
@@ -18,18 +18,18 @@ describe('Owner-qualified board routes', () => {
 
   it('validates the owner before resolving the slug for board and widget requests', async () => {
     const getBoardForUsername = vi.fn(() => of(board));
-    expect(await resolve('alice', 'portfolio', { getBoardForUsername })).toBe('portfolio');
+    expect(await resolve('alice', 'portfolio', { getBoardForUsername })).toEqual(board);
     expect(getBoardForUsername).toHaveBeenCalledWith('alice', 'portfolio');
   });
 
   it('never loads the bare slug when the owner lookup fails', async () => {
     const getBoardForUsername = () => throwError(() => new HttpErrorResponse({ status: 404 }));
-    expect(await resolve('bob', 'portfolio', { getBoardForUsername })).toBe('__missing-owner-board__');
+    await expect(resolve('bob', 'portfolio', { getBoardForUsername })).rejects.toMatchObject({ status: 404 });
   });
 
   it('keeps legacy slugs and the username main-board shortcut working', async () => {
-    expect(await resolve(null, 'portfolio', {})).toBe('portfolio');
-    expect(await resolve('alice', null, { getUserMainBoard: () => of({ mainBoardUrl: 'portfolio' }) })).toBe('portfolio');
+    expect(await resolve(null, 'portfolio', { getBoard: () => of(board) })).toEqual(board);
+    expect(await resolve('alice', null, { getUserMainBoard: () => of({ mainBoardUrl: 'portfolio' }), getBoard: () => of(board) })).toEqual(board);
   });
 
   it('builds account links from the board owner, including boards shown to admins', () => {

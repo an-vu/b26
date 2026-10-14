@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { AppearanceSettingsComponent } from './appearance-settings';
-import { BERRY_APPEARANCE } from '../../services/site-theme.service';
+import { BERRY_APPEARANCE } from '../../themes/appearance-values';
 import type { BoardAppearance } from '../../models/board';
 import { widgetCornerRadius } from '../../utils/widget-corner.util';
 

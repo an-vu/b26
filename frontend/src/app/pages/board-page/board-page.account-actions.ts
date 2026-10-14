@@ -1,12 +1,11 @@
 import type { Router } from '@angular/router';
 import { finalize, NEVER, Observable, takeUntil } from 'rxjs';
 
-import type { AuthService } from '../../services/auth.service';
 import type { BoardService } from '../../services/board.service';
 import type { BoardStoreService } from '../../services/board-store.service';
 import type { UserStoreService } from '../../services/user-store.service';
 import { getApiErrorMessage } from '../../utils/api-error.util';
-import { runCreateBoardFlow, runSignOutFlow } from './board-page.account';
+import { runCreateBoardFlow } from './board-page.account';
 
 export function runCreateNewBoardAction(params: {
   cancel$?: Observable<unknown>;
@@ -90,34 +89,6 @@ export function runDeleteBoardAction(params: {
     error: (error) => {
       stopDeleting();
       params.setAccountActionError(getApiErrorMessage(error, 'Unable to delete board.'));
-    },
-  });
-}
-
-export function runSignOutAction(params: {
-  isSigningOut: boolean;
-  setSigningOut: (isSigningOut: boolean) => void;
-  authService: AuthService;
-  userStore: UserStoreService;
-  boardStore: BoardStoreService;
-  router: Router;
-  closeAccountMenu: () => void;
-}): void {
-  if (params.isSigningOut) {
-    return;
-  }
-
-  runSignOutFlow({
-    authService: params.authService,
-    userStore: params.userStore,
-    boardStore: params.boardStore,
-    router: params.router,
-    closeAccountMenu: params.closeAccountMenu,
-    onStart: () => {
-      params.setSigningOut(true);
-    },
-    onComplete: () => {
-      params.setSigningOut(false);
     },
   });
 }

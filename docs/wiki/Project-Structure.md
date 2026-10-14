@@ -5,7 +5,7 @@ b26/
 ├── frontend/
 │   ├── src/app/
 │   │   ├── pages/app-pages/       Home, Settings, Insights, Sign In, profiles
-│   │   ├── pages/board-page/      Board rendering, editing, widget picker
+│   │   ├── pages/board-page/      Board loading, settings state, editing, widget picker
 │   │   ├── widgets/               Widget components, registry, dynamic host
 │   │   ├── services/              API clients and board/user stores
 │   │   ├── models/                TypeScript API/data types
@@ -49,6 +49,11 @@ b26/
 |---|---|
 | Understand URLs | `frontend/src/app/app.routes.ts` |
 | Change the board editor | `frontend/src/app/pages/board-page/board-page.ts` and its template/helpers |
+| Change widget flip geometry | `frontend/src/app/pages/board-page/widget-editor-motion.ts` |
+| Change shared appearance defaults | `frontend/src/app/themes/appearance-values.ts` |
+| Change Instagram caching or refreshes | `backend/src/main/java/com/b26/backend/widget/social/` |
+| Edit settings draft/baseline rules | `frontend/src/app/pages/board-page/board-settings-state.ts` |
+| Tune Instagram JPEG cache bounds | `backend/src/main/java/com/b26/backend/widget/social/InstagramImageCache.java` |
 | Add a widget renderer | `frontend/src/app/widgets/widget-registry.ts` |
 | Understand saving/conflicts | `BoardService.java`, `SaveBoardEditRequest.java`, `board-page.save-flow.ts` |
 | Understand signup/dev login | `AuthService.java`, `backend/.env.example` |

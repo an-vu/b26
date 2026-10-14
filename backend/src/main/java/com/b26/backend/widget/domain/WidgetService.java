@@ -43,6 +43,12 @@ public class WidgetService {
         .toList();
   }
 
+  @Transactional(readOnly = true)
+  public WidgetDto getWidgetByBoardId(String boardId, long widgetId) {
+    return toDto(widgetRepository.findByIdAndBoard_Id(widgetId, boardId)
+        .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId)));
+  }
+
   @Transactional
   public WidgetDto createWidget(String boardId, UpsertWidgetRequest request) {
     BoardEntity board = findBoardByUrl(boardId);

@@ -1,6 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { BehaviorSubject, of, throwError } from 'rxjs';
-import { SiteThemeService, BERRY_APPEARANCE } from './site-theme.service';
+import { SiteThemeService } from './site-theme.service';
+import { BERRY_APPEARANCE } from '../themes/appearance-values';
 import { AuthService } from './auth.service';
 import { BoardStoreService } from './board-store.service';
 import { UserStoreService } from './user-store.service';

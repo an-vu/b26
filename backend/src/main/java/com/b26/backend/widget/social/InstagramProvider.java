@@ -19,7 +19,7 @@ public class InstagramProvider {
   }
   public boolean configured() { return !token.isBlank(); }
   public InstagramProfile fetch(String username) throws Exception {
-    // Fixed destination; neither widget URLs nor provider image URLs are fetched by this server.
+    // Profile requests use a fixed destination; image fetching is separately restricted to Instagram CDNs.
     var request = HttpRequest.newBuilder(URI.create("https://api.apify.com/v2/acts/apify~instagram-profile-scraper/run-sync-get-dataset-items?timeout=60&maxItems=1&maxTotalChargeUsd=0.02"))
         .timeout(Duration.ofSeconds(70)).header("Authorization", "Bearer " + token)
         .header("Content-Type", "application/json")
@@ -46,7 +46,7 @@ public class InstagramProvider {
       try {
         URI link = URI.create(url), photo = URI.create(image);
         if (!safe(link) || !Set.of("instagram.com", "www.instagram.com").contains(link.getHost()) || !link.getPath().matches("/(p|reel|tv)/[A-Za-z0-9_-]+/?")) continue;
-        if (!safe(photo) || !(photo.getHost().endsWith(".cdninstagram.com") || photo.getHost().endsWith(".fbcdn.net"))) continue;
+        if (!safeImage(photo)) continue;
         Instant.parse(time);
         if (posts.stream().noneMatch(p -> p.url().equals(url))) posts.add(new InstagramProfile.Post(url, image, time));
       } catch (RuntimeException ignored) { /* Ignore malformed provider data. */ }
@@ -58,7 +58,7 @@ public class InstagramProvider {
       .connectTimeout(Duration.ofSeconds(10)).followRedirects(HttpClient.Redirect.NEVER).build();
   static byte[] image(String url) throws Exception {
     URI uri = URI.create(url);
-    if (!safe(uri) || !(uri.getHost().endsWith(".cdninstagram.com") || uri.getHost().endsWith(".fbcdn.net")))
+    if (!safeImage(uri))
       throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_GATEWAY);
     var response = IMAGE_CLIENT.send(HttpRequest.newBuilder(uri).timeout(Duration.ofSeconds(20)).GET().build(), HttpResponse.BodyHandlers.ofInputStream());
     try (var stream = response.body()) {
@@ -69,6 +69,9 @@ public class InstagramProvider {
         throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_GATEWAY);
       return bytes;
     }
+  }
+  private static boolean safeImage(URI uri) {
+    return safe(uri) && (uri.getHost().endsWith(".cdninstagram.com") || uri.getHost().endsWith(".fbcdn.net"));
   }
   private static boolean safe(URI uri) { return "https".equals(uri.getScheme()) && uri.getHost() != null && uri.getUserInfo() == null && uri.getPort() == -1; }
 }

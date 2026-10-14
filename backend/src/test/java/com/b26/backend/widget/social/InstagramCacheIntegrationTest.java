@@ -22,11 +22,12 @@ class InstagramCacheIntegrationTest {
         var source = new DriverManagerDataSource(url, user, password);
         var properties = new Properties(); properties.setProperty("currentSchema", schema); source.setConnectionProperties(properties);
         var db = new JdbcTemplate(source);
-        db.execute("CREATE TABLE instagram_profile_cache(username varchar(30) primary key, payload text not null default '{\"status\":\"loading\",\"followersCount\":null,\"posts\":[]}', refresh_after timestamptz not null default current_timestamp)");
-        db.execute("CREATE TABLE instagram_fetch_budget(fetch_day date primary key, requests integer not null default 0)");
+        new org.springframework.jdbc.datasource.init.ResourceDatabasePopulator(
+            new org.springframework.core.io.ClassPathResource("db/migration/V39__instagram_profile_cache.sql"))
+            .execute(source);
         var provider = mock(InstagramProvider.class); when(provider.configured()).thenReturn(true);
         when(provider.fetch("instagram")).thenReturn(new InstagramProfile("ready", 99L, List.of()));
-        service = new InstagramService(db, new ObjectMapper(), provider, 1);
+        service = new InstagramService(new InstagramCacheRepository(db, new ObjectMapper()), provider, 1);
         assertEquals("loading", service.get("instagram").status());
         InstagramProfile result = await(service, "instagram");
         assertEquals(99L, result.followersCount());

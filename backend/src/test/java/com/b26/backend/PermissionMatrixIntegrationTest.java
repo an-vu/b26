@@ -89,6 +89,29 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(get(path).header(AUTHORIZATION_HEADER, owner.token())).andExpect(status().isNotFound());
   }
 
+  @Test
+  void instagramLookupStaysScopedToTheEnabledWidgetAndBoard() throws Exception {
+    String payload = """
+        {"type":"link","title":"Instagram","layout":"span-1",
+         "config":{"url":"https://instagram.com/instagram"},"enabled":true,"order":0}
+        """;
+    var response = mockMvc.perform(post(boardPath() + "/widgets").header(AUTHORIZATION_HEADER, owner.token())
+        .contentType(MediaType.APPLICATION_JSON).content(payload)).andExpect(status().isCreated()).andReturn();
+    long widgetId = objectMapper.readTree(response.getResponse().getContentAsString()).get("id").asLong();
+    String suffix = "/widgets/" + widgetId + "/instagram?expectedUsername=changed-profile";
+    String endpoint = API_BOARD + "/" + board.getId() + suffix;
+    // A stale profile name must not initiate a provider fetch.
+    mockMvc.perform(get(endpoint).header(AUTHORIZATION_HEADER, owner.token()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.status").value("unavailable"));
+    var another = createBoard(owner);
+    mockMvc.perform(get(API_BOARD + "/" + another.getId() + suffix).header(AUTHORIZATION_HEADER, owner.token()))
+        .andExpect(status().isNotFound());
+    mockMvc.perform(put(boardPath() + "/widgets/" + widgetId).header(AUTHORIZATION_HEADER, owner.token())
+        .contentType(MediaType.APPLICATION_JSON).content(payload.replace("true", "false")))
+        .andExpect(status().isOk());
+    mockMvc.perform(get(endpoint).header(AUTHORIZATION_HEADER, owner.token())).andExpect(status().isNotFound());
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"mine", "by-owner"})
   void reservedLookingSlugsCannotSkipPrivateBoardAuthorization(String slug) throws Exception {

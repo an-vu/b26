@@ -12,6 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class BoardRoutingIntegrationTest extends ApiIntegrationTestSupport {
   @Test
   void ownerRouteAndLegacyLookupResolveTheSameBoard() throws Exception {
+    issueAuthTokenForUser("anvu"); // Explicit owner fixture; do not depend on another test creating it.
     mockMvc.perform(get("/api/board/by-owner/anvu/default"))
         .andExpect(status().isOk()).andExpect(jsonPath("$.id").value("default"))
         .andExpect(jsonPath("$.ownerUsername").value("anvu"));
