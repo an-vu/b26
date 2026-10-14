@@ -19,6 +19,55 @@
 
 .social-follow-row .link { display: inline-flex; align-items: center; gap: 8px; }
 .social-follow-row .social-followers { color: inherit; opacity: .7; }
-:host-context([data-color-mode='dark']) .monochrome-brand { filter: invert(1); }
-.social-logo-badge { display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; box-sizing: border-box; border-radius: 12px; background: color-mix(in srgb, var(--social-accent) 10%, var(--theme-surface)); }
+.social-logo-badge { display: grid; place-items: center; width: 44px; height: 44px; padding: 8px; box-sizing: border-box; border-radius: 12px; background: #ffffff; }
 .social-logo-badge.instagram-badge { background: radial-gradient(circle at 25% 105%, #ffd776, #fa713b 32%, #d62976 58%, #7638b3 80%, #4f5bd5); }
+/* Fixed widget footprint: the photo grid gets the remaining space, never expands the tile. */
+.widget.social-profile.has-instagram-posts { grid-template-columns: 44px minmax(0, 1fr); grid-template-rows: auto auto minmax(0, 1fr); gap: 6px 10px; }
+.has-instagram-posts .social-logo-badge { grid-row: 1 / 3; }
+.has-instagram-posts .social-handle, .has-instagram-posts .social-follow-row { grid-column: 2; }
+.instagram-posts { grid-column: 1 / -1; width: 100%; height: 100%; min-height: 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); grid-template-rows: repeat(3, minmax(0, 1fr)); gap: 3px; overflow: hidden; border-radius: 6px; }
+.instagram-posts a { min-width: 0; min-height: 0; overflow: hidden; background: color-mix(in srgb, currentColor 8%, transparent); }
+.widget .instagram-posts img { display: block; width: 100%; height: 100%; border-radius: 0; object-fit: cover; }
+
+/* The small square keeps the original stack over its newest post. */
+.widget.social-profile.instagram-photo-card {
+  position: relative;
+  isolation: isolate;
+  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  gap: 12px;
+  color: white;
+}
+.widget.instagram-photo-card .instagram-background {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 0;
+  z-index: -2;
+  pointer-events: none;
+}
+.instagram-photo-card::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--palette-black) 60%, transparent), color-mix(in srgb, var(--palette-black) 18%, transparent));
+  z-index: -1;
+  pointer-events: none;
+}
+.instagram-photo-card .social-handle { color: white; text-shadow: 0 1px 3px color-mix(in srgb, var(--palette-black) 45%, transparent); }
+
+/* Tint the existing theme material instead of replacing its glass, grain or blossoms.
+   No additional backdrop filter: the shared widget surface owns the material. */
+.social-profile { position: relative; isolation: isolate; color: var(--theme-text); }
+.social-profile:not(.instagram-photo-card)::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: color-mix(in srgb, var(--social-background) 24%, transparent);
+  pointer-events: none;
+  z-index: -1;
+}
+.social-profile .social-handle { color: inherit; }
+.social-profile.instagram-photo-card { color: #ffffff; }

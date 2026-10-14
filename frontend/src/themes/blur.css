@@ -2,9 +2,9 @@
 :root { --progressive-blur-soft: 2px; --progressive-blur-medium: 5px; --progressive-blur-strong: 9px; }
 .blur-layer {
   position: absolute; inset: var(--blur-inset); background: transparent;
-  --edge-mask: linear-gradient(var(--blur-direction, to top), #000 calc(100% - var(--blur-reach)),
-    rgba(0, 0, 0, .85) calc(100% - var(--blur-reach) * .75), rgba(0, 0, 0, .5) calc(100% - var(--blur-reach) * .5),
-    rgba(0, 0, 0, .15) calc(100% - var(--blur-reach) * .25), transparent 100%);
+  --edge-mask: linear-gradient(var(--blur-direction, to top), var(--palette-black) calc(100% - var(--blur-reach)),
+    color-mix(in srgb, var(--palette-black) 85%, transparent) calc(100% - var(--blur-reach) * .75), color-mix(in srgb, var(--palette-black) 50%, transparent) calc(100% - var(--blur-reach) * .5),
+    color-mix(in srgb, var(--palette-black) 15%, transparent) calc(100% - var(--blur-reach) * .25), transparent 100%);
   -webkit-mask-image: var(--edge-mask); mask-image: var(--edge-mask);
 }
 @supports ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
@@ -17,11 +17,11 @@
     -webkit-mask-image: var(--progressive-mask); mask-image: var(--progressive-mask);
   }
   :is(.footer-blur, .header-blur, .board-glass)::before {
-    z-index: 1; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 55%, transparent 95%);
+    z-index: 1; --progressive-mask: linear-gradient(var(--blur-direction, to top), var(--palette-black) 55%, transparent 95%);
     -webkit-backdrop-filter: blur(var(--progressive-blur-medium)); backdrop-filter: blur(var(--progressive-blur-medium));
   }
   :is(.footer-blur, .header-blur, .board-glass)::after {
-    z-index: 2; --progressive-mask: linear-gradient(var(--blur-direction, to top), #000 40%, transparent 80%);
+    z-index: 2; --progressive-mask: linear-gradient(var(--blur-direction, to top), var(--palette-black) 40%, transparent 80%);
     -webkit-backdrop-filter: blur(var(--progressive-blur-strong)); backdrop-filter: blur(var(--progressive-blur-strong));
   }
 }
@@ -30,8 +30,8 @@
 .board-glass { --blur-inset: 0; }
 .board-glass > .blur-layer, .board-glass::before, .board-glass::after {
   --edge-fade: 22px;
-  --board-mask-x: linear-gradient(to right, transparent, #000 var(--edge-fade), #000 calc(100% - var(--edge-fade)), transparent);
-  --board-mask-y: linear-gradient(to bottom, transparent, #000 var(--edge-fade), #000 calc(100% - var(--edge-fade)), transparent);
+  --board-mask-x: linear-gradient(to right, transparent, var(--palette-black) var(--edge-fade), var(--palette-black) calc(100% - var(--edge-fade)), transparent);
+  --board-mask-y: linear-gradient(to bottom, transparent, var(--palette-black) var(--edge-fade), var(--palette-black) calc(100% - var(--edge-fade)), transparent);
   -webkit-mask-image: var(--board-mask-x), var(--board-mask-y);
   mask-image: var(--board-mask-x), var(--board-mask-y);
   -webkit-mask-composite: source-in; mask-composite: intersect;

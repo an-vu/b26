@@ -1,10 +1,14 @@
 @if (brandAtTop()) {
-  <header class="home-header" aria-label="BlueBerry">
-    @if (blur.enabled()) {
+  <header class="home-header" [class.visitor-header]="visitorHero()" aria-label="BlueBerry">
+    @if (blur.enabled() || visitorHero()) {
       <div class="header-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()" [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>
     }
     <div class="header-inner">
-      <button class="toolbar-wordmark home-header-brand" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="closeAccount(); aboutPanel.open($event)">BlueBerry</button>
+      @if (visitorHero()) {
+        <span class="toolbar-wordmark home-header-brand visitor-wordmark" [appHeroWordmark]="true">BlueBerry</span>
+      } @else {
+      <button class="toolbar-wordmark home-header-brand" [appHeroWordmark]="visitorHero()" type="button" aria-label="About BlueBerry" aria-haspopup="dialog" (click)="closeAccount(); aboutPanel.open($event)">BlueBerry</button>
+      }
     </div>
   </header>
 }
@@ -12,7 +16,7 @@
   <div class="board-top-blur header-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()"
     [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>
 }
-@if (blur.enabled()) {
+@if (blur.enabled() || visitorHero()) {
   <!-- Safari can retain the old backdrop inside a scrolling board; refresh only the glass when its canvas changes. -->
   @for (backdrop of [theme.themeId() + theme.colorMode() + theme.background()]; track backdrop) {
     <div class="footer-blur chrome-glass" [class.chrome-glass-off]="blurSuppressed()" [style.--chrome-fade-duration]="blurDuration() + 'ms'" aria-hidden="true"><span class="blur-layer"></span></div>

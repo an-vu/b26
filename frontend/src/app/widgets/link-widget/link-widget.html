@@ -1,14 +1,26 @@
 @if (socialProfile; as profile) {
-  <article class="widget social-profile" [style.--social-accent]="profile.accent">
+  <article class="widget social-profile" [class.has-instagram-posts]="!!instagram?.posts?.length && !compactInstagramPost" [class.instagram-photo-card]="!!compactInstagramPost" [style.--social-accent]="profile.accent" [style.--social-background]="profile.background">
+    @if (compactInstagramPost; as post) {
+      <img class="instagram-background" [attr.src]="post.imageUrl || null" alt="" loading="lazy" referrerpolicy="no-referrer" (error)="hideFailedImage($event)" />
+    }
     <span class="social-logo-badge" [class.instagram-badge]="profile.platform === 'Instagram'">
-    <img class="social-brand-logo" [class.monochrome-brand]="profile.platform === 'GitHub' || profile.platform === 'TikTok'"
+    <img class="social-brand-logo"
       [src]="'/brand/social/' + (profile.icon === 'social-x' ? 'twitter' : profile.icon) + '.svg'"
       [alt]="profile.platform === 'X' ? 'Twitter' : profile.platform" width="28" height="28" />
     </span>
     <strong class="social-handle">{{ profile.handle }}</strong>
     <div class="social-follow-row">
-      <a class="link app-button" [href]="profile.url" target="_blank" rel="noopener noreferrer" (click)="recordClick()" [attr.aria-label]="'Follow ' + profile.handle + ' on ' + profile.platform" title="Opens the profile to follow">Follow <span class="social-followers" [title]="followerCount === '—' ? 'Follower count not connected yet' : 'Followers'">{{ followerCount }}</span></a>
+      <a class="link app-button" [href]="profile.url" target="_blank" rel="noopener noreferrer" (click)="recordClick()" [attr.aria-label]="profile.action + ' ' + profile.handle + ' on ' + profile.platform" [title]="'Opens the profile on ' + profile.platform">{{ profile.action }} <span class="social-followers" [title]="followerCount === '—' ? (profile.platform === 'YouTube' ? 'Subscriber count unavailable' : 'Follower count unavailable') : (profile.platform === 'YouTube' ? 'Subscribers' : 'Followers')">{{ followerCount }}</span></a>
     </div>
+    @if (instagram?.status === 'ready' && instagram?.posts?.length && !compactInstagramPost) {
+      <div class="instagram-posts" aria-label="Recent Instagram posts">
+        @for (post of instagram!.posts; track post.url) {
+          <a [href]="post.url" target="_blank" rel="noopener noreferrer" aria-label="View Instagram post" (click)="recordClick()">
+            <img [attr.src]="post.imageUrl || null" alt="Instagram post" loading="lazy" referrerpolicy="no-referrer" (error)="hideFailedImage($event)" />
+          </a>
+        }
+      </div>
+    }
   </article>
 } @else {
 <article class="widget">

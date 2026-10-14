@@ -23,15 +23,22 @@ describe('Home and shared navigation', () => {
   it('shows visitor onboarding and one complete bottom navigation', () => {
     const fixture = TestBed.createComponent(HomePageComponent); fixture.detectChanges();
     const element = fixture.nativeElement as HTMLElement;
-    expect(element.textContent).toContain('Make yourself');
-    expect(element.querySelector('.home-cta')?.getAttribute('href')).toBe('/signin?mode=signup');
+    expect(element.textContent).toContain('Sign up');
+    expect(element.querySelector('.intro-hook')?.textContent).toBe('One board. All the things you love.');
+    expect(element.querySelector('.intro-login')?.getAttribute('href')).toBe('/signin');
+    expect(element.querySelector('.home-join-button')?.textContent).toBe('Sign up');
+    expect(element.textContent).not.toContain('Join for free');
+    expect(element.querySelector('.intro-signin')).toBeNull();
+    expect(element.querySelector('.home-join-button')?.getAttribute('href')).toBe('/signin?mode=signup');
     expect(element.querySelectorAll('nav[aria-label="Main navigation"]')).toHaveLength(1);
-    for (const label of ['Home', 'Search', 'Account', 'About BlueBerry']) {
+    for (const label of ['Home', 'Search', 'Account']) {
       expect(element.querySelectorAll(`button[aria-label="${label}"]`)).toHaveLength(1);
     }
-    expect(element.querySelector('.home-header button[aria-label="About BlueBerry"]')).not.toBeNull();
+    expect(element.querySelector('.home-header button[aria-label="About BlueBerry"]')).toBeNull();
+    expect(element.querySelector('.visitor-wordmark')?.tagName).toBe('SPAN');
     expect(element.querySelector('.bottom-actions .toolbar-wordmark')).toBeNull();
-    expect(element.querySelector('.navigation-context')?.textContent).toContain('Home');
+    expect(element.querySelector('.navigation-context')?.textContent).toContain('Sign up');
+    expect(element.querySelector('.home-settings-button')).toBeNull();
     element.querySelector<HTMLButtonElement>('button[aria-label="Account"]')!.click(); fixture.detectChanges();
     expect(element.querySelector('.account-link')?.textContent).toContain('Sign In');
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true })); fixture.detectChanges();

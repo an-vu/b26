@@ -1,6 +1,6 @@
 type SocialBrand = 'instagram' | 'tiktok' | 'social-x' | 'github' | 'youtube' | 'linkedin' | 'facebook' | 'behance' | 'pinterest';
 
-export interface SocialProfile { platform: string; handle: string; url: string; icon: SocialBrand; accent: string; }
+export interface SocialProfile { platform: string; handle: string; url: string; icon: SocialBrand; accent: string; background: string; action: 'Follow' | 'Subscribe' | 'Connect'; }
 
 /** Conservative URL-only detection; never fetches account data or follows redirects. */
 export function detectSocialProfile(raw: string): SocialProfile | null {
@@ -11,7 +11,11 @@ export function detectSocialProfile(raw: string): SocialProfile | null {
   const parts = url.pathname.split('/').filter(Boolean);
   const profile = (platform: string, handle: string, icon: SocialBrand, accent: string): SocialProfile => {
     url.protocol = 'https:'; url.search = ''; url.hash = '';
-    return { platform, handle, icon, accent, url: url.href };
+    const neutral = icon === 'instagram' || icon === 'github';
+    return { platform, handle, icon, accent, url: url.href,
+      background: neutral ? '#f1f2f4' : icon === 'tiktok' ? '#161616' : accent,
+      action: icon === 'youtube' ? 'Subscribe' : icon === 'linkedin' ? 'Connect' : 'Follow',
+    };
   };
   const single = parts.length === 1 ? parts[0] : '';
   if (host === 'instagram.com' && /^[\w.]{1,30}$/.test(single) && !['p', 'reel', 'reels', 'stories', 'explore', 'accounts', 'direct', 'about'].includes(single.toLowerCase()))
@@ -19,11 +23,11 @@ export function detectSocialProfile(raw: string): SocialProfile | null {
   if (host === 'tiktok.com' && /^@[\w.]+$/.test(single))
     return profile('TikTok', single, 'tiktok', '#25a8ac');
   if (['x.com', 'twitter.com'].includes(host) && /^\w{1,15}$/.test(single) && !['home', 'explore', 'search', 'i', 'settings', 'messages', 'notifications', 'login', 'signup', 'intent', 'share'].includes(single.toLowerCase()))
-    return profile('X', `@${single}`, 'social-x', '#777777');
+    return profile('X', `@${single}`, 'social-x', '#1da1f2');
   if (host === 'github.com' && /^[a-z\d](?:[a-z\d-]{0,37}[a-z\d])?$/i.test(single) && !['settings', 'explore', 'features', 'topics', 'marketplace', 'login', 'join', 'about', 'pricing', 'orgs', 'organizations', 'notifications', 'search'].includes(single.toLowerCase()))
-    return profile('GitHub', `@${single}`, 'github', '#8267b8');
+    return profile('GitHub', `@${single}`, 'github', '#24292f');
   if (host === 'youtube.com' && /^@[\w.-]+$/.test(single))
-    return profile('YouTube', single, 'youtube', '#db3434');
+    return profile('YouTube', single, 'youtube', '#ff0000');
   if (host === 'linkedin.com' && parts.length === 2 && parts[0] === 'in' && /^[\w-]+$/.test(parts[1]))
     return profile('LinkedIn', parts[1], 'linkedin', '#0a66c2');
   if (host === 'facebook.com' && /^[\w.]+$/.test(single) && !['watch', 'reel', 'reels', 'stories', 'groups', 'events', 'marketplace', 'login', 'share', 'sharer.php', 'profile.php', 'pages', 'help', 'settings'].includes(single.toLowerCase()))

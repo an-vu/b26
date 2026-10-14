@@ -1,0 +1,49 @@
+package com.b26.backend.widget.social;
+
+import com.b26.backend.common.config.ApiAccess;
+import com.b26.backend.widget.domain.WidgetService;
+import java.net.URI;
+import java.util.Locale;
+import java.util.Set;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
+@RestController
+@ApiAccess(value = ApiAccess.Policy.BOARD_READ, byId = true)
+@RequestMapping("/api/board/{boardId}/widgets/{widgetId}/instagram")
+public class InstagramController {
+  private final com.b26.backend.board.persistence.BoardRepository boards;
+  private final WidgetService widgets;
+  private final InstagramService instagram;
+  public InstagramController(WidgetService widgets, InstagramService instagram, com.b26.backend.board.persistence.BoardRepository boards) { this.boards = boards; this.widgets = widgets; this.instagram = instagram; }
+  @GetMapping
+  public InstagramProfile get(@PathVariable String boardId, @PathVariable long widgetId, @RequestParam String expectedUsername) {
+    var widget = widgets.getWidgetsForBoard(boards.findById(boardId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND)).getBoardUrl()).stream().filter(w -> w.id() == widgetId && w.enabled() && w.type().equals("link")).findFirst()
+        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    String username = username(widget.config().path("url").asText());
+    if (username == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (!username.equalsIgnoreCase(expectedUsername)) return InstagramProfile.state("unavailable");
+    return instagram.get(username);
+  }
+  @GetMapping("/images/{index}")
+  public org.springframework.http.ResponseEntity<byte[]> image(@PathVariable String boardId,
+      @PathVariable long widgetId, @PathVariable int index, @RequestParam String expectedUsername) throws Exception {
+    var profile = get(boardId, widgetId, expectedUsername);
+    if (index < 0 || index >= profile.posts().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    return org.springframework.http.ResponseEntity.ok()
+        .header("Cache-Control", "private, max-age=300")
+        .header("X-Content-Type-Options", "nosniff")
+        .contentType(org.springframework.http.MediaType.IMAGE_JPEG)
+        .body(InstagramProvider.image(profile.posts().get(index).imageUrl()));
+  }
+
+  static String username(String url) {
+    try {
+      URI uri = URI.create(url.matches("(?i)^https?://.*") ? url : "https://" + url);
+      if (!Set.of("https", "http").contains(uri.getScheme()) || uri.getHost() == null || !Set.of("instagram.com", "www.instagram.com").contains(uri.getHost().toLowerCase(Locale.ROOT)) || uri.getUserInfo() != null || uri.getPort() != -1) return null;
+      String name = uri.getPath().replaceAll("^/|/$", "").toLowerCase(Locale.ROOT);
+      return name.matches("[a-z0-9_.]{1,30}") && !Set.of("p", "reel", "reels", "stories", "explore", "accounts", "direct", "about").contains(name) ? name : null;
+    } catch (RuntimeException error) { return null; }
+  }
+}

@@ -78,6 +78,17 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
     boardRepository.saveAndFlush(board);
   }
 
+  @Test
+  void instagramReadsCannotBypassPrivateBoardAccess() throws Exception {
+    String path = API_BOARD + "/" + board.getId() + "/widgets/999/instagram?expectedUsername=instagram";
+    mockMvc.perform(get(path)).andExpect(status().isNotFound());
+    String imagePath = path.replace("/instagram?", "/instagram/images/0?");
+    mockMvc.perform(get(imagePath)).andExpect(status().isNotFound());
+    mockMvc.perform(get(imagePath).header(AUTHORIZATION_HEADER, outsider.token())).andExpect(status().isNotFound());
+    mockMvc.perform(get(path).header(AUTHORIZATION_HEADER, outsider.token())).andExpect(status().isNotFound());
+    mockMvc.perform(get(path).header(AUTHORIZATION_HEADER, owner.token())).andExpect(status().isNotFound());
+  }
+
   @ParameterizedTest
   @ValueSource(strings = {"mine", "by-owner"})
   void reservedLookingSlugsCannotSkipPrivateBoardAuthorization(String slug) throws Exception {

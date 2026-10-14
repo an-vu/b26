@@ -8,7 +8,7 @@
 .feed-post:is(:hover, :focus-within) { z-index: 4; }
 .feed-reveal, .suggestion { position: absolute; inset: 0; height: auto; min-height: 0; }
 .feed-reveal { padding: 0; overflow: hidden; transition: transform 180ms ease, box-shadow 180ms ease; }
-.feed-post:is(:hover, :focus-within) .feed-reveal { transform: scale(1.025); box-shadow: 0 8px 24px #0003; }
+.feed-post:is(:hover, :focus-within) .feed-reveal { transform: scale(1.025); box-shadow: 0 8px 24px color-mix(in srgb, var(--palette-black) 20%, transparent); }
 app-widget-host { position: absolute; inset: 0; width: auto; height: auto; min-height: 0; }
 .activity-overlay {
   position: absolute; inset: auto 0 0; z-index: 2;
@@ -17,7 +17,7 @@ app-widget-host { position: absolute; inset: 0; width: auto; height: auto; min-h
   color: var(--palette-white, #f9f8f6);
   isolation: isolate; pointer-events: none;
 }
-.activity-overlay::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(transparent, rgb(0 0 0 / 72%)); }
+.activity-overlay::before { content: ''; position: absolute; inset: 0; z-index: -1; background: linear-gradient(transparent, color-mix(in srgb, var(--palette-black) 72%, transparent)); }
 .activity-overlay::before, .activity-identity, .activity-time, .activity-controls { opacity: 0; visibility: hidden; transition: opacity 180ms ease, visibility 180ms ease; }
 .feed-post:is(:hover, :focus-within) :is(.activity-identity, .activity-time, .activity-controls),
 .feed-post:is(:hover, :focus-within) .activity-overlay::before { opacity: 1; visibility: visible; }
@@ -29,7 +29,7 @@ app-widget-host { position: absolute; inset: 0; width: auto; height: auto; min-h
 .activity-identity strong, .activity-identity > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .activity-identity strong { font-weight: 600; }
 .activity-identity > span { font-size: 10px; opacity: .7; }
-.activity-time { position: absolute; top: var(--feed-detail-inset, 10px); right: var(--feed-detail-inset, 10px); z-index: 3; color: var(--palette-white, #f9f8f6); font-size: 10px; white-space: nowrap; text-shadow: 0 1px 3px #000; pointer-events: none; }
+.activity-time { position: absolute; top: var(--feed-detail-inset, 10px); right: var(--feed-detail-inset, 10px); z-index: 3; color: var(--palette-white, #f9f8f6); font-size: 10px; white-space: nowrap; text-shadow: 0 1px 3px var(--palette-black); pointer-events: none; }
 .activity-controls { position: absolute; bottom: var(--feed-detail-inset, 10px); right: var(--feed-detail-inset, 10px); z-index: 3; display: grid; gap: 6px; --icon-size: 17px; }
 .activity-controls button {
   display: grid; place-items: center; width: 28px; height: 28px; padding: 0;

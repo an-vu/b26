@@ -31,7 +31,7 @@
 .page[data-theme='aqua'] :is(.widget, .board-card) {
   color: var(--theme-text); background: linear-gradient(var(--aqua-paper-glint), transparent 90px), var(--aqua-paper);
   border: 1px solid var(--aqua-frame); border-radius: var(--board-widget-radius, 12px);
-  box-shadow: inset 0 0 0 1px var(--aqua-rim), 0 1px 3px #0005, 0 12px 28px var(--aqua-shadow);
+  box-shadow: inset 0 0 0 1px var(--aqua-rim), 0 1px 3px color-mix(in srgb, var(--palette-black) 33.333333%, transparent), 0 12px 28px var(--aqua-shadow);
 }
 .page[data-theme='aqua'] .widget h3 {
   margin: calc(-1 * var(--widget-content-inset, 12px)) calc(-1 * var(--widget-content-inset, 12px)) 12px; padding: var(--widget-content-inset, 12px);
@@ -64,7 +64,7 @@
   --theme-text: #283341; --theme-muted: #586777; --theme-surface: #edf0f3; --theme-border: #929ca8;
   color: var(--theme-text); background: linear-gradient(var(--aqua-paper-glint), transparent 100px), url('/themes/aqua-linen.svg'), var(--aqua-linen);
   border: 1px solid var(--aqua-frame); border-radius: 9px;
-  box-shadow: inset 0 0 0 1px #ffffffa0, 0 2px 4px #0005, 0 16px 38px #07112780;
+  box-shadow: inset 0 0 0 1px #ffffffa0, 0 2px 4px color-mix(in srgb, var(--palette-black) 33.333333%, transparent), 0 16px 38px #07112780;
   text-shadow: 0 1px var(--aqua-engrave);
 }
 .page[data-theme='aqua'] .board-settings-heading {
@@ -96,7 +96,7 @@
   box-shadow: inset 0 1px 3px #22375038, 0 1px #ffffffa0; padding: 7px 9px; font: inherit; text-shadow: none;
 }
 [data-theme='aqua'] :is(input, textarea)::placeholder { color: var(--theme-muted); }
-.page[data-theme='aqua'] .inline-edit { color: #fff; background: #0b1d3955; border-color: #bdd8ff80; box-shadow: inset 0 1px 3px #0004; }
+.page[data-theme='aqua'] .inline-edit { color: #fff; background: #0b1d3955; border-color: #bdd8ff80; box-shadow: inset 0 1px 3px color-mix(in srgb, var(--palette-black) 26.666667%, transparent); }
 [data-theme='aqua'] input[type='checkbox'] { accent-color: #327ecc; }
 .page[data-theme='aqua'] .light-switch-track { border: 1px solid #6e7c8d; box-sizing: border-box; border-radius: 13px; }
 .page[data-theme='aqua'] .light-switch-track::after { border-radius: 50%; border: 1px solid #7e8997; box-sizing: border-box; box-shadow: inset 0 1px #fff, 0 1px 3px #162e4b80; }
@@ -106,13 +106,13 @@
 [data-theme='aqua'] dialog li a:hover { color: #fff; background: var(--aqua-blue); text-shadow: 0 -1px #365371; }
 [data-theme='aqua'] dialog li a:hover span { color: #e5efff; }
 [data-theme='aqua'] dialog::backdrop { background: #09122699; }
-.page[data-theme='aqua'] .board-settings-feedback { color: #e5ecf7; background: url('/themes/aqua-linen.svg'), #29384ac9; border: 1px solid #a7bed030; box-shadow: inset 0 1px #ffffff15; text-shadow: 0 -1px #000; }
+.page[data-theme='aqua'] .board-settings-feedback { color: #e5ecf7; background: url('/themes/aqua-linen.svg'), #29384ac9; border: 1px solid #a7bed030; box-shadow: inset 0 1px #ffffff15; text-shadow: 0 -1px var(--palette-black); }
 [data-theme='aqua'] :is(.meta-label, .settings-placeholder, .settings-section-title) { color: var(--theme-muted); }
 [data-theme='aqua'] a { color: inherit; }
 [data-theme='aqua'] .error { color: var(--theme-error); }
 /* A graphite interpretation for lights off, not a claim of historical dark-mode support. */
 [data-theme='aqua'][data-color-mode='dark'] {
-  color-scheme: dark; --aqua-engrave: #0005; --aqua-paper-glint: #ffffff08; --theme-text: #e5ebf4; --theme-muted: #b2bed0; --theme-surface: #354152;
+  color-scheme: dark; --aqua-engrave: color-mix(in srgb, var(--palette-black) 33.333333%, transparent); --aqua-paper-glint: #ffffff08; --theme-text: #e5ebf4; --theme-muted: #b2bed0; --theme-surface: #354152;
   --theme-border: #66758b; --theme-error: #ffb0b4; --aqua-paper: #2c3645; --aqua-field: #1e2938;
   --aqua-linen: #303b4c; --aqua-metal: linear-gradient(#62718a, #46546b 50%, #344158);
   --aqua-rim: #ffffff35; --aqua-shadow: #02061980;
@@ -121,7 +121,7 @@
 .page[data-theme='aqua'][data-color-mode='dark'] { background-image: linear-gradient(#040a2455, #040a2455), url('/themes/aqua-galaxy.svg'); }
 [data-theme='aqua'][data-color-mode='dark'] :is(button, a).app-button { background: var(--aqua-metal); text-shadow: var(--button-rest-text-shadow); box-shadow: var(--button-rest-shadow);
   --button-rest-text-shadow: 0 -1px #162033;
-  --button-rest-shadow: inset 0 1px #ffffff30, 0 1px 3px #0005;
+  --button-rest-shadow: inset 0 1px #ffffff30, 0 1px 3px color-mix(in srgb, var(--palette-black) 33.333333%, transparent);
   --button-hover-color: #fff;
   --button-hover-background: linear-gradient(#6d83a2, #435b7b 48%, #354d6c 51%, #4c6689);
   --button-hover-text-shadow: 0 -1px #182638; }

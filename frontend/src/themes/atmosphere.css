@@ -139,7 +139,7 @@
   mix-blend-mode: soft-light; opacity: .65;
 }
 .page[data-theme]:not([data-theme='default'])[data-color-mode='dark']::after {
-  background: radial-gradient(ellipse at 18% 25%, color-mix(in srgb, var(--wallpaper-tint, transparent) 65%, transparent), transparent 72%), linear-gradient(145deg, #00000030, color-mix(in srgb, var(--wallpaper-tint, transparent) 35%, #070b16));
+  background: radial-gradient(ellipse at 18% 25%, color-mix(in srgb, var(--wallpaper-tint, transparent) 65%, transparent), transparent 72%), linear-gradient(145deg, color-mix(in srgb, var(--palette-black) 18.823529%, transparent), color-mix(in srgb, var(--wallpaper-tint, transparent) 35%, #070b16));
   mix-blend-mode: multiply; opacity: .55;
 }
 

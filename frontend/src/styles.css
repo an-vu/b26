@@ -167,7 +167,6 @@ html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidde
 .page.app-page[data-theme='aqua'] .home-cta { text-shadow: none; }
 .page.app-page[data-theme='aqua'] :is(.widget, .feed-empty, .board-library) { color: var(--theme-text); }
 
-.page.app-page .home-cta { color: var(--theme-surface); }
 .page.app-page[data-theme='aqua'] .home-cta { color: #283341; }
 
 .page.board-status { min-height: 100dvh; }

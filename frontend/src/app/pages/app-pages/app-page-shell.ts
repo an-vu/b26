@@ -9,18 +9,19 @@ import type { BoardAppearance } from '../../models/board';
   selector: 'app-page-shell', standalone: true,
   imports: [WidgetBounceDirective, SiteNavigationComponent, BoardAtmosphereComponent],
   template: `
-    <main class="page app-page" [class.home-page]="home()" [attr.data-theme]="theme.themeId()" [attr.data-color-mode]="theme.colorMode()"
+    <main class="page app-page" [class.home-page]="home()" [class.visitor-home]="visitorHero()" [attr.data-theme]="theme.themeId()" [attr.data-color-mode]="theme.colorMode()"
       [attr.data-pattern]="appearance()?.pattern" [attr.data-intensity]="appearance()?.patternIntensity">
       @if (appearance(); as appearance) {
         <app-board-atmosphere [appearance]="appearance" [darkInk]="theme.themeId() === 'default' && theme.colorMode() === 'light' && theme.foreground() === '#30302e'" />
       }
       <section appWidgetBounce class="app-page-content"><ng-content /></section>
-      <app-site-navigation [brandAtTop]="home()"><ng-content select="[page-navigation]" /></app-site-navigation>
+      <app-site-navigation [brandAtTop]="home()" [visitorHero]="visitorHero()"><ng-content select="[page-navigation]" /></app-site-navigation>
     </main>`,
   styleUrl: './app-pages.css'
 })
 export class AppPageShellComponent {
   readonly home = input(false);
+  readonly visitorHero = input(false);
   readonly appearance = input<BoardAppearance | null>(null);
   readonly theme = inject(SiteThemeService);
 }

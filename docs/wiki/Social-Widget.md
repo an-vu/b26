@@ -24,7 +24,7 @@ One profile per widget. Paste a supported profile URL; BlueBerry detects its pla
 - Platform logo in a 44px rounded square, 28px artwork with 8px inset.
 - Handle below the logo; Follow button below the handle.
 - Follower count sits inside Follow; unknown counts display `—`, never zero or invented data.
-- Follow opens the platform profile; it does not follow automatically.
+- Actions open the platform profile; they do not subscribe, connect or follow automatically. YouTube uses Subscribe, LinkedIn personal profiles use Connect, and other platforms use Follow. Facebook retains Follow because its URLs do not reliably distinguish profiles from Pages.
 - The back uses shared panel styling, widget corners/insets, a Social media link field, and Done.
 - Done retains the widget draft; clicking outside cancels that editor session. Board Save/Cancel controls persistence.
 
@@ -34,8 +34,26 @@ One profile per widget. Paste a supported profile URL; BlueBerry detects its pla
 - Instagram: official Meta white glyph on a gradient badge. Other glyphs: Simple Icons 11.15.0. Twitter bird is intentional.
 - Detection: `frontend/src/app/utils/social-profile.util.ts`.
 - Rendering: `frontend/src/app/widgets/link-widget/`.
-- Saved type remains `link` for compatibility; no data migration is required.
+- Saved type remains `link` for compatibility. Instagram data caching uses migration V39.
 
-## Planned, not connected
+## Other platforms
 
-Live follower counts, account privacy detection, profile photos, and recent posts require platform-specific data integrations. No automatic follower lookup currently runs. More platforms and URL formats can be added with detection tests and sourced assets.
+Other platforms currently use URL detection only. Their live follower counts and recent posts remain planned.
+
+## Instagram data integration
+
+Saved Instagram widgets can retrieve follower counts and up to nine recent posts through Apify's `apify/instagram-profile-scraper`. No profile-picture field is stored or returned. The provider may include additional fields in its response; BlueBerry discards them.
+
+Set `APIFY_TOKEN` on the **backend only**. For local Docker, put the replacement token in the ignored root `.env`, then run `docker compose --project-name b26-local --file docker-compose.local.yml up -d --build backend`. Never put it in frontend environment files or commit it. Production uses the backend host's environment settings.
+
+`INSTAGRAM_DAILY_FETCH_LIMIT` defaults to 20 provider runs per UTC day across instances; 0 disables paid fetches. Each run requests a maximum total charge of USD 0.02. These are application limits, not a guarantee of a free provider plan. Configure spending controls in Apify as well.
+
+V39 adds a persistent six-hour profile cache, a cross-instance refresh lease, and a daily fetch budget. Failed requests back off for 15 minutes; private profiles return no posts or count. A failure is never labelled private. Requests run in a bounded background queue while the widget polls briefly. The endpoint enforces board read access and only fetches URLs already saved on enabled Social widgets; picker/editor previews make no provider calls. Profile changes reset the rendered result.
+
+Posts are sorted newest-first from the provider's returned latest-post set, deduplicated and capped at nine. Instagram CDN images can expire or fail; failed thumbnails stay blank until the next refresh. JPEG thumbnails are served through a board-authorized backend endpoint because Instagram blocks direct cross-origin image embedding. They are not persisted in BlueBerry storage. With no token, the widget keeps its ordinary profile link and an unavailable count. Live results require a separately configured replacement token and provider verification.
+
+The small square Instagram widget keeps the stacked logo, handle and Follow button, with the newest post as its background and a dark readability overlay. Larger layouts retain the nine-post grid.
+
+Brand tints over the active theme’s widget material: YouTube red; Twitter blue; Facebook, LinkedIn and Behance their respective blues; Pinterest red; TikTok near-black; GitHub and Instagram light grey/white. A small Instagram widget with a recent post retains its photo background.
+
+Social cards retain the theme’s shared surface, shadows and action-button styling. Platform colors are translucent tints, preserving Berry glass/frost and Omakase blossoms without adding another blur layer.

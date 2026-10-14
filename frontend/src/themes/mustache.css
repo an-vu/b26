@@ -75,7 +75,7 @@
 }
 [data-theme='lofi'] .inline-edit { background: transparent; }
 .page[data-theme='lofi'] .navigation-orb .orb-button__dot {
-  background: linear-gradient(#ffffff65, transparent 48%, #0002), var(--orb-dot);
+  background: linear-gradient(#ffffff65, transparent 48%, color-mix(in srgb, var(--palette-black) 13.333333%, transparent)), var(--orb-dot);
   border-color: #121d29b3; box-shadow: inset 0 1px #ffffffa0, 0 1px #ffffff30;
 }
 .page[data-theme='lofi'] .navigation-orb { --nav-material-halo: #b9d4eb55; }
@@ -86,7 +86,7 @@
   color-scheme: dark; --theme-text: #e9edf0; --theme-muted: #a8b2b9; --theme-border: #56616a;
   --theme-surface: #30363b; --mustache-paper: #30363b; --mustache-bg: #20262b; --mustache-field: #242b30;
   --mustache-silver: linear-gradient(#515d66, #39444d 48%, #2b343c);
-  --mustache-glint: #ffffff20; --mustache-shadow: #0005; --danger-ink: #ffaaa0;
+  --mustache-glint: #ffffff20; --mustache-shadow: color-mix(in srgb, var(--palette-black) 33.333333%, transparent); --danger-ink: #ffaaa0;
 }
 [data-theme='lofi'][data-color-mode='dark'] .utility-panel {
   --theme-text: #e9edf0; --theme-muted: #a8b2b9; --theme-border: #56616a; --theme-surface: #30363b;
@@ -98,6 +98,6 @@
   --range-track-background: linear-gradient(90deg, #4f789b var(--radius-fill, 50%), var(--mustache-bg) var(--radius-fill, 50%));
   --range-track-shadow: inset 0 1px 2px #2b2a2855; --range-track-firefox-shadow: inset 0 1px 2px #2b2a2855;
   --range-thumb-box: border-box; --range-thumb-size: 20px; --range-thumb-offset: -7px;
-  --range-thumb-border: 1px solid #8b887e; --range-thumb-shadow: inset 0 1px #fff8, 0 1px 2px #0003;
-  --range-thumb-firefox-size: 20px; --range-thumb-firefox-shadow: 0 1px 2px #0003;
+  --range-thumb-border: 1px solid #8b887e; --range-thumb-shadow: inset 0 1px #fff8, 0 1px 2px color-mix(in srgb, var(--palette-black) 20%, transparent);
+  --range-thumb-firefox-size: 20px; --range-thumb-firefox-shadow: 0 1px 2px color-mix(in srgb, var(--palette-black) 20%, transparent);
 }

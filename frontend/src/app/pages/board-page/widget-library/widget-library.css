@@ -29,7 +29,7 @@
 .widget-library-item:disabled { opacity: .5; cursor: default; }
 .widget-library-preview { display: block; width: 100%; height: 100%; min-width: 0; min-height: 0; pointer-events: none; }
 app-widget-host { display: block; width: 100%; height: 100%; }
-.widget-library-add { position: absolute; top: -10px; left: -10px; z-index: 2; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--palette-green) 65%, #143a25); background: var(--widget-add-fill, var(--palette-green)); color: #fff; box-shadow: var(--widget-add-shadow, 0 2px 4px #0002); --icon-size: 18px; opacity: 0; scale: .8; transition: opacity 160ms ease, scale 160ms ease; }
+.widget-library-add { position: absolute; top: -10px; left: -10px; z-index: 2; display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--palette-green) 65%, #143a25); background: var(--widget-add-fill, var(--palette-green)); color: #fff; box-shadow: var(--widget-add-shadow, 0 2px 4px color-mix(in srgb, var(--palette-black) 13.333333%, transparent)); --icon-size: 18px; opacity: 0; scale: .8; transition: opacity 160ms ease, scale 160ms ease; }
 .widget-library-item:is(:hover, :focus-visible):not(:disabled) .widget-library-add { opacity: 1; scale: 1; }
 @media (hover: none) { .widget-library-add { opacity: 1; scale: 1; } }
 @media (max-width: 1024px) { :host { flex: none; height: 360px; } }
