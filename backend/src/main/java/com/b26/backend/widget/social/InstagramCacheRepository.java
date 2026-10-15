@@ -22,19 +22,24 @@ public class InstagramCacheRepository {
     this.mapper = mapper;
   }
 
-  public Optional<InstagramProfile> findFresh(String username) {
+  /** A cached payload; stale entries are still served while a refresh is pending or after it fails. */
+  public record Cached(InstagramProfile profile, boolean fresh) {}
+
+  public Optional<Cached> find(String username) {
     return db.query("""
-        SELECT payload FROM instagram_profile_cache
-        WHERE username = ? AND refresh_after > CURRENT_TIMESTAMP
-        """, (rs, row) -> decode(rs.getString("payload")), username).stream().findFirst();
+        SELECT payload, refresh_after > CURRENT_TIMESTAMP AS fresh FROM instagram_profile_cache
+        WHERE username = ?
+        """, (rs, row) -> new Cached(decode(rs.getString("payload")), rs.getBoolean("fresh")), username)
+        .stream().findFirst();
   }
 
+  /** Takes the refresh lease. The previous payload stays in place until a refresh replaces it. */
   public boolean claimRefresh(String username) {
     return db.update("""
         INSERT INTO instagram_profile_cache(username, refresh_after)
         VALUES (?, CURRENT_TIMESTAMP + INTERVAL '15 minutes')
         ON CONFLICT (username) DO UPDATE
-        SET payload = EXCLUDED.payload, refresh_after = EXCLUDED.refresh_after
+        SET refresh_after = EXCLUDED.refresh_after
         WHERE instagram_profile_cache.refresh_after <= CURRENT_TIMESTAMP
         """, username) > 0;
   }
@@ -49,11 +54,26 @@ public class InstagramCacheRepository {
         """, limit) > 0;
   }
 
+  /**
+   * Stores a usable result for SUCCESS_TTL. Anything else schedules a retry and keeps the last
+   * usable payload, so a failed fetch or an exhausted budget never replaces good data.
+   */
   public void save(String username, InstagramProfile profile) throws JsonProcessingException {
-    boolean cacheable = profile.status().equals("ready") || profile.status().equals("private");
-    Instant expires = Instant.now().plus(cacheable ? SUCCESS_TTL : RETRY_TTL);
-    db.update("UPDATE instagram_profile_cache SET payload = ?, refresh_after = ? WHERE username = ?",
-        mapper.writeValueAsString(profile), Timestamp.from(expires), username);
+    if (isUsable(profile)) {
+      db.update("UPDATE instagram_profile_cache SET payload = ?, refresh_after = ? WHERE username = ?",
+          mapper.writeValueAsString(profile), Timestamp.from(Instant.now().plus(SUCCESS_TTL)), username);
+      return;
+    }
+    db.update("""
+        UPDATE instagram_profile_cache
+        SET payload = CASE WHEN payload::jsonb ->> 'status' IN ('ready', 'private') THEN payload ELSE ? END,
+            refresh_after = ?
+        WHERE username = ?
+        """, mapper.writeValueAsString(profile), Timestamp.from(Instant.now().plus(RETRY_TTL)), username);
+  }
+
+  static boolean isUsable(InstagramProfile profile) {
+    return profile.status().equals("ready") || profile.status().equals("private");
   }
 
   private InstagramProfile decode(String payload) {

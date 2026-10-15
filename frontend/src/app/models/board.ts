@@ -27,15 +27,6 @@ export type Board = {
 
 export type BoardPage = { items: Board[]; page: number; size: number; totalElements: number; totalPages: number };
 
-export type UpdateBoardMetaRequest = {
-  name: string;
-  headline: string;
-};
-
-export type UpdateBoardUrlRequest = {
-  boardUrl: string;
-};
-
 export type UpdateBoardIdentityRequest = {
   appearance?: BoardAppearance;
   version?: number;

@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { BehaviorSubject, Observable, Subject, takeUntil, tap } from 'rxjs';
 import type {
@@ -17,7 +17,7 @@ export class AuthService {
   readonly user$ = this.userSubject.asObservable();
   private readonly sessionChanged$ = new Subject<void>();
 
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   signup(payload: SignupRequest): Observable<AuthSessionResponse> {
     return this.http

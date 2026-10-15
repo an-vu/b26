@@ -1,6 +1,7 @@
+import { signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
-import { Router } from '@angular/router';
-import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
+import { provideRouter } from '@angular/router';
+import { of, Subject, throwError } from 'rxjs';
 import { vi } from 'vitest';
 import { BoardLibraryComponent } from './board-library';
 import { BoardService } from '../../services/board.service';
@@ -10,34 +11,38 @@ import { Board, UserProfile } from '../../models/board';
 
 const board: Board = { id: 'a', boardUrl: 'first', boardName: 'First', name: '', headline: '', version: 3, visibility: 'private' };
 function setup(mainId = '') {
-  const profile$ = new BehaviorSubject<UserProfile | null>({userId: 'alice', username: 'alice', displayName: 'Alice', email: null});
+  const profile = signal<UserProfile | null>({userId: 'alice', username: 'alice', displayName: 'Alice', email: null});
   const service = {
-    getMyBoards: vi.fn(() => of([board])), getMyPreferences: vi.fn(() => of({mainBoardId: mainId})),
+    getMyBoards: vi.fn(() => of([board])), getMyPreferences: vi.fn(() => of({mainBoardId: mainId})), getHomeAppearance: vi.fn(() => of(null)),
     updateBoardVisibility: vi.fn(() => of({...board, visibility: 'public'})),
     updateMyPreferences: vi.fn(() => of({mainBoardId: 'a'})),
   };
   TestBed.configureTestingModule({providers: [
-    {provide: BoardService, useValue: service}, {provide: Router, useValue: {}},
+    {provide: BoardService, useValue: service}, provideRouter([]),
     {provide: BoardStoreService, useValue: {refreshBoards: vi.fn()}},
-    {provide: UserStoreService, useValue: {setMainBoardId: vi.fn(), profile$}},
+    {provide: UserStoreService, useValue: {setMainBoardId: vi.fn(), profile}},
   ]});
-  return {service, profile$, fixture: TestBed.createComponent(BoardLibraryComponent)};
+  const fixture = TestBed.createComponent(BoardLibraryComponent);
+  TestBed.tick();
+  /** Simulate the user store changing account, then let the component's effect run. */
+  const setProfile = (next: UserProfile | null) => { profile.set(next); TestBed.tick(); };
+  return {service, profile, setProfile, fixture};
 }
 describe('Board visibility and public main selection', () => {
   it('refreshes owner-qualified board links after the account username changes', () => {
-    const {service, profile$, fixture} = setup();
+    const {service, profile, setProfile, fixture} = setup();
     service.getMyBoards.mockReturnValue(of([{ ...board, ownerUsername: 'new-name' }]));
-    profile$.next({ ...profile$.value!, username: 'new-name' });
+    setProfile({ ...profile()!, username: 'new-name' });
     expect(service.getMyBoards).toHaveBeenCalledTimes(2);
     expect(fixture.componentInstance.boardRoute(fixture.componentInstance.boards[0])).toBe('/new-name/first');
   });
   it('clears old boards immediately when the account changes and ignores pending responses', () => {
-    const {service, profile$, fixture} = setup('a');
+    const {service, setProfile, fixture} = setup('a');
     expect(fixture.componentInstance.boards).toEqual([board]);
     const oldBoards = new Subject<Board[]>();
     service.getMyBoards.mockReturnValue(oldBoards);
     fixture.componentInstance.refresh();
-    profile$.next(null);
+    setProfile(null);
     expect(oldBoards.observed).toBe(false);
     oldBoards.next([board]); oldBoards.complete();
     expect(fixture.componentInstance.boards).toEqual([]);

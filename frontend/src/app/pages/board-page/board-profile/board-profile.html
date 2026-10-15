@@ -1,45 +1,52 @@
+@let profile = board();
       <aside class="board-rail" [class.is-editing]="isWidgetEditMode">
         <div class="profile-avatar" role="img" aria-label="Profile picture placeholder">
           <svg viewBox="0 0 64 64" fill="none" aria-hidden="true"><circle cx="32" cy="24" r="10" fill="currentColor"/><path d="M12 57c0-13 8-20 20-20s20 7 20 20" fill="currentColor"/></svg>
         </div>
-        <ng-container *ngIf="isWidgetEditMode; else profileDetails">
+        @if (isWidgetEditMode) {
           <div class="profile-edit-fields">
-            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Name</span><input class="app-textbox" type="text" aria-label="Profile name" name="profile-name" [ngModel]="profileNameDraft" (ngModelChange)="profileNameDraftChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Name" /></span>
-            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Bio</span><textarea class="app-textbox" aria-label="Profile description" name="board-headline" [ngModel]="boardDraftHeadline" (ngModelChange)="boardDraftHeadlineChange.emit($event)" [disabled]="isWidgetSaving" maxlength="255" placeholder="Bio" rows="3"></textarea></span>
-            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Link</span><input class="app-textbox" type="text" aria-label="Website or social URL" name="board-website" [ngModel]="boardDraftWebsite" (ngModelChange)="boardDraftWebsiteChange.emit($event)" [disabled]="isWidgetSaving" maxlength="2048" placeholder="Link" /></span>
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Name</span><input class="app-textbox" type="text" aria-label="Profile name" name="profile-name" [(ngModel)]="profileNameDraft" [disabled]="isWidgetSaving()" maxlength="255" placeholder="Name" /></span>
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Bio</span><textarea class="app-textbox" aria-label="Profile description" name="board-headline" [(ngModel)]="boardDraftHeadline" [disabled]="isWidgetSaving()" maxlength="255" placeholder="Bio" rows="3"></textarea></span>
+            <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Link</span><input class="app-textbox" type="text" aria-label="Website or social URL" name="board-website" [(ngModel)]="boardDraftWebsite" [disabled]="isWidgetSaving()" maxlength="2048" placeholder="Link" /></span>
           </div>
-        </ng-container>
-        <ng-template #profileDetails>
-          <h1 class="profile-name">{{ board.ownerDisplayName || board.ownerUsername || 'Name' }}</h1>
-          <p class="profile-handle">@{{ board.ownerUsername || 'username' }}</p>
+        } @else {
+          <h1 class="profile-name">{{ profile.ownerDisplayName || profile.ownerUsername || 'Name' }}</h1>
+          <p class="profile-handle">@{{ profile.ownerUsername || 'username' }}</p>
           <div class="profile-stats" aria-label="Profile statistics placeholders">
             <span><strong>0</strong> Likes</span><span><strong>0</strong> Followers</span><span><strong>0</strong> Following</span>
           </div>
           <div class="profile-bio">
-            <span class="profile-field">{{ board.headline || 'Welcome to my page' }}</span>
-            <div *ngIf="board.website?.trim()" class="profile-field profile-website-field">
-              <a *ngIf="safeWebsite(board.website) as website; else plainWebsite" [href]="website" target="_blank" rel="noopener noreferrer">{{ board.website }}</a>
-              <ng-template #plainWebsite>{{ board.website }}</ng-template>
-            </div>
+            <span class="profile-field">{{ profile.headline || 'Welcome to my page' }}</span>
+            @if (profile.website?.trim()) {
+              <div class="profile-field profile-website-field">
+                @if (safeWebsite(profile.website); as website) {
+                  <a [href]="website" target="_blank" rel="noopener noreferrer">{{ profile.website }}</a>
+                } @else {
+                  {{ profile.website }}
+                }
+              </div>
+            }
           </div>
-        </ng-template>
-        <div class="profile-edit-actions" *ngIf="!readOnlyView && canEditBoard">
-          <button
-            type="button"
-            class="app-button"
-            *ngIf="!isWidgetEditMode; else doneButton"
-            (click)="edit.emit()"
-            [disabled]="isSettingsReloading || isWidgetLoading || isIdentitySaving"
-          >
-          {{ isWidgetLoading ? 'Loading...' : 'Edit' }}
-        </button>
-        <ng-template #doneButton>
-          <button type="button" class="app-button" (click)="save.emit()" [disabled]="isWidgetSaving">
-            {{ isWidgetSaving ? 'Saving...' : 'Save' }}
-          </button>
-          <button type="button" class="app-button" (click)="cancel.emit()" [disabled]="isWidgetSaving">Cancel</button>
-        </ng-template>
-        </div>
-        <p class="board-settings-feedback" role="status" aria-live="polite" *ngIf="canEditBoard && !readOnlyView">{{ settingsFeedback }}</p>
+        }
+        @if (canEdit()) {
+          <div class="profile-edit-actions">
+            @if (!isWidgetEditMode) {
+              <button
+                type="button"
+                class="app-button"
+                (click)="edit.emit()"
+                [disabled]="isSettingsReloading() || isWidgetLoading() || isIdentitySaving()"
+              >
+                {{ isWidgetLoading() ? 'Loading...' : 'Edit' }}
+              </button>
+            } @else {
+              <button type="button" class="app-button" (click)="save.emit()" [disabled]="isWidgetSaving()">
+                {{ isWidgetSaving() ? 'Saving...' : 'Save' }}
+              </button>
+              <button type="button" class="app-button" (click)="cancel.emit()" [disabled]="isWidgetSaving()">Cancel</button>
+            }
+          </div>
+          <p class="board-settings-feedback" role="status" aria-live="polite">{{ settingsFeedback() }}</p>
+        }
         <ng-content />
       </aside>

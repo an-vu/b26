@@ -23,6 +23,7 @@
   --theme-muted: var(--palette-gray);
   color: var(--palette-black);
   z-index: 100;
+  --toolbar-border-width: 1px;
 }
 
 .bottom-actions-left {
@@ -94,8 +95,10 @@
   color: var(--palette-black);
   box-sizing: border-box;
   border: 1px solid color-mix(in srgb, var(--palette-black) 28%, transparent);
+  transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease;
 }
 .navigation-orb__icon {
+  display: block;
   width: 12px;
   height: 12px;
   opacity: 0;
@@ -142,8 +145,6 @@
 
 .toolbar-wordmark:hover { color: var(--palette-black); }
 
-.navigation-orb .orb-button__dot { transition: transform 180ms ease, box-shadow 220ms ease, border-color 220ms ease; }
-
 /* Short, compositor-driven crossfade when changing theme families. */
 ::view-transition-old(root), ::view-transition-new(root) { animation-duration: 420ms; animation-timing-function: cubic-bezier(.22, .61, .36, 1); }
 ::view-transition-group(root) { animation-duration: 420ms; }
@@ -157,8 +158,6 @@
   box-shadow: var(--nav-hover-shadow, inset 0 1px 2px #ffffff80, 0 2px 5px color-mix(in srgb, var(--palette-black) 12.54902%, transparent), 0 0 9px var(--nav-halo, #c4ddff50));
 }
 .page[data-theme] .navigation-orb:active .orb-button__dot { transform: scale(.94); }
-
-.bottom-actions { --toolbar-border-width: 1px; }
 
 @media (prefers-reduced-motion: reduce) {
   .toolbar-wordmark, .navigation-orb .orb-button__dot, .navigation-orb__icon { transition: none; }

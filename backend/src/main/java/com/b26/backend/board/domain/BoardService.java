@@ -3,16 +3,17 @@ package com.b26.backend.board.domain;
 import com.b26.backend.board.api.BoardDto;
 import com.b26.backend.board.api.BoardEditDto;
 import com.b26.backend.board.api.SaveBoardEditRequest;
-import com.b26.backend.widget.api.SyncWidgetsRequest;
-import com.b26.backend.board.api.UpdateBoardMetaRequest;
 import com.b26.backend.board.api.UpdateBoardIdentityRequest;
-import com.b26.backend.board.api.UpdateBoardUrlRequest;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.common.api.BadRequestException;
+import com.b26.backend.common.api.ConflictException;
+import com.b26.backend.common.api.NotFoundException;
+import com.b26.backend.user.domain.UsernameRules;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
 import com.b26.backend.user.persistence.UserPreferenceRepository;
-import com.b26.backend.widget.api.UpsertWidgetRequest;
+import com.b26.backend.widget.api.UpsertWidgetWithIdRequest;
 import com.b26.backend.widget.domain.WidgetService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
@@ -20,6 +21,7 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -48,18 +50,18 @@ public class BoardService {
   @Transactional
   public BoardEditDto getEditor(String slug) {
     BoardEntity board = boardRepository.findForEditing(slug)
-        .orElseThrow(() -> new BoardNotFoundException(slug));
+        .orElseThrow(() -> NotFoundException.board(slug));
     return new BoardEditDto(toDto(board), widgetService.getWidgetsForBoard(slug));
   }
 
   @Transactional
   public BoardEditDto saveEditor(String slug, SaveBoardEditRequest request) {
     BoardEntity board = boardRepository.findForEditing(slug)
-        .orElseThrow(() -> new BoardNotFoundException(slug));
+        .orElseThrow(() -> NotFoundException.board(slug));
     if (!request.version().equals(board.getVersion())) {
-      throw new BoardEditConflictException();
+      throw ConflictException.boardChanged();
     }
-    var widgets = widgetService.syncWidgets(slug, new SyncWidgetsRequest(request.widgets()));
+    var widgets = widgetService.syncWidgets(board, request.widgets());
     board.setName(request.name().trim());
     board.setHeadline(request.headline().trim());
     if (request.website() != null) board.setWebsite(request.website().trim());
@@ -82,10 +84,10 @@ public class BoardService {
   @Transactional(readOnly = true)
   public BoardDto getBoardForUsername(String username, String slug) {
     var owner = appUserRepository.findByUsername(username.toLowerCase(java.util.Locale.ROOT))
-        .orElseThrow(() -> new BoardNotFoundException(username + "/" + slug));
+        .orElseThrow(() -> NotFoundException.board(username + "/" + slug));
     BoardEntity board = findBoardByUrl(slug);
     if (!owner.getId().equals(board.getOwnerUserId())) {
-      throw new BoardNotFoundException(username + "/" + slug);
+      throw NotFoundException.board(username + "/" + slug);
     }
     return toDto(board);
   }
@@ -93,10 +95,9 @@ public class BoardService {
   @Transactional(readOnly = true)
   public com.b26.backend.board.api.BoardPageDto getBoards(int page, int size) {
     if (page < 0 || size < 1 || size > 100) {
-      throw new org.springframework.web.server.ResponseStatusException(
-          org.springframework.http.HttpStatus.BAD_REQUEST, "Use page >= 0 and size between 1 and 100");
+      throw new BadRequestException("page", "Use page >= 0 and size between 1 and 100");
     }
-    var result = boardRepository.findPublicBoards(org.springframework.data.domain.PageRequest.of(page, size));
+    var result = boardRepository.findPublicBoards(PageRequest.of(page, size));
     return new com.b26.backend.board.api.BoardPageDto(
         result.getContent().stream().map(row -> toDto(row.getBoard(), row.getOwner())).toList(),
         page, size, result.getTotalElements(), result.getTotalPages());
@@ -125,97 +126,62 @@ public class BoardService {
 
   @Transactional
   public BoardDto createBoardForOwner(AppUserEntity user) {
-    int nextNumber = boardRepository.findByOwnerUserIdOrderByUpdatedAtDescBoardNameAsc(user.getId()).size() + 1;
-    String boardName;
-    String boardUrl;
-
-    while (true) {
-      boardName = "Board #" + nextNumber;
-      boardUrl = "board-" + nextNumber;
-      if (!boardRepository.existsByBoardUrl(boardUrl)) {
-        break;
-      }
-      nextNumber++;
-    }
-
-    BoardEntity board = new BoardEntity();
-    board.setId(UUID.randomUUID().toString());
-    board.setOwnerUserId(user.getId());
-    board.setVisibility("private");
-    board.setBoardName(boardName);
-    board.setBoardUrl(boardUrl);
+    BoardEntity board = newBoard(user);
+    board.setBoardName("Board #" + (boardRepository.countByOwnerUserId(user.getId()) + 1));
     board.setName("Title");
     board.setHeadline("Description");
-    board.setUpdatedAt(OffsetDateTime.now());
-
     BoardEntity saved = boardRepository.saveAndFlush(board);
 
     var config = objectMapper.createObjectNode();
     config.put("embedUrl", "https://blueberry2026.vercel.app");
-    widgetService.createWidget(
-        saved.getBoardUrl(),
-        new UpsertWidgetRequest("embed", "New Widget", "span-2", config, true, 0));
-
-    boardRepository.flush();
+    widgetService.syncWidgets(saved, List.of(
+        new UpsertWidgetWithIdRequest(null, "embed", "New Widget", "span-2", config, true, 0)));
     return toDto(saved);
   }
 
   @Transactional
   public BoardDto createStarterBoardForOwner(AppUserEntity user) {
-    BoardEntity board = new BoardEntity();
-    String id = UUID.randomUUID().toString();
-    board.setId(id);
-    board.setOwnerUserId(user.getId());
-    board.setVisibility("private");
+    BoardEntity board = newBoard(user);
     board.setBoardName("My Board");
-    board.setBoardUrl("board-" + id);
     board.setName(user.getDisplayName());
     board.setHeadline("Welcome to my board");
-    board.setUpdatedAt(OffsetDateTime.now());
     return toDto(boardRepository.saveAndFlush(board));
   }
 
-  @Transactional
-  public BoardDto updateBoardMeta(String boardId, UpdateBoardMetaRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-
-    board.setName(request.name());
-    board.setHeadline(request.headline());
-    return persist(board);
-  }
-
-  @Transactional
-  public BoardDto updateBoardUrl(String boardId, UpdateBoardUrlRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-
-    String normalized = normalizeBoardUrl(request.boardUrl());
-    if (boardRepository.existsByBoardUrlAndIdNot(normalized, board.getId())) {
-      throw new InvalidBoardUpdateException("board_url is already used: " + normalized);
-    }
-
-    board.setBoardUrl(normalized);
-    return persist(board);
+  /** New boards start private under a random slug; owners rename the slug from board settings. */
+  private BoardEntity newBoard(AppUserEntity owner) {
+    String boardUrl;
+    do {
+      boardUrl = "board-" + UUID.randomUUID().toString().substring(0, 8);
+    } while (boardRepository.existsByBoardUrl(boardUrl));
+    BoardEntity board = new BoardEntity();
+    board.setId(UUID.randomUUID().toString());
+    board.setOwnerUserId(owner.getId());
+    board.setVisibility("private");
+    board.setBoardUrl(boardUrl);
+    board.setUpdatedAt(OffsetDateTime.now());
+    return board;
   }
 
   @Transactional
   public BoardDto updateBoardIdentity(String boardId, UpdateBoardIdentityRequest request) {
     BoardEntity board = boardRepository.findForEditing(boardId)
-        .orElseThrow(() -> new BoardNotFoundException(boardId));
+        .orElseThrow(() -> NotFoundException.board(boardId));
     if (request.version() != null && !request.version().equals(board.getVersion())) {
-      throw new BoardEditConflictException();
+      throw ConflictException.boardChanged();
     }
 
     if (request.appearance() != null && request.version() == null) {
-      throw new InvalidBoardUpdateException("version is required when saving appearance");
+      throw new BadRequestException("board", "version is required when saving appearance");
     }
     String normalizedBoardName = request.boardName().trim();
     if (normalizedBoardName.isEmpty()) {
-      throw new InvalidBoardUpdateException("board_name is required");
+      throw new BadRequestException("board", "board_name is required");
     }
 
     String normalizedUrl = normalizeBoardUrl(request.boardUrl());
     if (boardRepository.existsByBoardUrlAndIdNot(normalizedUrl, board.getId())) {
-      throw new InvalidBoardUpdateException("board_url is already used: " + normalizedUrl);
+      throw new BadRequestException("board", "board_url is already used: " + normalizedUrl);
     }
 
     board.setBoardName(normalizedBoardName);
@@ -238,15 +204,15 @@ public class BoardService {
   public void deleteBoard(String boardId) {
     BoardEntity candidate = findBoardByUrl(boardId);
     appUserRepository.lockById(candidate.getOwnerUserId())
-        .orElseThrow(() -> new BoardNotFoundException(boardId));
+        .orElseThrow(() -> NotFoundException.board(boardId));
     BoardEntity board = boardRepository.findForEditing(boardId)
-        .orElseThrow(() -> new BoardNotFoundException(boardId));
+        .orElseThrow(() -> NotFoundException.board(boardId));
     if (boardRepository.countByOwnerUserId(board.getOwnerUserId()) <= 1) {
-      throw new InvalidBoardUpdateException(
+      throw new BadRequestException("board",
           "Cannot delete the owner's only board. Create another board first.");
     }
     if (userPreferenceRepository.existsByMainBoardId(board.getId())) {
-      throw new InvalidBoardUpdateException(
+      throw new BadRequestException("board",
           "Cannot delete the main board. Remove or replace the main board before deleting it.");
     }
     boardRepository.delete(board);
@@ -257,10 +223,10 @@ public class BoardService {
   public BoardDto updateVisibility(String slug, com.b26.backend.board.api.UpdateBoardVisibilityRequest request) {
     BoardEntity candidate = findBoardByUrl(slug);
     appUserRepository.lockById(candidate.getOwnerUserId()).orElseThrow();
-    BoardEntity board = boardRepository.findForEditing(slug).orElseThrow(() -> new BoardNotFoundException(slug));
-    if (!request.version().equals(board.getVersion())) throw new BoardEditConflictException();
+    BoardEntity board = boardRepository.findForEditing(slug).orElseThrow(() -> NotFoundException.board(slug));
+    if (!request.version().equals(board.getVersion())) throw ConflictException.boardChanged();
     if ("private".equals(request.visibility()) && userPreferenceRepository.existsByMainBoardId(board.getId())) {
-      throw new InvalidBoardUpdateException("Remove or replace this main board before making it private.");
+      throw new BadRequestException("board", "Remove or replace this main board before making it private.");
     }
     board.setVisibility(request.visibility());
     return persist(board);
@@ -271,18 +237,18 @@ public class BoardService {
     try {
       return toDto(boardRepository.saveAndFlush(board));
     } catch (DataIntegrityViolationException exception) {
-      throw new InvalidBoardUpdateException("board update conflicts with existing data");
+      throw new BadRequestException("board", "board update conflicts with existing data");
     } catch (ObjectOptimisticLockingFailureException exception) {
-      throw new InvalidBoardUpdateException("board update conflict detected, please retry");
+      throw new BadRequestException("board", "board update conflict detected, please retry");
     } catch (JpaSystemException exception) {
-      throw new InvalidBoardUpdateException("board update failed due to persistence state");
+      throw new BadRequestException("board", "board update failed due to persistence state");
     }
   }
 
   private static String normalizeBoardUrl(String rawBoardUrl) {
     String normalized = rawBoardUrl.trim().toLowerCase(java.util.Locale.ROOT);
-    if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
-      throw new InvalidBoardUpdateException(
+    if (!UsernameRules.isSlug(normalized)) {
+      throw new BadRequestException("board",
           "board_url must use lowercase letters, numbers, and single hyphens");
     }
     return normalized;
@@ -291,7 +257,7 @@ public class BoardService {
   private BoardEntity findBoardByUrl(String boardUrl) {
     return boardRepository
         .findByBoardUrl(boardUrl)
-        .orElseThrow(() -> new BoardNotFoundException(boardUrl));
+        .orElseThrow(() -> NotFoundException.board(boardUrl));
   }
 
   private BoardDto toDto(BoardEntity board) {

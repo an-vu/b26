@@ -1,7 +1,8 @@
             <fieldset class="board-theme-picker">
               <legend>Theme · {{ pickerLabel('theme', selectedTheme.label) }}</legend>
               <div class="board-theme-options" [style.--theme-count]="themes.length">
-                <button class="board-theme-option" type="button" *ngFor="let theme of themes"
+                @for (theme of themes; track theme.id) {
+                <button class="board-theme-option" type="button"
                   [disabled]="disabled()" [attr.aria-label]="theme.label"
                   [attr.aria-pressed]="selectedTheme.id === theme.id" [attr.data-theme-option]="theme.id" (mouseenter)="pickerHover['theme'] = theme.label" (mouseleave)="pickerHover['theme'] = null"
                   (focus)="pickerFocus['theme'] = theme.label" (blur)="pickerFocus['theme'] = null"
@@ -9,6 +10,7 @@
                   <span class="theme-swatch" [attr.data-family]="theme.id" aria-hidden="true"></span>
 
                 </button>
+                }
               </div>
             </fieldset>
             <hr />
@@ -20,7 +22,7 @@
                     [style.--radius-fill]="(sliderValue('radiusStep') - 1) * 25 + '%'"
                     [attr.aria-valuetext]="cornerLabel(sliderValue('radiusStep'))" min="1" max="5" step="1"
                     [value]="sliderValue('radiusStep')" (input)="slide('radiusStep', $event)" (change)="finishSlide('radiusStep', $event)" />
-                  <span class="slider-marks" aria-hidden="true"><i *ngFor="let level of cornerLevels" [class.is-selected]="sliderValue('radiusStep') === level"></i></span>
+                  <span class="slider-marks" aria-hidden="true">@for (level of cornerLevels; track level) {<i [class.is-selected]="sliderValue('radiusStep') === level"></i>}</span>
                 </span>
               </label>
               <label>
@@ -30,7 +32,7 @@
                     [style.--radius-fill]="(sliderValue('spacingStep') - 1) * 50 + '%'"
                     [attr.aria-valuetext]="sizeLabel(sliderValue('spacingStep'))" min="1" max="3" step="1"
                     [value]="sliderValue('spacingStep')" (input)="slide('spacingStep', $event)" (change)="finishSlide('spacingStep', $event)" />
-                  <span class="slider-marks" aria-hidden="true"><i *ngFor="let level of gapLevels" [class.is-selected]="sliderValue('spacingStep') === level"></i></span>
+                  <span class="slider-marks" aria-hidden="true">@for (level of gapLevels; track level) {<i [class.is-selected]="sliderValue('spacingStep') === level"></i>}</span>
                 </span>
               </label>
             </div>
@@ -38,22 +40,30 @@
             <fieldset>
               <legend>Background Color · {{ pickerLabel('color', colorLabel) }}</legend>
               <div class="board-color-options">
-                <button *ngFor="let color of colors" type="button"
+                @for (color of colors; track color.value) {
+                <button type="button"
                   [title]="color.name" [attr.aria-label]="color.name + ' background'" [attr.aria-pressed]="appearance().backgroundColor === color.value"
                   [style.background]="color.value" (mouseenter)="pickerHover['color'] = color.name" (mouseleave)="pickerHover['color'] = null"
                   (focus)="pickerFocus['color'] = color.name" (blur)="pickerFocus['color'] = null" [disabled]="disabled()"
                   (click)="set('backgroundColor', color.value)"></button>
+                }
               </div>
             </fieldset>
             <fieldset>
               <legend>Pattern · {{ pickerLabel('pattern', patternLabel(appearance().pattern)) }}</legend>
               <div class="board-pattern-options">
-                <button *ngFor="let pattern of patterns" type="button"
+                @for (pattern of patterns; track pattern) {
+                <button type="button"
                   [attr.data-pattern-option]="pattern" (mouseenter)="pickerHover['pattern'] = patternLabel(pattern)" (mouseleave)="pickerHover['pattern'] = null"
-                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern'" [attr.aria-pressed]="appearance().pattern === pattern"
+                  (focus)="pickerFocus['pattern'] = patternLabel(pattern)" (blur)="pickerFocus['pattern'] = null" [title]="patternLabel(pattern)" [attr.aria-pressed]="appearance().pattern === pattern"
+                  [attr.data-level]="patternLevel(pattern)"
+                  [attr.aria-label]="(pattern === 'grid' ? 'Meteor' : pattern) + ' pattern' + (patternLevel(pattern) ? ', ' + patternLevel(pattern) : '')"
                   [disabled]="disabled()" (click)="selectPattern(pattern)">
-                  <app-icon *ngIf="pattern !== 'none'" [name]="pattern" />
+                  @if (pattern !== 'none') {
+                    <app-icon [name]="pattern" />
+                  }
                 </button>
+                }
 
               </div>
             </fieldset>
@@ -90,5 +100,9 @@
                 </span>
               </label>
             </div>
-            <hr *ngIf="showReset()" />
-<div *ngIf="showReset()" class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>
+            @if (showReset()) {
+              <hr />
+            }
+@if (showReset()) {
+<div class="board-settings-tools"><button type="button" class="app-button settings-reset" [disabled]="disabled()" (click)="reset()">Reset to default</button></div>
+}

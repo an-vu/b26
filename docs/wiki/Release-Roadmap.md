@@ -1,6 +1,6 @@
 # Release roadmap
 
-**Current release: 1.6.3.** It consolidates board loading and editor state, optimizes widget rendering and Instagram caching, and records local Safari performance. About remains Version 26.1; hosted deployment status is tracked separately in [Deployment](Deployment).
+**Current release: 1.6.4.** It simplifies the frontend and backend, rebuilds the Stars and Lava patterns, makes each board show its own theme, and renames theme ids, with migrations V40–V42 pending deployment. About remains Version 26.1; hosted deployment status is tracked separately in [Deployment](Deployment).
 
 | Version | Scope | Status |
 | --- | --- | --- |
@@ -19,13 +19,14 @@
 | 1.5.4 | Board privacy and dedicated pages | Committed |
 | 1.5.5 | Home feed, navigation, and appearance controls | Committed |
 | 1.5.6 | Frontend consolidation, About, favicons, and responsive panels | Committed |
-| 1.5.7 | Mustache, shared icons, pattern placeholders, and production samples | Committed |
+| 1.5.7 | Mustache (now Valencia), shared icons, pattern placeholders, and production samples | Committed |
 | 1.5.8 | Widget picker, panel animations, appearance controls, and editor cleanup | Committed |
 | 1.5.9 | Backend consolidation, paginated boards, widget analytics, and legacy retirement | Committed as `edbb620` |
 | 1.6.0 | Public/private, owner/admin, and visitor permission enforcement | Implemented and tested locally; committed |
 | 1.6.1 | Berry glass/frost materials, Social widgets, and widget editing refinements | Committed as `5d8653d` |
 | 1.6.2 | Instagram follower/posts integration and visitor homepage | Committed as `e293ea9` |
-| 1.6.3 | Board/editor consolidation, rendering and cache optimization, and Safari measurements | Committed; tested locally |
+| 1.6.3 | Board/editor consolidation, rendering and cache optimization, and Safari measurements | Committed as `45e471d` |
+| 1.6.4 | Simplification pass, Stars and Lava rebuilds, per-board themes, and theme id rename | Committed; tested locally |
 | 1.7.0 | Widget library expansion I | Later |
 | 1.8.0 | Widget library expansion II | Later |
 | 1.9.0 | Insights I | Later |
@@ -54,10 +55,23 @@ The old configurable page/widget permission matrix belonged to retired system bo
 
 ## Current work and rollout
 
+**Simplification pass (after 1.6.3, not yet released).** Pending migrations, applied at the next backend deploy:
+
+- **V40** drops the theme, pattern, intensity, and color-mode CHECK constraints. `AppearanceRules` is now the only list of allowed values, so a new theme no longer needs a migration.
+- **V41** converts `widgets.config_json` to `jsonb`. It rewrites the column (a brief lock on `widgets`), and any unparseable legacy config becomes `{}`.
+- **V42** renames theme ids in boards and Home appearances (`default` → `berry`, `frutiger-aero` → `aero`, `omahakase` → `omakase`, `lofi` → `valencia`) and sets both column defaults to `berry`. The old ids are still accepted by the API and frontend and converted to the new ones.
+
+API changes in the same pass:
+
+- The unused `PATCH /meta`, `PATCH /url`, single-widget create/update/delete, `PUT /widgets/sync`, and `GET /api/insights/{boardId}` endpoints are removed.
+- Sign-in can now return 429 after repeated failures.
+- Profile saves require an email and return 409 when it's taken.
+- Client IPs now come from `X-Forwarded-For`.
+
 The 1.6.3 cleanup shares board loading, separates settings draft ownership, improves loading/retry errors, preserves widget render inputs, pauses hidden-tab Instagram polling, and adds bounded image caching. No new migration is required.
 
 Home's local sample activity and suggested profiles are a development preview, gated to localhost outside production. A real community activity API, following, publishing, reactions, and comments remain planned. Instagram counts/recent posts are implemented; other social platforms still use URL-only detection.
 
-The 1.6.0 implementation passed 119 backend tests (including PostgreSQL), 141 frontend tests, and both package/production builds. The release contains these verified changes; hosted rollout is tracked separately. Before the next hosted rollout, verify current provider state, pending migrations, production settings, backups, and the authenticated user journey. See [Development reference](Development-Reference).
+The 1.6.0 implementation passed 119 backend tests (including PostgreSQL), 141 frontend tests, and both package/production builds. The release contains these verified changes; hosted rollout is tracked separately. Before the next hosted rollout, verify current provider state, pending migrations, production settings, backups, and the authenticated user journey. See [Deployment](Deployment).
 
 Committed in 1.5.3: sidebar profile editing, settings autosave, board switching, Search/Account/About redesigns, Meteor and scroll refinements, shared panel materials, and hidden-tab animation suspension. Details: [Appearance and panels](Board-Appearance-and-Panels).

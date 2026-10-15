@@ -1,13 +1,12 @@
 package com.b26.backend.widget.social;
 
+import com.b26.backend.common.api.NotFoundException;
 import com.b26.backend.common.config.ApiAccess;
 import com.b26.backend.widget.domain.WidgetService;
 import java.net.URI;
 import java.util.Locale;
 import java.util.Set;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @ApiAccess(value = ApiAccess.Policy.BOARD_READ, byId = true)
@@ -24,9 +23,9 @@ public class InstagramController {
   @GetMapping
   public InstagramProfile get(@PathVariable String boardId, @PathVariable long widgetId, @RequestParam String expectedUsername) {
     var widget = widgets.getWidgetByBoardId(boardId, widgetId);
-    if (!widget.enabled() || !widget.type().equals("link")) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (!widget.enabled() || !widget.type().equals("link")) throw new NotFoundException("Instagram profile not found");
     String username = username(widget.config().path("url").asText());
-    if (username == null) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (username == null) throw new NotFoundException("Instagram profile not found");
     if (!username.equalsIgnoreCase(expectedUsername)) return InstagramProfile.state("unavailable");
     return instagram.get(username);
   }
@@ -34,7 +33,7 @@ public class InstagramController {
   public org.springframework.http.ResponseEntity<byte[]> image(@PathVariable String boardId,
       @PathVariable long widgetId, @PathVariable int index, @RequestParam String expectedUsername) throws Exception {
     var profile = get(boardId, widgetId, expectedUsername);
-    if (index < 0 || index >= profile.posts().size()) throw new ResponseStatusException(HttpStatus.NOT_FOUND);
+    if (index < 0 || index >= profile.posts().size()) throw new NotFoundException("Instagram post not found");
     return org.springframework.http.ResponseEntity.ok()
         .header("Cache-Control", "private, max-age=300")
         .header("X-Content-Type-Options", "nosniff")

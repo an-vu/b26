@@ -10,25 +10,26 @@
   background: linear-gradient(var(--picker-shine), transparent 60%), color-mix(in srgb, var(--palette-red) 22%, var(--theme-surface));
 }
 
-/* Separate pseudo-elements are necessary for WebKit and Firefox. */
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range'] {
+/* Themed sliders for every non-Berry theme (tokens set per theme).
+   Separate pseudo-elements are necessary for WebKit and Firefox. */
+.page[data-theme]:where(:not([data-theme='berry'])) input[type='range'] {
   appearance: none; -webkit-appearance: none; background: transparent; cursor: pointer;
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-webkit-slider-runnable-track {
+.page[data-theme]:where(:not([data-theme='berry'])) input[type='range']::-webkit-slider-runnable-track {
   height: 7px; border: var(--range-track-border); border-radius: var(--range-track-radius);
   background: var(--range-track-background); box-shadow: var(--range-track-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-moz-range-track {
+.page[data-theme]:where(:not([data-theme='berry'])) input[type='range']::-moz-range-track {
   height: 5px; border: var(--range-track-border); border-radius: var(--range-track-radius);
   background: var(--range-track-background); box-shadow: var(--range-track-firefox-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-webkit-slider-thumb {
+.page[data-theme]:where(:not([data-theme='berry'])) input[type='range']::-webkit-slider-thumb {
   appearance: none; -webkit-appearance: none; box-sizing: var(--range-thumb-box);
   width: var(--range-thumb-size); height: var(--range-thumb-size); margin-top: var(--range-thumb-offset);
   border: var(--range-thumb-border); border-radius: 50%; background: var(--switch-knob);
   box-shadow: var(--range-thumb-shadow);
 }
-.page:is([data-theme='frutiger-aero'], [data-theme='aqua'], [data-theme='omahakase'], [data-theme='kiwi'], [data-theme='lofi']) input[type='range']::-moz-range-thumb {
+.page[data-theme]:where(:not([data-theme='berry'])) input[type='range']::-moz-range-thumb {
   box-sizing: var(--range-thumb-box); width: var(--range-thumb-firefox-size); height: var(--range-thumb-firefox-size);
   border: var(--range-thumb-border); border-radius: 50%; background: var(--switch-knob);
   box-shadow: var(--range-thumb-firefox-shadow);
@@ -53,7 +54,7 @@
 .page .app-text-field, dialog .app-text-field {
   display: flex; align-items: baseline; gap: 10px; width: 100%; min-width: 0;
   box-sizing: border-box; padding: 8px 10px; border: 1px solid var(--theme-border); border-radius: 8px;
-  background: var(--aqua-field, var(--mustache-field, var(--theme-surface))); color: var(--theme-text);
+  background: var(--aqua-field, var(--valencia-field, var(--theme-surface))); color: var(--theme-text);
   text-align: left; font-size: 13px; font-weight: 400; text-shadow: none;
 }
 .app-text-field-label { flex: 0 1 auto; max-width: 45%; color: var(--theme-muted); line-height: 1.4; }

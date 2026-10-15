@@ -58,62 +58,30 @@ class BoardApiIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @Test
-  void patchBoardUrl_valid_returns200AndPersists() throws Exception {
-    String payload =
-        """
-        {
-          "boardUrl": "default-updated"
-        }
-        """;
-
+  void patchBoardIdentity_renamesSlugAndRejectsInvalidFormat() throws Exception {
     mockMvc
-        .perform(
-            patch("/api/board/default/url")
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
+        .perform(authJson(patch("/api/board/union-pacific/identity"),
+            "{\"boardName\":\"Union Pacific\",\"boardUrl\":\"union-pacific-updated\"}"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.boardUrl").value("default-updated"));
-
+        .andExpect(jsonPath("$.boardUrl").value("union-pacific-updated"));
     mockMvc
-        .perform(get("/api/board/default-updated"))
+        .perform(get("/api/board/union-pacific-updated"))
         .andExpect(status().isOk())
-        .andExpect(jsonPath("$.boardUrl").value("default-updated"));
-
-    String rollbackPayload =
-        """
-        {
-          "boardUrl": "default"
-        }
-        """;
-
+        .andExpect(jsonPath("$.boardUrl").value("union-pacific-updated"));
     mockMvc
-        .perform(
-            patch("/api/board/default-updated/url")
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(rollbackPayload))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.boardUrl").value("default"));
+        .perform(authJson(patch("/api/board/union-pacific-updated/identity"),
+            "{\"boardName\":\"Union Pacific\",\"boardUrl\":\"Union Pacific\"}"))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.message").value("Validation failed"));
   }
 
   @Test
-  void patchBoardUrl_invalidFormat_returns400() throws Exception {
-    String payload =
-        """
-        {
-          "boardUrl": "Default Updated"
-        }
-        """;
-
-    mockMvc
-        .perform(
-            patch("/api/board/default/url")
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
-        .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("Validation failed"));
+  void retiredMetaAndUrlEndpointsAreNotServed() throws Exception {
+    mockMvc.perform(authJson(patch("/api/board/default/meta"), "{\"name\":\"x\",\"headline\":\"y\"}"))
+        .andExpect(status().is4xxClientError());
+    mockMvc.perform(authJson(patch("/api/board/default/url"), "{\"boardUrl\":\"other\"}"))
+        .andExpect(status().is4xxClientError());
+    mockMvc.perform(get(API_BOARD_DEFAULT)).andExpect(jsonPath("$.boardUrl").value("default"));
   }
 
   @Test
@@ -144,18 +112,18 @@ class BoardApiIntegrationTest extends ApiIntegrationTestSupport {
 
     mockMvc
         .perform(
-            patch("/api/board/default/meta")
+            patch("/api/board/default/identity")
                 .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Default Ordered\",\"headline\":\"Ordered\"}"))
+                .content("{\"boardName\":\"Default Ordered\",\"boardUrl\":\"default\"}"))
         .andExpect(status().isOk());
 
     mockMvc
         .perform(
-            patch("/api/board/home/meta")
+            patch("/api/board/home/identity")
                 .header(AUTHORIZATION_HEADER, authHeader)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("{\"name\":\"Home Ordered\",\"headline\":\"Ordered\"}"))
+                .content("{\"boardName\":\"Home Ordered\",\"boardUrl\":\"home\"}"))
         .andExpect(status().isOk());
 
     mockMvc

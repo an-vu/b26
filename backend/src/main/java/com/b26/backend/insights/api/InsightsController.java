@@ -1,5 +1,6 @@
 package com.b26.backend.insights.api;
 
+import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.insights.domain.InsightsService;
 import com.b26.backend.board.domain.BoardAccessService;
 import com.b26.backend.common.config.ApiAccess;
@@ -20,10 +21,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class InsightsController {
   private final InsightsService insightsService;
   private final BoardAccessService boardAccess;
+  private final AuthService authService;
 
-  public InsightsController(InsightsService insightsService, BoardAccessService boardAccess) {
+  public InsightsController(InsightsService insightsService, BoardAccessService boardAccess, AuthService authService) {
     this.insightsService = insightsService;
     this.boardAccess = boardAccess;
+    this.authService = authService;
   }
 
   @PostMapping("/insights/widgets/{widgetId}/click")
@@ -33,26 +36,20 @@ public class InsightsController {
       @PathVariable long widgetId,
       @Valid @RequestBody RecordClickRequest request,
       HttpServletRequest servletRequest) {
-    String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
+    String sourceIp = sourceIp(servletRequest);
     // The board ID comes from the validated body, so enforce visibility here before recording.
-    boardAccess.requireRead(request.boardId(), true, false, servletRequest.getHeader("Authorization"));
+    requireReadableBoard(request.boardId(), servletRequest);
     insightsService.recordClick(request.boardId(), widgetId, sourceIp);
-  }
-
-  @GetMapping("/insights/{boardId}")
-  @ApiAccess(value = BOARD_OWNER_READ, byId = true)
-  public InsightsResponse getInsights(@PathVariable String boardId) {
-    return insightsService.getInsights(boardId);
   }
 
   @PostMapping("/insights/view")
   @ApiAccess(PUBLIC)
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void recordView(@Valid @RequestBody RecordViewRequest request, HttpServletRequest servletRequest) {
-    String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
+    String sourceIp = sourceIp(servletRequest);
     String userAgent = servletRequest.getHeader("User-Agent");
     // Public admission still requires read access to the board supplied in the body.
-    boardAccess.requireRead(request.boardId(), true, false, servletRequest.getHeader("Authorization"));
+    requireReadableBoard(request.boardId(), servletRequest);
     insightsService.recordView(request.boardId(), sourceIp, request.source(), userAgent);
   }
 
@@ -60,5 +57,15 @@ public class InsightsController {
   @ApiAccess(value = BOARD_OWNER_READ, byId = true)
   public InsightsSummaryResponse getSummary(@PathVariable String boardId) {
     return insightsService.getSummary(boardId);
+  }
+
+  // Remote addresses come from X-Forwarded-For via server.forward-headers-strategy=framework.
+  private static String sourceIp(HttpServletRequest request) {
+    return request.getRemoteAddr() == null ? "unknown" : request.getRemoteAddr();
+  }
+
+  private void requireReadableBoard(String boardId, HttpServletRequest request) {
+    var reader = authService.findAuthenticatedUser(request.getHeader("Authorization")).orElse(null);
+    boardAccess.requireRead(boardId, true, false, reader);
   }
 }

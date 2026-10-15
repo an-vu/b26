@@ -1,7 +1,7 @@
 import type { BoardAppearance } from '../models/board';
 
 export const BERRY_APPEARANCE: BoardAppearance = {
-  themeFamily: 'default', theme: 'light', backgroundColor: '#f9f8f6',
+  themeFamily: 'berry', theme: 'light', backgroundColor: '#f9f8f6',
   radiusStep: 2, spacingStep: 2, pattern: 'none', patternIntensity: 'light',
 };
 

@@ -10,6 +10,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import com.fasterxml.jackson.databind.JsonNode;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 
 @Entity
 @Table(name = "widgets")
@@ -32,8 +35,9 @@ public class WidgetEntity {
   @Column(nullable = false)
   private String layout;
 
-  @Column(nullable = false, length = 4000)
-  private String configJson;
+  @JdbcTypeCode(SqlTypes.JSON)
+  @Column(name = "config_json", nullable = false)
+  private JsonNode config;
 
   @Column(nullable = false)
   private boolean enabled;
@@ -77,12 +81,12 @@ public class WidgetEntity {
     this.layout = layout;
   }
 
-  public String getConfigJson() {
-    return configJson;
+  public JsonNode getConfig() {
+    return config;
   }
 
-  public void setConfigJson(String configJson) {
-    this.configJson = configJson;
+  public void setConfig(JsonNode config) {
+    this.config = config;
   }
 
   public boolean isEnabled() {

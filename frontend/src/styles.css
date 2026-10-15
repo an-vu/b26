@@ -1,14 +1,15 @@
 @import "./themes/blur.css";
 @import "./themes/palette.css";
 @import "./themes/panels.css";
-@import "./themes/default.css";
+@import "./themes/berry.css";
 @import "./themes/buttons.css";
-@import "./themes/frutiger-aero.css";
+@import "./themes/materials.css";
+@import "./themes/aero.css";
 @import "./themes/aqua.css";
 @import "./themes/atmosphere.css";
-@import "./themes/omahakase.css";
+@import "./themes/omakase.css";
 @import "./themes/kiwi.css";
-@import "./themes/mustache.css";
+@import "./themes/valencia.css";
 @import "./themes/forms.css";
 @import "./themes/controls.css";
 @import "./themes/surfaces.css";
@@ -32,6 +33,7 @@ body {
   padding: 0;
   color: var(--theme-text);
   background: var(--palette-white);
+  overscroll-behavior: none;
 }
 
 .text-muted {
@@ -60,53 +62,6 @@ body {
   font-style: normal;
   font-size: 12px;
   color: var(--theme-muted);
-}
-
-.inline-edit {
-  font-family: inherit;
-  font-style: inherit;
-  font-variant: inherit;
-  font-stretch: inherit;
-  font-feature-settings: inherit;
-  line-height: inherit;
-  color: inherit;
-  border: 0;
-  border-bottom: var(--inline-edit-underline, 1px) solid transparent;
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
-  margin: 0;
-  outline: none;
-  box-shadow: none;
-  min-width: 0;
-  width: 100%;
-  box-sizing: border-box;
-  appearance: none;
-}
-
-.inline-edit::placeholder {
-  color: inherit;
-  opacity: 0.5;
-}
-
-.inline-edit:focus {
-  border-bottom-color: var(--theme-border);
-}
-
-.inline-edit.title {
-  line-height: var(--header-title-line-height, 1.2);
-  height: calc(
-    var(--header-title-font-size, 32px) * var(--header-title-line-height, 1.2) +
-      var(--inline-edit-underline, 1px)
-  );
-}
-
-.inline-edit.subtitle {
-  line-height: var(--header-subtitle-line-height, 1.4);
-  height: calc(
-    var(--header-subtitle-font-size, 16px) * var(--header-subtitle-line-height, 1.4) +
-      var(--inline-edit-underline, 1px)
-  );
 }
 
 :is(.widget, .board-card) {
@@ -149,28 +104,12 @@ app-widget-host.widget-host-preview .widget {
   background: transparent;
 }
 
-html, body { overscroll-behavior: none; }
-.navigation-orb__icon { display: block; }
-
 /* Freeze CSS timelines in hidden tabs without discarding their animation position. */
 html[data-page-hidden] *, html[data-page-hidden] *::before, html[data-page-hidden] *::after {
   animation-play-state: paused !important;
 }
 
-/* Dedicated pages sit directly on Aqua's galaxy wallpaper. Keep chrome and panels
-   in their existing silver palette while giving exposed page text enough contrast. */
-.page.app-page[data-theme='aqua'] .app-page-content { color: #f5f8ff; }
-.page.app-page[data-theme='aqua'] :is(.home-heading, .home-intro) {
-  --theme-text: #f5f8ff; --theme-muted: #dce6f6;
-  text-shadow: 0 1px 3px #07132a;
-}
-.page.app-page[data-theme='aqua'] .home-cta { text-shadow: none; }
-.page.app-page[data-theme='aqua'] :is(.widget, .feed-empty, .board-library) { color: var(--theme-text); }
-
-.page.app-page[data-theme='aqua'] .home-cta { color: #283341; }
-
 .page.board-status { min-height: 100dvh; }
-.page.board-status[data-theme='aqua'] > p { color: #f5f8ff; text-shadow: 0 1px 3px #07132a; }
 
 html[data-chrome-blur-off] .bottom-actions {
   backdrop-filter: none !important; -webkit-backdrop-filter: none !important;

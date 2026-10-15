@@ -9,6 +9,7 @@ import { SiteNavigationComponent } from '../../components/site-navigation/site-n
 import { Router } from '@angular/router';
 import { AuthService } from '../../services/auth.service';
 import type { AuthUser } from '../../models/auth';
+import type { BoardThemeId } from '../../themes/board-theme';
 
 describe('Home and shared navigation', () => {
   let user: BehaviorSubject<AuthUser | null>;
@@ -68,7 +69,7 @@ describe('Home and shared navigation', () => {
     expect(fixture.nativeElement.querySelector('a[href="/settings"]')).toBeNull();
     expect(fixture.nativeElement.querySelector(fixture.componentInstance.showPreview ? 'app-home-feed-preview' : '.feed-empty')).not.toBeNull();
     expect(fixture.nativeElement.textContent).not.toContain('Sample activity');
-    expect(fixture.nativeElement.querySelector('.app-page').dataset.theme).toBe('default');
+    expect(fixture.nativeElement.querySelector('.app-page').dataset.theme).toBe('berry');
   });
   it('persists only the viewer’s Home appearance and resets it when signing out', () => {
     const service = TestBed.inject(BoardService);
@@ -89,6 +90,14 @@ describe('Home and shared navigation', () => {
     user.next(null); fixture.detectChanges();
     expect(fixture.componentInstance.appearance()).toEqual(DEFAULT_HOME_APPEARANCE);
     expect(fixture.nativeElement.querySelector('.home-settings')).toBeNull();
+  });
+  it('reads a legacy Home theme id as its current id', () => {
+    vi.mocked(TestBed.inject(BoardService).getHomeAppearance)
+      .mockReturnValue(of({ ...DEFAULT_HOME_APPEARANCE, themeFamily: 'omahakase' as BoardThemeId }));
+    const fixture = TestBed.createComponent(HomePageComponent); fixture.detectChanges();
+    user.next({ id: 'owner', username: 'owner' } as AuthUser); fixture.detectChanges();
+    expect(fixture.componentInstance.appearance().themeFamily).toBe('omakase');
+    expect(fixture.nativeElement.querySelector('.app-page').dataset.theme).toBe('omakase');
   });
   it('previews slider changes live without saving until release and restores the saved value on failure', () => {
     const save = vi.spyOn(TestBed.inject(BoardService), 'updateHomeAppearance').mockReturnValue(throwError(() => new Error('Unavailable')));

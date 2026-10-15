@@ -2,9 +2,11 @@
 
 ## Site-wide theme
 
-Signed-out visitors always use **Berry**. Signed-in users use their selected main board’s theme family, light/dark mode, and background across Sign In, Settings, Insights, profiles, boards, bottom navigation, and utility panels. With no selected main board, the fallback is Berry. Viewing someone else’s board does not switch the viewer’s theme.
+**Every board shows its own look.** A board page (`/<username>` or `/<username>/<slug>`) displays that board’s saved theme family, light/dark mode, background, pattern, radius, and spacing, for its owner and for every visitor. Board Settings changes preview on the page instantly.
 
-Saved changes to the selected main board update the site theme. Changing another board’s appearance does not replace it. Widget radius, spacing, and atmosphere patterns remain per-board settings. Home is an exception: it uses its own saved theme family, light/dark mode, background, pattern/intensity, radius, and spacing. Home and boards share the same appearance controls and atmosphere renderer; leaving Home restores the normal main-board theme.
+**Home sets the app theme.** Home uses the signed-in user’s saved Home appearance, and the other app pages (Settings, Insights, Sign In, and a profile without a public board) use that same saved Home appearance. Signed-out visitors see Berry on app pages.
+
+`SiteThemeService` decides which look is active: a page holds its own look while open (a board’s appearance, or Home’s live preview) and releases it on leave; only the page that set the look can release it. Home and boards share the same appearance controls and atmosphere renderer.
 
 `SiteThemeService` resolves the session and main-board preference; `SiteNavigationComponent` contains the common bottom bar, Account, Search, and About panels. Dedicated application pages use `AppPageShellComponent`; board pages project their board settings into the same navigation.
 
@@ -12,7 +14,12 @@ Saved changes to the selected main board update the site theme. Changing another
 
 Open the board-name button in the bottom toolbar. Theme, background color, pattern/intensity, light mode, widget radius, and widget spacing save automatically. Board name and URL save on blur or Enter. Reset to default also saves automatically; there are no settings Save/Cancel buttons. Failed saves keep the draft and offer Retry saving; successful-save feedback disappears automatically.
 
-Six themes: **Berry**, **Aero**, **Aqua**, **Omakase**, **Kiwi**, and **Mustache**. Mustache uses 2012 Instagram-inspired blue enamel chrome, silver photo panels, and charcoal camera controls. The Light switch controls light/dark mode independently. Nine background colors blend into the wallpaper, with darker tinting in dark mode. Patterns are None, Stars, Snow, Meteor, Rainfall, Sakura, and Wave. Lava and Bokeh are non-saving placeholders with hover labels. Clicking a selected animated pattern cycles its light/medium/heavy intensity. Visitors see saved appearance; writes remain owner/admin only.
+Six themes: **Berry**, **Aero**, **Aqua**, **Omakase**, **Kiwi**, and **Valencia**. Theme ids match the lowercase names (`berry`, `aero`, `aqua`, `omakase`, `kiwi`, `valencia`), as do their stylesheets in `frontend/src/themes/<id>.css`. Valencia, named after the classic 2012 Instagram filter, uses 2012 Instagram-inspired blue enamel chrome, silver photo panels, and charcoal camera controls. The Light switch controls light/dark mode independently. Nine background colors blend into the wallpaper, with darker tinting in dark mode. Patterns are None, Stars, Snow, Meteor, Rainfall, Sakura, Wave, Lava, and Bokeh. Clicking a selected animated pattern cycles its light/medium/heavy intensity; a ring around the selected pattern fills a third, two thirds, or all the way to show the level.
+
+- **Stars** draws on one canvas (`star-atmosphere`). Light boards get shimmering pearl stars; dark boards get a night sky with a Milky Way, soft bright stars, and shooting stars. Some stars, and the Milky Way, take the current theme's signature colors. It follows the theme and light/dark mode the page is showing.
+- **Lava** is a WebGL shader (`lava-atmosphere`). Light uses Berry's dock colors with a pearl glow, Medium the classic RGB look, and Heavy shades of the board color; blob size and warp drift slowly.
+
+Values for both were tuned in the Pattern Lab prototype and live in `star-sky.ts` and `lava-looks.ts`. Visitors see saved appearance; writes remain owner/admin only.
 
 The theme picker uses five previews in one row. Theme, color, and pattern labels reflect the hovered choice, then return to the selection. Reset to default is part of the shared appearance controls. Board switcher and red Delete board remain board-only tools. The switcher selects boards and sets the main board inside Board Settings. Switcher and delete-confirmation views keep the panel height and bottom action row, with their content centered.
 
@@ -70,7 +77,7 @@ Routes use `loadComponent` so page code is fetched on demand. Board aliases reta
 
 All browser icons live in `frontend/public/favicons/`. PNGs render the Apple Color Emoji 🍱 glyph directly; ICO contains 16px and 32px variants. The HTML uses absolute, versioned icon URLs so nested routes and stale icon caches do not point to the old artwork. Touch and manifest icons use the same bento artwork.
 
-Mustache persistence is enabled for boards and Home by V35, keeping the internal `lofi` ID for saved-appearance compatibility. Its sixth preview remains on the same row; the preview grid follows the theme count. Its visual reference is the [2012 Instagram interface](https://es.wired.com/galerias/si-crees-que-recuerdas-el-instagram-de-hace-15-anos-mira-dos-veces).
+Valencia (originally released as Mustache) is enabled for boards and Home. V42 renamed the original theme ids (`default` → `berry`, `frutiger-aero` → `aero`, `omahakase` → `omakase`, `lofi` → `valencia`) in saved boards and Home appearances. The API (`AppearanceRules.normalizeThemeFamily`) and the frontend (`normalizeThemeId`) still accept the old ids and convert them, so stale tabs and cached data keep working. Its sixth preview remains on the same row; the preview grid follows the theme count. Its visual reference is the [2012 Instagram interface](https://es.wired.com/galerias/si-crees-que-recuerdas-el-instagram-de-hace-15-anos-mira-dos-veces).
 
 ## Corner, Gap, and active navigation icons
 

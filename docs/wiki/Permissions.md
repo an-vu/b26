@@ -32,7 +32,7 @@ Controllers declare an `@ApiAccess` policy. `ApiAuthorizationInterceptor` checks
 
 ## Frontend behavior
 
-Editing controls depend on the server's `canEdit` result. Account or board changes clear old permission state while fresh requests resolve; errors leave editing disabled. The public `/{username}` profile remains a read-only presentation even for its owner; use `/{username}/{slug}` to edit.
+Editing controls depend on the server's `canEdit` result. Account or board changes clear old permission state while fresh requests resolve; errors leave editing disabled. The owner (or an admin) can edit widgets and board settings on both `/{username}` and `/{username}/{slug}`; visitors see the same pages read-only.
 
 Board libraries, insights, and account stores clear data and cancel obsolete loads when the account changes or signs out. Profile forms discard queued autosaves and pending responses from the previous account. Bearer tokens are attached only to recognized same-origin API routes. These UI rules support the server checks; they do not replace them.
 

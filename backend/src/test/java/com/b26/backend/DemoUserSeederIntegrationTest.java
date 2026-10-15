@@ -11,16 +11,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@SpringBootTest(properties = {
-    "app.demo-users.enabled=true",
-    "spring.datasource.url=jdbc:h2:mem:b26-demo-test;DB_CLOSE_DELAY=-1"
-})
+@SpringBootTest(properties = "app.demo-users.enabled=true")
 @DirtiesContext
 class DemoUserSeederIntegrationTest extends ApiIntegrationTestSupport {
   @Autowired DemoUserSeeder seeder;
 
   @Test
   void demoUsersHaveMainBoardsAndRestartPreservesEdits() throws Exception {
+    seeder.seed(); // The startup run was cleared with the per-class database reset.
     for (String username : List.of("blueberry", "news", "feature", "daily", "emma", "victoria", "nori")) {
       var user = appUserRepository.findByUsername(username).orElseThrow();
       assertEquals("USER", user.getRole());

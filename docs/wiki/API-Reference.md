@@ -45,8 +45,6 @@ Signup accepts `email`, `password`, and optional `displayName` / `username`. The
 | GET | `/api/board/{slug}/editor` | Owner/admin; board + widgets snapshot |
 | PUT | `/api/board/{slug}/editor` | Owner/admin; atomic editor save with required version |
 | PATCH | `/api/board/{slug}/identity` | Owner/admin; board name and URL slug |
-| PATCH | `/api/board/{slug}/meta` | Owner/admin; display name and headline |
-| PATCH | `/api/board/{slug}/url` | Owner/admin; URL slug |
 | PATCH | `/api/board/{slug}/visibility` | Owner/admin; public/private, subject to main-board safeguards |
 | PUT | `/api/board/{slug}` | Retired; 410 Gone |
 | DELETE | `/api/board/{slug}` | Owner/admin; delete; reject last or main boards; success returns 204 |
@@ -81,12 +79,8 @@ Username and slug behavior, including reserved names and rename limitations, is 
 | Method | Path | Access / purpose |
 |---|---|---|
 | GET | `/api/board/{slug}/widgets` | Public board, or owner/admin for private board |
-| POST | `/api/board/{slug}/widgets` | Owner/admin; create widget |
-| PUT | `/api/board/{slug}/widgets/{widgetId}` | Owner/admin; update widget |
-| DELETE | `/api/board/{slug}/widgets/{widgetId}` | Owner/admin; delete widget |
-| PUT | `/api/board/{slug}/widgets/sync` | Owner/admin; synchronize the complete widget list |
 
-The frontend's board editor uses the atomic editor endpoint to save metadata and widgets together. Individual widget endpoints remain available.
+Widgets are created, changed, reordered, and deleted only through the atomic editor save (`PUT /api/board/{slug}/editor`). Widget validation failures return 400 with `{"message": "Validation failed", "errors": [{"message": ...}]}`.
 
 ## Retired contracts
 
@@ -99,13 +93,12 @@ These endpoints use **stable board IDs**, not URL slugs. Reading insights requir
 | Method | Path | Purpose |
 |---|---|---|
 | POST | `/api/insights/widgets/{widgetId}/click` | Record a click on an enabled link widget belonging to the supplied `boardId` |
-| GET | `/api/insights/{boardId}` | Read `{boardId, totalClicks, byTarget}` |
 | POST | `/api/insights/view` | Record a view; body includes `boardId` and optional `source` |
 | GET | `/api/insights/{boardId}/summary` | Read view/click summary |
 
 Click bodies are `{"boardId":"stable-id"}`. Aggregates use `{targetId, clickCount}`; targets are `widget:42` or historical `card:github`. Historical events remain in totals. Board-view link buttons send events; feed, picker, and editor previews do not. Tracking failures do not block navigation.
 
-Click suppression is atomic within one backend instance: one event per IP/board/target within two seconds, with expired entries removed on requests and at most 10,000 active entries. A full window rejects new keys with 429 rather than evicting protected keys. Multiple backend instances would require shared enforcement.
+Client IPs come from `X-Forwarded-For` (`server.forward-headers-strategy=framework`), since requests arrive through the Vercel and Render proxies. Click suppression is atomic within one backend instance: one event per IP/board/target within two seconds, with expired entries removed on requests and at most 10,000 active entries. A full window rejects new keys with 429 rather than evicting protected keys. Multiple backend instances would require shared enforcement.
 
 ## Errors and source of truth
 

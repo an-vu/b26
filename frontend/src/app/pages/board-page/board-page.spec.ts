@@ -3,31 +3,29 @@ import { AppearanceSettingsComponent } from '../../components/appearance-setting
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, convertToParamMap } from '@angular/router';
 import { vi } from 'vitest';
-import { defer, of, Subject, throwError } from 'rxjs';
+import { EMPTY, defer, of, Subject, throwError } from 'rxjs';
 
 import { BoardPageComponent } from './board-page';
 import { BoardService } from '../../services/board.service';
+import { UserStoreService } from '../../services/user-store.service';
+import type { BoardEditorStore } from './board-editor.store';
 import type { Widget } from '../../models/widget';
 
 describe('BoardPageComponent', () => {
   let component: BoardPageComponent;
   let fixture: ComponentFixture<BoardPageComponent>;
+  let store: BoardEditorStore;
   let boardServiceStub: {
     getMyBoards: BoardService['getMyBoards'];
     getBoard: BoardService['getBoard'];
     getMyProfile: BoardService['getMyProfile'];
     getMyPreferences: BoardService['getMyPreferences'];
-    updateBoardMeta: BoardService['updateBoardMeta'];
-    updateBoardUrl: BoardService['updateBoardUrl'];
+    getHomeAppearance: BoardService['getHomeAppearance'];
     updateBoardIdentity: BoardService['updateBoardIdentity'];
     getBoardPermissions: BoardService['getBoardPermissions'];
     getWidgets: BoardService['getWidgets'];
-    createWidget: BoardService['createWidget'];
-    updateWidget: BoardService['updateWidget'];
-    deleteWidget: BoardService['deleteWidget'];
     deleteBoard: BoardService['deleteBoard'];
   };
-  let updateWidgetCalls: Array<{ widgetId: number; order: number }> = [];
 
   const routeStub = {
     paramMap: of(convertToParamMap({ boardId: 'default' })),
@@ -39,7 +37,6 @@ describe('BoardPageComponent', () => {
   };
 
   beforeEach(async () => {
-    updateWidgetCalls = [];
     boardServiceStub = {
       getMyBoards: () =>
         of([
@@ -60,28 +57,13 @@ describe('BoardPageComponent', () => {
           username: 'anvu',
           email: 'anvu@local',
         }),
+      getHomeAppearance: () => EMPTY,
       getMyPreferences: () =>
         of({
           userId: 'anvu',
           username: 'anvu',
           mainBoardId: 'default',
           mainBoardUrl: 'default',
-        }),
-      updateBoardMeta: () =>
-        of({
-          id: 'default',
-          boardName: 'Default',
-          boardUrl: 'default',
-          name: 'An Vu',
-          headline: 'Software Engineer',
-        }),
-      updateBoardUrl: () =>
-        of({
-          id: 'default',
-          boardName: 'Default',
-          boardUrl: 'default',
-          name: 'An Vu',
-          headline: 'Software Engineer',
         }),
       updateBoardIdentity: () =>
         of({
@@ -93,29 +75,6 @@ describe('BoardPageComponent', () => {
         }),
       getBoardPermissions: () => of({ canEdit: true }),
       getWidgets: () => of([]),
-      createWidget: () =>
-        of({
-          id: 1,
-          type: 'embed',
-          title: 'Now Playing',
-          layout: 'span-1',
-          config: { embedUrl: 'https://example.com/embed' },
-          enabled: true,
-          order: 0,
-        }),
-      updateWidget: (_boardId: string, widgetId: number, payload) => {
-        updateWidgetCalls.push({ widgetId, order: payload.order });
-        return of({
-          id: widgetId,
-          type: payload.type,
-          title: payload.title,
-          layout: payload.layout,
-          config: payload.config,
-          enabled: payload.enabled,
-          order: payload.order,
-        } as Widget);
-      },
-      deleteWidget: () => of(undefined),
       deleteBoard: () => of(undefined),
     };
 
@@ -128,13 +87,18 @@ describe('BoardPageComponent', () => {
     }).compileComponents();
   });
 
-  it('opens the sidebar widget library only in Edit and adds a selected widget to the draft', () => {
+  function create() {
     fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance; fixture.detectChanges();
+    component = fixture.componentInstance;
+    store = component.store;
+    fixture.detectChanges();
+  }
+
+  it('opens the sidebar widget library only in Edit and adds a selected widget to the draft', () => {
+    create();
     expect(fixture.nativeElement.querySelector('app-widget-library')).toBeNull();
-    component.canEditBoard = true;
-    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Hello', version: 1 }, []);
-    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    store.startEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Hello', version: 1 }, []);
+    fixture.detectChanges();
     const rail = fixture.nativeElement.querySelector('.board-rail');
     expect(rail.classList.contains('is-editing')).toBe(true);
     expect(rail.querySelector('.profile-handle')).toBeNull();
@@ -152,64 +116,62 @@ describe('BoardPageComponent', () => {
     for (const label of ['Social', 'Embed', 'Map']) {
       rail.querySelector(`button[aria-label="Add ${label} widget"]`).click(); fixture.detectChanges();
     }
-    expect(component.widgetDrafts.map(draft => draft.type)).toEqual(['link', 'embed', 'map']);
-    expect(component.widgetDrafts.map(draft => draft.order)).toEqual([0, 1, 2]);
-    expect(component.widgetDrafts.every(draft => draft.layout === 'span-1')).toBe(true);
+    expect(store.drafts().map(draft => draft.type)).toEqual(['link', 'embed', 'map']);
+    expect(store.drafts().map(draft => draft.order)).toEqual([0, 1, 2]);
+    expect(store.drafts().every(draft => draft.layout === 'span-1')).toBe(true);
     expect(rail.querySelector('.widget-library-form')).toBeNull();
     expect(fixture.nativeElement.querySelectorAll('.widget-edit-tile')).toHaveLength(3);
     fixture.nativeElement.querySelector('.widget-edit-tile').click(); fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('.widget-editor-back input')?.getAttribute('placeholder')).toBe('Social media link');
-    expect(component.isWidgetSettingsOpen(component.widgetDrafts[0])).toBe(true);
+    expect(store.selectedDraft()).toBe(store.drafts()[0]);
     // The enlarged back preserves the front's proportions, including rectangular sources.
     component.editorMotion.size = 440;
     component.editorMotion.sourceSize = { width: 220, height: 110 };
-    fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
-    expect(component.editorMotion.radius).toBe(`${component.boardRadiusDraft * 2}px / ${component.boardRadiusDraft * 4}px`);
+    component['cdr'].markForCheck(); fixture.detectChanges();
+    expect(component.editorMotion.radius).toBe(`${component.boardRadius * 2}px / ${component.boardRadius * 4}px`);
     expect(component.editorMotion.panelInset).toBe(`${component.widgetEditorInset * 4}px ${component.widgetEditorInset * 2}px`);
     expect(fixture.nativeElement.querySelector('.widget-editor-back').style.getPropertyValue('--panel-padding')).toBe(component.editorMotion.panelInset);
     expect(fixture.nativeElement.querySelector('.widget-editor-back').style.borderRadius).toBe(component.editorMotion.radius);
 
-    expect(component.isWidgetSettingsOpen(component.widgetDrafts[1])).toBe(false);
     const grid = fixture.nativeElement.querySelector('.board-grid');
     expect(grid.classList.contains('is-editing-widget')).toBe(true);
     expect(fixture.nativeElement.querySelectorAll('.widget-editor-backdrop')).toHaveLength(1);
     expect(grid.querySelector('.widget-editor-backdrop')).toBeNull();
     expect(grid.hasAttribute('inert')).toBe(true);
     expect(rail.hasAttribute('inert')).toBe(false);
-    component.widgetDrafts[0].title = 'Edited draft';
+    const input = fixture.nativeElement.querySelector('.widget-editor-back input') as HTMLInputElement;
+    input.value = 'example.com/me'; input.dispatchEvent(new Event('input'));
+    expect(store.drafts()[0].linkUrl).toBe('example.com/me');
+    store.updateDraft(store.drafts()[0], { title: 'Edited draft' });
     fixture.nativeElement.querySelector('.widget-editor-done').click(); fixture.detectChanges();
-    expect(component.selectedWidgetDraft).toBeUndefined();
-    expect(component.isWidgetEditMode).toBe(true);
-    expect(component.widgetDrafts[0].title).toBe('Edited draft');
+    expect(store.selectedDraft()).toBeUndefined();
+    expect(store.editing()).toBe(true);
+    expect(store.drafts()[0].title).toBe('Edited draft');
     expect(grid.hasAttribute('inert')).toBe(false);
     fixture.nativeElement.querySelector('.widget-edit-tile').click(); fixture.detectChanges();
-    component.widgetDrafts[0].title = 'Discard this change';
+    store.updateDraft(store.drafts()[0], { title: 'Discard this change' });
     document.body.dispatchEvent(new Event('pointerdown', { bubbles: true }));
     fixture.detectChanges();
-    expect(component.selectedWidgetDraft).toBeUndefined();
-    expect(component.widgetDrafts[0].title).toBe('Edited draft');
+    expect(store.selectedDraft()).toBeUndefined();
+    expect(store.drafts()[0].title).toBe('Edited draft');
 
-
-    component.isWidgetSaving = true; fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    store.widgetsSaving.set(true); fixture.detectChanges();
     rail.querySelector('button[aria-label="Add Social widget"]').click();
-    expect(component.widgetDrafts).toHaveLength(3);
-    component.isWidgetSaving = false;
-    component.cancelWidgetEdit(); fixture.changeDetectorRef.markForCheck(); fixture.detectChanges();
+    expect(store.drafts()).toHaveLength(3);
+    store.cancelEdit(); fixture.detectChanges();
     expect(fixture.nativeElement.querySelector('app-widget-library')).toBeNull();
   });
 
   it('requires confirmation and keeps the board when deletion is cancelled', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    create();
     const remove = vi.spyOn(boardServiceStub, 'deleteBoard');
     const confirm = vi.spyOn(window, 'confirm');
-    component.onAccountBoardDelete('default', new MouseEvent('click'));
-    expect(component.pendingDeleteBoardUrl).toBe('default');
+    store.requestBoardDelete('default');
+    expect(store.pendingDelete()?.boardUrl).toBe('default');
     expect(confirm).not.toHaveBeenCalled();
-    component.cancelBoardDelete();
-    component.confirmBoardDelete();
-    expect(component.pendingDeleteBoardUrl).toBeNull();
+    store.cancelBoardDelete();
+    store.confirmBoardDelete();
+    expect(store.pendingDelete()).toBeNull();
     expect(remove).not.toHaveBeenCalled();
     confirm.mockRestore();
   });
@@ -218,32 +180,28 @@ describe('BoardPageComponent', () => {
     const result = new Subject<void>();
     const remove = vi.spyOn(boardServiceStub, 'deleteBoard').mockReturnValue(result);
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(true);
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.isBoardIdentityMenuOpen = true;
-    component.settings.name = 'Unsaved name';
-    component.onAccountBoardDelete('default', new MouseEvent('click'));
+    create();
+    store.settingsOpen.set(true);
+    component.settings.name.set('Unsaved name');
+    store.requestBoardDelete('default');
     expect(remove).not.toHaveBeenCalled();
-    component.confirmBoardDelete();
-    component.confirmBoardDelete();
+    store.confirmBoardDelete();
+    store.confirmBoardDelete();
     expect(remove).toHaveBeenCalledTimes(1);
     expect(confirm).not.toHaveBeenCalled();
     expect(component.canLeaveBoard()).toBe(false);
     result.error({ error: { errors: [{ message: 'Choose another main board first.' }] } });
     await fixture.whenStable();
-    expect(component.isDeletingBoard).toBe(false);
-    expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.settings.name).toBe('Unsaved name');
-    expect(component.pendingDeleteBoardUrl).toBe('default');
+    expect(store.deletingBoard()).toBe(false);
+    expect(store.settingsOpen()).toBe(true);
+    expect(component.settings.name()).toBe('Unsaved name');
+    expect(store.pendingDelete()?.boardUrl).toBe('default');
     expect(fixture.nativeElement.textContent).toContain('Choose another main board first.');
     confirm.mockRestore();
   });
 
   it('should create', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    create();
     expect(component).toBeTruthy();
   });
 
@@ -259,8 +217,7 @@ describe('BoardPageComponent', () => {
         })
       );
 
-    fixture = TestBed.createComponent(BoardPageComponent);
-    fixture.detectChanges();
+    create();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Loading...');
   });
@@ -268,139 +225,67 @@ describe('BoardPageComponent', () => {
   it('should render missing state when board request fails', () => {
     boardServiceStub.getBoard = () => throwError(() => ({ status: 404 }));
 
-    fixture = TestBed.createComponent(BoardPageComponent);
-    fixture.detectChanges();
+    create();
     const compiled = fixture.nativeElement as HTMLElement;
     expect(compiled.textContent).toContain('Board not found.');
   });
 
+  const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: 'Software Engineer' };
+  const embed = (id: number, title: string, order: number): Widget =>
+    ({ id, type: 'embed', title, layout: 'span-1', config: { embedUrl: `https://example.com/${id}` }, enabled: true, order });
+
   it('should normalize local order when moving widgets down', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    const widgets: Widget[] = [
-      {
-        id: 1,
-        type: 'embed',
-        title: 'One',
-        layout: 'span-1',
-        config: { embedUrl: 'https://example.com/1' },
-        enabled: true,
-        order: 0,
-      },
-      {
-        id: 2,
-        type: 'embed',
-        title: 'Two',
-        layout: 'span-1',
-        config: { embedUrl: 'https://example.com/2' },
-        enabled: true,
-        order: 1,
-      },
-    ];
-
-    component.startWidgetEdit(
-      {
-        id: 'default',
-        boardName: 'Default',
-        boardUrl: 'default',
-        name: 'An Vu',
-        headline: 'Software Engineer',
-      },
-      widgets
-    );
-    const firstDraft = component.widgetDrafts[0];
-    component.moveWidget(firstDraft, 1);
-
-    expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([2, 1]);
-    expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 1]);
-    expect(updateWidgetCalls.length).toBe(0);
+    create();
+    store.startEdit(board, [embed(1, 'One', 0), embed(2, 'Two', 1)]);
+    store.moveDraft(store.drafts()[0], 1);
+    expect(store.drafts().map((draft) => draft.id)).toEqual([2, 1]);
+    expect(store.drafts().map((draft) => draft.order)).toEqual([0, 1]);
   });
 
   it('should sort widget drafts by order when entering edit mode', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-
-    const widgets: Widget[] = [
-      {
-        id: 10,
-        type: 'map',
-        title: 'Late',
-        layout: 'span-1',
-        config: { places: ['A'] },
-        enabled: true,
-        order: 5,
-      },
-      {
-        id: 11,
-        type: 'embed',
-        title: 'Early',
-        layout: 'span-1',
-        config: { embedUrl: 'https://example.com' },
-        enabled: true,
-        order: 0,
-      },
-    ];
-
-    component.startWidgetEdit(
-      {
-        id: 'default',
-        boardName: 'Default',
-        boardUrl: 'default',
-        name: 'An Vu',
-        headline: 'Software Engineer',
-      },
-      widgets
-    );
-    expect(component.widgetDrafts.map((draft) => draft.id)).toEqual([11, 10]);
-    expect(component.widgetDrafts.map((draft) => draft.order)).toEqual([0, 5]);
+    create();
+    store.startEdit(board, [{ ...embed(10, 'Late', 5), type: 'map', config: { places: ['A'] } }, embed(11, 'Early', 0)]);
+    expect(store.drafts().map((draft) => draft.id)).toEqual([11, 10]);
+    expect(store.drafts().map((draft) => draft.order)).toEqual([0, 5]);
   });
+
   it('persists the main board and refreshes the account menu only on success', () => {
     const update = vi.fn(() => of({ userId: 'anvu', username: 'anvu', mainBoardId: 'second', mainBoardUrl: 'second' }));
     Object.assign(boardServiceStub, { updateMyPreferences: update });
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.onAccountBoardSetMain('second', new MouseEvent('click'));
+    create();
+    store.setMainBoard('second');
     expect(update).toHaveBeenCalledWith({ mainBoardId: 'second' });
-    expect(component.accountMainBoardId).toBe('second');
-    expect(component.isSettingMainBoard).toBe(false);
+    expect(store.mainBoardId()).toBe('second');
+    expect(store.settingMainBoard()).toBe(false);
   });
 
   it('keeps the selected main board on failure and shows the error', () => {
     Object.assign(boardServiceStub, { updateMyPreferences: () => throwError(() => ({ error: { message: 'Unable to save preference' } })) });
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.onAccountBoardSetMain('second', new MouseEvent('click'));
-    expect(component.accountMainBoardId).toBe('default');
-    expect(component.accountActionError).toBe('Unable to save preference');
+    create();
+    TestBed.inject(UserStoreService).setMainBoardId('default');
+    store.setMainBoard('second');
+    expect(store.mainBoardId()).toBe('default');
+    expect(store.accountActionError()).toBe('Unable to save preference');
   });
 
   it('keeps identity drafts visible after a failed save', () => {
     boardServiceStub.updateBoardIdentity = () => throwError(() => ({ error: { message: 'URL already in use' } }));
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.settings.slug = 'taken-url';
-    component.saveIdentity();
-    expect(component.settings.slug).toBe('taken-url');
-    expect(component.identitySaveError).toBe('URL already in use');
-    expect(component.hasUnsavedChanges).toBe(true);
+    create();
+    component.settings.slug.set('taken-url');
+    component.saveSettings();
+    expect(component.settings.slug()).toBe('taken-url');
+    expect(store.identityError()).toBe('URL already in use');
+    expect(store.hasUnsavedChanges()).toBe(true);
   });
 
   it('detects changed drafts but leaves an untouched editor clean', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: 'Description', version: 1 }, []);
-    expect(component.hasUnsavedChanges).toBe(false);
-    component.boardDraftName = 'Changed';
-    expect(component.hasUnsavedChanges).toBe(true);
-    component.cancelWidgetEdit();
-    expect(component.hasUnsavedChanges).toBe(false);
+    create();
+    store.startEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: 'Description', version: 1 }, []);
+    expect(store.hasUnsavedChanges()).toBe(false);
+    store.boardName.set('Changed');
+    expect(store.hasUnsavedChanges()).toBe(true);
+    store.cancelEdit();
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
   it('loads a coherent editor snapshot instead of editing the displayed stale board', () => {
@@ -410,13 +295,11 @@ describe('BoardPageComponent', () => {
         widgets: [],
       }),
     });
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.requestWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Stale title', headline: 'Stale description' });
-    expect(component.boardDraftName).toBe('Latest title');
-    expect(component.isWidgetEditMode).toBe(true);
-    expect(component.hasUnsavedChanges).toBe(false);
+    create();
+    store.requestEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Stale title', headline: 'Stale description' });
+    expect(store.boardName()).toBe('Latest title');
+    expect(store.editing()).toBe(true);
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
   it('saves appearance-only changes with the board revision and clears the dirty state', () => {
@@ -424,186 +307,161 @@ describe('BoardPageComponent', () => {
     boardServiceStub.getBoard = () => of(board);
     const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 9 }));
     boardServiceStub.updateBoardIdentity = save;
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.settings.dark = true;
-    component.settings.pattern = 'grid';
-    component.settings.radius = 3;
-    expect(component.hasUnsavedChanges).toBe(true);
-    component.saveIdentity();
+    create();
+    component.settings.patchAppearance({ theme: 'dark', pattern: 'grid', radiusStep: 3 });
+    expect(store.hasUnsavedChanges()).toBe(true);
+    component.saveSettings();
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
-      version: 8, appearance: { spacingStep: 2, themeFamily: 'default', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid', patternIntensity: 'light' },
+      version: 8, appearance: { spacingStep: 2, themeFamily: 'berry', theme: 'dark', radiusStep: 3, backgroundColor: '#f9f8f6', pattern: 'grid', patternIntensity: 'light' },
     }));
-    expect(component.hasUnsavedChanges).toBe(false);
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
-  it.each(['frutiger-aero', 'aqua', 'omahakase', 'kiwi'] as const)('automatically saves the selected %s family', (family) => {
+  it.each(['aero', 'aqua', 'omakase', 'kiwi'] as const)('automatically saves the selected %s family', (family) => {
     const board = { id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 4 };
     boardServiceStub.getBoard = () => of(board);
     const save = vi.fn((_slug, request) => of({ ...board, ...request, version: 5 }));
     boardServiceStub.updateBoardIdentity = save;
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
+    create();
+    component.changeAppearance({ ...component.settings.appearance(), themeFamily: family });
     fixture.detectChanges();
-    component.onAppearanceChange({ ...component.settings.appearance, themeFamily: family });
-    fixture.detectChanges();
-    expect(component.settings.theme.id).toBe(family);
-    expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe('default');
-    expect(component.hasUnsavedChanges).toBe(false);
+    expect(component.settings.theme().id).toBe(family);
+    // The board shows its own theme family right away.
+    expect(fixture.nativeElement.querySelector('main').dataset.theme).toBe(family);
     expect(save).toHaveBeenCalledTimes(1);
     expect(save).toHaveBeenCalledWith('default', expect.objectContaining({
       appearance: expect.objectContaining({ themeFamily: family }), version: 4,
     }));
-    expect(component.hasUnsavedChanges).toBe(false);
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
   it('saves pattern intensity emitted by the shared appearance controls', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    create();
     component.toggleBoardIdentityMenu();
     fixture.detectChanges();
     const controls = fixture.debugElement.query(By.directive(AppearanceSettingsComponent)).componentInstance as AppearanceSettingsComponent;
+    const intensity = () => component.settings.appearance().patternIntensity;
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.settings.intensity).toBe('light');
+    expect(intensity()).toBe('light');
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.settings.intensity).toBe('medium');
+    expect(intensity()).toBe('medium');
     controls.selectPattern('stars');
     fixture.detectChanges();
-    expect(component.settings.intensity).toBe('heavy');
+    expect(intensity()).toBe('heavy');
     controls.selectPattern('sakura');
     fixture.detectChanges();
-    expect(component.settings.intensity).toBe('light');
+    expect(intensity()).toBe('light');
   });
 
   it('keeps a failed appearance preview and restores saved values on Cancel', () => {
     const appearance = { theme: 'dark' as const, radiusStep: 3 as const, backgroundColor: '#e6f0ff', pattern: 'dots' as const };
     boardServiceStub.getBoard = () => of({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2, appearance });
     boardServiceStub.updateBoardIdentity = () => throwError(() => ({ status: 409, error: { message: 'Board changed in another tab' } }));
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    expect(component.settings.appearance).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
+    create();
+    const saved = { spacingStep: 2, themeFamily: 'berry', ...appearance, pattern: 'stars', patternIntensity: 'light' };
+    expect(component.settings.appearance()).toEqual(saved);
     component.resetAppearance();
-    expect(component.hasUnsavedChanges).toBe(true);
-    component.saveIdentity();
-    expect(component.settings.appearance.theme).toBe('light');
-    expect(component.hasUnsavedChanges).toBe(true);
-    expect(component.identitySaveError).toContain('another tab');
-    component.cancelIdentityEdit();
-    expect(component.settings.appearance).toEqual({ spacingStep: 2, themeFamily: 'default', ...appearance, pattern: 'stars', patternIntensity: 'light' });
-    expect(component.hasUnsavedChanges).toBe(false);
+    expect(store.hasUnsavedChanges()).toBe(true);
+    component.saveSettings();
+    expect(component.settings.appearance().theme).toBe('light');
+    expect(store.hasUnsavedChanges()).toBe(true);
+    expect(store.identityError()).toContain('another tab');
+    store.cancelSettings();
+    expect(component.settings.appearance()).toEqual(saved);
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
   it('keeps appearance drafts when the menu closes and blocks entering the widget editor', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.settings.pattern = 'checkered';
+    create();
+    component.settings.patchAppearance({ pattern: 'checkered' });
     component.closeBoardIdentityMenu();
-    expect(component.hasUnsavedChanges).toBe(true);
-    component.requestWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '' });
-    expect(component.isWidgetEditMode).toBe(false);
-    expect(component.widgetSaveError).toContain('board settings');
+    expect(store.hasUnsavedChanges()).toBe(true);
+    store.requestEdit({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '' });
+    expect(store.editing()).toBe(false);
+    expect(store.widgetError()).toContain('board settings');
     const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
     expect(component.canLeaveBoard()).toBe(false);
     confirm.mockRestore();
   });
 
   it('waits for the latest revision after Cancel before reopening settings', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
+    create();
     const reload = new Subject<import('../../models/board').Board>();
     boardServiceStub.getBoard = () => reload;
-    component.settings.pattern = 'grid';
-    component.cancelIdentityEdit();
-    expect(component.isSettingsReloading).toBe(true);
+    component.settings.patchAppearance({ pattern: 'grid' });
+    store.cancelSettings();
+    expect(store.settingsReloading()).toBe(true);
     component.toggleBoardIdentityMenu();
-    expect(component.isBoardIdentityMenuOpen).toBe(false);
+    expect(store.settingsOpen()).toBe(false);
     reload.next({ id: 'default', boardName: 'Latest name', boardUrl: 'default', name: 'Title', headline: '', version: 9,
       appearance: { theme: 'dark', radiusStep: 3, backgroundColor: '#e6f0ff', pattern: 'dots' } });
-    expect(component.isSettingsReloading).toBe(false);
+    expect(store.settingsReloading()).toBe(false);
     component.toggleBoardIdentityMenu();
-    expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.settings.name).toBe('Latest name');
-    expect(component.settings.appearance.pattern).toBe('stars');
-    expect(component.hasUnsavedChanges).toBe(false);
+    expect(store.settingsOpen()).toBe(true);
+    expect(component.settings.name()).toBe('Latest name');
+    expect(component.settings.appearance().pattern).toBe('stars');
+    expect(store.hasUnsavedChanges()).toBe(false);
   });
 
-  it('moves focus into settings and restores it on Escape without discarding the draft', () => {
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.canEditBoard = true;
-    fixture.detectChanges();
+  it('moves focus into settings and restores it on Escape without discarding the draft', async () => {
+    create();
     component.toggleBoardIdentityMenu();
+    await fixture.whenStable();
     expect(document.activeElement?.getAttribute('name')).toBe('board-identity-name');
-    component.settings.pattern = 'grid';
+    component.settings.patchAppearance({ pattern: 'grid' });
     document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
     fixture.detectChanges();
     expect(document.activeElement?.classList.contains('board-identity-button')).toBe(true);
-    expect(component.settingsFeedback).toBe('Unsaved board settings');
-    expect(component.settings.pattern).toBe('grid');
+    expect(store.settingsFeedback()).toBe('Unsaved board settings');
+    expect(component.settings.appearance().pattern).toBe('grid');
   });
 
   it('announces pending, saved, and failed settings without clearing failed drafts', () => {
     const saved = new Subject<import('../../models/board').Board>();
     boardServiceStub.updateBoardIdentity = () => saved;
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.settings.pattern = 'grid';
-    component.saveIdentity();
-    expect(component.settingsFeedback).toBe('Saving board settings…');
+    create();
+    component.settings.patchAppearance({ pattern: 'grid' });
+    component.saveSettings();
+    expect(store.settingsFeedback()).toBe('Saving board settings…');
     saved.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'Title', headline: '', version: 2,
-      appearance: component.settings.appearance });
+      appearance: component.settings.appearance() });
     saved.complete();
-    expect(component.settingsFeedback).toBe('Board settings saved');
+    expect(store.settingsFeedback()).toBe('Board settings saved');
     boardServiceStub.updateBoardIdentity = () => throwError(() => ({ error: { message: 'Connection failed' } }));
-    component.settings.pattern = 'dots';
-    component.saveIdentity();
-    expect(component.settingsFeedback).toContain('not saved');
-    expect(component.settings.pattern).toBe('dots');
+    component.settings.patchAppearance({ pattern: 'dots' });
+    component.saveSettings();
+    expect(store.settingsFeedback()).toContain('not saved');
+    expect(component.settings.appearance().pattern).toBe('dots');
   });
-
-
 
   it('autosaves settings without closing the panel and reuses the returned version', () => {
     const pending = new Subject<import('../../models/board').Board>();
     const update = vi.fn((_url: string, _request: import('../../models/board').UpdateBoardIdentityRequest) => pending);
     boardServiceStub.updateBoardIdentity = update;
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.canEditBoard = true;
-    component.isBoardIdentityMenuOpen = true;
-    component.onAppearanceChange({ ...component.settings.appearance, pattern: 'snow', patternIntensity: 'light' });
+    create();
+    store.settingsOpen.set(true);
+    component.changeAppearance({ ...component.settings.appearance(), pattern: 'snow', patternIntensity: 'light' });
     expect(update).toHaveBeenCalledTimes(1);
-    component.saveSettingsAutomatically();
+    component.saveSettings();
     expect(update).toHaveBeenCalledTimes(1);
-    pending.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: '', version: 7, appearance: component.settings.appearance });
+    pending.next({ id: 'default', boardName: 'Default', boardUrl: 'default', name: 'An Vu', headline: '', version: 7, appearance: component.settings.appearance() });
     pending.complete();
-    expect(component.isBoardIdentityMenuOpen).toBe(true);
-    expect(component.settings.changed).toBe(false);
-    component.settings.background = '#a64ce6';
-    component.saveSettingsAutomatically();
+    expect(store.settingsOpen()).toBe(true);
+    expect(component.settings.changed()).toBe(false);
+    component.settings.patchAppearance({ backgroundColor: '#a64ce6' });
+    component.saveSettings();
     expect(update.mock.calls[1]?.[1]).toMatchObject({ version: 7, appearance: { backgroundColor: '#a64ce6' } });
   });
 
   it('retains failed automatic settings and lets the user retry', () => {
     boardServiceStub.updateBoardIdentity = () => throwError(() => new Error('offline'));
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.canEditBoard = true;
-    component.onAppearanceChange({ ...component.settings.appearance, pattern: 'rainfall', patternIntensity: 'light' });
-    expect(component.identitySaveError).toBeTruthy();
-    expect(component.settings.pattern).toBe('rainfall');
-    expect(component.settings.changed).toBe(true);
+    create();
+    component.changeAppearance({ ...component.settings.appearance(), pattern: 'rainfall', patternIntensity: 'light' });
+    expect(store.identityError()).toBeTruthy();
+    expect(component.settings.appearance().pattern).toBe('rainfall');
+    expect(component.settings.changed()).toBe(true);
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Retry saving');
   });
@@ -611,14 +469,11 @@ describe('BoardPageComponent', () => {
   it('renders an asynchronous editor failure and enables retry without another user action', async () => {
     const save = new Subject<import('../../models/board').BoardEdit>();
     Object.assign(boardServiceStub, { saveEditor: () => save });
-    fixture = TestBed.createComponent(BoardPageComponent);
-    component = fixture.componentInstance;
-    fixture.detectChanges();
-    component.canEditBoard = true;
-    component.startWidgetEdit({ id: 'default', boardName: 'Default', boardUrl: 'default',
+    create();
+    store.startEdit({ id: 'default', boardName: 'Default', boardUrl: 'default',
       name: 'Original title', headline: 'Description', version: 1 }, []);
-    component.boardDraftName = 'Retained draft';
-    component.doneWidgetEdit();
+    store.boardName.set('Retained draft');
+    store.saveEdit();
     fixture.detectChanges();
     expect(fixture.nativeElement.textContent).toContain('Saving...');
     save.error({ error: { message: 'Temporarily unavailable' } });
@@ -627,8 +482,7 @@ describe('BoardPageComponent', () => {
     const done = Array.from(fixture.nativeElement.querySelectorAll('button'))
       .find(button => (button as HTMLButtonElement).textContent?.trim() === 'Save') as HTMLButtonElement;
     expect(done.disabled).toBe(false);
-    expect(component.boardDraftName).toBe('Retained draft');
-    expect(component.hasUnsavedChanges).toBe(true);
+    expect(store.boardName()).toBe('Retained draft');
+    expect(store.hasUnsavedChanges()).toBe(true);
   });
-
 });

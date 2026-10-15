@@ -1,13 +1,12 @@
 import { bindHomeIntroScroll, type HomeIntroController } from './home-intro-scroll';
 import { animateHomeEntrance } from '../utils/home-entrance.util';
-import { AfterViewInit, Directive, ElementRef, Input, NgZone, OnChanges, OnDestroy, inject } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, OnChanges, OnDestroy, inject, input } from '@angular/core';
 
 /** Paint the hero transition and hand intro gestures off to native feed scrolling. */
 @Directive({ selector: '[appHeroWordmark]', standalone: true })
 export class HeroWordmarkDirective implements AfterViewInit, OnChanges, OnDestroy {
-  @Input() appHeroWordmark = false;
+  readonly appHeroWordmark = input(false);
   private readonly element: HTMLElement = inject(ElementRef).nativeElement;
-  private readonly zone = inject(NgZone);
   private scroller: HTMLElement | null = null;
   private frame = 0;
   private dirty = true;
@@ -23,21 +22,19 @@ export class HeroWordmarkDirective implements AfterViewInit, OnChanges, OnDestro
   private reduceMotion = () => { if (this.motion?.matches) this.cancelEntrances(); this.lastProgress = -1; this.schedule(); };
   ngAfterViewInit() {
     this.scroller = this.element.closest('.app-page');
-    this.zone.runOutsideAngular(() => {
-      if (this.scroller) this.controller = bindHomeIntroScroll(this.scroller, () =>
-        this.appHeroWordmark && !this.dirty ? this.geometry.distance : null, progress => this.paint(progress));
-      this.scroller?.addEventListener('scroll', this.schedule, { passive: true });
-      window.addEventListener('resize', this.invalidate);
-      this.motion?.addEventListener('change', this.reduceMotion);
-      if (typeof ResizeObserver !== 'undefined') {
-        this.resize = new ResizeObserver(this.invalidate);
-        if (this.scroller) this.resize.observe(this.scroller);
-        const content = this.scroller?.querySelector('.app-page-content');
-        if (content) this.resize.observe(content);
-      }
-      document.fonts?.ready.then(() => { if (!this.destroyed) this.invalidate(); });
-      this.schedule();
-    });
+    if (this.scroller) this.controller = bindHomeIntroScroll(this.scroller, () =>
+      this.appHeroWordmark() && !this.dirty ? this.geometry.distance : null, progress => this.paint(progress));
+    this.scroller?.addEventListener('scroll', this.schedule, { passive: true });
+    window.addEventListener('resize', this.invalidate);
+    this.motion?.addEventListener('change', this.reduceMotion);
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resize = new ResizeObserver(this.invalidate);
+      if (this.scroller) this.resize.observe(this.scroller);
+      const content = this.scroller?.querySelector('.app-page-content');
+      if (content) this.resize.observe(content);
+    }
+    document.fonts?.ready.then(() => { if (!this.destroyed) this.invalidate(); });
+    this.schedule();
   }
   ngOnChanges() { this.invalidate(); }
   private invalidate = () => { this.dirty = true; this.lastProgress = -1; this.schedule(); };
@@ -94,7 +91,7 @@ export class HeroWordmarkDirective implements AfterViewInit, OnChanges, OnDestro
     return true;
   }
   private update() {
-    if (!this.appHeroWordmark || !this.scroller) {
+    if (!this.appHeroWordmark() || !this.scroller) {
       this.cancelEntrances(); this.entered = false;
       this.element.style.removeProperty('transform');
       this.element.style.removeProperty('font-size'); return;

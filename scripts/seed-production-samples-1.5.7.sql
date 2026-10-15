@@ -10,7 +10,7 @@ BEGIN
     "displayName": "vHuman",
     "boardName": "Studio notes",
     "headline": "Sample board: quiet objects, spaces, and visual ideas.",
-    "themeFamily": "default",
+    "themeFamily": "berry",
     "theme": "light",
     "pattern": "none",
     "widgets": [
@@ -130,7 +130,7 @@ BEGIN
     "displayName": "Moka",
     "boardName": "Slow mornings",
     "headline": "Sample board: coffee, warm light, and weekend wandering.",
-    "themeFamily": "omahakase",
+    "themeFamily": "omakase",
     "theme": "dark",
     "pattern": "sakura",
     "widgets": [
@@ -190,7 +190,7 @@ BEGIN
     "displayName": "Sol",
     "boardName": "Outside, please",
     "headline": "Sample board: green trails, fresh air, and small escapes.",
-    "themeFamily": "frutiger-aero",
+    "themeFamily": "aero",
     "theme": "light",
     "pattern": "wave",
     "widgets": [

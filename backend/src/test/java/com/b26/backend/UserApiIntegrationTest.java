@@ -12,7 +12,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserApiIntegrationTest extends ApiIntegrationTestSupport {
 
   @org.junit.jupiter.params.ParameterizedTest
-  @org.junit.jupiter.params.provider.ValueSource(strings = {"kiwi", "lofi"})
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"kiwi", "valencia"})
   void homeAppearance_isPersistedForViewerWithoutChangingMainBoard(String family) throws Exception {
     selectDefault();
     mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"), "{\"radiusStep\":5,\"spacingStep\":1,\"themeFamily\":\"%s\",\"theme\":\"dark\",\"backgroundColor\":\"#3185fc\",\"pattern\":\"snow\",\"patternIntensity\":\"heavy\"}".formatted(family)))
@@ -31,7 +31,17 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
             .header(AUTHORIZATION_HEADER, issueAuthTokenForUser("home-other")))
         .andExpect(status().isOk()).andExpect(jsonPath("$.radiusStep").value(2))
         .andExpect(jsonPath("$.spacingStep").value(2))
-        .andExpect(jsonPath("$.themeFamily").value("default"));
+        .andExpect(jsonPath("$.themeFamily").value("berry"));
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.CsvSource({"default,berry", "frutiger-aero,aero", "omahakase,omakase", "lofi,valencia"})
+  void homeAppearance_savesLegacyThemeFamilyIdsAsCurrentIds(String legacy, String current) throws Exception {
+    mockMvc.perform(authJson(put(API_USERS_ME_PREFERENCES + "/home"),
+            "{\"radiusStep\":2,\"spacingStep\":2,\"themeFamily\":\"%s\"}".formatted(legacy)))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.themeFamily").value(current));
+    mockMvc.perform(auth(get(API_USERS_ME_PREFERENCES + "/home")))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.themeFamily").value(current));
   }
 
   @Test
@@ -114,6 +124,25 @@ class UserApiIntegrationTest extends ApiIntegrationTestSupport {
                 .content(payload))
         .andExpect(status().isBadRequest())
         .andExpect(jsonPath("$.message").value("Validation failed"));
+  }
+
+  @Test
+  void patchMyUserProfile_requiresAnUnusedEmail() throws Exception {
+    issueAuthTokenForUser("email-owner");
+    String profile = "{\"displayName\":\"An Vu\",\"username\":\"anvu\",\"email\":%s}";
+    for (String blank : new String[]{"null", "\"\""}) {
+      mockMvc.perform(authJson(patch(API_USERS_ME), profile.formatted(blank)))
+          .andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.errors[0].message").value("email is required"));
+    }
+    mockMvc.perform(authJson(patch(API_USERS_ME), profile.formatted("\"EMAIL-OWNER@local\"")))
+        .andExpect(status().isConflict())
+        .andExpect(jsonPath("$.message").value("email already in use"));
+    mockMvc.perform(authJson(patch(API_USERS_ME), profile.formatted("\"An.Vu@Example.com\"")))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.email").value("an.vu@example.com"));
+    mockMvc.perform(authJson(patch(API_USERS_ME), profile.formatted("\"anvu@local\"")))
+        .andExpect(status().isOk());
   }
 
   @Test

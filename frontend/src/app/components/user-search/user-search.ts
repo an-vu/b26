@@ -2,7 +2,6 @@ import { PanelComponent } from '../panel/panel';
 import { PanelCloseAnimation } from '../../utils/panel-close-animation';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { ToolbarPanelAnchor } from '../../utils/toolbar-panel-anchor';
-import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, DestroyRef, ElementRef, ViewChild, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
@@ -16,7 +15,7 @@ type SearchState =
 @Component({
   selector: 'app-user-search',
   standalone: true,
-  imports: [PanelComponent, PanelBehaviorDirective, CommonModule, RouterLink],
+  imports: [PanelComponent, PanelBehaviorDirective, RouterLink],
   templateUrl: './user-search.html',
   styleUrl: './user-search.css',
 })

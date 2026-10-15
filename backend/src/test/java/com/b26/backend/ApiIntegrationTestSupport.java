@@ -1,5 +1,6 @@
 package com.b26.backend;
 
+import com.b26.backend.auth.domain.SigninAttemptGuard;
 import com.b26.backend.auth.persistence.AuthSessionEntity;
 import com.b26.backend.auth.persistence.AuthSessionRepository;
 import com.b26.backend.board.persistence.BoardRepository;
@@ -8,13 +9,15 @@ import com.b26.backend.insights.persistence.ClickEventRepository;
 import com.b26.backend.insights.persistence.ViewEventRepository;
 import com.b26.backend.user.persistence.AppUserEntity;
 import com.b26.backend.user.persistence.AppUserRepository;
-import com.fasterxml.jackson.databind.JsonNode;
+import com.b26.backend.widget.persistence.WidgetEntity;
+import com.b26.backend.widget.persistence.WidgetRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.UUID;
+import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -22,11 +25,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
-
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -40,6 +39,10 @@ abstract class ApiIntegrationTestSupport {
   @Autowired protected BoardRepository boardRepository;
   @Autowired protected AppUserRepository appUserRepository;
   @Autowired protected AuthSessionRepository authSessionRepository;
+  @Autowired protected WidgetRepository widgetRepository;
+  @Autowired protected SigninAttemptGuard signinAttemptGuard;
+  @Autowired private Flyway flyway;
+  private static Class<?> databasePreparedFor;
 
   protected static final String AUTHORIZATION_HEADER = "Authorization";
   protected static final String API_BOARD = "/api/board";
@@ -59,10 +62,16 @@ abstract class ApiIntegrationTestSupport {
       """;
 
   @BeforeEach
-  void clearClicks() {
+  void resetState() {
+    // Test classes share one PostgreSQL database; each class starts from freshly migrated fixtures.
+    if (databasePreparedFor != getClass()) {
+      TestDatabaseConfig.cleanAndMigrate(flyway);
+      databasePreparedFor = getClass();
+    }
     clickEventRepository.deleteAll();
     viewEventRepository.deleteAll();
     clickAbuseGuard.clear();
+    signinAttemptGuard.clear();
   }
 
   protected String authAnvu() {
@@ -78,27 +87,21 @@ abstract class ApiIntegrationTestSupport {
     return auth(builder).contentType(MediaType.APPLICATION_JSON).content(payload);
   }
 
-  protected long createWidgetAndReturnId() throws Exception {
-    String payload =
-        """
-        {
-          "type": "embed",
-          "title": "Seeded in test",
-          "layout": "span-1",
-          "config": { "embedUrl": "https://example.com/embed" },
-          "enabled": true,
-          "order": 9
-        }
-        """;
+  /** Inserts an enabled widget directly; API writes go through the board editor. */
+  protected long createWidget(String boardId, String type, String configJson) throws Exception {
+    WidgetEntity widget = new WidgetEntity();
+    widget.setBoard(boardRepository.findById(boardId).orElseThrow());
+    widget.setType(type);
+    widget.setTitle("Test " + type);
+    widget.setLayout("span-1");
+    widget.setConfig(objectMapper.readTree(configJson));
+    widget.setEnabled(true);
+    widget.setSortOrder(9);
+    return widgetRepository.saveAndFlush(widget).getId();
+  }
 
-    MvcResult result =
-        mockMvc
-            .perform(authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
-            .andExpect(status().isCreated())
-            .andReturn();
-
-    JsonNode body = objectMapper.readTree(result.getResponse().getContentAsString());
-    return body.get("id").asLong();
+  protected long createLink(String boardId) throws Exception {
+    return createWidget(boardId, "link", "{\"url\":\"https://example.com\"}");
   }
 
   protected String issueAuthTokenForUser(String userId) {

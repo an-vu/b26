@@ -1,30 +1,19 @@
-# Deployment notes
+# Deployment
 
-The repository contains configuration for an Angular frontend on Vercel and a Docker backend on Render, connected to PostgreSQL. Neon is the confirmed database provider.
-
-## Hosting check — October 8, 2026
-
-- **Vercel:** production deployment [A6GPk16UXHSx8MYv1SVbtRndBeBp](https://vercel.com/ans-projects-d68d4b8b/b26-frontend/A6GPk16UXHSx8MYv1SVbtRndBeBp) is **Ready**, sourced from `93a2e2b` (1.5.3), and assigned to `https://blueberry2026.vercel.app`. GitHub’s Vercel commit status also reports success. Dashboard evidence was used because the connector returned a scope-access error.
-- **Render:** [b26-backend](https://dashboard.render.com/web/srv-d66gsbh5pdvs73d5kpp0) deployment `dep-db3658h5efls73c27icg` for `93a2e2b` is **update_failed**. The Docker build completed; startup applied V30/V31 and initialized JPA, then stopped producing startup logs. Render reported “Port scan timeout reached, no open ports detected” at October 7 15:33 UTC, then timed out at 15:36 UTC. This establishes the failure stage, not the underlying cause. The last successful deploy is `dep-db31q60473hc7386repg`, commit `6d712dd` (1.5.2), marked **live**. The public `/actuator/health` endpoint returned `UP` during this check; health alone does not establish running feature compatibility.
-- **Neon:** [b26-db production](https://console.neon.tech/app/projects/odd-moon-16008051/branches/br-curly-unit-akypucwr), project `odd-moon-16008051`, default branch `br-curly-unit-akypucwr`, is **ready**. A read-only SQL query confirmed V30 `board profile website` and V31 `widget spacing` both have `success = true`, installed October 7 around 15:19 UTC.
-
-**Retry result:** deployment `dep-db3l84bncjis73asd5pg` of the unchanged 1.5.3 commit became **live** October 8 at 03:30 CDT (08:30 UTC). Tomcat bound port 8080 and startup completed in 116.894 seconds. Health returned HTTP 200 / UP, and the production `/anvu/default` board loaded in Safari. No backend code or configuration change was needed; the original timeout’s root cause remains unproven. Frontend and backend now both deploy 1.5.3, with database V31. Authenticated production saves still await a signed-in test session. Local Aqua and Contact refinements remain uncommitted and undeployed; production build and 87 frontend tests pass. Aqua controls and About were visually checked at desktop and 390 × 844 phone dimensions in Safari, including light/dark settings. No 1.5.4 rollout was performed.
+The Angular frontend deploys to Vercel, the Docker backend to Render, and the database is PostgreSQL on Neon. Production frontend: `https://blueberry2026.vercel.app`.
 
 ## Frontend: Vercel
 
 - Project root: `frontend`.
 - Build command: `npm run build`.
-- Output directory: **`dist/b26`**. `angular.json` sets the browser output subdirectory to an empty string; the old wiki's `dist/b26/browser` is outdated.
-- `frontend/vercel.json` rewrites `/api/*` and `/actuator/*` to `https://b26-backend.onrender.com` and other paths to `index.html`.
-- Confirm the backend rewrite destination matches the service you actually deploy.
-
-The current production domain is `https://blueberry2026.vercel.app`, confirmed in the October 8 dashboard check.
+- Output directory: **`dist/b26`** (`angular.json` sets the browser subdirectory to an empty string).
+- `frontend/vercel.json` rewrites `/api/*` and `/actuator/*` to `https://b26-backend.onrender.com` and every other path to `index.html`. Confirm that destination matches the backend you actually deploy.
 
 ## Backend: Render or another Docker host
 
-Build using `backend/` as the Docker build context and its `Dockerfile`. The image exposes port 8080. The health endpoint is `/actuator/health`.
+Build with `backend/` as the Docker build context and its `Dockerfile`. The image exposes port 8080; the health endpoint is `/actuator/health`. Render deploys pushes to `main` automatically and does not wait for CI.
 
-Required configuration:
+Required configuration (keep credentials in the provider dashboard):
 
 ```dotenv
 SPRING_PROFILES_ACTIVE=prod
@@ -32,36 +21,29 @@ SPRING_DATASOURCE_URL=jdbc:postgresql://<database-host>:5432/<database>?sslmode=
 SPRING_DATASOURCE_USERNAME=<database-user>
 SPRING_DATASOURCE_PASSWORD=<database-password>
 APP_AUTH_REQUIRE_PASSWORD=true
-APP_CORS_ALLOWED_ORIGINS=https://<your-frontend-domain>
+APP_DEMO_USERS_ENABLED=false
+APP_CORS_ALLOWED_ORIGINS=https://blueberry2026.vercel.app
 ```
 
-Use the TLS requirements supplied by the database provider. Keep Hibernate's default `validate` setting and let Flyway manage migrations. Do not deploy the local password bypass or the sample local database credentials.
-
-## 1.2.0 URL rollout
-
-- Deploy the backend before the frontend; new pages need the owner lookup endpoint.
-- No schema migration or new index is required. Existing global slug uniqueness stays in place.
-- Check existing usernames against the reserved list in [Page URLs](Pages-and-Editing); old profile edits could have bypassed it. Resolve conflicts with the account owner.
-- Confirm direct nested URLs and refreshes reach the Angular app through the existing SPA fallback.
-- Check canonical, legacy, main-board, signup, save, rename, and delete flows. Review API 404/5xx responses and browser errors.
-- Roll back frontend before backend if needed. No data rollback is required; shared canonical URLs require the new routing code.
+Use the TLS settings the database provider supplies. Keep Hibernate's `validate` setting and let Flyway manage migrations; never edit an applied migration. Startup refuses the local password bypass and demo seeding under `prod` or on Render. Prefer a direct (non-pooled) Neon connection for migration and export work.
 
 ## Release checklist
 
 1. Check CI, including PostgreSQL tests and the frontend production build.
-2. Back up the database before a schema upgrade.
-3. Confirm host environment variables and frontend API rewrites.
-4. Deploy through the provider's configured branch or manual workflow. The old wiki assumed automatic deployment from `main`; check that setting in the dashboards.
+2. Back up the database before a schema upgrade, and review every pending migration.
+3. Confirm host environment variables and the frontend API rewrite.
+4. Deploy the backend first, then the frontend, and record both deploy IDs.
 5. Verify API health, sign-in, public board loading, and an owned-board save.
 
+Roll back the frontend before the backend. Don't restore the production database over newer user writes without assessing data loss.
+
+## Migration notes
+
+- **V37** archives `cards` and `system_settings` and changes `click_events.card_id` to `target_id`. Don't run a pre-V37 backend against a V37 database; fix forward or restore the pre-migration backup with the matching old release.
+- **V40 onward:** see [Release roadmap](Release-Roadmap) for what each pending migration changes before rolling it out.
+
+## Production sample profiles
+
+@vhuman, @vi, @moka, @sol, and @pixel are public sample profiles with no email or password. `scripts/seed-production-samples-1.5.7.sql` recreates them; it refuses username/URL conflicts and preserves existing accounts. Running it is an explicit data operation, not a migration.
+
 Repository sources: [frontend deployment config](https://github.com/an-vu/b26/blob/main/frontend/vercel.json), [Angular build config](https://github.com/an-vu/b26/blob/main/frontend/angular.json), [backend image](https://github.com/an-vu/b26/blob/main/backend/Dockerfile).
-
-## Production sample profiles — 1.5.7
-
-Added @vhuman, @vi, @moka, @sol, and @pixel to Neon production on October 8, 2026. Each has a public main board and five widgets. These sample profiles have no email or password and cannot sign in. The reviewed, repeatable SQL is in `scripts/seed-production-samples-1.5.7.sql`; it refuses username/URL conflicts and preserves existing accounts and edits. It is an explicit data operation, not an automatic migration or local database upload. Find the profiles through Search or `/vhuman/sample-vhuman` (and equivalent username/slug pairs). Home still uses its fixed preview collection.
-
-## V37 coordinated rollout
-
-Deploy the matching frontend and backend together. The public board list changes to a paginated envelope; retired card/system-route APIs return 410. V37 renames `cards` and `system_settings` to archives, removes their foreign keys, and changes `click_events.card_id` to namespaced `target_id`. Existing card records, route mappings, and click counts are retained.
-
-Take the normal database backup before rollout. Do not roll an old backend binary back onto V37: it expects the old tables and column. Use a forward fix or restore the pre-migration database with the corresponding old release. The cleanup has only been tested locally; no hosted rollout is implied.

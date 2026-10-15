@@ -1,0 +1,52 @@
+/* Shared material rules for the non-Berry themes (Aero, Aqua, Omakase, Kiwi, Valencia).
+ * Each theme root only sets tokens; its own file adds genuinely unique touches after this.
+ * `:where(:not(...))` adds no specificity, so these match the old per-theme selectors exactly.
+ *
+ * Tokens (set on the theme root unless noted):
+ *   --surface-bg / -border / -shadow / -filter   widgets and board cards
+ *   --panel-bg / -border / -shadow               utility panels (and the dock, by default)
+ *   --dock-bg / -border / -shadow, --dock-text / -muted / -surface / -theme-border
+ *   --input-fg / -bg / -border / -radius / -shadow
+ *   --button-bg / --button-border                set on the button rule, beside --button-rest-*
+ * Border colours fall back to --theme-border and text to --theme-text where a theme omits them.
+ */
+[data-theme]:where(:not([data-theme='berry'])) {
+  color: var(--theme-text);
+  /* Root values, so panels and the dock can restore them under chrome that re-tints text. */
+  --ui-text: var(--theme-text); --ui-muted: var(--theme-muted); --ui-surface: var(--theme-surface); --ui-border: var(--theme-border);
+}
+[data-theme]:where(:not([data-theme='berry'])) a { color: inherit; }
+[data-theme]:where(:not([data-theme='berry'])) .error { color: var(--theme-error); }
+
+.page[data-theme]:where(:not([data-theme='berry'])) :is(.widget, .board-card) {
+  color: var(--theme-text); background: var(--surface-bg);
+  border: 1px solid var(--surface-border, var(--theme-border)); border-radius: var(--board-widget-radius, 12px);
+  box-shadow: var(--surface-shadow); backdrop-filter: var(--surface-filter, none);
+}
+.page[data-theme]:where(:not([data-theme='berry'])) app-widget-host.widget-host-preview .widget {
+  background: transparent; border: 0; box-shadow: none; backdrop-filter: none;
+}
+
+[data-theme]:where(:not([data-theme='berry'])) .utility-panel {
+  --theme-text: var(--ui-text); --theme-muted: var(--ui-muted); --theme-surface: var(--ui-surface); --theme-border: var(--ui-border);
+  color: var(--theme-text); background: var(--panel-bg);
+  border: 1px solid var(--panel-border, var(--theme-border)); box-shadow: var(--panel-shadow);
+}
+/* Aqua's dock is a distinct smoked-glass shelf and keeps its own rule. */
+.page[data-theme]:where(:not([data-theme='berry'], [data-theme='aqua'])) .bottom-actions {
+  --theme-text: var(--dock-text, var(--ui-text)); --theme-muted: var(--dock-muted, var(--ui-muted));
+  --theme-surface: var(--dock-surface, var(--ui-surface)); --theme-border: var(--dock-theme-border, var(--ui-border));
+  color: var(--theme-text); background: var(--dock-bg, var(--panel-bg));
+  border: 1px solid var(--dock-border, var(--panel-border)); box-shadow: var(--dock-shadow, var(--panel-shadow));
+}
+
+[data-theme]:where(:not([data-theme='berry'])) :is(button, a).app-button {
+  color: var(--button-rest-color, var(--theme-text)); background: var(--button-bg);
+  border: 1px solid var(--button-border, var(--theme-border));
+  box-shadow: var(--button-rest-shadow); text-shadow: var(--button-rest-text-shadow);
+}
+[data-theme]:where(:not([data-theme='berry'])) :is(input:not([type='checkbox']):not([type='range']), select, textarea) {
+  color: var(--input-fg, var(--theme-text)); background: var(--input-bg);
+  border: 1px solid var(--input-border, var(--theme-border)); border-radius: var(--input-radius); box-shadow: var(--input-shadow);
+}
+:is([data-theme='aqua'], [data-theme='aero']) :is(.meta-label, .settings-section-title) { color: var(--theme-muted); }

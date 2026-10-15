@@ -13,15 +13,8 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
 
   @org.junit.jupiter.api.BeforeEach
   void createLinkTargets() throws Exception {
-    firstLink = createLink();
-    secondLink = createLink();
-  }
-
-  private long createLink() throws Exception {
-    var result = mockMvc.perform(authJson(post(API_BOARD_DEFAULT_WIDGETS),
-        "{\"type\":\"link\",\"title\":\"Link\",\"layout\":\"span-1\",\"config\":{\"url\":\"https://example.com\"},\"enabled\":true,\"order\":0}"))
-        .andExpect(status().isCreated()).andReturn();
-    return objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+    firstLink = createLink("default");
+    secondLink = createLink("default");
   }
 
   private String clickPath(long id) {
@@ -54,7 +47,7 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @Test
-  void postClick_andGetInsights_work() throws Exception {
+  void postClicks_areCountedPerTargetInSummary() throws Exception {
     mockMvc
         .perform(
             post(clickPath(firstLink))
@@ -70,11 +63,36 @@ class InsightsApiIntegrationTest extends ApiIntegrationTestSupport {
         .andExpect(status().isNoContent());
 
     mockMvc
-        .perform(auth(get("/api/insights/default")))
+        .perform(auth(get("/api/insights/default/summary")))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.boardId").value("default"))
         .andExpect(jsonPath("$.totalClicks").value(2))
-        .andExpect(jsonPath("$.byTarget.length()").value(2));
+        .andExpect(jsonPath("$.topClickedLinks.length()").value(2));
+  }
+
+  @Test
+  void summaryListsAtMostFiveTopTargets() throws Exception {
+    for (int i = 0; i < 7; i++) {
+      mockMvc.perform(post(clickPath(createLink("default"))).contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+          .content(DEFAULT_CLICK_PAYLOAD)).andExpect(status().isNoContent());
+    }
+    mockMvc.perform(auth(get("/api/insights/default/summary")))
+        .andExpect(jsonPath("$.totalClicks").value(7))
+        .andExpect(jsonPath("$.topClickedLinks.length()").value(5));
+  }
+
+  @Test
+  void forwardedClientAddressIsRecordedBehindTheProxy() throws Exception {
+    mockMvc.perform(post("/api/insights/view").contentType(org.springframework.http.MediaType.APPLICATION_JSON)
+            .header("X-Forwarded-For", "203.0.113.7, 10.0.0.2").content(DEFAULT_VIEW_PAYLOAD))
+        .andExpect(status().isNoContent());
+    org.junit.jupiter.api.Assertions.assertEquals("203.0.113.7",
+        viewEventRepository.findAll().get(0).getSourceIp());
+  }
+
+  @Test
+  void removedRawInsightsEndpointIsNotServed() throws Exception {
+    mockMvc.perform(auth(get("/api/insights/default"))).andExpect(status().isNotFound());
   }
 
   @Test

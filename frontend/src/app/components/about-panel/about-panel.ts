@@ -2,11 +2,10 @@ import { PanelComponent } from '../panel/panel';
 import { PanelCloseAnimation } from '../../utils/panel-close-animation';
 import { PanelBehaviorDirective } from '../../directives/panel-behavior';
 import { Component, ElementRef, ViewChild, inject, DestroyRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { ABOUT_RELEASE } from './release-info';
 
 @Component({
-  selector: 'app-about-panel', standalone: true, imports: [PanelComponent, PanelBehaviorDirective, CommonModule],
+  selector: 'app-about-panel', standalone: true, imports: [PanelComponent, PanelBehaviorDirective],
   templateUrl: './about-panel.html', styleUrl: './about-panel.css',
 })
 export class AboutPanelComponent {

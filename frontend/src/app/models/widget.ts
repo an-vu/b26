@@ -22,7 +22,3 @@ export type UpsertWidgetRequest = {
 export type UpsertWidgetWithIdRequest = UpsertWidgetRequest & {
   id?: number;
 };
-
-export type SyncWidgetsRequest = {
-  widgets: UpsertWidgetWithIdRequest[];
-};

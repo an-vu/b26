@@ -45,62 +45,6 @@ describe('BoardService', () => {
     req.flush([]);
   });
 
-  it('should call backend POST widget endpoint', () => {
-    service
-      .createWidget('default', {
-        type: 'embed',
-        title: 'Now Playing',
-        layout: 'span-1',
-        config: { embedUrl: 'https://example.com/embed' },
-        enabled: true,
-        order: 0,
-      })
-      .subscribe();
-
-    const req = httpMock.expectOne('/api/board/default/widgets');
-    expect(req.request.method).toBe('POST');
-    req.flush({});
-  });
-
-  it('should call backend PUT widget endpoint', () => {
-    service
-      .updateWidget('default', 1, {
-        type: 'map',
-        title: 'Places',
-        layout: 'span-2',
-        config: { places: ['Omaha, NE'] },
-        enabled: true,
-        order: 1,
-      })
-      .subscribe();
-
-    const req = httpMock.expectOne('/api/board/default/widgets/1');
-    expect(req.request.method).toBe('PUT');
-    req.flush({});
-  });
-
-  it('should call backend DELETE widget endpoint', () => {
-    service.deleteWidget('default', 1).subscribe();
-
-    const req = httpMock.expectOne('/api/board/default/widgets/1');
-    expect(req.request.method).toBe('DELETE');
-    req.flush({});
-  });
-
-  it('should call backend PATCH board url endpoint', () => {
-    service.updateBoardUrl('default', { boardUrl: 'berkshire' }).subscribe();
-
-    const req = httpMock.expectOne('/api/board/default/url');
-    expect(req.request.method).toBe('PATCH');
-    req.flush({
-      id: 'default',
-      boardName: 'Berkshire',
-      boardUrl: 'berkshire',
-      name: 'An',
-      headline: 'H',
-    });
-  });
-
   it('should call backend PATCH board identity endpoint', () => {
     service.updateBoardIdentity('default', { boardName: 'Berkshire', boardUrl: 'berkshire' }).subscribe();
 

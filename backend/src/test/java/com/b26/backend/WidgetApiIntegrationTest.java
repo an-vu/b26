@@ -1,9 +1,11 @@
 package com.b26.backend;
 
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MvcResult;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -32,211 +34,82 @@ class WidgetApiIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @Test
-  void postWidget_valid_returns201() throws Exception {
-    String payload =
-        """
-        {
-          "type": "embed",
-          "title": "Demo Embed",
-          "layout": "span-1",
-          "config": { "embedUrl": "https://example.com/embed" },
-          "enabled": true,
-          "order": 5
-        }
-        """;
+  void editorCreatesUpdatesAndDeletesWidgetsWithJsonConfig() throws Exception {
+    ObjectNode request = editorRequest("default");
+    ArrayNode widgets = (ArrayNode) request.get("widgets");
+    int seeded = widgets.size();
+    ObjectNode map = widgets.addObject().put("type", "map").put("title", "Places").put("layout", "span-2")
+        .put("enabled", true).put("order", 1000);
+    map.putObject("config").putArray("places").add("Omaha, NE").add("Austin, TX");
+    var saved = save("default", request);
+    assertEquals(seeded + 1, saved.get("widgets").size());
+    var created = (ObjectNode) saved.get("widgets").get(seeded);
+    assertEquals(2, created.at("/config/places").size());
 
-    mockMvc
-        .perform(authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.type").value("embed"))
-        .andExpect(jsonPath("$.title").value("Demo Embed"))
-        .andExpect(jsonPath("$.config.embedUrl").value("https://example.com/embed"));
+    ObjectNode update = editorRequest("default");
+    ((ObjectNode) update.get("widgets").get(seeded)).put("title", "Updated Places");
+    var updated = save("default", update);
+    assertEquals("Updated Places", updated.get("widgets").get(seeded).get("title").asText());
+    assertEquals(created.get("id"), updated.get("widgets").get(seeded).get("id"));
+
+    ObjectNode removal = editorRequest("default");
+    ((ArrayNode) removal.get("widgets")).remove(seeded);
+    mockMvc.perform(authJson(put("/api/board/default/editor"), removal.toString()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.widgets.length()").value(seeded));
   }
 
   @Test
-  void putWidget_valid_returns200() throws Exception {
-    long widgetId = createWidgetAndReturnId();
-    String payload =
-        """
-        {
-          "type": "map",
-          "title": "Updated Places",
-          "layout": "span-2",
-          "config": { "places": ["Omaha, NE", "Austin, TX"] },
-          "enabled": true,
-          "order": 2
-        }
-        """;
-
-    mockMvc
-        .perform(
-            put("/api/board/default/widgets/{widgetId}", widgetId)
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
-        .andExpect(status().isOk())
-        .andExpect(jsonPath("$.id").value(widgetId))
-        .andExpect(jsonPath("$.type").value("map"))
-        .andExpect(jsonPath("$.config.places.length()").value(2));
-  }
-
-  @Test
-  void deleteWidget_valid_returns204() throws Exception {
-    long widgetId = createWidgetAndReturnId();
-
-    mockMvc
-        .perform(
-            delete("/api/board/default/widgets/{widgetId}", widgetId)
-                .header(AUTHORIZATION_HEADER, authAnvu()))
-        .andExpect(status().isNoContent());
-
-    mockMvc
-        .perform(
-            delete("/api/board/default/widgets/{widgetId}", widgetId)
-                .header(AUTHORIZATION_HEADER, authAnvu()))
-        .andExpect(status().isNotFound());
-  }
-
-  @Test
-  void postWidget_invalidConfig_returns400() throws Exception {
-    String payload =
-        """
-        {
-          "type": "embed",
-          "title": "Bad Embed",
-          "layout": "span-1",
-          "config": { "embedUrl": "not-a-url" },
-          "enabled": true,
-          "order": 0
-        }
-        """;
-
-    mockMvc
-        .perform(authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
+  void editorRejectsInvalidConfigAndUnsupportedLayout() throws Exception {
+    ObjectNode request = editorRequest("default");
+    ObjectNode embed = ((ArrayNode) request.get("widgets")).addObject().put("type", "embed").put("title", "Bad Embed")
+        .put("layout", "span-1").put("enabled", true).put("order", 0);
+    embed.putObject("config").put("embedUrl", "not-a-url");
+    mockMvc.perform(authJson(put("/api/board/default/editor"), request.toString()))
         .andExpect(status().isBadRequest())
-        .andExpect(jsonPath("$.message").value("embed config requires a valid http embedUrl"));
+        .andExpect(jsonPath("$.errors[0].message").value("embed config requires a valid http embedUrl"));
+    embed.put("layout", "span-9");
+    ((ObjectNode) embed.get("config")).put("embedUrl", "https://example.com/embed");
+    mockMvc.perform(authJson(put("/api/board/default/editor"), request.toString()))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.errors[0].message").value("unsupported widget layout: span-9"));
   }
 
   @Test
-  void widgets_endpoints_acceptBoardUrlSlug() throws Exception {
-    var board =
-        boardRepository
-            .findById("default")
-            .orElseThrow(() -> new IllegalStateException("default board missing"));
-    String originalUrl = board.getBoardUrl();
-    String slug = "default-slug-test";
-    board.setBoardUrl(slug);
-    boardRepository.save(board);
-
-    try {
-      mockMvc
-          .perform(get("/api/board/{boardSlug}/widgets", slug))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$").isArray());
-
-      String createPayload =
-          """
-          {
-            "type": "link",
-            "title": "Slug Link",
-            "layout": "span-1",
-            "config": { "url": "https://example.com/" },
-            "enabled": true,
-            "order": 99
-          }
-          """;
-
-      MvcResult createResult =
-          mockMvc
-              .perform(
-                  post("/api/board/{boardSlug}/widgets", slug)
-                      .header(AUTHORIZATION_HEADER, authAnvu())
-                      .contentType(MediaType.APPLICATION_JSON)
-                      .content(createPayload))
-              .andExpect(status().isCreated())
-              .andReturn();
-
-      long widgetId =
-          objectMapper.readTree(createResult.getResponse().getContentAsString()).get("id").asLong();
-
-      String updatePayload =
-          """
-          {
-            "type": "link",
-            "title": "Slug Updated",
-            "layout": "span-1",
-            "config": { "url": "https://example.org/" },
-            "enabled": true,
-            "order": 100
-          }
-          """;
-
-      mockMvc
-          .perform(
-              put("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId)
-                  .header(AUTHORIZATION_HEADER, authAnvu())
-                  .contentType(MediaType.APPLICATION_JSON)
-                  .content(updatePayload))
-          .andExpect(status().isOk())
-          .andExpect(jsonPath("$.id").value(widgetId))
-          .andExpect(jsonPath("$.title").value("Slug Updated"));
-
-      mockMvc
-          .perform(
-              delete("/api/board/{boardSlug}/widgets/{widgetId}", slug, widgetId)
-                  .header(AUTHORIZATION_HEADER, authAnvu()))
-          .andExpect(status().isNoContent());
-    } finally {
-      boardRepository.findById("default").ifPresent(
-          fresh -> {
-            fresh.setBoardUrl(originalUrl);
-            boardRepository.save(fresh);
-          });
-    }
-  }
-
-  @Test
-  void postWidget_linkValid_returns201() throws Exception {
-    String payload =
-        """
-        {
-          "type": "link",
-          "title": "GitHub",
-          "layout": "span-1",
-          "config": { "url": "https://github.com/an-vu" },
-          "enabled": true,
-          "order": 3
-        }
-        """;
-
-    mockMvc
-        .perform(authJson(post(API_BOARD_DEFAULT_WIDGETS), payload))
-        .andExpect(status().isCreated())
-        .andExpect(jsonPath("$.type").value("link"))
-        .andExpect(jsonPath("$.config.url").value("https://github.com/an-vu"));
-  }
-
-  @Test
-  void putWidget_wrongBoard_returns404() throws Exception {
-    long widgetId = createWidgetAndReturnId();
-    String payload =
-        """
-        {
-          "type": "embed",
-          "title": "Other",
-          "layout": "span-1",
-          "config": { "embedUrl": "https://example.com/embed" },
-          "enabled": true,
-          "order": 1
-        }
-        """;
-
-    mockMvc
-        .perform(
-            put("/api/board/berkshire/widgets/{widgetId}", widgetId)
-                .header(AUTHORIZATION_HEADER, authAnvu())
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(payload))
+  void editorCannotClaimAnotherBoardsWidget() throws Exception {
+    long foreign = createLink("berkshire");
+    ObjectNode request = editorRequest("default");
+    ObjectNode copy = ((ArrayNode) request.get("widgets")).addObject().put("id", foreign).put("type", "link")
+        .put("title", "Moved").put("layout", "span-1").put("enabled", true).put("order", 0);
+    copy.putObject("config").put("url", "https://example.com/");
+    mockMvc.perform(authJson(put("/api/board/default/editor"), request.toString()))
         .andExpect(status().isNotFound());
+  }
+
+  @Test
+  void singleWidgetWriteEndpointsAreGone() throws Exception {
+    long widgetId = createLink("default");
+    String payload = "{\"type\":\"link\",\"title\":\"x\",\"layout\":\"span-1\",\"config\":{},\"enabled\":true,\"order\":0}";
+    mockMvc.perform(authJson(post(API_BOARD_DEFAULT_WIDGETS), payload)).andExpect(status().is4xxClientError());
+    mockMvc.perform(authJson(put(API_BOARD_DEFAULT_WIDGETS + "/" + widgetId), payload)).andExpect(status().is4xxClientError());
+    mockMvc.perform(authJson(put(API_BOARD_DEFAULT_WIDGETS + "/sync"), "{\"widgets\":[]}")).andExpect(status().is4xxClientError());
+    mockMvc.perform(auth(delete(API_BOARD_DEFAULT_WIDGETS + "/" + widgetId))).andExpect(status().is4xxClientError());
+    assertEquals(true, widgetRepository.findById(widgetId).isPresent());
+  }
+
+  private ObjectNode editorRequest(String slug) throws Exception {
+    var snapshot = objectMapper.readTree(mockMvc.perform(auth(get(API_BOARD + "/" + slug + "/editor")))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
+    ObjectNode request = objectMapper.createObjectNode();
+    request.put("version", snapshot.at("/board/version").asLong());
+    request.put("name", snapshot.at("/board/name").asText());
+    request.put("headline", snapshot.at("/board/headline").asText());
+    request.set("widgets", snapshot.get("widgets").deepCopy());
+    return request;
+  }
+
+  private com.fasterxml.jackson.databind.JsonNode save(String slug, ObjectNode request) throws Exception {
+    return objectMapper.readTree(mockMvc.perform(authJson(put(API_BOARD + "/" + slug + "/editor"), request.toString())
+            .contentType(MediaType.APPLICATION_JSON))
+        .andExpect(status().isOk()).andReturn().getResponse().getContentAsString());
   }
 }

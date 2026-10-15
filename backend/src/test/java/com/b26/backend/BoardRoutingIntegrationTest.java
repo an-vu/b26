@@ -71,7 +71,8 @@ class BoardRoutingIntegrationTest extends ApiIntegrationTestSupport {
         .contentType(MediaType.APPLICATION_JSON)
         .content("{\"boardName\":\"Stolen\",\"boardUrl\":\"stolen\"}"))
         .andExpect(status().isForbidden());
-    mockMvc.perform(authJson(patch("/api/board/default/url"), "{\"boardUrl\":\"berkshire\"}"))
+    mockMvc.perform(authJson(patch("/api/board/default/identity"),
+        "{\"boardName\":\"Default\",\"boardUrl\":\"berkshire\"}"))
         .andExpect(status().isBadRequest());
     mockMvc.perform(get("/api/board/by-owner/anvu/default"))
         .andExpect(status().isOk()).andExpect(jsonPath("$.boardUrl").value("default"));

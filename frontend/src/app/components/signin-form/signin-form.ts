@@ -1,6 +1,5 @@
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, Input, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import type { Widget } from '../../models/widget';
@@ -10,25 +9,22 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-signin-form',
   standalone: true,
-  imports: [CommonModule, FormsModule, SignupFormComponent],
+  imports: [FormsModule, SignupFormComponent],
   templateUrl: './signin-form.html',
   styleUrl: './signin-form.css',
 })
 export class SigninFormComponent {
-  @Input() widget?: Widget;
+  readonly widget = input<Widget>();
 
   showSignup = inject(ActivatedRoute).snapshot.queryParamMap?.get('mode') === 'signup';
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly authService = inject(AuthService);
+  private readonly router = inject(Router);
 
   email = '';
   password = '';
   isSubmitting = false;
   errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private router: Router
-  ) {}
 
   onSigninSubmit(): void {
     if (this.isSubmitting) {

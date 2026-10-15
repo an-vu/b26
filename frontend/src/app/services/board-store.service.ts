@@ -1,51 +1,53 @@
-import { Injectable } from '@angular/core';
-import { BehaviorSubject, Subscription } from 'rxjs';
+import { inject, Injectable, signal } from '@angular/core';
+import { Subscription } from 'rxjs';
 import { BoardService } from './board.service';
 import type { Board } from '../models/board';
 import type { BoardIdentity } from '../models/board-identity';
 
+/** The signed-in account's board list, loaded by SiteThemeService whenever the account changes. */
 @Injectable({ providedIn: 'root' })
 export class BoardStoreService {
-  private noticeSubject = new BehaviorSubject('');
-  readonly notice$ = this.noticeSubject.asObservable();
-
-  setNotice(message: string) {
-    this.noticeSubject.next(message);
-  }
-
-  private boardsSubject = new BehaviorSubject<BoardIdentity[]>([]);
-  readonly boards$ = this.boardsSubject.asObservable();
+  private readonly boardService = inject(BoardService);
+  private readonly noticeState = signal('');
+  private readonly boardsState = signal<BoardIdentity[]>([]);
   private refreshRequest?: Subscription;
 
-  constructor(private boardService: BoardService) {}
+  readonly notice = this.noticeState.asReadonly();
+  readonly boards = this.boardsState.asReadonly();
+
+  setNotice(message: string) {
+    this.noticeState.set(message);
+  }
 
   refreshBoards() {
     this.refreshRequest?.unsubscribe();
     this.refreshRequest = this.boardService.getMyBoards().subscribe({
-      next: (boards) => this.boardsSubject.next(boards.map((board) => this.toIdentity(board))),
-      error: () => this.boardsSubject.next([]),
+      next: (boards) => this.boardsState.set(boards.map(toIdentity)),
+      error: () => this.boardsState.set([]),
     });
   }
 
   clearBoards() {
     this.refreshRequest?.unsubscribe();
     this.setNotice('');
-    this.boardsSubject.next([]);
+    this.boardsState.set([]);
   }
 
+  /** Apply a saved board locally; the response is authoritative, so no refetch is needed. */
   updateBoardInStore(updated: Board) {
-    this.boardsSubject.next(this.boardsSubject.value.map(board => board.id === updated.id ? this.toIdentity(updated) : board));
-    this.refreshBoards();
+    this.boardsState.update((boards) =>
+      boards.map((board) => (board.id === updated.id ? toIdentity(updated) : board)),
+    );
   }
+}
 
-  private toIdentity(board: Board): BoardIdentity {
-    return {
-      id: board.id,
-      boardName: board.boardName,
-      boardUrl: board.boardUrl,
-      ownerUsername: board.ownerUsername,
-      visibility: board.visibility,
-      appearance: board.appearance,
-    };
-  }
+function toIdentity(board: Board): BoardIdentity {
+  return {
+    id: board.id,
+    boardName: board.boardName,
+    boardUrl: board.boardUrl,
+    ownerUsername: board.ownerUsername,
+    visibility: board.visibility,
+    appearance: board.appearance,
+  };
 }

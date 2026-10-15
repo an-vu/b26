@@ -1,8 +1,7 @@
 import { HttpClient } from '@angular/common/http';
 import { Subscription, timer, exhaustMap, takeWhile, take, catchError, of, EMPTY, switchMap } from 'rxjs';
 import { detectSocialProfile } from '../../utils/social-profile.util';
-import { Component, Input, inject, OnChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, inject, OnChanges, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { InsightsService } from '../../services/insights.service';
 import { PageActivityService } from '../../services/page-activity.service';
 import type { Widget } from '../../models/widget';
@@ -18,13 +17,12 @@ const followerFormatter = new Intl.NumberFormat('en', { notation: 'compact', max
 @Component({
   selector: 'app-link-widget',
   standalone: true,
-  imports: [CommonModule],
   templateUrl: './link-widget.html',
   styleUrl: './link-widget.css',
 })
 export class LinkWidgetComponent implements OnChanges, OnDestroy {
-  @Input({ required: true }) widget!: Widget;
-  @Input() boardId?: string;
+  readonly widget = input.required<Widget>();
+  readonly boardId = input<string>();
   private readonly insights = inject(InsightsService);
   private readonly http = inject(HttpClient);
   private readonly cdr = inject(ChangeDetectorRef);
@@ -42,9 +40,10 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
   }
   ngOnChanges() {
     const profile = this.socialProfile;
-    const endpoint = profile?.platform === 'Instagram' && this.boardId && this.widget.id > 0
-      ? `/api/board/${encodeURIComponent(this.boardId)}/widgets/${this.widget.id}/instagram` : null;
-    const count = this.widget.layout === 'span-1' ? 1 : 9;
+    const widget = this.widget(), boardId = this.boardId();
+    const endpoint = profile?.platform === 'Instagram' && boardId && widget.id > 0
+      ? `/api/board/${encodeURIComponent(boardId)}/widgets/${widget.id}/instagram` : null;
+    const count = widget.layout === 'span-1' ? 1 : 9;
     const username = profile?.handle.replace(/^@/, '') ?? '';
     const key = endpoint ? JSON.stringify([endpoint, username, count]) : '';
     // Title/order edits and repeated renders must not restart polling or discard loaded photos.
@@ -77,30 +76,31 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
 
 
   get compactInstagramPost() {
-    return this.widget.layout === 'span-1' && this.instagram?.status === 'ready'
+    return this.widget().layout === 'span-1' && this.instagram?.status === 'ready'
       ? this.instagram.posts[0] : undefined;
   }
 
   recordClick() {
-    if (this.boardId && this.widget.id > 0) {
-      this.insights.recordWidgetClick(this.boardId, this.widget.id).subscribe({ error: () => {} });
+    const boardId = this.boardId(), widget = this.widget();
+    if (boardId && widget.id > 0) {
+      this.insights.recordWidgetClick(boardId, widget.id).subscribe({ error: () => {} });
     }
   }
 
-  get description(): string { return typeof this.widget?.config?.['description'] === 'string' ? this.widget.config['description'] as string : ''; }
+  get description(): string { return typeof this.widget()?.config?.['description'] === 'string' ? this.widget().config['description'] as string : ''; }
   get imageUrl(): string | null {
-    const value = this.widget?.config?.['imageUrl'];
+    const value = this.widget()?.config?.['imageUrl'];
     return typeof value === 'string' && (value.startsWith('https://') || (value.startsWith('/') && !value.startsWith('//'))) ? value : null;
   }
 
   get followerCount(): string {
-    const count = this.socialProfile?.platform === 'Instagram' ? this.instagram?.followersCount : this.widget?.config?.['followersCount'];
+    const count = this.socialProfile?.platform === 'Instagram' ? this.instagram?.followersCount : this.widget()?.config?.['followersCount'];
     return typeof count === 'number' && Number.isSafeInteger(count) && count >= 0
       ? followerFormatter.format(count) : '—';
   }
 
   get socialProfile() {
-    const url = String(this.widget?.config?.['url'] ?? '');
+    const url = String(this.widget()?.config?.['url'] ?? '');
     if (url !== this.profileUrl) {
       this.profileUrl = url;
       this.parsedProfile = detectSocialProfile(url);
@@ -109,7 +109,7 @@ export class LinkWidgetComponent implements OnChanges, OnDestroy {
   }
 
   get url(): string | null {
-    const value = this.widget?.config?.['url'];
+    const value = this.widget()?.config?.['url'];
     if (typeof value !== 'string' || !value.trim()) return null;
     try {
       const parsed = new URL(/^[a-z][a-z\d+.-]*:/i.test(value.trim()) ? value.trim() : `https://${value.trim()}`);

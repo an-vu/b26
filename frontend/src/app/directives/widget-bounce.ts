@@ -1,12 +1,11 @@
 import { PageActivityService } from '../services/page-activity.service';
 import { Subscription } from 'rxjs';
-import { AfterViewInit, Directive, ElementRef, NgZone, OnDestroy, inject } from '@angular/core';
+import { AfterViewInit, Directive, ElementRef, OnDestroy, inject } from '@angular/core';
 
 /** Gesture-driven overscroll: input changes a target, only animation moves the widgets. */
 @Directive({ selector: '[appWidgetBounce]', standalone: true })
 export class WidgetBounceDirective implements AfterViewInit, OnDestroy {
   private element: HTMLElement = inject(ElementRef).nativeElement;
-  private zone = inject(NgZone);
   private scroller?: HTMLElement;
   private activity = inject(PageActivityService);
   private visibility?: Subscription;
@@ -22,17 +21,15 @@ export class WidgetBounceDirective implements AfterViewInit, OnDestroy {
   private motion = window.matchMedia?.('(prefers-reduced-motion: reduce)');
   ngAfterViewInit() {
     this.scroller = this.element.parentElement?.closest<HTMLElement>('.panel-body, .page-fixed-scroll, .app-page') ?? undefined;
-    this.zone.runOutsideAngular(() => {
-      this.scroller?.addEventListener('wheel', this.wheel, { passive: false });
-      this.scroller?.addEventListener('touchstart', this.touchStart, { passive: true });
-      this.scroller?.addEventListener('touchmove', this.touchMove, { passive: false });
-      this.scroller?.addEventListener('touchend', this.touchEnd, { passive: true });
-      this.scroller?.addEventListener('touchcancel', this.touchEnd, { passive: true });
-      this.scroller?.addEventListener('scroll', this.scroll, { passive: true });
-      window.addEventListener('blur', this.reset);
-      this.motion?.addEventListener('change', this.reset);
-      this.visibility = this.activity.visible$.subscribe(visible => { if (!visible) this.reset(); });
-    });
+    this.scroller?.addEventListener('wheel', this.wheel, { passive: false });
+    this.scroller?.addEventListener('touchstart', this.touchStart, { passive: true });
+    this.scroller?.addEventListener('touchmove', this.touchMove, { passive: false });
+    this.scroller?.addEventListener('touchend', this.touchEnd, { passive: true });
+    this.scroller?.addEventListener('touchcancel', this.touchEnd, { passive: true });
+    this.scroller?.addEventListener('scroll', this.scroll, { passive: true });
+    window.addEventListener('blur', this.reset);
+    this.motion?.addEventListener('change', this.reset);
+    this.visibility = this.activity.visible$.subscribe(visible => { if (!visible) this.reset(); });
   }
   private atBottom() {
     const s = this.scroller;

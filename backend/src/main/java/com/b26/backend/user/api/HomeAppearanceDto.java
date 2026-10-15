@@ -16,4 +16,9 @@ public record HomeAppearanceDto(
     @Pattern(regexp = AppearanceRules.HEX_COLOR) String backgroundColor,
     @Pattern(regexp = AppearanceRules.PATTERN) String pattern,
     @Pattern(regexp = AppearanceRules.INTENSITY) String patternIntensity
-) {}
+) {
+  public HomeAppearanceDto {
+    // Legacy theme ids are normalized before validation and persistence.
+    themeFamily = AppearanceRules.normalizeThemeFamily(themeFamily);
+  }
+}

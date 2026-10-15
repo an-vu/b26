@@ -1,0 +1,82 @@
+/* Valencia (theme id 'valencia'): 2012 Instagram enamel, silver photo panels and charcoal controls. */
+[data-theme='valencia'] {
+  font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  color-scheme: light;
+  --theme-text: #333536; --theme-muted: #85888a; --theme-border: #bfc2c3;
+  --theme-surface: #eeeeec; --theme-focus: #688eae; --theme-error: #af4036;
+  --valencia-paper: #eeeeec; --valencia-bg: #d4d5d3; --valencia-field: #fafafa;
+  --valencia-chrome: linear-gradient(#6d9bb8, #39769d 48%, #285577);
+  --valencia-silver: linear-gradient(#fafbfb, #e9ebeb 48%, #d3d6d6);
+  --valencia-shadow: #242a3029; --valencia-glint: #ffffffa6;
+  --switch-width: 44px; --switch-height: 26px; --switch-knob-size: 20px; --switch-inset: 3px; --switch-travel: 18px;
+  --switch-on: linear-gradient(#7b9ebb, #3c678d); --switch-off: linear-gradient(#898f93, #bbc0c3);
+  --switch-knob: linear-gradient(#fafbfb, #dce0e2); --switch-shadow: inset 0 1px 3px #29282566, 0 1px #ffffffb3;
+  --picker-glow: #668db740; --picker-shine: #fff9; --danger-ink: #a63c32;
+  --focus-width: 1px; --focus-offset: 2px; --focus-color: #678baa80;
+  --widget-add-fill: linear-gradient(#97b78c, #527047);
+  --nav-material-halo: #b9d4eb55;
+  /* Material tokens (materials.css). Widgets and panels share the photo-paper material. */
+  --surface-bg: url('/themes/valencia-paper.svg'), var(--valencia-paper);
+  --surface-shadow: inset 0 1px var(--valencia-glint), 0 2px 5px var(--valencia-shadow);
+  --panel-bg: var(--surface-bg); --panel-shadow: var(--surface-shadow);
+  /* The charcoal camera toolbar; panels anchored to it restore the paper tokens. */
+  --dock-text: #f3eee4; --dock-muted: #c4bcae; --dock-surface: #343431; --dock-theme-border: #181b1e;
+  --dock-bg: linear-gradient(#555451, #343431 48%, #222320 51%, #363631); --dock-border: #22211f;
+  --dock-shadow: inset 0 1px #ffffff40, 0 3px 10px #1c1b1833;
+  --input-bg: var(--valencia-field); --input-radius: 6px; --input-shadow: inset 0 1px 3px #4f473b20;
+}
+.page[data-theme='valencia'] {
+  /* The page is its own viewport-sized scroller, so a scroll-attached wallpaper already stays put. */
+  background: radial-gradient(ellipse at 50% 0, #ffffff30, transparent 70%), url('/themes/valencia-paper.svg'), var(--valencia-bg);
+}
+.page[data-theme='valencia'] .widget h3 { font-weight: 600; letter-spacing: -.02em; }
+/* Unlike the other themes, Valencia never re-rounded preview widgets. */
+.page[data-theme='valencia'] app-widget-host.widget-host-preview .widget { border-radius: 0; }
+.page[data-theme='valencia'] .board-rail { color: var(--theme-text); }
+.page[data-theme='valencia'] .board-settings-heading {
+  margin: calc(-1 * var(--panel-padding)) calc(-1 * var(--panel-padding)) 8px;
+  padding: var(--panel-padding); color: #fff; background: var(--valencia-chrome);
+  border-bottom: 1px solid #294d6c; border-radius: 9px 9px 0 0;
+  text-align: center; text-shadow: 0 -1px #1a395880;
+}
+.page[data-theme='valencia'] .home-header { background: transparent; color: var(--theme-text); box-shadow: none; }
+.page[data-theme='valencia'] .home-header-brand {
+  background: var(--valencia-chrome); background-clip: text; -webkit-background-clip: text;
+  color: transparent; -webkit-text-fill-color: transparent; text-shadow: none;
+  filter: drop-shadow(0 1px 0 var(--valencia-glint));
+}
+.page[data-theme='valencia'][data-color-mode='dark'] .home-header-brand {
+  background-image: linear-gradient(#b2d6e8, #80b4d3 48%, #5293bf);
+}
+[data-theme='valencia'] :is(button, a).app-button {
+  --button-bg: var(--valencia-silver); text-shadow: 0 1px #ffffff50;
+  --button-rest-shadow: inset 0 1px var(--valencia-glint), 0 1px 2px var(--valencia-shadow);
+  --button-hover-background: var(--valencia-silver); --button-hover-border: #8499ab;
+  --button-hover-shadow: inset 0 1px var(--valencia-glint), 0 0 7px #537aa330;
+  --button-active-background: linear-gradient(#cbd1d4, #eef1f2); --button-active-shadow: inset 0 1px 3px #443c3333;
+}
+.page[data-theme='valencia'] .bottom-actions :is(.board-identity-button, .home-settings-button) {
+  background: var(--valencia-chrome); border-color: #1c3f60; color: #fff; text-shadow: 0 -1px #24405d;
+  --button-hover-background: var(--valencia-chrome);
+}
+.page[data-theme='valencia'] .navigation-orb .orb-button__dot {
+  background: linear-gradient(#ffffff65, transparent 48%, color-mix(in srgb, var(--palette-black) 13.333333%, transparent)), var(--orb-dot);
+  border-color: #121d29b3; box-shadow: inset 0 1px #ffffffa0, 0 1px #ffffff30;
+}
+.page[data-theme='valencia'] .bottom-actions .toolbar-wordmark { color: #d0d6d9; text-shadow: 0 -1px #101311; }
+.page[data-theme='valencia'] .bottom-actions .toolbar-wordmark:hover { color: #f7fbff; text-shadow: 0 0 7px #c8d9e54d; }
+.page[data-theme='valencia'] .board-atmosphere { color: #879ca9; }
+[data-theme='valencia'][data-color-mode='dark'] {
+  color-scheme: dark; --theme-text: #e9edf0; --theme-muted: #a8b2b9; --theme-border: #56616a;
+  --theme-surface: #30363b; --valencia-paper: #30363b; --valencia-bg: #20262b; --valencia-field: #242b30;
+  --valencia-silver: linear-gradient(#515d66, #39444d 48%, #2b343c);
+  --valencia-glint: #ffffff20; --valencia-shadow: color-mix(in srgb, var(--palette-black) 33.333333%, transparent);
+}
+[data-theme='valencia'] input[type='range'] {
+  --range-track-border: 1px solid var(--theme-border); --range-track-radius: 99px;
+  --range-track-background: linear-gradient(90deg, #4f789b var(--radius-fill, 50%), var(--valencia-bg) var(--radius-fill, 50%));
+  --range-track-shadow: inset 0 1px 2px #2b2a2855; --range-track-firefox-shadow: inset 0 1px 2px #2b2a2855;
+  --range-thumb-box: border-box; --range-thumb-size: 20px; --range-thumb-offset: -7px;
+  --range-thumb-border: 1px solid #8b887e; --range-thumb-shadow: inset 0 1px #fff8, 0 1px 2px color-mix(in srgb, var(--palette-black) 20%, transparent);
+  --range-thumb-firefox-size: 20px; --range-thumb-firefox-shadow: 0 1px 2px color-mix(in srgb, var(--palette-black) 20%, transparent);
+}

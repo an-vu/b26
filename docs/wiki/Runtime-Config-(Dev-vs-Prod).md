@@ -7,7 +7,6 @@
 | `npm run dev` / `npm run dev:backend` | The shell script sources `backend/.env.dev` before starting Maven. |
 | `./mvnw spring-boot:run` directly | Your process environment; `.env.dev` is not loaded automatically. |
 | `./setup.sh` | Explicit local values in `docker-compose.local.yml`; `.env.dev` is not loaded. |
-| Older manual `docker-compose.yml` workflow | `backend/.env.dev` via `env_file`, plus explicit Compose overrides. |
 | Hosted backend | Environment variables configured in the hosting service. |
 
 `backend/.env.example` is a template, not the active environment file. Keep real credentials out of Git.
@@ -17,10 +16,8 @@
 - Default profile: **`postgres`**.
 - `postgres` and `dev`: external PostgreSQL connection, Hibernate `validate`.
 - `prod`: external PostgreSQL connection, Hibernate defaults to `validate`; an override exists through `SPRING_JPA_HIBERNATE_DDL_AUTO`.
-- `test`: in-memory H2, schema `create-drop`, Flyway disabled. Real PostgreSQL tests run separately.
+- `test`: PostgreSQL from `POSTGRES_TEST_*` with Flyway and `validate`; the suite cleans and re-migrates that database (see [Testing](Testing)).
 - **`APP_AUTH_REQUIRE_PASSWORD=false`** controls local password bypass. Choosing the `dev` profile alone does not enable it.
-
-The older `docker-compose.yml` explicitly overrides `SPRING_PROFILES_ACTIVE` to `prod` unless its interpolation environment supplies another value. It also supplies `APP_CORS_ALLOWED_ORIGINS`, defaulting to `http://localhost:4200`. Values set only in the service's `.env.dev` cannot override these explicit Compose entries.
 
 ## Important settings
 
@@ -55,7 +52,7 @@ System-route updates and the `APP_ADMIN_TOKEN` / `X-Admin-Token` bypass are reti
 
 - Frontend code uses relative `/api/...` paths.
 - Angular development proxy forwards to `http://localhost:8080`.
-- Docker Nginx forwards to `http://backend:8080`.
+- Inside `./setup.sh`, `proxy.docker.conf.json` forwards to `http://backend:8080`.
 - `frontend/vercel.json` forwards to the configured Render backend URL.
 
 See [Docker](Docker), [Local development](Getting-Started-%28Local%29), and [Deployment](Deployment) for complete workflows.

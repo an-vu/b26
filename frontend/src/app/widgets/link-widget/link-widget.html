@@ -24,14 +24,19 @@
   </article>
 } @else {
 <article class="widget">
-  <img *ngIf="imageUrl" [src]="imageUrl" [alt]="widget.title" loading="lazy" />
-  <p *ngIf="description" class="description">{{ description }}</p>
-  <a *ngIf="url; else invalid" class="link app-button" (click)="recordClick()" [href]="url" target="_blank" rel="noreferrer noopener">
-    Visit
-  </a>
-  <ng-template #invalid>
+  @if (imageUrl) {
+    <img [src]="imageUrl" [alt]="widget().title" loading="lazy" />
+  }
+  @if (description) {
+    <p class="description">{{ description }}</p>
+  }
+  @if (url) {
+    <a class="link app-button" (click)="recordClick()" [href]="url" target="_blank" rel="noreferrer noopener">
+      Visit
+    </a>
+  } @else {
     <p class="fallback">Add a social profile URL.</p>
-  </ng-template>
+  }
 </article>
 
 }

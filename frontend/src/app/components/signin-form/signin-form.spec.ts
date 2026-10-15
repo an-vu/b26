@@ -10,7 +10,7 @@ describe('Sign-in onboarding', () => {
       providers: [provideRouter([]), provideHttpClient()],
     });
     const fixture = TestBed.createComponent(SigninFormComponent);
-    fixture.componentInstance.widget = { id: 1, type: 'signin', title: 'Welcome', layout: 'span-2', config: {}, enabled: true, order: 0 };
+    fixture.componentRef.setInput('widget', { id: 1, type: 'signin', title: 'Welcome', layout: 'span-2', config: {}, enabled: true, order: 0 });
     fixture.detectChanges();
     const buttons = () => Array.from(fixture.nativeElement.querySelectorAll('button')) as HTMLButtonElement[];
     buttons().find(button => button.textContent?.includes("Don't Have"))!.click();

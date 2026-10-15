@@ -9,4 +9,9 @@ public record BoardAppearance(
     @NotNull @Pattern(regexp = AppearanceRules.PATTERN) String pattern,
     @Pattern(regexp = AppearanceRules.THEME) String themeFamily,
     @Pattern(regexp = AppearanceRules.INTENSITY) String patternIntensity,
-    @Min(1) @Max(3) Integer spacingStep) {}
+    @Min(1) @Max(3) Integer spacingStep) {
+  public BoardAppearance {
+    // Legacy theme ids are normalized before validation and persistence.
+    themeFamily = AppearanceRules.normalizeThemeFamily(themeFamily);
+  }
+}

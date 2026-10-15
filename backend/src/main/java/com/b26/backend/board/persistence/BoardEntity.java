@@ -42,7 +42,7 @@ public class BoardEntity {
   private String theme = "light";
 
   @Column(name = "appearance_theme_family", nullable = false)
-  private String themeFamily = "default";
+  private String themeFamily = "berry";
 
   @Column(name = "appearance_pattern_intensity", nullable = false)
   private String patternIntensity = "light";

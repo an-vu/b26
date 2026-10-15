@@ -1,5 +1,5 @@
-import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { Component, inject, input } from '@angular/core';
+import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { SiteNavigationComponent } from '../../components/site-navigation/site-navigation';
 import { SiteThemeService } from '../../services/site-theme.service';
 import { BoardAtmosphereComponent } from '../../components/board-atmosphere/board-atmosphere';
@@ -12,7 +12,7 @@ import type { BoardAppearance } from '../../models/board';
     <main class="page app-page" [class.home-page]="home()" [class.visitor-home]="visitorHero()" [attr.data-theme]="theme.themeId()" [attr.data-color-mode]="theme.colorMode()"
       [attr.data-pattern]="appearance()?.pattern" [attr.data-intensity]="appearance()?.patternIntensity">
       @if (appearance(); as appearance) {
-        <app-board-atmosphere [appearance]="appearance" [darkInk]="theme.themeId() === 'default' && theme.colorMode() === 'light' && theme.foreground() === '#30302e'" />
+        <app-board-atmosphere [appearance]="appearance" [darkInk]="theme.themeId() === 'berry' && theme.colorMode() === 'light' && theme.foreground() === '#30302e'" />
       }
       <section appWidgetBounce class="app-page-content"><ng-content /></section>
       <app-site-navigation [brandAtTop]="home()" [visitorHero]="visitorHero()"><ng-content select="[page-navigation]" /></app-site-navigation>

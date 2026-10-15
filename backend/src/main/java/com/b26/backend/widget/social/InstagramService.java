@@ -25,20 +25,23 @@ public class InstagramService {
 
   public InstagramProfile get(String username) {
     if (!provider.configured()) return InstagramProfile.state("not_configured");
-    var cached = cache.findFresh(username);
-    if (cached.isPresent()) return cached.get();
-    if (!slots.tryAcquire()) return InstagramProfile.state("unavailable");
+    var cached = cache.find(username);
+    if (cached.isPresent() && cached.get().fresh()) return cached.get().profile();
+    // Serve the last usable payload while refreshing; only first loads report "loading".
+    InstagramProfile stale = cached.map(InstagramCacheRepository.Cached::profile)
+        .filter(InstagramCacheRepository::isUsable).orElse(null);
+    if (!slots.tryAcquire()) return stale != null ? stale : InstagramProfile.state("unavailable");
     try {
       if (!cache.claimRefresh(username)) {
         slots.release();
-        return InstagramProfile.state("loading");
+        return stale != null ? stale : InstagramProfile.state("loading");
       }
       worker.submit(() -> refresh(username));
     } catch (RuntimeException error) {
       slots.release();
       throw error;
     }
-    return InstagramProfile.state("loading");
+    return stale != null ? stale : InstagramProfile.state("loading");
   }
 
   private void refresh(String username) {

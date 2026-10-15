@@ -1,8 +1,8 @@
 <article class="widget">
-  <h3>{{ widget?.title || 'Account Settings' }}</h3>
+  <h3>{{ widget()?.title || 'Account Settings' }}</h3>
 
-  <ng-container *ngIf="vm$ | async as vm">
-    <ng-container *ngIf="vm.profile; else signedOut">
+  @if (vm(); as vm) {
+    @if (vm.profile) {
     <section class="settings-section">
       <p class="settings-section-title">Account Information</p>
 
@@ -15,7 +15,9 @@
             (ngModelChange)="onProfileFieldChanged('displayName', $event)"
             placeholder="Name" aria-label="Name"
           /></span>
-          <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'displayName'">Saved</em>
+          @if (vm.profileSavedField === 'displayName') {
+            <em class="settings-saved-indicator">Saved</em>
+          }
         </div>
       </label>
 
@@ -28,7 +30,9 @@
             (ngModelChange)="onProfileFieldChanged('username', $event)"
             placeholder="Username" aria-label="Username"
           /></span>
-          <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'username'">Saved</em>
+          @if (vm.profileSavedField === 'username') {
+            <em class="settings-saved-indicator">Saved</em>
+          }
         </div>
       </label>
 
@@ -36,12 +40,14 @@
 
         <div class="settings-input-status-row">
           <span class="app-text-field"><span class="app-text-field-label" aria-hidden="true">Email</span><input
-            type="email"
+            type="email" required
             [ngModel]="vm.email"
             (ngModelChange)="onProfileFieldChanged('email', $event)"
             placeholder="Email" aria-label="Email"
           /></span>
-          <em class="settings-saved-indicator" *ngIf="vm.profileSavedField === 'email'">Saved</em>
+          @if (vm.profileSavedField === 'email') {
+            <em class="settings-saved-indicator">Saved</em>
+          }
         </div>
       </label>
 
@@ -52,7 +58,8 @@
       </div>
     </section>
 
-    <section class="settings-section" *ngIf="showMainBoard">
+    @if (showMainBoard()) {
+    <section class="settings-section">
       <p class="settings-section-title">Main Board</p>
 
       <label class="settings-field">
@@ -60,20 +67,29 @@
         <div class="settings-input-status-row">
           <select [ngModel]="vm.mainBoardId" (ngModelChange)="onMainBoardChanged($event)">
             <option value="">No public main board</option>
-            <option *ngFor="let board of vm.boards" [value]="board.id" [disabled]="board.visibility === 'private'">
-              {{ board.boardName }}{{ board.visibility === 'private' ? ' · Private' : '' }} ({{ boardRoute(board) }})
-            </option>
+            @for (board of vm.boards; track board.id) {
+              <option [value]="board.id" [disabled]="board.visibility === 'private'">
+                {{ board.boardName }}{{ board.visibility === 'private' ? ' · Private' : '' }} ({{ boardRoute(board) }})
+              </option>
+            }
           </select>
-          <em class="settings-saved-indicator" *ngIf="vm.saved">Saved</em>
+          @if (vm.saved) {
+            <em class="settings-saved-indicator">Saved</em>
+          }
         </div>
       </label>
 
     </section>
-    <p role="alert" class="settings-status settings-status--error" *ngIf="vm.errorMessage">{{ vm.errorMessage }}</p>
-    </ng-container>
-    <ng-template #signedOut>
-      <p *ngIf="vm.isHydrating; else signinPrompt">Loading account…</p>
-      <ng-template #signinPrompt><a routerLink="/signin">Sign in to manage your account</a></ng-template>
-    </ng-template>
-  </ng-container>
+    }
+    @if (vm.errorMessage) {
+      <p role="alert" class="settings-status settings-status--error">{{ vm.errorMessage }}</p>
+    }
+    } @else {
+      @if (vm.isHydrating) {
+        <p>Loading account…</p>
+      } @else {
+        <a routerLink="/signin">Sign in to manage your account</a>
+      }
+    }
+  }
 </article>

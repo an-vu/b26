@@ -1,16 +1,14 @@
 package com.b26.backend.widget.domain;
 
-import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
-import com.b26.backend.widget.api.SyncWidgetsRequest;
-import com.b26.backend.widget.api.UpsertWidgetRequest;
+import com.b26.backend.common.api.BadRequestException;
+import com.b26.backend.common.api.NotFoundException;
 import com.b26.backend.widget.api.UpsertWidgetWithIdRequest;
 import com.b26.backend.widget.api.WidgetDto;
 import com.b26.backend.widget.persistence.WidgetEntity;
 import com.b26.backend.widget.persistence.WidgetRepository;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.OffsetDateTime;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -24,74 +22,29 @@ import org.springframework.transaction.annotation.Transactional;
 public class WidgetService {
   private final WidgetRepository widgetRepository;
   private final BoardRepository boardRepository;
-  private final ObjectMapper objectMapper;
 
-  public WidgetService(
-      WidgetRepository widgetRepository,
-      BoardRepository boardRepository,
-      ObjectMapper objectMapper) {
+  public WidgetService(WidgetRepository widgetRepository, BoardRepository boardRepository) {
     this.widgetRepository = widgetRepository;
     this.boardRepository = boardRepository;
-    this.objectMapper = objectMapper;
   }
 
   @Transactional(readOnly = true)
   public List<WidgetDto> getWidgetsForBoard(String boardId) {
     BoardEntity board = findBoardByUrl(boardId);
     return widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId()).stream()
-        .map(this::toDto)
+        .map(WidgetService::toDto)
         .toList();
   }
 
   @Transactional(readOnly = true)
   public WidgetDto getWidgetByBoardId(String boardId, long widgetId) {
     return toDto(widgetRepository.findByIdAndBoard_Id(widgetId, boardId)
-        .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId)));
+        .orElseThrow(() -> NotFoundException.widget(boardId, widgetId)));
   }
 
+  /** Replaces the board's widgets with the given list; an invalid item rolls back the whole save. */
   @Transactional
-  public WidgetDto createWidget(String boardId, UpsertWidgetRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-    validateLayout(request.layout());
-    validateConfig(request.type(), request.config());
-
-    WidgetEntity widget = new WidgetEntity();
-    applyRequest(widget, request);
-    widget.setBoard(board);
-    board.setUpdatedAt(OffsetDateTime.now());
-    return toDto(widgetRepository.save(widget));
-  }
-
-  @Transactional
-  public WidgetDto updateWidget(String boardId, long widgetId, UpsertWidgetRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-    validateLayout(request.layout());
-    validateConfig(request.type(), request.config());
-
-    WidgetEntity widget =
-        widgetRepository
-            .findByIdAndBoard_Id(widgetId, board.getId())
-            .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
-    applyRequest(widget, request);
-    board.setUpdatedAt(OffsetDateTime.now());
-    return toDto(widgetRepository.save(widget));
-  }
-
-  @Transactional
-  public void deleteWidget(String boardId, long widgetId) {
-    BoardEntity board = findBoardByUrl(boardId);
-    WidgetEntity widget =
-        widgetRepository
-            .findByIdAndBoard_Id(widgetId, board.getId())
-            .orElseThrow(() -> new WidgetNotFoundForBoardException(boardId, widgetId));
-    widgetRepository.delete(widget);
-    board.setUpdatedAt(OffsetDateTime.now());
-  }
-
-  @Transactional
-  public List<WidgetDto> syncWidgets(String boardId, SyncWidgetsRequest request) {
-    BoardEntity board = findBoardByUrl(boardId);
-
+  public List<WidgetDto> syncWidgets(BoardEntity board, List<UpsertWidgetWithIdRequest> items) {
     List<WidgetEntity> existing = widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId());
     Map<Long, WidgetEntity> byId = new HashMap<>();
     for (WidgetEntity widget : existing) {
@@ -99,25 +52,25 @@ public class WidgetService {
     }
 
     Set<Long> keptIds = new HashSet<>();
-    for (UpsertWidgetWithIdRequest item : request.widgets()) {
+    for (UpsertWidgetWithIdRequest item : items) {
       validateLayout(item.layout());
       validateConfig(item.type(), item.config());
 
       WidgetEntity widget;
       if (item.id() != null) {
         if (!keptIds.add(item.id())) {
-          throw new InvalidWidgetConfigException("widgets contain duplicate ids");
+          throw invalid("widgets contain duplicate ids");
         }
         widget = byId.get(item.id());
         if (widget == null) {
-          throw new WidgetNotFoundForBoardException(boardId, item.id());
+          throw NotFoundException.widget(board.getBoardUrl(), item.id());
         }
       } else {
         widget = new WidgetEntity();
         widget.setBoard(board);
       }
 
-      applyRequest(widget, item.toUpsertRequest());
+      applyRequest(widget, item);
       WidgetEntity saved = widgetRepository.save(widget);
       keptIds.add(saved.getId());
     }
@@ -130,28 +83,28 @@ public class WidgetService {
 
     board.setUpdatedAt(OffsetDateTime.now());
     return widgetRepository.findByBoard_IdOrderBySortOrderAsc(board.getId()).stream()
-        .map(this::toDto)
+        .map(WidgetService::toDto)
         .toList();
   }
 
   private BoardEntity findBoardByUrl(String boardUrl) {
     return boardRepository
         .findByBoardUrl(boardUrl)
-        .orElseThrow(() -> new BoardNotFoundException(boardUrl));
+        .orElseThrow(() -> NotFoundException.board(boardUrl));
   }
 
-  private void applyRequest(WidgetEntity widget, UpsertWidgetRequest request) {
+  private static void applyRequest(WidgetEntity widget, UpsertWidgetWithIdRequest request) {
     widget.setType(request.type().trim());
     widget.setTitle(request.title().trim());
     widget.setLayout(request.layout().trim());
-    widget.setConfigJson(request.config().toString());
+    widget.setConfig(request.config().deepCopy());
     widget.setEnabled(request.enabled());
     widget.setSortOrder(request.order());
   }
 
   private static void validateConfig(String type, JsonNode config) {
     if (!config.isObject() || config.toString().length() > 4000) {
-      throw new InvalidWidgetConfigException("Widget configuration must be an object of at most 4000 characters");
+      throw invalid("Widget configuration must be an object of at most 4000 characters");
     }
     if ("embed".equals(type) || "link".equals(type)) {
       String field = "embed".equals(type) ? "embedUrl" : "url";
@@ -160,7 +113,7 @@ public class WidgetService {
         return;
       }
       if (!url.isTextual() || !isHttpUrl(url.asText())) {
-        throw new InvalidWidgetConfigException(type + " config requires a valid http " + field);
+        throw invalid(type + " config requires a valid http " + field);
       }
       return;
     }
@@ -171,11 +124,11 @@ public class WidgetService {
         return;
       }
       if (!places.isArray()) {
-        throw new InvalidWidgetConfigException("map config places must be an array");
+        throw invalid("map config places must be an array");
       }
       for (JsonNode place : places) {
         if (!place.isTextual()) {
-          throw new InvalidWidgetConfigException("map config places entries must be strings");
+          throw invalid("map config places entries must be strings");
         }
       }
       return;
@@ -188,7 +141,7 @@ public class WidgetService {
       return;
     }
 
-    throw new InvalidWidgetConfigException("unsupported widget type: " + type);
+    throw invalid("unsupported widget type: " + type);
   }
 
   private static boolean isHttpUrl(String value) {
@@ -209,26 +162,22 @@ public class WidgetService {
         && !"span-2x2".equals(layout)
         && !"span-3x3".equals(layout)
         && !"span-4".equals(layout)) {
-      throw new InvalidWidgetConfigException("unsupported widget layout: " + layout);
+      throw invalid("unsupported widget layout: " + layout);
     }
   }
 
-  private WidgetDto toDto(WidgetEntity widget) {
+  private static BadRequestException invalid(String message) {
+    return new BadRequestException("widget", message);
+  }
+
+  private static WidgetDto toDto(WidgetEntity widget) {
     return new WidgetDto(
         widget.getId(),
         widget.getType(),
         widget.getTitle(),
         widget.getLayout(),
-        parseJson(widget.getConfigJson()),
+        widget.getConfig(),
         widget.isEnabled(),
         widget.getSortOrder());
-  }
-
-  private JsonNode parseJson(String json) {
-    try {
-      return objectMapper.readTree(json);
-    } catch (Exception exception) {
-      return objectMapper.createObjectNode();
-    }
   }
 }

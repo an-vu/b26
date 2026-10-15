@@ -3,7 +3,7 @@ import { vi } from 'vitest';
 import { HttpErrorResponse } from '@angular/common/http';
 import type { BoardService } from '../../services/board.service';
 import { resolveBoard$ } from './board-page.routing';
-import { mapAccountBoards, runCreateBoardFlow } from './board-page.account';
+import { mapAccountBoards } from './board-editor.store';
 import { boardRoute } from '../../models/board-route';
 
 const board = { id: 'id-1', boardName: 'Portfolio', boardUrl: 'portfolio', ownerUsername: 'alice' };
@@ -35,15 +35,5 @@ describe('Owner-qualified board routes', () => {
   it('builds account links from the board owner, including boards shown to admins', () => {
     expect(mapAccountBoards([board])[0].route).toBe('/alice/portfolio');
     expect(boardRoute({ boardUrl: 'old-board' })).toBe('/b/old-board');
-  });
-
-  it('opens newly created boards using the returned owner', () => {
-    const router = { navigateByUrl: vi.fn() };
-    runCreateBoardFlow({
-      boardService: { createBoard: () => of(board) }, boardStore: { refreshBoards: vi.fn() },
-      userStore: { refreshMyPreferences: vi.fn() }, router, closeAccountMenu: vi.fn(),
-      onStart: vi.fn(), onFinalize: vi.fn(), onError: vi.fn(),
-    } as any);
-    expect(router.navigateByUrl).toHaveBeenCalledWith('/alice/portfolio');
   });
 });

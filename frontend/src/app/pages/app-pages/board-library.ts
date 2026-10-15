@@ -1,8 +1,7 @@
-import { ChangeDetectorRef, Component, DestroyRef, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { ChangeDetectorRef, Component, DestroyRef, computed, effect, inject, untracked } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { forkJoin, switchMap, of, Observable, distinctUntilChanged, map, Subject, Subscription, takeUntil } from 'rxjs';
+import { forkJoin, switchMap, of, Observable, Subject, Subscription, takeUntil } from 'rxjs';
 import { BoardService } from '../../services/board.service';
 import { BoardStoreService } from '../../services/board-store.service';
 import { UserStoreService } from '../../services/user-store.service';
@@ -11,17 +10,17 @@ import { boardRoute } from '../../models/board-route';
 import { getApiErrorMessage } from '../../utils/api-error.util';
 
 @Component({
-  selector: 'app-board-library', standalone: true, imports: [CommonModule, RouterLink],
+  selector: 'app-board-library', standalone: true, imports: [RouterLink],
   template: `<section class="board-library" aria-labelledby="library-title"><h2 id="library-title">Your boards</h2>
     <p>Public boards can be visited by anyone with the link. Your main board appears at your username. Making a board public does not publish it to Home.</p>
-    <p *ngIf="error" role="alert">{{error}}</p><p *ngIf="loading">Loading boards…</p>
-    <article *ngFor="let board of boards"><div><a [routerLink]="boardRoute(board)">{{board.boardName}}</a><small>{{board.visibility === 'private' ? 'Private' : 'Public'}}{{board.id === mainId ? ' · Main board' : ''}}</small></div>
+    @if (error) {<p role="alert">{{error}}</p>}@if (loading) {<p>Loading boards…</p>}
+    @for (board of boards; track board.id) {<article><div><a [routerLink]="boardRoute(board)">{{board.boardName}}</a><small>{{board.visibility === 'private' ? 'Private' : 'Public'}}{{board.id === mainId ? ' · Main board' : ''}}</small></div>
       <div class="actions"><button class="app-button" type="button" [disabled]="busy" (click)="changeVisibility(board)">{{board.visibility === 'private' ? 'Make public' : 'Make private'}}</button>
       <button class="app-button" type="button" [disabled]="busy" (click)="setMain(board)">{{board.id === mainId ? 'Remove main board' : 'Set as main board'}}</button></div>
-    </article><p *ngIf="!loading && !signedIn">Sign in to manage your boards.</p>
-    <p *ngIf="!loading && signedIn && !boards.length && !error">No boards yet.</p>
-    <button class="app-button" *ngIf="error && signedIn" type="button" [disabled]="loading || busy" (click)="refresh(true)">Retry loading boards</button>
-    <button class="app-button" *ngIf="signedIn" type="button" [disabled]="loading || busy" (click)="create()">Create private board</button>
+    </article>}@if (!loading && !signedIn) {<p>Sign in to manage your boards.</p>}
+    @if (!loading && signedIn && !boards.length && !error) {<p>No boards yet.</p>}
+    @if (error && signedIn) {<button class="app-button" type="button" [disabled]="loading || busy" (click)="refresh(true)">Retry loading boards</button>}
+    @if (signedIn) {<button class="app-button" type="button" [disabled]="loading || busy" (click)="create()">Create private board</button>}
   </section>`,
   styleUrl: './board-library.css'
 })
@@ -36,17 +35,18 @@ export class BoardLibraryComponent {
   boards: Board[] = []; mainId = ''; busy = false; loading = true; error = ''; signedIn = false;
   private refreshRequest?: Subscription;
   private readonly accountChanged$ = new Subject<void>();
+  /** Owner-qualified links depend on the username too, so a rename reloads the list. */
+  private readonly account = computed(() => { const profile = this.userStore.profile(); return profile ? `${profile.userId}:${profile.username}` : null; });
   constructor() {
-    this.userStore.profile$.pipe(
-      map(profile => profile ? `${profile.userId}:${profile.username}` : null), distinctUntilChanged(), takeUntilDestroyed(this.destroyRef)
-    ).subscribe(id => {
-      this.accountChanged$.next();
-      this.refreshRequest?.unsubscribe();
-      this.boards = []; this.mainId = ''; this.error = ''; this.busy = false; this.loading = false;
-      this.signedIn = !!id;
-      if (id) this.refresh();
-      this.cdr.markForCheck();
-    });
+    effect(() => { const id = this.account(); untracked(() => this.accountChanged(id)); });
+  }
+  private accountChanged(id: string | null) {
+    this.accountChanged$.next();
+    this.refreshRequest?.unsubscribe();
+    this.boards = []; this.mainId = ''; this.error = ''; this.busy = false; this.loading = false;
+    this.signedIn = !!id;
+    if (id) this.refresh();
+    this.cdr.markForCheck();
   }
   refresh(clearError = false) {
     if (!this.signedIn) return;

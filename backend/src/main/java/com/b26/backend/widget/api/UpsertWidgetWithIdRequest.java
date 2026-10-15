@@ -5,6 +5,7 @@ import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 
+/** A widget in an editor save; a null id creates it, an existing id updates it. */
 public record UpsertWidgetWithIdRequest(
     Long id,
     @NotBlank(message = "type is required") String type,
@@ -12,8 +13,4 @@ public record UpsertWidgetWithIdRequest(
     @NotBlank(message = "layout is required") String layout,
     @NotNull(message = "config is required") JsonNode config,
     @NotNull(message = "enabled is required") Boolean enabled,
-    @NotNull(message = "order is required") @Min(value = 0, message = "order must be >= 0") Integer order) {
-  public UpsertWidgetRequest toUpsertRequest() {
-    return new UpsertWidgetRequest(type, title, layout, config, enabled, order);
-  }
-}
+    @NotNull(message = "order is required") @Min(value = 0, message = "order must be >= 0") Integer order) {}

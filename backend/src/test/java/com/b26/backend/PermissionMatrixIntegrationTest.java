@@ -33,10 +33,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @Transactional
 class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
-  private static final String LINK = """
-      {"type":"link","title":"Permission test","layout":"span-1",
-       "config":{"url":"https://example.com"},"enabled":true,"order":0}
-      """;
   private Actor owner;
   private Actor outsider;
   private Actor admin;
@@ -91,13 +87,7 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
 
   @Test
   void instagramLookupStaysScopedToTheEnabledWidgetAndBoard() throws Exception {
-    String payload = """
-        {"type":"link","title":"Instagram","layout":"span-1",
-         "config":{"url":"https://instagram.com/instagram"},"enabled":true,"order":0}
-        """;
-    var response = mockMvc.perform(post(boardPath() + "/widgets").header(AUTHORIZATION_HEADER, owner.token())
-        .contentType(MediaType.APPLICATION_JSON).content(payload)).andExpect(status().isCreated()).andReturn();
-    long widgetId = objectMapper.readTree(response.getResponse().getContentAsString()).get("id").asLong();
+    long widgetId = createWidget(board.getId(), "link", "{\"url\":\"https://instagram.com/instagram\"}");
     String suffix = "/widgets/" + widgetId + "/instagram?expectedUsername=changed-profile";
     String endpoint = API_BOARD + "/" + board.getId() + suffix;
     // A stale profile name must not initiate a provider fetch.
@@ -106,9 +96,9 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
     var another = createBoard(owner);
     mockMvc.perform(get(API_BOARD + "/" + another.getId() + suffix).header(AUTHORIZATION_HEADER, owner.token()))
         .andExpect(status().isNotFound());
-    mockMvc.perform(put(boardPath() + "/widgets/" + widgetId).header(AUTHORIZATION_HEADER, owner.token())
-        .contentType(MediaType.APPLICATION_JSON).content(payload.replace("true", "false")))
-        .andExpect(status().isOk());
+    var widget = widgetRepository.findById(widgetId).orElseThrow();
+    widget.setEnabled(false);
+    widgetRepository.saveAndFlush(widget);
     mockMvc.perform(get(endpoint).header(AUTHORIZATION_HEADER, owner.token())).andExpect(status().isNotFound());
   }
 
@@ -131,8 +121,8 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
     for (String suffix : List.of("", "/widgets", "/editor", "/permissions")) {
       assertPrivateRead(boardPath() + suffix, variant);
     }
-    String path = boardPath() + "/meta";
-    String payload = "{\"name\":\"Changed\",\"headline\":\"Only an owner can save\"}";
+    String path = boardPath() + "/identity";
+    String payload = "{\"boardName\":\"Changed\",\"boardUrl\":\"" + board.getBoardUrl() + "\"}";
     mockMvc.perform(routed(HttpMethod.PATCH, path, variant).contentType(MediaType.APPLICATION_JSON)
         .content(payload)).andExpect(status().isUnauthorized());
     mockMvc.perform(routed(HttpMethod.PATCH, path, variant).header(AUTHORIZATION_HEADER, outsider.token())
@@ -160,9 +150,8 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   static Stream<Arguments> writeCases() {
-    return Stream.of("owner", "admin").flatMap(role -> Stream.of("metadata", "url", "identity",
-        "visibility", "editor", "create widget", "update widget", "sync widgets", "delete widget",
-        "delete board").map(operation -> Arguments.of(role, operation)));
+    return Stream.of("owner", "admin").flatMap(role -> Stream.of("identity",
+        "visibility", "editor", "delete board").map(operation -> Arguments.of(role, operation)));
   }
 
   @Test
@@ -178,8 +167,7 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
       }
       mockMvc.perform(withToken(get(boardPath() + "/permissions"), token))
           .andExpect(status().isOk()).andExpect(jsonPath("$.canEdit").value(canEdit));
-      for (String path : List.of(boardPath() + "/editor", "/api/insights/" + board.getId(),
-          "/api/insights/" + board.getId() + "/summary")) {
+      for (String path : List.of(boardPath() + "/editor", "/api/insights/" + board.getId() + "/summary")) {
         mockMvc.perform(withToken(get(path), token)).andExpect(status().is(canEdit ? 200 : 404));
         mockMvc.perform(withToken(head(path), token)).andExpect(status().is(canEdit ? 200 : 404));
       }
@@ -198,7 +186,7 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
 
     mockMvc.perform(get(boardPath()).header(AUTHORIZATION_HEADER, owner.token()))
         .andExpect(status().isNotFound());
-    mockMvc.perform(mutation("metadata", before).request().header(AUTHORIZATION_HEADER, owner.token()))
+    mockMvc.perform(mutation("identity", before).request().header(AUTHORIZATION_HEADER, owner.token()))
         .andExpect(status().isUnauthorized());
     for (String path : List.of("/api/auth/me", API_USERS_ME, API_USERS_ME_PREFERENCES,
         API_USERS_ME_PREFERENCES + "/home", API_BOARD + "/mine")) {
@@ -239,9 +227,7 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
 
   @Test
   void privateBoardAnalyticsEventsRejectAnUnrelatedSignedInUser() throws Exception {
-    var result = mockMvc.perform(post(boardPath() + "/widgets").header(AUTHORIZATION_HEADER, owner.token())
-        .contentType(MediaType.APPLICATION_JSON).content(LINK)).andExpect(status().isCreated()).andReturn();
-    long widgetId = objectMapper.readTree(result.getResponse().getContentAsString()).get("id").asLong();
+    long widgetId = createLink(board.getId());
     for (String path : List.of("/api/insights/view", "/api/insights/widgets/" + widgetId + "/click")) {
       String payload = "{\"boardId\":\"" + board.getId() + "\",\"source\":\"direct\"}";
       mockMvc.perform(post(path).header(AUTHORIZATION_HEADER, outsider.token())
@@ -291,12 +277,7 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
   private Mutation mutation(String operation, JsonNode snapshot) {
     String path = boardPath();
     long version = snapshot.get("board").get("version").asLong();
-    long widgetId = snapshot.get("widgets").get(0).get("id").asLong();
     return switch (operation) {
-      case "metadata" -> new Mutation(HttpMethod.PATCH, path + "/meta",
-          "{\"name\":\"Saved\",\"headline\":\"Saved description\"}", 200);
-      case "url" -> new Mutation(HttpMethod.PATCH, path + "/url",
-          "{\"boardUrl\":\"renamed-" + UUID.randomUUID() + "\"}", 200);
       case "identity" -> new Mutation(HttpMethod.PATCH, path + "/identity",
           "{\"boardName\":\"Renamed\",\"boardUrl\":\"" + board.getBoardUrl() + "\",\"version\":" + version + "}", 200);
       case "visibility" -> new Mutation(HttpMethod.PATCH, path + "/visibility",
@@ -307,10 +288,6 @@ class PermissionMatrixIntegrationTest extends ApiIntegrationTestSupport {
         payload.set("widgets", snapshot.get("widgets").deepCopy());
         yield new Mutation(HttpMethod.PUT, path + "/editor", payload.toString(), 200);
       }
-      case "create widget" -> new Mutation(HttpMethod.POST, path + "/widgets", LINK, 201);
-      case "update widget" -> new Mutation(HttpMethod.PUT, path + "/widgets/" + widgetId, LINK, 200);
-      case "sync widgets" -> new Mutation(HttpMethod.PUT, path + "/widgets/sync", "{\"widgets\":[]}", 200);
-      case "delete widget" -> new Mutation(HttpMethod.DELETE, path + "/widgets/" + widgetId, "", 204);
       case "delete board" -> new Mutation(HttpMethod.DELETE, path, "", 204);
       default -> throw new IllegalArgumentException(operation);
     };

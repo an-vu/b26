@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { inject, Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import type {
@@ -7,8 +7,6 @@ import type {
   BoardEdit,
   SaveBoardEditRequest,
   UpdateBoardIdentityRequest,
-  UpdateBoardMetaRequest,
-  UpdateBoardUrlRequest,
   UserMainBoard,
   UserProfile,
   UpdateUserPreferencesRequest,
@@ -16,12 +14,12 @@ import type {
   UserPreferences,
   BoardPermissions,
 } from '../models/board';
-import type { SyncWidgetsRequest, UpsertWidgetRequest, Widget } from '../models/widget';
+import type { Widget } from '../models/widget';
 import type { HomeAppearance } from '../models/home-appearance';
 
 @Injectable({ providedIn: 'root' })
 export class BoardService {
-  constructor(private http: HttpClient) {}
+  private readonly http = inject(HttpClient);
 
   getEditor(boardUrl: string): Observable<BoardEdit> {
     return this.http.get<BoardEdit>(`/api/board/${boardUrl}/editor`);
@@ -55,20 +53,6 @@ export class BoardService {
     return this.http.delete<void>(`/api/board/${boardId}`);
   }
 
-  updateBoardMeta(boardId: string, payload: UpdateBoardMetaRequest): Observable<Board> {
-    return this.http.patch<Board>(
-      `/api/board/${boardId}/meta`,
-      payload
-    );
-  }
-
-  updateBoardUrl(boardId: string, payload: UpdateBoardUrlRequest): Observable<Board> {
-    return this.http.patch<Board>(
-      `/api/board/${boardId}/url`,
-      payload
-    );
-  }
-
   updateBoardIdentity(boardId: string, payload: UpdateBoardIdentityRequest): Observable<Board> {
     return this.http.patch<Board>(
       `/api/board/${boardId}/identity`,
@@ -86,33 +70,6 @@ export class BoardService {
 
   getWidgets(boardId: string): Observable<Widget[]> {
     return this.http.get<Widget[]>(`/api/board/${boardId}/widgets`);
-  }
-
-  createWidget(boardId: string, payload: UpsertWidgetRequest): Observable<Widget> {
-    return this.http.post<Widget>(
-      `/api/board/${boardId}/widgets`,
-      payload
-    );
-  }
-
-  updateWidget(boardId: string, widgetId: number, payload: UpsertWidgetRequest): Observable<Widget> {
-    return this.http.put<Widget>(
-      `/api/board/${boardId}/widgets/${widgetId}`,
-      payload
-    );
-  }
-
-  deleteWidget(boardId: string, widgetId: number): Observable<void> {
-    return this.http.delete<void>(
-      `/api/board/${boardId}/widgets/${widgetId}`
-    );
-  }
-
-  syncWidgets(boardId: string, payload: SyncWidgetsRequest): Observable<Widget[]> {
-    return this.http.put<Widget[]>(
-      `/api/board/${boardId}/widgets/sync`,
-      payload
-    );
   }
 
   getMyPreferences(): Observable<UserPreferences> {

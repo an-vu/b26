@@ -20,4 +20,6 @@ public interface AppUserRepository extends JpaRepository<AppUserEntity, String> 
   boolean existsByUsernameIgnoreCase(String username);
 
   boolean existsByEmailIgnoreCase(String email);
+
+  boolean existsByEmailIgnoreCaseAndIdNot(String email, String id);
 }

@@ -1,9 +1,9 @@
 package com.b26.backend.user.domain;
 
-import com.b26.backend.auth.domain.AuthService;
-import com.b26.backend.board.domain.BoardNotFoundException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.common.api.BadRequestException;
+import com.b26.backend.common.api.NotFoundException;
 import com.b26.backend.user.api.UpdateUserPreferencesRequest;
 import com.b26.backend.user.api.HomeAppearanceDto;
 import com.b26.backend.user.api.UserMainBoardDto;
@@ -20,40 +20,33 @@ public class UserPreferencesService {
   private final AppUserRepository appUserRepository;
   private final UserPreferenceRepository userPreferenceRepository;
   private final BoardRepository boardRepository;
-  private final AuthService authService;
-
 
   public UserPreferencesService(
       AppUserRepository appUserRepository,
       UserPreferenceRepository userPreferenceRepository,
-      BoardRepository boardRepository,
-      AuthService authService) {
+      BoardRepository boardRepository) {
     this.appUserRepository = appUserRepository;
     this.userPreferenceRepository = userPreferenceRepository;
     this.boardRepository = boardRepository;
-    this.authService = authService;
   }
 
   @Transactional
-  public UserPreferencesDto getMyPreferences(String authorizationHeader) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+  public UserPreferencesDto getMyPreferences(AppUserEntity user) {
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     BoardEntity board = resolveUserMainBoard(user.getId(), preference.getMainBoardId());
     return toDto(user, board);
   }
 
   @Transactional
-  public HomeAppearanceDto getHomeAppearance(String authorizationHeader) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
-    UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
+  public HomeAppearanceDto getHomeAppearance(String userId) {
+    UserPreferenceEntity preference = getOrCreatePreferences(userId);
     return homeAppearance(preference);
   }
 
   @Transactional
-  public HomeAppearanceDto updateHomeAppearance(String authorizationHeader, HomeAppearanceDto request) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
-    appUserRepository.lockById(user.getId()).orElseThrow(() -> new UserNotFoundException(user.getId()));
-    UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
+  public HomeAppearanceDto updateHomeAppearance(String userId, HomeAppearanceDto request) {
+    appUserRepository.lockById(userId).orElseThrow(() -> NotFoundException.user(userId));
+    UserPreferenceEntity preference = getOrCreatePreferences(userId);
     preference.setHomeRadiusStep(request.radiusStep());
     preference.setHomeSpacingStep(request.spacingStep());
     if (request.themeFamily() != null) preference.setHomeThemeFamily(request.themeFamily());
@@ -73,15 +66,14 @@ public class UserPreferencesService {
 
   @Transactional
   public UserPreferencesDto updateMyPreferences(
-      String authorizationHeader,
+      AppUserEntity user,
       UpdateUserPreferencesRequest request) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
     appUserRepository.lockById(user.getId())
-        .orElseThrow(() -> new UserNotFoundException(user.getId()));
+        .orElseThrow(() -> NotFoundException.user(user.getId()));
     String boardId = request.mainBoardId() == null ? "" : request.mainBoardId().trim();
     BoardEntity board = boardId.isEmpty() ? null : findBoardOwnedByUser(boardId, user.getId());
     if (board != null && !"public".equals(board.getVisibility())) {
-      throw new InvalidUserPreferencesException("The main board must be public. Make it public before selecting it.");
+      throw new BadRequestException("preferences", "The main board must be public. Make it public before selecting it.");
     }
     UserPreferenceEntity preference = getOrCreatePreferences(user.getId());
     preference.setMainBoardId(board == null ? null : board.getId());
@@ -93,11 +85,11 @@ public class UserPreferencesService {
   public UserMainBoardDto getMainBoardByUsername(String username) {
     String normalized = username.trim().toLowerCase(java.util.Locale.ROOT);
     if (normalized.isEmpty()) {
-      throw new UserNotFoundException(username);
+      throw NotFoundException.user(username);
     }
 
     AppUserEntity user = appUserRepository.findByUsername(normalized)
-        .orElseThrow(() -> new UserNotFoundException(username));
+        .orElseThrow(() -> NotFoundException.user(username));
     String mainId = userPreferenceRepository.findById(user.getId()).map(UserPreferenceEntity::getMainBoardId).orElse(null);
     BoardEntity board = resolveUserMainBoard(user.getId(), mainId);
     return new UserMainBoardDto(user.getId(), user.getUsername(), board == null ? "" : board.getId(), board == null ? "" : board.getBoardUrl(), user.getDisplayName());
@@ -115,9 +107,9 @@ public class UserPreferencesService {
   }
 
   private BoardEntity findBoardOwnedByUser(String boardId, String userId) {
-    BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> new BoardNotFoundException(boardId));
+    BoardEntity board = boardRepository.findById(boardId).orElseThrow(() -> NotFoundException.board(boardId));
     if (!userId.equals(board.getOwnerUserId())) {
-      throw new InvalidUserPreferencesException(
+      throw new BadRequestException("preferences",
           "mainBoardId must reference a board owned by user '" + userId + "'");
     }
     return board;

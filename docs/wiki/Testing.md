@@ -15,26 +15,20 @@ Tests use Vitest through Angular. The production output is `frontend/dist/b26`, 
 
 The local 1.6.0 production frontend build passed. See [Troubleshooting](Troubleshooting) for build issues.
 
-## Backend: fast suite
+## Backend
+
+Every backend test runs against PostgreSQL with the real Flyway migrations, so the suite proves the schema, constraints, and migrations as well as the API. Start a disposable database, then run from `backend/` with Java 21:
 
 ```bash
-cd backend
-./mvnw test
+docker run -d --name b26-test-db -p 127.0.0.1:5433:5432 -e POSTGRES_DB=b26_test -e POSTGRES_PASSWORD=postgres postgres:16
+POSTGRES_TEST_URL='jdbc:postgresql://localhost:5433/b26_test' POSTGRES_TEST_USER=postgres POSTGRES_TEST_PASSWORD=postgres ./mvnw test
 ```
 
-Use Java 21. These tests normally use H2 and generated schemas; they do not by themselves prove PostgreSQL migrations work.
+Without the variables, tests connect to `localhost:5432/b26_test` as `postgres`/`postgres`.
 
-## Backend: include PostgreSQL tests
+**The suite wipes its database.** Each test context and test class runs Flyway `clean` and then re-migrates with the fixtures in `src/test/resources/db/test-fixtures`. As a safety net, the tests refuse to clean any database whose name doesn't contain `test`. Never point `POSTGRES_TEST_URL` at a database you care about.
 
-Start a disposable PostgreSQL database, then run from `backend/`:
-
-```bash
-POSTGRES_TEST_URL='jdbc:postgresql://localhost:5432/b26_test' POSTGRES_TEST_USER=postgres POSTGRES_TEST_PASSWORD=postgres ./mvnw test
-```
-
-The database in that example must already exist, and the credentials must match it. The PostgreSQL tests create and drop randomly named schemas; use a test database whose user can create schemas. They do not clean the connection's default schema.
-
-Without `POSTGRES_TEST_URL`, those tests are skipped. They cover fresh migrations, upgrades from historical versioned migrations, real-database onboarding, schema validation, simultaneous editor saves, and concurrent deletion safeguards.
+The migration tests additionally create and drop randomly named schemas, covering fresh installs, upgrades from historical versions, onboarding, schema validation, simultaneous editor saves, and concurrent deletion safeguards.
 
 ## CI
 

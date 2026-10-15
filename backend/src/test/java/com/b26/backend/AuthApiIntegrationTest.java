@@ -35,9 +35,9 @@ class AuthApiIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(get(API_BOARD + "/" + board.getBoardUrl() + "/permissions")
         .header(AUTHORIZATION_HEADER, token))
         .andExpect(status().isOk()).andExpect(jsonPath("$.canEdit").value(true));
-    mockMvc.perform(patch(API_BOARD + "/" + board.getBoardUrl() + "/meta")
+    mockMvc.perform(patch(API_BOARD + "/" + board.getBoardUrl() + "/identity")
         .header(AUTHORIZATION_HEADER, token).contentType(MediaType.APPLICATION_JSON)
-        .content("{\"name\":\"My first board\",\"headline\":\"Hello!\"}"))
+        .content("{\"boardName\":\"My first board\",\"boardUrl\":\"" + board.getBoardUrl() + "\"}"))
         .andExpect(status().isOk());
     mockMvc.perform(post("/api/auth/signin").contentType(MediaType.APPLICATION_JSON)
         .content(objectMapper.writeValueAsString(java.util.Map.of("email", email, "password", "test-password-123"))))
@@ -53,6 +53,80 @@ class AuthApiIntegrationTest extends ApiIntegrationTestSupport {
             "email", email, "password", "test-password-123", "username", "settings"))))
         .andExpect(status().isBadRequest());
     assertFalse(appUserRepository.existsByEmailIgnoreCase(email));
+  }
+
+  @Test
+  void signinResponsesDoNotRevealWhetherAnEmailIsRegistered() throws Exception {
+    String known = signup();
+    String unknown = "unknown-" + UUID.randomUUID() + "@example.com";
+    for (String email : new String[]{known, unknown}) {
+      mockMvc.perform(signin(email, "short")).andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.errors[0].message").value("password must be between 8 and 72 characters"));
+      mockMvc.perform(signin(email, null)).andExpect(status().isBadRequest())
+          .andExpect(jsonPath("$.errors[0].message").value("password is required"));
+      mockMvc.perform(signin(email, "wrong-password-123")).andExpect(status().isUnauthorized())
+          .andExpect(jsonPath("$.message").value("Invalid email or password"));
+    }
+  }
+
+  @Test
+  void repeatedFailedSigninsAreThrottledPerEmail() throws Exception {
+    String email = signup();
+    for (int i = 0; i < 5; i++) {
+      mockMvc.perform(signin(email, "wrong-password-123")).andExpect(status().isUnauthorized());
+    }
+    mockMvc.perform(signin(email, "test-password-123")).andExpect(status().isTooManyRequests())
+        .andExpect(jsonPath("$.message").value("Too many sign-in attempts. Try again later."));
+    // Other accounts from a different address are unaffected.
+    String other = signup();
+    mockMvc.perform(signin(other, "test-password-123").with(request -> {
+      request.setRemoteAddr("198.51.100.20");
+      return request;
+    })).andExpect(status().isOk());
+  }
+
+  @Test
+  void repeatedFailedSigninsAreThrottledPerAddress() throws Exception {
+    String email = signup();
+    for (int i = 0; i < 20; i++) {
+      mockMvc.perform(signin("probe-" + i + "@example.com", "wrong-password-123")).andExpect(status().isUnauthorized());
+    }
+    mockMvc.perform(signin(email, "test-password-123")).andExpect(status().isTooManyRequests());
+  }
+
+  @org.springframework.beans.factory.annotation.Autowired
+  com.b26.backend.auth.domain.AuthService authService;
+
+  @Test
+  void scheduledPurgeRemovesOnlyExpiredAndRevokedSessions() throws Exception {
+    issueAuthTokenForUser("purge-user");
+    issueAuthTokenForUser("purge-user");
+    var sessions = authSessionRepository.findAll().stream()
+        .filter(session -> session.getUserId().equals("purge-user")).toList();
+    sessions.get(0).setExpiresAt(java.time.Instant.now().minusSeconds(1));
+    sessions.get(1).setRevokedAt(java.time.Instant.now());
+    authSessionRepository.saveAllAndFlush(sessions);
+    String active = issueAuthTokenForUser("purge-user");
+    authService.purgeInactiveSessions();
+    assertEquals(1, authSessionRepository.findAll().stream()
+        .filter(session -> session.getUserId().equals("purge-user")).count());
+    mockMvc.perform(get("/api/auth/me").header(AUTHORIZATION_HEADER, active)).andExpect(status().isOk());
+  }
+
+  private String signup() throws Exception {
+    String email = "signin-" + UUID.randomUUID() + "@example.com";
+    mockMvc.perform(post("/api/auth/signup").contentType(MediaType.APPLICATION_JSON)
+        .content(objectMapper.writeValueAsString(java.util.Map.of("email", email, "password", "test-password-123"))))
+        .andExpect(status().isCreated());
+    return email;
+  }
+
+  private org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder signin(String email, String password)
+      throws Exception {
+    var body = new java.util.HashMap<String, String>();
+    body.put("email", email);
+    if (password != null) body.put("password", password);
+    return post("/api/auth/signin").contentType(MediaType.APPLICATION_JSON).content(objectMapper.writeValueAsString(body));
   }
 
   @Test

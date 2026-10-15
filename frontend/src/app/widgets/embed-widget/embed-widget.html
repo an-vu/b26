@@ -1,15 +1,15 @@
 <article class="widget">
-  <h3>{{ widget.title }}</h3>
-  <iframe
-    *ngIf="safeEmbedUrl; else invalid"
-    class="embed-frame"
-    [src]="safeEmbedUrl"
-    loading="lazy"
-    width="100%"
-    frameborder="0"
-    allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
-  ></iframe>
-  <ng-template #invalid>
+  <h3>{{ widget().title }}</h3>
+  @if (safeEmbedUrl) {
+    <iframe
+      class="embed-frame"
+      [src]="safeEmbedUrl"
+      loading="lazy"
+      width="100%"
+      frameborder="0"
+      allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture"
+    ></iframe>
+  } @else {
     <p class="fallback">Embed URL is missing or invalid.</p>
-  </ng-template>
+  }
 </article>

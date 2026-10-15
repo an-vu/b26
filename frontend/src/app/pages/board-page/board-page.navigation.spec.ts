@@ -4,15 +4,12 @@ import { provideRouter, Router } from '@angular/router';
 import { RouterTestingHarness } from '@angular/router/testing';
 import { vi } from 'vitest';
 import { pendingBoardChangesGuard, routes } from '../../app.routes';
-import { BoardPageComponent } from './board-page';
 
 @Component({ standalone: true, template: '' })
 class GuardedPage {
-  hasUnsavedChanges = true;
-  isWidgetSaving = false;
-  isIdentitySaving = false;
-  widgetSaveError = '';
-  canLeaveBoard = BoardPageComponent.prototype.canLeaveBoard;
+  canLeaveBoard() {
+    return window.confirm('Discard unsaved board changes?');
+  }
 }
 
 describe('Unsaved board navigation', () => {
@@ -50,15 +47,5 @@ describe('Unsaved board navigation', () => {
     }
     await harness.navigateByUrl('/u/portfolio', GuardedPage);
     expect(TestBed.inject(Router).url).toBe('/b/portfolio');
-  });
-
-  it('blocks leaving while saving and warns on browser unload', () => {
-    const page = new GuardedPage();
-    page.isWidgetSaving = true;
-    expect(page.canLeaveBoard()).toBe(false);
-    expect(page.widgetSaveError).toContain('Wait for the current operation');
-    const event = { preventDefault: vi.fn(), returnValue: undefined };
-    BoardPageComponent.prototype.onBeforeUnload.call(page as unknown as BoardPageComponent, event as unknown as BeforeUnloadEvent);
-    expect(event.preventDefault).toHaveBeenCalledOnce();
   });
 });

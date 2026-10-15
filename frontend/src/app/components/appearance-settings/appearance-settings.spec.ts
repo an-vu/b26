@@ -63,12 +63,12 @@ it('cycles the selected pattern intensity, resets all appearance fields, and ign
 
 it('shows six theme previews and keeps Lava and Bokeh placeholders from changing appearance', () => {
   const fixture = TestBed.createComponent(AppearanceSettingsComponent);
-  fixture.componentRef.setInput('appearance', { ...BERRY_APPEARANCE, themeFamily: 'lofi' });
+  fixture.componentRef.setInput('appearance', { ...BERRY_APPEARANCE, themeFamily: 'valencia' });
   fixture.detectChanges();
   const changes: BoardAppearance[] = [];
   fixture.componentInstance.appearanceChange.subscribe(value => changes.push(value));
   expect(fixture.nativeElement.querySelectorAll('.board-theme-option')).toHaveLength(6);
-  expect(fixture.componentInstance.selectedTheme.label).toBe('Mustache');
+  expect(fixture.componentInstance.selectedTheme.label).toBe('Valencia');
   for (const pattern of ['lava', 'bokeh']) {
     const button = fixture.nativeElement.querySelector(`[data-pattern-option="${pattern}"]`);
     expect(button.disabled).toBe(false);
@@ -79,4 +79,18 @@ it('shows six theme previews and keeps Lava and Bokeh placeholders from changing
     expect(fixture.componentInstance.pickerLabel('pattern', 'None')).toBe(pattern === 'lava' ? 'Lava' : 'Bokeh');
   }
   expect(changes.map(change => change.pattern)).toEqual(['lava', 'bokeh']);
+});
+
+it('marks only the selected pattern with its level for the filling ring', () => {
+  TestBed.configureTestingModule({});
+  const fixture = TestBed.createComponent(AppearanceSettingsComponent);
+  fixture.componentRef.setInput('appearance', { ...BERRY_APPEARANCE, pattern: 'lava', patternIntensity: 'medium' });
+  fixture.detectChanges();
+  const lava = fixture.nativeElement.querySelector('[data-pattern-option="lava"]');
+  expect(lava.dataset.level).toBe('medium');
+  expect(lava.getAttribute('aria-label')).toBe('lava pattern, medium');
+  expect(fixture.nativeElement.querySelectorAll('[data-level]')).toHaveLength(1);
+  fixture.componentRef.setInput('appearance', { ...BERRY_APPEARANCE, pattern: 'none' });
+  fixture.detectChanges();
+  expect(fixture.nativeElement.querySelectorAll('[data-level]')).toHaveLength(0);
 });

@@ -1,5 +1,5 @@
 <article class="widget">
-  <h3>{{ widget?.title || 'Create Your Account' }}</h3>
+  <h3>{{ widget()?.title || 'Create Your Account' }}</h3>
 
   <form class="auth-form" (ngSubmit)="onSignupSubmit()">
     <label class="auth-field">
@@ -50,6 +50,8 @@
       Already Have an Account?
     </button>
 
-    <p class="auth-message auth-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+    @if (errorMessage) {
+      <p class="auth-message auth-message--error">{{ errorMessage }}</p>
+    }
   </form>
 </article>

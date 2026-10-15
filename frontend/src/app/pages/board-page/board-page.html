@@ -1,21 +1,30 @@
-<div class="board-feedback" *ngIf="boardDeleteError || isDeletingBoard || (boardNotice$ | async)">
-  <p class="error" role="alert" *ngIf="boardDeleteError">{{ boardDeleteError }}</p>
-  <p role="status" *ngIf="isDeletingBoard">Deleting board…</p>
-  <p role="status" *ngIf="boardNotice$ | async as notice">
-    {{ notice }} <button class="app-button" type="button" (click)="dismissBoardNotice()">Dismiss</button>
-  </p>
-</div>
-<ng-container *ngIf="pageState$ | async as state">
+@if (store.boardDeleteError() || store.deletingBoard() || store.boardNotice()) {
+  <div class="board-feedback">
+    @if (store.boardDeleteError(); as error) {
+      <p class="error" role="alert">{{ error }}</p>
+    }
+    @if (store.deletingBoard()) {
+      <p role="status">Deleting board…</p>
+    }
+    @if (store.boardNotice(); as notice) {
+      <p role="status">
+        {{ notice }} <button class="app-button" type="button" (click)="store.dismissBoardNotice()">Dismiss</button>
+      </p>
+    }
+  </div>
+}
+@let state = store.page();
+@if (state.status === 'ready') {
+  @let appearance = settings.appearance();
   <main
     class="page page-fixed-scroll"
-    *ngIf="state.status === 'ready'"
-    [attr.data-pattern]="settings.pattern"
-    [attr.data-intensity]="settings.intensity"
+    [attr.data-pattern]="appearance.pattern"
+    [attr.data-intensity]="appearance.patternIntensity"
     [attr.data-theme]="siteTheme.themeId()"
     [attr.data-color-mode]="siteTheme.colorMode()"
-    [style.--board-widget-radius.px]="boardRadiusDraft"
+    [style.--board-widget-radius.px]="boardRadius"
     [style.--widget-content-inset.px]="widgetEditorInset"
-    [style.--widget-spacing.px]="settings.gap * 8"
+    [style.--widget-spacing.px]="appearance.spacingStep! * 8"
     [style.--board-bg-color]="siteTheme.background()"
     [style.--board-night-bg]="siteTheme.nightBackground()"
     [style.--board-foreground]="siteTheme.foreground()"
@@ -23,61 +32,70 @@
     [style.--board-accent]="siteTheme.background() === '#f9f8f6' ? '#00b2d7' : siteTheme.background()"
     [style.--board-muted]="siteTheme.background() === '#f9f8f6' ? '#62625e' : siteTheme.foreground()"
   >
-    <app-board-atmosphere [appearance]="settings.appearance" [darkInk]="settings.theme.id === 'default' && !settings.dark && settings.foreground === '#30302e'" />
+    <app-board-atmosphere [appearance]="appearance" [darkInk]="settings.darkInk()" />
     <div class="board-shell">
       <app-board-profile
         [board]="state.board"
-        [isWidgetEditMode]="isWidgetEditMode"
-        [(profileNameDraft)]="profileNameDraft"
-        [(boardDraftHeadline)]="boardDraftHeadline"
-        [(boardDraftWebsite)]="boardDraftWebsite"
-        [isWidgetSaving]="isWidgetSaving"
-        [readOnlyView]="readOnlyView"
-        [canEditBoard]="canEditBoard"
-        [isSettingsReloading]="isSettingsReloading"
-        [isWidgetLoading]="isWidgetLoading"
-        [isIdentitySaving]="isIdentitySaving"
-        [settingsFeedback]="settingsFeedback"
-        (edit)="requestWidgetEdit(state.board)" (save)="doneWidgetEdit()" (cancel)="discardWidgetEdit()">
-        <app-widget-library animate.leave="panel-slide-down" *ngIf="isWidgetEditMode" [disabled]="isWidgetSaving || isIdentitySaving" (selectWidget)="addWidgetFromLibrary($event)" />
+        [isWidgetEditMode]="store.editing()"
+        [(profileNameDraft)]="store.profileName"
+        [(boardDraftHeadline)]="store.headline"
+        [(boardDraftWebsite)]="store.website"
+        [isWidgetSaving]="store.widgetsSaving()"
+        [canEdit]="store.editable()"
+        [isSettingsReloading]="store.settingsReloading()"
+        [isWidgetLoading]="store.editorLoading()"
+        [isIdentitySaving]="store.identitySaving()"
+        [settingsFeedback]="store.settingsFeedback()"
+        (edit)="store.requestEdit(state.board)" (save)="store.saveEdit()" (cancel)="store.discardEdit()">
+        @if (store.editing()) {
+          <app-widget-library animate.leave="panel-slide-down" [disabled]="store.widgetsSaving() || store.identitySaving()" (selectWidget)="addWidgetFromLibrary($event)" />
+        }
       </app-board-profile>
 
-      <section appWidgetBounce class="board-content widgets-section" *ngIf="widgetsState$ | async as widgetState">
-        <p role="status" *ngIf="widgetState.status === 'loading'">Loading widgets…</p>
-        <p class="error" role="alert" *ngIf="widgetState.status === 'error'">Unable to load widgets. <button class="app-button" type="button" (click)="retryLoad()">Retry</button></p>
-        <p class="error" role="alert" *ngIf="widgetSaveError">{{ widgetSaveError }}</p>
+      @let widgetState = store.widgets();
+      <section appWidgetBounce class="board-content widgets-section">
+        @if (widgetState.status === 'loading') {
+          <p role="status">Loading widgets…</p>
+        }
+        @if (widgetState.status === 'error') {
+          <p class="error" role="alert">Unable to load widgets. <button class="app-button" type="button" (click)="store.reload()">Retry</button></p>
+        }
+        @if (store.widgetError(); as error) {
+          <p class="error" role="alert">{{ error }}</p>
+        }
 
-        <div class="board-grid square-grid" *ngIf="isWidgetEditMode" [class.is-editing-widget]="selectedWidgetDraft && !widgetEditorClosing" [attr.inert]="selectedWidgetDraft ? '' : null">
-          <article
-            *ngFor="let draft of widgetDrafts; let i = index"
-            [class]="'board-tile widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
-            [class.widget-edit-source-hidden]="isWidgetSettingsOpen(draft)"
-            tabindex="0" role="button" [attr.aria-label]="'Edit widget: ' + (draft.title || draft.type)"
-            (click)="openWidgetSettings(draft, $event)"
-            (keydown.enter)="openWidgetSettings(draft, $event)"
-            (keydown.space)="$event.preventDefault(); openWidgetSettings(draft, $event)"
-          >
-            <button
-              type="button"
-              class="app-button widget-delete-button"
-              [attr.aria-label]="'Delete widget: ' + (draft.title || 'Untitled')" title="Delete widget"
-              (click)="deleteWidget(draft); $event.stopPropagation()"
-              [disabled]="isWidgetSaving"
-            >
-              <app-icon name="minus" />
-            </button>
+        @if (store.editing()) {
+          @let selected = store.selectedDraft();
+          @let previews = store.previews();
+          <div class="board-grid square-grid" [class.is-editing-widget]="selected && !widgetEditorClosing()" [attr.inert]="selected ? '' : null">
+            @for (draft of store.drafts(); track draft.key; let i = $index) {
+              <article
+                [class]="'board-tile widget-tile widget-edit-tile ' + tileLayoutClass(draft.layout)"
+                [class.widget-edit-source-hidden]="draft.key === store.selectedKey()"
+                tabindex="0" role="button" [attr.aria-label]="'Edit widget: ' + (draft.title || draft.type)"
+                (click)="openWidgetSettings(draft, $event)"
+                (keydown.enter)="openWidgetSettings(draft, $event)"
+                (keydown.space)="$event.preventDefault(); openWidgetSettings(draft, $event)"
+              >
+                <button
+                  type="button"
+                  class="app-button widget-delete-button"
+                  [attr.aria-label]="'Delete widget: ' + (draft.title || 'Untitled')" title="Delete widget"
+                  (click)="store.deleteDraft(draft); $event.stopPropagation()"
+                  [disabled]="store.widgetsSaving()"
+                >
+                  <app-icon name="minus" />
+                </button>
 
-            <div class="widget-edit-preview">
-              <app-widget-host [widget]="widgetPreviewFromDraft(draft, i)" />
-            </div>
-          </article>
+                <div class="widget-edit-preview">
+                  <app-widget-host [widget]="previews[i]" />
+                </div>
+              </article>
+            }
+          </div>
 
-
-        </div>
-
-        @if (isWidgetEditMode) {
-          @if (selectedWidgetDraft; as draft) {
-            <div class="widget-editor-backdrop board-glass" aria-hidden="true" [class.is-closing]="widgetEditorClosing"
+          @if (selected; as draft) {
+            <div class="widget-editor-backdrop board-glass" aria-hidden="true" [class.is-closing]="widgetEditorClosing()"
               [style.--widget-flip-duration]="editorMotion.duration + 'ms'"
               [style.left.px]="editorMotion.bounds.left - 64" [style.top.px]="editorMotion.bounds.top - 64"
               [style.width.px]="editorMotion.bounds.width + 128" [style.height.px]="editorMotion.backdropHeight + 128"><span class="blur-layer"></span></div>
@@ -87,81 +105,87 @@
                 <div class="widget-editor-front" aria-hidden="true" inert>
                   <div class="widget-editor-front-content" [style.width.px]="editorMotion.sourceSize.width" [style.height.px]="editorMotion.sourceSize.height"
                     [style.transform]="'scale(' + editorMotion.size / editorMotion.sourceSize.width + ',' + editorMotion.size / editorMotion.sourceSize.height + ')'">
-                  <app-widget-host [widget]="widgetPreviewFromDraft(draft, widgetDrafts.indexOf(draft))" />
+                    <app-widget-host [widget]="previews[store.drafts().indexOf(draft)]" />
                   </div>
                 </div>
-              <section appPanel class="widget-editor-back utility-panel" [style.--panel-padding]="editorMotion.panelInset" [style.border-radius]="editorMotion.radius" role="dialog" aria-label="Widget settings"
-                (keydown.escape)="closeWidgetSettings(true); $event.stopPropagation()" (keydown.tab)="trapWidgetEditorFocus($event)"
-                >
-                <h2 class="board-settings-heading">{{ draft.type === 'link' ? 'Social' : (draft.type | titlecase) }}</h2>
-                <app-widget-editor [draft]="draft"
-                  [disabled]="isWidgetSaving || isIdentitySaving"  [error]="getDraftValidationError(draft)"
-                  (fieldChange)="onWidgetDraftFieldChange(draft)" />
-                <button panelActions class="app-button widget-editor-done" type="button" (click)="closeWidgetSettings()">Done</button>
-              </section>
+                <section appPanel class="widget-editor-back utility-panel" [style.--panel-padding]="editorMotion.panelInset" [style.border-radius]="editorMotion.radius" role="dialog" aria-label="Widget settings"
+                  (keydown.escape)="closeWidgetSettings(true); $event.stopPropagation()" (keydown.tab)="trapWidgetEditorFocus($event)">
+                  <h2 class="board-settings-heading">{{ draft.type === 'link' ? 'Social' : (draft.type | titlecase) }}</h2>
+                  <app-widget-editor [draft]="draft"
+                    [disabled]="store.widgetsSaving() || store.identitySaving()" [error]="store.draftError(draft)"
+                    (draftChange)="store.updateDraft(draft, $event)" />
+                  <button panelActions class="app-button widget-editor-done" type="button" (click)="closeWidgetSettings()">Done</button>
+                </section>
               </div>
             </div>
           }
-        }
-
-        <ng-container *ngIf="!isWidgetEditMode">
-          <p class="widgets-empty text-muted" *ngIf="widgetState.status === 'ready' && widgetState.widgets.length === 0">No widgets configured yet.</p>
-          <div class="board-grid square-grid" *ngIf="widgetState.widgets.length > 0">
-            <div
-              class="board-tile widget-tile"
-              *ngFor="let widget of widgetState.widgets; let i = index; trackBy: trackWidget"
-              [class]="'board-tile widget-tile ' + tileLayoutClass(widget.layout)"
-            >
-              <app-widget-host [widget]="widget" [boardId]="state.board.id"></app-widget-host>
+        } @else {
+          @if (widgetState.status === 'ready' && widgetState.widgets.length === 0) {
+            <p class="widgets-empty text-muted">No widgets configured yet.</p>
+          }
+          @if (widgetState.widgets.length > 0) {
+            <div class="board-grid square-grid">
+              @for (widget of widgetState.widgets; track widget.id ?? $index) {
+                <div [class]="'board-tile widget-tile ' + tileLayoutClass(widget.layout)">
+                  <app-widget-host [widget]="widget" [boardId]="state.board.id" />
+                </div>
+              }
             </div>
-          </div>
-        </ng-container>
+          }
+        }
       </section>
     </div>
 
-    <app-site-navigation [beforeSignOut]="prepareSignOut" [topBlur]="true" [blurSuppressed]="!!selectedWidgetDraft && isWidgetEditMode && !widgetEditorClosing" [blurDuration]="editorMotion.duration">
-      <app-board-settings *ngIf="!readOnlyView && canEditBoard"
-        [board]="state.board"
-        [menuLabel]="boardMenuLabel(state.board.id)"
-        [(boardIdentityNameDraft)]="settings.name"
-        [(boardIdentitySlugDraft)]="settings.slug"
-        [appearanceDraft]="settings.appearance"
-        [accountBoards]="accountBoards"
-        [accountMainBoardId]="accountMainBoardId"
-        [pendingDeleteBoardUrl]="pendingDeleteBoardUrl"
-        [pendingDeleteBoardLabel]="pendingDeleteBoardLabel"
-        [accountActionError]="accountActionError"
-        [boardDeleteError]="boardDeleteError"
-        [deletingBoardUrl]="deletingBoardUrl"
-        [identitySaveError]="identitySaveError"
-        [isSettingsReloading]="isSettingsReloading"
-        [isBoardIdentityMenuOpen]="isBoardIdentityMenuOpen"
-        [isWidgetEditMode]="isWidgetEditMode"
-        [isWidgetLoading]="isWidgetLoading"
-        [isWidgetSaving]="isWidgetSaving"
-        [isIdentitySaving]="isIdentitySaving"
-        [isBoardSwitcherOpen]="isBoardSwitcherOpen"
-        [isSettingMainBoard]="isSettingMainBoard"
-        [hasUnsavedChanges]="hasUnsavedChanges"
-        [isDeletingBoard]="isDeletingBoard"
-        (toggle)="toggleBoardIdentityMenu()" (save)="saveSettingsAutomatically()" (reset)="resetAppearance()"
-        (appearancePreview)="settings.applyAppearance($event)" (appearanceChange)="onAppearanceChange($event)" (switchBoard)="switchToBoard($event)"
-        (deleteBoard)="onAccountBoardDelete(state.board.boardUrl, $event)" (setMain)="onAccountBoardSetMain($event.id, $event.event)"
-        (toggleSwitcher)="toggleBoardSwitcher()" (confirmDelete)="confirmBoardDelete()" (dismiss)="dismissBoardSettings($event)" />
+    <app-site-navigation [beforeSignOut]="prepareSignOut" [topBlur]="true" [blurSuppressed]="!!store.selectedDraft() && store.editing() && !widgetEditorClosing()" [blurDuration]="editorMotion.duration">
+      @if (store.canEdit()) {
+        <app-board-settings
+          [board]="state.board"
+          [menuLabel]="store.boardMenuLabel(state.board.id)"
+          [(boardIdentityNameDraft)]="settings.name"
+          [(boardIdentitySlugDraft)]="settings.slug"
+          [appearanceDraft]="appearance"
+          [accountBoards]="store.accountBoards()"
+          [accountMainBoardId]="store.mainBoardId()"
+          [pendingDelete]="store.pendingDelete()"
+          [accountActionError]="store.accountActionError()"
+          [boardDeleteError]="store.boardDeleteError()"
+          [deletingBoardUrl]="store.deletingBoardUrl()"
+          [identitySaveError]="store.identityError()"
+          [isSettingsReloading]="store.settingsReloading()"
+          [isBoardIdentityMenuOpen]="store.settingsOpen()"
+          [isWidgetEditMode]="store.editing()"
+          [isWidgetLoading]="store.editorLoading()"
+          [isWidgetSaving]="store.widgetsSaving()"
+          [isIdentitySaving]="store.identitySaving()"
+          [isBoardSwitcherOpen]="store.switcherOpen()"
+          [isSettingMainBoard]="store.settingMainBoard()"
+          [hasUnsavedChanges]="store.hasUnsavedChanges()"
+          [isDeletingBoard]="store.deletingBoard()"
+          (toggle)="toggleBoardIdentityMenu()" (save)="saveSettings()" (reset)="resetAppearance()"
+          (appearancePreview)="settings.applyAppearance($event)" (appearanceChange)="changeAppearance($event)" (switchBoard)="switchToBoard($event)"
+          (deleteBoard)="store.requestBoardDelete(state.board.boardUrl)" (setMain)="store.setMainBoard($event)"
+          (toggleSwitcher)="store.toggleSwitcher()" (confirmDelete)="store.confirmBoardDelete()" (dismiss)="dismissBoardSettings($event)" />
+      }
     </app-site-navigation>
   </main>
-  <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none" *ngIf="state.status === 'loading'">
-    <p>Loading...</p>
-  </main>
-  <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none" *ngIf="state.status === 'missing'">
-    <p>Board not found.</p>
-  </main>
-
-  @if (state.status === 'error' || state.status === 'denied') {
-    <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none">
-      <p role="alert">{{ state.status === 'denied' ? 'This board is private or your session has expired.' : 'Unable to load this board. Please try again.' }}</p>
-      <button type="button" class="app-button" (click)="retryLoad()">Retry</button>
-    </main>
+} @else {
+  @switch (state.status) {
+    @case ('loading') {
+      <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none">
+        <p>Loading...</p>
+      </main>
+    }
+    @case ('missing') {
+      <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none">
+        <p>Board not found.</p>
+      </main>
+    }
+    @default {
+      <main class="page board-status" [attr.data-theme]="siteTheme.themeId()" [attr.data-color-mode]="siteTheme.colorMode()" data-pattern="none">
+        <p role="alert">{{ state.status === 'denied' ? 'This board is private or your session has expired.' : 'Unable to load this board. Please try again.' }}</p>
+        <button type="button" class="app-button" (click)="store.reload()">Retry</button>
+      </main>
+    }
   }
-  <app-site-navigation *ngIf="state.status !== 'ready'" />
-</ng-container>
+  <app-site-navigation />
+}

@@ -17,7 +17,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -54,7 +54,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -92,7 +92,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -131,7 +131,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -170,7 +170,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -208,7 +208,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -246,7 +246,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "radiusStep": 2,
         "backgroundColor": "#f9f8f6",
         "pattern": "none",
-        "themeFamily": "default",
+        "themeFamily": "berry",
         "patternIntensity": "light",
         "spacingStep": 2
       },
@@ -262,7 +262,7 @@ export const HOME_PREVIEW_BOARDS: HomePreviewBoard[] = [
         "layout": "span-1",
         "config": {
           "url": "https://github.com/an-vu/b26",
-          "imageUrl": "/brand/blueberry-about.png",
+          "imageUrl": "/brand/blueberry-about-512.webp?v=6",
           "description": "A little space for your favorite things."
         },
         "enabled": true,

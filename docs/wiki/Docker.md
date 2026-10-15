@@ -40,8 +40,8 @@ docker compose -p b26-local -f docker-compose.local.yml ps
 
 This workflow is for local preview, not deployment or phone/LAN access. Keep password checks enabled in hosted environments.
 
-## Existing Compose workflows
+## Host development database
 
-`docker-compose.yml` plus `docker-compose.db.yml` remains a separate, manually configured workflow using `backend/.env.dev`. Its database volume is different. Do not mix commands from that workflow with `./setup.sh` and expect the same data.
+`docker-compose.db.yml` only starts PostgreSQL for [host development](Getting-Started-%28Local%29) (`npm run dev` with `backend/.env.dev`). Its database volume is different from this one, so the two workflows do not share data.
 
 [Dev login](Dev-Login-and-Accounts) · [Database and backups](Dev-Data-Safety) · [Troubleshooting](Troubleshooting)

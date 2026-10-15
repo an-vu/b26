@@ -5,7 +5,6 @@ import java.sql.DriverManager;
 import java.util.UUID;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -23,7 +22,6 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @AutoConfigureMockMvc
 @ActiveProfiles("postgres")
 @DirtiesContext
-@EnabledIfEnvironmentVariable(named = "POSTGRES_TEST_URL", matches = ".+")
 class PostgresOnboardingIntegrationTest {
   private static final String SCHEMA = "b26_app_" + UUID.randomUUID().toString().replace("-", "");
   private static final String URL = System.getenv("POSTGRES_TEST_URL");

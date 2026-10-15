@@ -1,20 +1,11 @@
 package com.b26.backend.common.api;
 
-import com.b26.backend.auth.domain.AuthConflictException;
-import com.b26.backend.auth.domain.AuthForbiddenException;
-import com.b26.backend.auth.domain.AuthUnauthorizedException;
-import com.b26.backend.auth.domain.InvalidAuthRequestException;
-import com.b26.backend.board.domain.BoardNotFoundException;
-import com.b26.backend.board.domain.InvalidBoardUpdateException;
-import com.b26.backend.insights.domain.ClickRateLimitedException;
-import com.b26.backend.user.domain.InvalidUserPreferencesException;
-import com.b26.backend.user.domain.InvalidUserProfileException;
-import com.b26.backend.user.domain.UserNotFoundException;
-import com.b26.backend.widget.domain.InvalidWidgetConfigException;
-import com.b26.backend.widget.domain.WidgetNotFoundForBoardException;
 import java.util.List;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -22,17 +13,26 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-  @ExceptionHandler({com.b26.backend.board.domain.BoardEditConflictException.class,
-      org.springframework.orm.ObjectOptimisticLockingFailureException.class})
-  @ResponseStatus(HttpStatus.CONFLICT)
-  public ApiError handleBoardConflict(RuntimeException exception) {
-    return new ApiError(new com.b26.backend.board.domain.BoardEditConflictException().getMessage());
+  @ExceptionHandler(ApiException.class)
+  public ResponseEntity<Object> handleApiException(ApiException exception) {
+    Object body = exception instanceof BadRequestException invalid
+        ? new ValidationErrorResponse("Validation failed",
+            List.of(new ValidationFieldError(invalid.field(), exception.getMessage())))
+        : new ApiError(exception.getMessage());
+    return ResponseEntity.status(exception.status()).body(body);
   }
 
-  @ExceptionHandler(BoardNotFoundException.class)
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ApiError handleBoardNotFound(BoardNotFoundException exception) {
-    return new ApiError(exception.getMessage());
+  @ExceptionHandler(ObjectOptimisticLockingFailureException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleOptimisticLock(ObjectOptimisticLockingFailureException exception) {
+    return new ApiError(ConflictException.BOARD_CHANGED);
+  }
+
+  /** Safety net for races that pass the service-level uniqueness checks. */
+  @ExceptionHandler(DataIntegrityViolationException.class)
+  @ResponseStatus(HttpStatus.CONFLICT)
+  public ApiError handleDataIntegrity(DataIntegrityViolationException exception) {
+    return new ApiError("This change conflicts with existing data.");
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -50,75 +50,5 @@ public class GlobalExceptionHandler {
   public ValidationErrorResponse handleUnreadableBody(HttpMessageNotReadableException exception) {
     return new ValidationErrorResponse(
         "Invalid request body", List.of(new ValidationFieldError("body", "Malformed JSON payload")));
-  }
-
-  @ExceptionHandler(InvalidBoardUpdateException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ValidationErrorResponse handleInvalidUpdate(InvalidBoardUpdateException exception) {
-    return new ValidationErrorResponse(
-        "Validation failed", List.of(new ValidationFieldError("board", exception.getMessage())));
-  }
-
-  @ExceptionHandler(ClickRateLimitedException.class)
-  @ResponseStatus(HttpStatus.TOO_MANY_REQUESTS)
-  public ApiError handleClickRateLimit(ClickRateLimitedException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(InvalidWidgetConfigException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ApiError handleInvalidWidgetConfig(InvalidWidgetConfigException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(WidgetNotFoundForBoardException.class)
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ApiError handleWidgetNotFound(WidgetNotFoundForBoardException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(UserNotFoundException.class)
-  @ResponseStatus(HttpStatus.NOT_FOUND)
-  public ApiError handleUserNotFound(UserNotFoundException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(InvalidUserPreferencesException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ValidationErrorResponse handleInvalidUserPreferences(InvalidUserPreferencesException exception) {
-    return new ValidationErrorResponse(
-        "Validation failed", List.of(new ValidationFieldError("preferences", exception.getMessage())));
-  }
-
-  @ExceptionHandler(InvalidUserProfileException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ValidationErrorResponse handleInvalidUserProfile(InvalidUserProfileException exception) {
-    return new ValidationErrorResponse(
-        "Validation failed", List.of(new ValidationFieldError("profile", exception.getMessage())));
-  }
-
-  @ExceptionHandler(InvalidAuthRequestException.class)
-  @ResponseStatus(HttpStatus.BAD_REQUEST)
-  public ValidationErrorResponse handleInvalidAuthRequest(InvalidAuthRequestException exception) {
-    return new ValidationErrorResponse(
-        "Validation failed", List.of(new ValidationFieldError("auth", exception.getMessage())));
-  }
-
-  @ExceptionHandler(AuthUnauthorizedException.class)
-  @ResponseStatus(HttpStatus.UNAUTHORIZED)
-  public ApiError handleAuthUnauthorized(AuthUnauthorizedException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(AuthConflictException.class)
-  @ResponseStatus(HttpStatus.CONFLICT)
-  public ApiError handleAuthConflict(AuthConflictException exception) {
-    return new ApiError(exception.getMessage());
-  }
-
-  @ExceptionHandler(AuthForbiddenException.class)
-  @ResponseStatus(HttpStatus.FORBIDDEN)
-  public ApiError handleAuthForbidden(AuthForbiddenException exception) {
-    return new ApiError(exception.getMessage());
   }
 }

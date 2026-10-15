@@ -14,9 +14,9 @@ b26/
 │   │   └── app.routes.ts          Browser routes and navigation guards
 │   ├── angular.json              Build/test configuration and output path
 │   ├── proxy.conf.json           Local API proxy
-│   ├── nginx.conf                Docker API proxy and SPA fallback
+│   ├── proxy.docker.conf.json    API proxy inside ./setup.sh
 │   ├── vercel.json               Hosted API rewrites and SPA fallback
-│   └── Dockerfile
+│   └── Dockerfile                Local development image for ./setup.sh
 ├── backend/
 │   ├── src/main/java/com/b26/backend/
 │   │   ├── auth/                 Signup, sign-in, sessions
@@ -37,8 +37,7 @@ b26/
 ├── .github/workflows/ci.yml       Tests, PostgreSQL service, frontend build
 ├── setup.sh                      One-command local Docker preview
 ├── docker-compose.local.yml      Self-contained preview, loopback-only frontend
-├── docker-compose.yml            Backend and frontend containers
-├── docker-compose.db.yml         Optional local PostgreSQL container
+├── docker-compose.db.yml         PostgreSQL for host development (npm run dev)
 ├── package.json                  Workspace startup and database commands
 └── README.md                     Short local setup guide
 ```

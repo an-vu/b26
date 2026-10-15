@@ -90,8 +90,8 @@ class BoardEditIntegrationTest extends ApiIntegrationTestSupport {
     String token = authAnvu();
     String slug = createBoard(token);
     var request = payload(snapshot(slug));
-    mockMvc.perform(patch(API_BOARD + "/" + slug + "/meta").header(AUTHORIZATION_HEADER, token)
-        .contentType(MediaType.APPLICATION_JSON).content("{\"name\":\"Other tab\",\"headline\":\"Changed\"}"))
+    mockMvc.perform(patch(API_BOARD + "/" + slug + "/identity").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content("{\"boardName\":\"Other tab\",\"boardUrl\":\"" + slug + "\"}"))
         .andExpect(status().isOk());
     mockMvc.perform(put(API_BOARD + "/" + slug + "/editor")
         .header(AUTHORIZATION_HEADER, token).contentType(MediaType.APPLICATION_JSON).content(request.toString()))

@@ -1,5 +1,5 @@
-import { WidgetBounceDirective } from '../../directives/widget-bounce';
 import { Component, ViewEncapsulation } from '@angular/core';
+import { WidgetBounceDirective } from '../../directives/widget-bounce';
 
 /** Shared frame, hosted on the existing element to preserve dialog and dock behavior.
  * Consumers supply a heading, body content, and an optional [panelActions] slot.

@@ -1,7 +1,6 @@
 import { boardRoute } from '../../models/board-route';
-import { CommonModule } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChangeDetectorRef, Component, EventEmitter, Input, Output, inject } from '@angular/core';
+import { ChangeDetectorRef, Component, EventEmitter, Output, inject, input } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { catchError, finalize, map, of, switchMap } from 'rxjs';
@@ -12,28 +11,25 @@ import { AuthService } from '../../services/auth.service';
 @Component({
   selector: 'app-signup-form',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [FormsModule],
   templateUrl: './signup-form.html',
   styleUrl: './signup-form.css',
 })
 export class SignupFormComponent {
-  @Input() widget?: Widget;
+  readonly widget = input<Widget>();
 
   @Output() signinRequested = new EventEmitter<void>();
 
   private readonly cdr = inject(ChangeDetectorRef);
+  private readonly authService = inject(AuthService);
+  private readonly boardService = inject(BoardService);
+  private readonly router = inject(Router);
 
   email = '';
   password = '';
   confirmPassword = '';
   isSubmitting = false;
   errorMessage = '';
-
-  constructor(
-    private authService: AuthService,
-    private boardService: BoardService,
-    private router: Router
-  ) {}
 
   onSignupSubmit(): void {
     if (this.isSubmitting) {

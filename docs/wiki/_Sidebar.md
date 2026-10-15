@@ -31,4 +31,3 @@
 - [Database and backups](Dev-Data-Safety)
 - [Testing](Testing)
 - [Deployment](Deployment)
-- [Development and operations reference](Development-Reference)

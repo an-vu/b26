@@ -1,7 +1,6 @@
 import { IconComponent, IconName } from '../icon/icon';
 import { ChromeBlurService } from '../../services/chrome-blur.service';
 import { Component, inject, input, output, signal } from '@angular/core';
-import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import type { BoardAppearance } from '../../models/board';
 import { BOARD_THEMES } from '../../themes/board-theme';
@@ -9,7 +8,7 @@ import { BOARD_PALETTE } from '../../themes/board-palette';
 import { BERRY_APPEARANCE } from '../../themes/appearance-values';
 
 @Component({
-  selector: 'app-appearance-settings', standalone: true, imports: [IconComponent, CommonModule, FormsModule],
+  selector: 'app-appearance-settings', standalone: true, imports: [IconComponent, FormsModule],
   templateUrl: './appearance-settings.html', styleUrl: './appearance-settings.css',
 })
 export class AppearanceSettingsComponent {
@@ -45,6 +44,11 @@ export class AppearanceSettingsComponent {
   pickerLabel(section: string, selected: string) { return this.pickerHover[section] || this.pickerFocus[section] || selected; }
   sizeLabel(step: number) { return step === 1 ? 'Small' : step === 3 ? 'Large' : 'Medium'; }
   patternLabel(pattern: string) { return pattern === 'grid' ? 'Meteor' : pattern.charAt(0).toUpperCase() + pattern.slice(1); }
+  /** Light / Medium / Heavy for the selected pattern; shown as a filling ring, not text. */
+  patternLevel(pattern: string) {
+    const current = this.appearance();
+    return pattern !== 'none' && current.pattern === pattern ? current.patternIntensity ?? 'light' : null;
+  }
   set<K extends keyof BoardAppearance>(field: K, value: BoardAppearance[K]) {
     if (!this.disabled()) this.appearanceChange.emit({ ...this.appearance(), [field]: value });
   }

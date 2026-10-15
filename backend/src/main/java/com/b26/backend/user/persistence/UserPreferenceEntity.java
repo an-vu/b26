@@ -22,7 +22,7 @@ public class UserPreferenceEntity {
   private int homeSpacingStep = 2;
 
   @Column(name = "home_theme_family", nullable = false)
-  private String homeThemeFamily = "default";
+  private String homeThemeFamily = "berry";
   @Column(name = "home_color_mode", nullable = false)
   private String homeColorMode = "light";
   @Column(name = "home_background_color", nullable = false)

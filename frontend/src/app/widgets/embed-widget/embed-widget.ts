@@ -1,12 +1,10 @@
-import { Component, Input, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, inject, input } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import type { Widget } from '../../models/widget';
 
 @Component({
   selector: 'app-embed-widget',
   standalone: true,
-  imports: [CommonModule],
   templateUrl: './embed-widget.html',
   styleUrl: './embed-widget.css',
 })
@@ -15,10 +13,10 @@ export class EmbedWidgetComponent {
   private lastEmbedUrl: unknown;
   private trustedEmbedUrl: SafeResourceUrl | null = null;
 
-  @Input({ required: true }) widget!: Widget;
+  readonly widget = input.required<Widget>();
 
   get safeEmbedUrl(): SafeResourceUrl | null {
-    const embedUrl = this.widget?.config?.['embedUrl'];
+    const embedUrl = this.widget()?.config?.['embedUrl'];
     if (embedUrl !== this.lastEmbedUrl) {
       this.lastEmbedUrl = embedUrl;
       this.trustedEmbedUrl = typeof embedUrl === 'string' && embedUrl.startsWith('http')

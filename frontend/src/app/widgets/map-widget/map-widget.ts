@@ -1,19 +1,17 @@
-import { Component, Input } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input } from '@angular/core';
 import type { Widget } from '../../models/widget';
 
 @Component({
   selector: 'app-map-widget',
   standalone: true,
-  imports: [CommonModule],
   templateUrl: './map-widget.html',
   styleUrl: './map-widget.css',
 })
 export class MapWidgetComponent {
-  @Input({ required: true }) widget!: Widget;
+  readonly widget = input.required<Widget>();
 
   get places(): string[] {
-    const maybePlaces = this.widget?.config?.['places'];
+    const maybePlaces = this.widget()?.config?.['places'];
     if (!Array.isArray(maybePlaces)) {
       return [];
     }

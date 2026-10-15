@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, inject } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { BehaviorSubject, catchError, distinctUntilChanged, map, of, shareReplay, startWith, switchMap, tap } from 'rxjs';
@@ -9,28 +9,34 @@ import { InsightsService } from '../../services/insights.service';
 import { AppPageShellComponent } from './app-page-shell';
 
 @Component({
-  standalone: true, imports: [CommonModule, FormsModule, RouterLink, AppPageShellComponent],
+  standalone: true, imports: [AsyncPipe, FormsModule, RouterLink, AppPageShellComponent],
   template: `
     <app-page-shell>
       <h1>Insights</h1>
-      <ng-container *ngIf="boards$ | async as boards">
+      @if (boards$ | async; as boards) {
         <label>Board
           <select [ngModel]="selected" (ngModelChange)="select($event)">
             <option value="">Choose a board</option>
-            <option *ngFor="let board of boards" [value]="board.id">{{board.boardName}}</option>
+            @for (board of boards; track board.id) {
+              <option [value]="board.id">{{board.boardName}}</option>
+            }
           </select>
         </label>
-        <p *ngIf="!boards.length && !error">No boards available. <ng-container *ngIf="!(signedIn$ | async)"><a routerLink="/signin">Sign in</a> to view your insights.</ng-container></p>
-      </ng-container>
-      <ng-container *ngIf="summary$ | async as summary">
+        @if (!boards.length && !error) {
+          <p>No boards available. @if (!(signedIn$ | async)) {<a routerLink="/signin">Sign in</a> to view your insights.}</p>
+        }
+      }
+      @if (summary$ | async; as summary) {
         <dl>
           <dt>Total visits</dt><dd>{{summary.totalVisits}}</dd>
           <dt>Visits today</dt><dd>{{summary.visitsToday}}</dd>
           <dt>Last 30 days</dt><dd>{{summary.visitsLast30Days}}</dd>
           <dt>Total clicks</dt><dd>{{summary.totalClicks}}</dd>
         </dl>
-      </ng-container>
-      <p role="alert" *ngIf="error">{{error}}</p>
+      }
+      @if (error) {
+        <p role="alert">{{error}}</p>
+      }
     </app-page-shell>`,
   styleUrl: './insights-page.css'
 })

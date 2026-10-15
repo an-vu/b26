@@ -6,7 +6,7 @@ import { HomeFeedPreviewComponent } from './home-feed-preview';
 import { environment } from '../../../environments/environment';
 import { Component, DestroyRef, inject, signal, effect, computed } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { CommonModule } from '@angular/common';
+import { AsyncPipe } from '@angular/common';
 import { AppearanceSettingsComponent } from '../../components/appearance-settings/appearance-settings';
 import { SiteThemeService } from '../../services/site-theme.service';
 import { RouterLink } from '@angular/router';
@@ -16,9 +16,15 @@ import { BoardService } from '../../services/board.service';
 import { DEFAULT_HOME_APPEARANCE, HomeAppearance } from '../../models/home-appearance';
 import { getApiErrorMessage } from '../../utils/api-error.util';
 import { AppPageShellComponent } from './app-page-shell';
+import { normalizeThemeId } from '../../themes/board-theme';
+
+/** Home appearances may still carry a legacy theme id (cached tab or not-yet-migrated API). */
+function withCurrentThemeId(appearance: HomeAppearance): HomeAppearance {
+  return { ...appearance, themeFamily: normalizeThemeId(appearance.themeFamily) };
+}
 
 @Component({
-  standalone: true, imports: [HomeEntranceDirective, PanelComponent, PanelBehaviorDirective, CommonModule, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
+  standalone: true, imports: [HomeEntranceDirective, PanelComponent, PanelBehaviorDirective, AsyncPipe, AppearanceSettingsComponent, RouterLink, AppPageShellComponent, HomeFeedPreviewComponent],
   templateUrl: './home-page.html', styleUrl: './home-page.css'
 })
 export class HomePageComponent {
@@ -40,8 +46,9 @@ export class HomePageComponent {
   private userId: string | null = null;
 
   constructor() {
-    effect(() => this.siteTheme.homeAppearance.set(this.displayedAppearance()));
-    this.destroyRef.onDestroy(() => this.siteTheme.homeAppearance.set(null));
+    // Home shows its live appearance (including hover previews) while open.
+    effect(() => this.siteTheme.showPageAppearance(this, this.displayedAppearance()));
+    this.destroyRef.onDestroy(() => this.siteTheme.releasePageAppearance(this));
     this.auth.user$.pipe(map(user => user?.id ?? null), distinctUntilChanged(), switchMap(id => {
       this.userId = id;
       this.preview.set(null);
@@ -52,7 +59,7 @@ export class HomePageComponent {
         return of({ ...DEFAULT_HOME_APPEARANCE });
       })) : of({ ...DEFAULT_HOME_APPEARANCE });
     }), takeUntilDestroyed(this.destroyRef)).subscribe(appearance => {
-      this.appearance.set({ ...DEFAULT_HOME_APPEARANCE, ...appearance }); this.loading.set(false);
+      this.appearance.set(withCurrentThemeId({ ...DEFAULT_HOME_APPEARANCE, ...appearance })); this.loading.set(false);
     });
   }
 
@@ -66,7 +73,11 @@ export class HomePageComponent {
       takeUntil(this.auth.user$.pipe(filter(user => user?.id !== userId))),
       takeUntilDestroyed(this.destroyRef), finalize(() => this.saving.set(false)),
     ).subscribe({
-      next: saved => this.appearance.set(saved),
+      // The saved Home appearance is also the theme for Settings, Insights and other app pages.
+      next: saved => {
+        const current = withCurrentThemeId(saved);
+        this.appearance.set(current); this.siteTheme.savedHomeAppearance.set(current);
+      },
       error: error => {
         this.appearance.set(previous);
         this.error.set(getApiErrorMessage(error, 'Unable to save Home settings. Please retry.'));

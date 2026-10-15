@@ -1,59 +1,86 @@
 import { TestBed } from '@angular/core/testing';
-import { BehaviorSubject, of, throwError } from 'rxjs';
+import { signal } from '@angular/core';
+import { BehaviorSubject, of, Subject, throwError } from 'rxjs';
 import { SiteThemeService } from './site-theme.service';
 import { BERRY_APPEARANCE } from '../themes/appearance-values';
 import { AuthService } from './auth.service';
+import { BoardService } from './board.service';
 import { BoardStoreService } from './board-store.service';
 import { UserStoreService } from './user-store.service';
 import type { AuthUser } from '../models/auth';
-import type { BoardIdentity } from '../models/board-identity';
+import type { BoardAppearance } from '../models/board';
+import type { BoardThemeId } from '../themes/board-theme';
 
 describe('Site theme', () => {
   let user: BehaviorSubject<AuthUser | null>;
-  let main: BehaviorSubject<string>;
-  let boards: BehaviorSubject<BoardIdentity[]>;
+  let home: Subject<BoardAppearance>;
   let auth: { user$: typeof user; getAccessToken: ReturnType<typeof vi.fn>; me: ReturnType<typeof vi.fn>; clearSession: ReturnType<typeof vi.fn> };
-  let stores: { refreshMyProfile: ReturnType<typeof vi.fn>; refreshMyPreferences: ReturnType<typeof vi.fn>; clearProfile: ReturnType<typeof vi.fn> };
+  let api: { getHomeAppearance: ReturnType<typeof vi.fn> };
   const account = { id: 'owner', username: 'owner', email: 'owner@example.com', role: 'USER' } as AuthUser;
-  const aqua = { id: 'main', boardName: 'Main', boardUrl: 'main', appearance: { ...BERRY_APPEARANCE, themeFamily: 'aqua' as const, theme: 'dark' as const } };
+  const kiwiHome: BoardAppearance = { ...BERRY_APPEARANCE, themeFamily: 'kiwi', theme: 'dark' };
+  const aquaBoard: BoardAppearance = { ...BERRY_APPEARANCE, themeFamily: 'aqua', backgroundColor: '#3185fc' };
 
   beforeEach(() => {
     user = new BehaviorSubject<AuthUser | null>(null);
-    main = new BehaviorSubject('');
-    boards = new BehaviorSubject<BoardIdentity[]>([]);
+    home = new Subject<BoardAppearance>();
     auth = { user$: user, getAccessToken: vi.fn(() => ''), me: vi.fn(() => of({ user: account })), clearSession: vi.fn(() => user.next(null)) };
-    stores = { refreshMyProfile: vi.fn(), refreshMyPreferences: vi.fn(), clearProfile: vi.fn(() => main.next('')) };
+    api = { getHomeAppearance: vi.fn(() => home) };
     TestBed.configureTestingModule({ providers: [
       { provide: AuthService, useValue: auth },
-      { provide: UserStoreService, useValue: { ...stores, mainBoardId$: main } },
-      { provide: BoardStoreService, useValue: { boards$: boards, clearBoards: () => boards.next([]), refreshBoards: vi.fn() } },
+      { provide: BoardService, useValue: api },
+      { provide: UserStoreService, useValue: { refreshMyProfile: vi.fn(), refreshMyPreferences: vi.fn(), clearProfile: vi.fn(), mainBoardId: signal('') } },
+      { provide: BoardStoreService, useValue: { boards: signal([]), clearBoards: vi.fn(), refreshBoards: vi.fn() } },
     ] });
   });
 
-  it('keeps signed-out visitors in Berry even when a visited board has another theme', () => {
+  it('uses Berry on app pages for signed-out visitors', () => {
     const theme = TestBed.inject(SiteThemeService);
-    main.next('main'); boards.next([aqua]);
+    expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
+    expect(api.getHomeAppearance).not.toHaveBeenCalled();
+  });
+
+  it("uses the signed-in user's saved Home appearance on app pages like Settings and Insights", () => {
+    const theme = TestBed.inject(SiteThemeService);
+    user.next(account); home.next(kiwiHome);
+    expect(api.getHomeAppearance).toHaveBeenCalledOnce();
+    expect(theme.themeId()).toBe('kiwi'); expect(theme.colorMode()).toBe('dark');
+    theme.savedHomeAppearance.set({ ...kiwiHome, themeFamily: 'omakase' });
+    expect(theme.themeId()).toBe('omakase');
+    theme.savedHomeAppearance.set({ ...kiwiHome, themeFamily: 'frutiger-aero' as BoardThemeId });
+    expect(theme.themeId()).toBe('aero'); expect(theme.appearance().themeFamily).toBe('aero');
+  });
+
+  it("shows a board's own appearance while the board page holds it, for visitors too", () => {
+    const theme = TestBed.inject(SiteThemeService), board = {};
+    theme.showPageAppearance(board, aquaBoard);
+    expect(theme.themeId()).toBe('aqua'); expect(theme.background()).toBe('#3185fc');
+    user.next(account); home.next(kiwiHome);
+    expect(theme.themeId()).toBe('aqua');
+    theme.releasePageAppearance(board);
+    expect(theme.themeId()).toBe('kiwi');
+  });
+
+  it("ignores a late release from a page that no longer owns the look", () => {
+    const theme = TestBed.inject(SiteThemeService), homePage = {}, boardPage = {};
+    theme.showPageAppearance(homePage, kiwiHome);
+    theme.showPageAppearance(boardPage, aquaBoard);
+    theme.releasePageAppearance(homePage);
+    expect(theme.themeId()).toBe('aqua');
+  });
+
+  it('drops the previous account theme on sign-out and account changes', () => {
+    const theme = TestBed.inject(SiteThemeService);
+    user.next(account); home.next(kiwiHome);
+    user.next({ ...account, id: 'another' });
+    expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
+    home.next(kiwiHome); user.next(null);
     expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
   });
 
-  it('follows only the signed-in main board and responds to appearance updates', () => {
+  it('keeps Berry when the Home appearance fails to load', () => {
+    api.getHomeAppearance.mockReturnValue(throwError(() => ({ status: 500 })));
     const theme = TestBed.inject(SiteThemeService);
-    user.next(account); main.next('main'); boards.next([aqua]);
-    expect(stores.refreshMyPreferences).toHaveBeenCalledOnce();
-    expect(theme.themeId()).toBe('aqua'); expect(theme.colorMode()).toBe('dark');
-    boards.next([aqua, { ...aqua, id: 'other', appearance: { ...BERRY_APPEARANCE, themeFamily: 'kiwi' } }]);
-    expect(theme.themeId()).toBe('aqua');
-    boards.next([{ ...aqua, appearance: { ...BERRY_APPEARANCE, themeFamily: 'kiwi' } }]);
-    expect(theme.themeId()).toBe('kiwi');
-    expect(theme.colorMode()).toBe('light');
-    main.next(''); expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
-  });
-
-  it('returns to Berry on logout and clears the previous account theme on account changes', () => {
-    const theme = TestBed.inject(SiteThemeService);
-    user.next(account); main.next('main'); boards.next([aqua]);
-    user.next({ ...account, id: 'another' }); expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
-    main.next('main'); boards.next([aqua]); user.next(null);
+    user.next(account);
     expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
   });
 
@@ -62,19 +89,6 @@ describe('Site theme', () => {
     auth.me.mockReturnValue(throwError(() => ({ status: 401 })));
     const theme = TestBed.inject(SiteThemeService);
     expect(auth.me).toHaveBeenCalledOnce(); expect(auth.clearSession).toHaveBeenCalledOnce();
-    expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
-  });
-  it('lets Home choose an independent theme and restores the main theme when leaving Home', () => {
-    const theme = TestBed.inject(SiteThemeService);
-    user.next(account); main.next('main'); boards.next([aqua]);
-    theme.homeAppearance.set({ ...BERRY_APPEARANCE, themeFamily: 'kiwi' });
-    expect(theme.themeId()).toBe('kiwi');
-    boards.next([{ ...aqua, appearance: { ...BERRY_APPEARANCE, themeFamily: 'omahakase' } }]);
-    expect(theme.themeId()).toBe('kiwi');
-    theme.homeAppearance.set(null);
-    expect(theme.themeId()).toBe('omahakase');
-    theme.homeAppearance.set({ ...BERRY_APPEARANCE, themeFamily: 'kiwi' });
-    user.next(null);
     expect(theme.appearance()).toEqual(BERRY_APPEARANCE);
   });
 });

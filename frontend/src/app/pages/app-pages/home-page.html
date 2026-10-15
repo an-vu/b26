@@ -4,25 +4,25 @@
     [style.--feed-detail-inset.px]="cornerInset(displayedAppearance().radiusStep)"
     [style.--widget-content-inset.px]="cornerInset(displayedAppearance().radiusStep)"
     [style.--feed-gap.px]="(displayedAppearance().spacingStep ?? 2) * 8">
-  <ng-container *ngIf="!(auth.user$ | async)" [ngTemplateOutlet]="visitor" />
-  <ng-template #visitor>
+  @if (!(auth.user$ | async)) {
     <section class="home-intro" aria-labelledby="intro-title">
       <h1 id="intro-title" class="intro-title">BlueBerry</h1>
       <p class="intro-hook">One board. All the things you love.</p>
       <div class="intro-auth-slot" aria-hidden="true"></div>
     </section>
     <header class="home-heading feed-heading"><h2>See what everyone’s been up to.</h2></header>
-  </ng-template>
+  }
   <section class="community-board" aria-label="Community board">
-  <app-home-feed-preview *ngIf="showPreview; else emptyFeed" />
-  <ng-template #emptyFeed>
+  @if (showPreview) {
+  <app-home-feed-preview />
+  } @else {
   <section class="feed-empty" aria-labelledby="empty-title">
     <div class="empty-illustration" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
     <p class="eyebrow">Room for something good</p>
     <h2 id="empty-title">A quiet beginning.</h2>
     <p>There are no published updates yet.<br />This is where the community's stories will gather.</p>
   </section>
-  </ng-template>
+  }
   </section>
   </div>
   <div page-navigation class="home-settings-anchor" appPanelBehavior [panelOpen]="settingsOpen()" (panelDismiss)="closeSettings()">
@@ -39,8 +39,12 @@
         <h2 class="board-settings-heading">Home Settings</h2>
         @if (auth.user$ | async) {
           <app-appearance-settings [appearance]="appearance()" [disabled]="loading() || saving()" (appearancePreview)="preview.set($event)" (appearanceChange)="saveAppearance($event)" />
-          <p role="status" *ngIf="loading() || saving()">{{ loading() ? 'Loading…' : 'Saving…' }}</p>
-          <p class="error" role="alert" *ngIf="error()">{{ error() }}</p>
+          @if (loading() || saving()) {
+            <p role="status">{{ loading() ? 'Loading…' : 'Saving…' }}</p>
+          }
+          @if (error()) {
+            <p class="error" role="alert">{{ error() }}</p>
+          }
         } @else {
           <a routerLink="/signin">Sign in to personalize Home</a>
         }

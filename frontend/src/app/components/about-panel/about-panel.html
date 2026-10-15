@@ -1,11 +1,17 @@
 <dialog appPanel class="utility-panel about-panel" appPanelBehavior [panelOpener]="panelOpener" (panelDismiss)="close($event !== 'outside')" #dialog tabindex="-1" aria-label="About BlueBerry" (cancel)="close()">
-  <img class="about-icon" src="/brand/blueberry-about.png?v=5" width="132" height="132" alt="BlueBerry" draggable="false" />
+  <img class="about-icon" src="/brand/blueberry-about-264.webp?v=6" width="132" height="132" alt="BlueBerry" draggable="false" />
   <h2 class="about-name">BlueBerry</h2>
   <p class="about-version">Version {{ release.version }}</p>
   <div panelActions class="about-actions">
-    <button *ngIf="release.contactUrl; else contactPlaceholder" class="app-button" type="button" (click)="contact()">Contact</button>
-    <ng-template #contactPlaceholder><button class="app-button" type="button" disabled title="Contact details coming soon">Contact</button></ng-template>
-    <a *ngIf="release.legalUrl; else legalPlaceholder" class="app-button" [href]="release.legalUrl">Legal</a>
-    <ng-template #legalPlaceholder><button class="app-button" type="button" disabled title="Legal information coming soon">Legal</button></ng-template>
+    @if (release.contactUrl) {
+      <button class="app-button" type="button" (click)="contact()">Contact</button>
+    } @else {
+      <button class="app-button" type="button" disabled title="Contact details coming soon">Contact</button>
+    }
+    @if (release.legalUrl) {
+      <a class="app-button" [href]="release.legalUrl">Legal</a>
+    } @else {
+      <button class="app-button" type="button" disabled title="Legal information coming soon">Legal</button>
+    }
   </div>
 </dialog>

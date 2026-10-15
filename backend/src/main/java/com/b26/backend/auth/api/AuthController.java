@@ -2,7 +2,10 @@ package com.b26.backend.auth.api;
 
 import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.common.config.ApiAccess;
+import com.b26.backend.common.config.CurrentUser;
+import com.b26.backend.user.persistence.AppUserEntity;
 import static com.b26.backend.common.config.ApiAccess.Policy.*;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -31,14 +34,15 @@ public class AuthController {
 
   @PostMapping("/signin")
   @ApiAccess(PUBLIC)
-  public AuthSessionResponse signin(@Valid @RequestBody SigninRequest request) {
-    return authService.signin(request);
+  public AuthSessionResponse signin(@Valid @RequestBody SigninRequest request, HttpServletRequest servletRequest) {
+    String sourceIp = servletRequest.getRemoteAddr() == null ? "unknown" : servletRequest.getRemoteAddr();
+    return authService.signin(request, sourceIp);
   }
 
   @GetMapping("/me")
   @ApiAccess(AUTHENTICATED)
-  public AuthMeResponse me(@RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
-    return authService.me(authorizationHeader);
+  public AuthMeResponse me(@CurrentUser AppUserEntity user) {
+    return authService.me(user);
   }
 
   @PostMapping("/signout")
@@ -46,6 +50,7 @@ public class AuthController {
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void signout(
       @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
+    // Revocation needs the presented token, not just its user.
     authService.signout(authorizationHeader);
   }
 }

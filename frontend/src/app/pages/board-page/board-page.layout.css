@@ -108,4 +108,4 @@
 }
 
 /* Scroll the content inside a stable viewport; keep wallpaper and toolbar anchored. */
-.page.page-fixed-scroll { height: 100dvh; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: none; scrollbar-gutter: stable; background-attachment: fixed; }
+.page.page-fixed-scroll { height: 100dvh; min-height: 0; overflow-y: auto; overflow-x: hidden; overscroll-behavior: none; scrollbar-gutter: stable; }

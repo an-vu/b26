@@ -12,22 +12,21 @@ export function bindHomeIntroScroll(
   let touchY: number | null = null, touchClaimed = false;
   let holdFeedBoundary = false, lastTouchY = 0, keyBoundaryHeld = false;
   let progress: number | null = null;
-  let state: 'intro' | 'entering' | 'feed' | 'returning' = 'intro';
+  // Direction of the running spring; only meaningful while `frame` is non-zero.
+  let animatingIn = false;
   const content = scroller.querySelector<HTMLElement>('.app-page-content');
   const originalOverflow = scroller.style.overflowY;
   let boundaryTimer: ReturnType<typeof setTimeout> | undefined;
   let boundaryLocked = false;
-  const unlockScroll = () => {
+  const setOverflow = (value: string) => {
     clearTimeout(boundaryTimer); boundaryTimer = undefined;
     boundaryLocked = false;
-    if (originalOverflow) scroller.style.overflowY = originalOverflow;
+    if (value) scroller.style.overflowY = value;
     else scroller.style.removeProperty('overflow-y');
   };
-  const lockScroll = () => {
-    clearTimeout(boundaryTimer); boundaryTimer = undefined;
-    boundaryLocked = false;
-    scroller.style.overflowY = 'hidden';
-  };
+  const unlockScroll = () => setOverflow(originalOverflow);
+  const lockScroll = () => setOverflow('hidden');
+  const pixels = (event: WheelEvent) => event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientHeight : 1);
   const releaseBoundaryAfterGesture = () => {
     clearTimeout(boundaryTimer);
     boundaryTimer = setTimeout(() => {
@@ -70,7 +69,7 @@ export function bindHomeIntroScroll(
     let value = Math.min(1, Math.max(0, startScroll / target)), velocity = 0;
     const goal = entering ? 1 : 0;
     let previous = performance.now();
-    state = entering ? 'entering' : 'returning';
+    animatingIn = entering;
     progress = value;
     if (entering) scroller.dispatchEvent(new Event(HOME_FEED_ENTER));
     const render = () => {
@@ -84,7 +83,6 @@ export function bindHomeIntroScroll(
       content?.style.removeProperty('translate');
       scroller.scrollTop = target * goal;
       progress = null; frame = 0;
-      state = entering ? 'feed' : 'intro';
       unlockScroll();
     };
     if (reduced?.matches) { finish(); return; }
@@ -108,7 +106,7 @@ export function bindHomeIntroScroll(
     if (target === null) { stop(); return; }
     const now = performance.now(), nextDirection = Math.sign(event.deltaY);
     if (!nextDirection) return;
-    const delta = event.deltaY * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientHeight : 1);
+    const delta = pixels(event);
     const magnitude = Math.abs(delta);
     // Wheel events have no finger-down signal. A clear increase in force after the
     // previous tail is a fresh push; small fluctuations in fading momentum aren't.
@@ -128,9 +126,8 @@ export function bindHomeIntroScroll(
     if (frame) {
       event.preventDefault();
       consumed = true;
-      if ((state === 'entering' && direction < 0) || (state === 'returning' && direction > 0)) {
-        consumed = true; advance(target, direction > 0);
-      }
+      // Reverse a running transition when the gesture opposes it.
+      if (animatingIn !== direction > 0) advance(target, direction > 0);
       return;
     }
     if (holdFeedBoundary && direction < 0 && scroller.scrollTop + delta <= target) {
@@ -142,9 +139,8 @@ export function bindHomeIntroScroll(
     const atFeedStart = scroller.scrollTop <= target + 2;
     if (direction > 0 && !inIntro || direction < 0 && (!atFeedStart || scroller.scrollTop <= 0)) return;
     event.preventDefault();
-    total += Math.abs(event.deltaY) * (event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? scroller.clientHeight : 1);
+    total += magnitude;
     if (total >= 16) { consumed = true; total = 0; advance(target, direction > 0); }
-
   };
   const touchStart = (event: TouchEvent) => {
     if (boundaryLocked) unlockScroll();
@@ -180,7 +176,6 @@ export function bindHomeIntroScroll(
     if (!frame && holdFeedBoundary && target !== null && scroller.scrollTop < target - 1) {
       landAtBoundary(target);
       if (touchY !== null) touchClaimed = true;
-      paint(1);
     }
   };
   const keyUp = () => { keyBoundaryHeld = false; if (boundaryLocked) unlockScroll(); };
@@ -209,23 +204,15 @@ export function bindHomeIntroScroll(
       event.preventDefault(); advance(target, false);
     } else if (['Home', 'End'].includes(event.key)) { holdFeedBoundary = false; stop(); }
   };
-  scroller.addEventListener('wheel', wheel, { passive: false });
-  scroller.addEventListener('touchstart', touchStart, { passive: true });
-  scroller.addEventListener('touchmove', touchMove, { passive: false });
-  scroller.addEventListener('touchend', touchEnd, { passive: true });
-  scroller.addEventListener('touchcancel', touchEnd, { passive: true });
-  scroller.addEventListener('keydown', key);
-  scroller.addEventListener('keyup', keyUp);
-  scroller.addEventListener('scroll', keepFeedBoundary, { passive: true });
-  return { get progress() { return progress; }, destroy() {
-    stop();
-    scroller.removeEventListener('wheel', wheel);
-    scroller.removeEventListener('touchstart', touchStart);
-    scroller.removeEventListener('touchmove', touchMove);
-    scroller.removeEventListener('touchend', touchEnd);
-    scroller.removeEventListener('touchcancel', touchEnd);
-    scroller.removeEventListener('keydown', key);
-    scroller.removeEventListener('keyup', keyUp);
-    scroller.removeEventListener('scroll', keepFeedBoundary);
-  } };
+  // Only wheel and touchmove may cancel native scrolling; everything else stays passive.
+  const listeners = new AbortController(), signal = listeners.signal;
+  scroller.addEventListener('wheel', wheel, { passive: false, signal });
+  scroller.addEventListener('touchmove', touchMove, { passive: false, signal });
+  scroller.addEventListener('touchstart', touchStart, { passive: true, signal });
+  scroller.addEventListener('touchend', touchEnd, { passive: true, signal });
+  scroller.addEventListener('touchcancel', touchEnd, { passive: true, signal });
+  scroller.addEventListener('scroll', keepFeedBoundary, { passive: true, signal });
+  scroller.addEventListener('keydown', key, { signal });
+  scroller.addEventListener('keyup', keyUp, { passive: true, signal });
+  return { get progress() { return progress; }, destroy() { stop(); listeners.abort(); } };
 }

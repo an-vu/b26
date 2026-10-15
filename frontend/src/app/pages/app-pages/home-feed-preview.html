@@ -1,8 +1,9 @@
 <div class="feed-grid-container">
 <section class="feed-grid square-grid" aria-label="Community activity">
+  @for (post of posts; track post.board.id) {
   <article class="feed-tile feed-post" tabindex="0" role="group"
     [attr.aria-label]="post.board.ownerDisplayName + ' · @' + post.board.ownerUsername + ' · ' + post.minutesAgo + ' minutes ago'"
-    *ngFor="let post of posts" [style.--feed-columns]="columns(post.widgets[0].layout)" [style.--feed-rows]="rows(post.widgets[0].layout)">
+    [style.--feed-columns]="columns(post.widgets[0].layout)" [style.--feed-rows]="rows(post.widgets[0].layout)">
     <div class="feed-reveal widget">
       <app-widget-host [widget]="post.widgets[0]" [previewMode]="true" />
       <div class="activity-overlay">
@@ -21,7 +22,9 @@
       </div>
     </div>
   </article>
-  <article class="feed-tile suggestion-tile" *ngFor="let person of suggestions">
+  }
+  @for (person of suggestions; track person.board.id) {
+  <article class="feed-tile suggestion-tile">
     <div class="suggestion widget">
     <p class="suggestion-label">Suggested for you</p>
     <span class="suggestion-avatar" aria-hidden="true">{{ (person.board.ownerDisplayName || '?').slice(0, 1) }}</span>
@@ -29,5 +32,6 @@
     <a class="app-button" [routerLink]="boardRoute(person.board)">Visit board <span aria-hidden="true">↗</span></a>
     </div>
   </article>
+  }
 </section>
 </div>

@@ -1,9 +1,9 @@
 package com.b26.backend.board.api;
 
-import com.b26.backend.auth.domain.AuthService;
 import com.b26.backend.board.domain.BoardAccessService;
 import com.b26.backend.board.domain.BoardService;
 import com.b26.backend.common.config.ApiAccess;
+import com.b26.backend.common.config.CurrentUser;
 import static com.b26.backend.common.config.ApiAccess.Policy.*;
 import com.b26.backend.user.persistence.AppUserEntity;
 import jakarta.validation.Valid;
@@ -16,7 +16,6 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
@@ -25,12 +24,10 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/board")
 public class BoardController {
   private final BoardService boardService;
-  private final AuthService authService;
   private final BoardAccessService boardAccess;
 
-  public BoardController(BoardService boardService, AuthService authService, BoardAccessService boardAccess) {
+  public BoardController(BoardService boardService, BoardAccessService boardAccess) {
     this.boardService = boardService;
-    this.authService = authService;
     this.boardAccess = boardAccess;
   }
 
@@ -68,41 +65,21 @@ public class BoardController {
 
   @GetMapping("/mine")
   @ApiAccess(AUTHENTICATED)
-  public List<BoardDto> getMyBoards(
-      @RequestHeader(name = "Authorization", required = false)
-          String authorizationHeader) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+  public List<BoardDto> getMyBoards(@CurrentUser AppUserEntity user) {
     return boardService.getBoardsForOwner(user.getId());
   }
 
   @PostMapping
   @ApiAccess(AUTHENTICATED)
-  public BoardDto createBoard(
-      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
-    AppUserEntity user = authService.getAuthenticatedUser(authorizationHeader);
+  public BoardDto createBoard(@CurrentUser AppUserEntity user) {
     return boardService.createBoardForOwner(user);
   }
 
   @GetMapping("/{boardId}/permissions")
   @ApiAccess(BOARD_READ)
   public BoardPermissionsResponse getBoardPermissions(
-      @PathVariable String boardId,
-      @RequestHeader(name = "Authorization", required = false) String authorizationHeader) {
-    return new BoardPermissionsResponse(boardAccess.canEditBoard(boardId, authorizationHeader));
-  }
-
-  @PatchMapping("/{boardId}/meta")
-  @ApiAccess(BOARD_WRITE)
-  public BoardDto updateBoardMeta(
-      @PathVariable String boardId, @Valid @RequestBody UpdateBoardMetaRequest request) {
-    return boardService.updateBoardMeta(boardId, request);
-  }
-
-  @PatchMapping("/{boardId}/url")
-  @ApiAccess(BOARD_WRITE)
-  public BoardDto updateBoardUrl(
-      @PathVariable String boardId, @Valid @RequestBody UpdateBoardUrlRequest request) {
-    return boardService.updateBoardUrl(boardId, request);
+      @PathVariable String boardId, @CurrentUser(required = false) AppUserEntity user) {
+    return new BoardPermissionsResponse(boardAccess.canEditBoard(boardId, user));
   }
 
   @PatchMapping("/{boardId}/identity")

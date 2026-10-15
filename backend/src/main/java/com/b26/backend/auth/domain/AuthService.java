@@ -19,9 +19,16 @@ import java.security.SecureRandom;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
+import com.b26.backend.common.api.ApiException;
+import com.b26.backend.common.api.AuthException;
+import com.b26.backend.common.api.BadRequestException;
+import com.b26.backend.common.api.ConflictException;
 import com.b26.backend.user.domain.UsernameRules;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,7 +42,10 @@ public class AuthService {
   private final AuthSessionRepository authSessionRepository;
   private final BoardService boardService;
   private final UserPreferenceRepository userPreferenceRepository;
+  private final SigninAttemptGuard signinAttempts;
   private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder(12);
+  // Unknown emails still pay for one hash check, so response time does not reveal registered emails.
+  private final String timingEqualizerHash = passwordEncoder.encode(UUID.randomUUID().toString());
   private final Duration sessionTtl;
   private final boolean requirePasswordForSignin;
 
@@ -44,12 +54,14 @@ public class AuthService {
       AuthSessionRepository authSessionRepository,
       BoardService boardService,
       UserPreferenceRepository userPreferenceRepository,
+      SigninAttemptGuard signinAttempts,
       @Value("${app.auth.session-ttl-hours:720}") long sessionTtlHours,
       @Value("${app.auth.require-password:true}") boolean requirePasswordForSignin) {
     this.appUserRepository = appUserRepository;
     this.authSessionRepository = authSessionRepository;
     this.boardService = boardService;
     this.userPreferenceRepository = userPreferenceRepository;
+    this.signinAttempts = signinAttempts;
     this.sessionTtl = Duration.ofHours(Math.max(1, sessionTtlHours));
     this.requirePasswordForSignin = requirePasswordForSignin;
   }
@@ -61,9 +73,9 @@ public class AuthService {
     if (normalizedUsername.isEmpty()) {
       normalizedUsername = ensureUniqueUsername(deriveUsernameSeedFromEmail(normalizedEmail));
     } else if (UsernameRules.isReserved(normalizedUsername)) {
-      throw new InvalidAuthRequestException("username is reserved");
+      throw new BadRequestException("auth", "username is reserved");
     } else if (appUserRepository.existsByUsernameIgnoreCase(normalizedUsername)) {
-      throw new AuthConflictException("username already in use");
+      throw new ConflictException("username already in use");
     }
 
     String normalizedDisplayName = normalizeDisplayName(request.displayName());
@@ -72,7 +84,7 @@ public class AuthService {
     }
 
     if (appUserRepository.existsByEmailIgnoreCase(normalizedEmail)) {
-      throw new AuthConflictException("email already in use");
+      throw new ConflictException("email already in use");
     }
 
     AppUserEntity user = new AppUserEntity();
@@ -93,34 +105,38 @@ public class AuthService {
   }
 
   @Transactional
-  public AuthSessionResponse signin(SigninRequest request) {
+  public AuthSessionResponse signin(SigninRequest request, String sourceIp) {
     String normalizedEmail = normalizeEmail(request.email());
-
-    AppUserEntity user =
-        appUserRepository
-            .findByEmailIgnoreCase(normalizedEmail)
-            .orElseThrow(() -> new AuthUnauthorizedException("Invalid email or password"));
-
+    String suppliedPassword = request.password();
+    // Validate the request shape before any lookup so responses never reveal whether an email exists.
     if (requirePasswordForSignin) {
-      String suppliedPassword = request.password();
       if (suppliedPassword == null || suppliedPassword.isBlank()) {
-        throw new InvalidAuthRequestException("password is required");
+        throw new BadRequestException("auth", "password is required");
       }
       if (suppliedPassword.length() < 8 || suppliedPassword.length() > 72) {
-        throw new InvalidAuthRequestException("password must be between 8 and 72 characters");
-      }
-      if (user.getPasswordHash() == null
-          || !passwordEncoder.matches(suppliedPassword, user.getPasswordHash())) {
-        throw new AuthUnauthorizedException("Invalid email or password");
+        throw new BadRequestException("auth", "password must be between 8 and 72 characters");
       }
     }
+    if (signinAttempts.isBlocked(normalizedEmail, sourceIp)) {
+      throw new ApiException(HttpStatus.TOO_MANY_REQUESTS, "Too many sign-in attempts. Try again later.");
+    }
 
+    AppUserEntity user = appUserRepository.findByEmailIgnoreCase(normalizedEmail).orElse(null);
+    String storedHash = user == null ? null : user.getPasswordHash();
+    boolean accepted = user != null;
+    if (requirePasswordForSignin) {
+      boolean matches = passwordEncoder.matches(suppliedPassword, storedHash == null ? timingEqualizerHash : storedHash);
+      accepted = storedHash != null && matches;
+    }
+    if (!accepted) {
+      signinAttempts.recordFailure(normalizedEmail, sourceIp);
+      throw AuthException.unauthorized("Invalid email or password");
+    }
+    signinAttempts.recordSuccess(normalizedEmail);
     return createSession(user);
   }
 
-  @Transactional(readOnly = true)
-  public AuthMeResponse me(String bearerToken) {
-    AppUserEntity user = getAuthenticatedUser(bearerToken);
+  public AuthMeResponse me(AppUserEntity user) {
     return new AuthMeResponse(toUserDto(user));
   }
 
@@ -137,7 +153,24 @@ public class AuthService {
     AuthSessionEntity session = requireActiveSession(bearerToken);
     return appUserRepository
         .findById(session.getUserId())
-        .orElseThrow(() -> new AuthUnauthorizedException("Session user no longer exists"));
+        .orElseThrow(() -> AuthException.unauthorized("Session user no longer exists"));
+  }
+
+  /** Anonymous callers and invalid or expired sessions resolve to empty. */
+  @Transactional(readOnly = true)
+  public Optional<AppUserEntity> findAuthenticatedUser(String bearerToken) {
+    try {
+      return Optional.of(getAuthenticatedUser(bearerToken));
+    } catch (AuthException ignored) {
+      return Optional.empty();
+    }
+  }
+
+  /** Expired and revoked sessions can never authenticate again; keep the table small. */
+  @Scheduled(initialDelayString = "PT10M", fixedDelayString = "${app.auth.session-purge-interval:PT6H}")
+  @Transactional
+  public void purgeInactiveSessions() {
+    authSessionRepository.deleteInactive(Instant.now());
   }
 
   private AuthSessionEntity requireActiveSession(String bearerToken) {
@@ -146,10 +179,10 @@ public class AuthService {
     AuthSessionEntity session =
         authSessionRepository
             .findByTokenHashAndRevokedAtIsNull(tokenHash)
-            .orElseThrow(() -> new AuthUnauthorizedException("Invalid or expired session"));
+            .orElseThrow(() -> AuthException.unauthorized("Invalid or expired session"));
 
     if (session.getExpiresAt().isBefore(Instant.now())) {
-      throw new AuthUnauthorizedException("Invalid or expired session");
+      throw AuthException.unauthorized("Invalid or expired session");
     }
 
     return session;
@@ -184,15 +217,15 @@ public class AuthService {
 
   private static String requireToken(String bearerToken) {
     if (bearerToken == null || bearerToken.isBlank()) {
-      throw new AuthUnauthorizedException("Missing Authorization header");
+      throw AuthException.unauthorized("Missing Authorization header");
     }
     String value = bearerToken.trim();
     if (!value.regionMatches(true, 0, "Bearer ", 0, 7)) {
-      throw new AuthUnauthorizedException("Invalid Authorization header format");
+      throw AuthException.unauthorized("Invalid Authorization header format");
     }
     String token = value.substring(7).trim();
     if (token.isEmpty()) {
-      throw new AuthUnauthorizedException("Missing bearer token");
+      throw AuthException.unauthorized("Missing bearer token");
     }
     return token;
   }
@@ -200,7 +233,7 @@ public class AuthService {
   private static String normalizeEmail(String email) {
     String normalized = email == null ? "" : email.trim().toLowerCase(java.util.Locale.ROOT);
     if (normalized.isEmpty()) {
-      throw new InvalidAuthRequestException("email is required");
+      throw new BadRequestException("auth", "email is required");
     }
     return normalized;
   }
@@ -210,8 +243,8 @@ public class AuthService {
     if (normalized.isEmpty()) {
       return "";
     }
-    if (!normalized.matches("^[a-z0-9]+(?:-[a-z0-9]+)*$")) {
-      throw new InvalidAuthRequestException("username format is invalid");
+    if (!UsernameRules.isSlug(normalized)) {
+      throw new BadRequestException("auth", "username format is invalid");
     }
     return normalized;
   }

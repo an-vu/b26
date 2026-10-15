@@ -5,34 +5,25 @@
   position: fixed; inset: 0; z-index: 1; overflow: hidden; pointer-events: none;
   color: var(--board-foreground, #30302e); --effect-opacity: .5; --grid-size: 48px;
 }
-.page[data-intensity='medium'] .board-atmosphere { --effect-opacity: .65; --grid-size: 36px; }
-.page[data-intensity='heavy'] .board-atmosphere { --effect-opacity: .8; --grid-size: 24px; }
 .page[data-theme='aqua'] .board-atmosphere,
-.page[data-theme='frutiger-aero'] .board-atmosphere,
+.page[data-theme='aero'] .board-atmosphere,
 .page[data-color-mode='dark'] .board-atmosphere { color: #e5f7ff; }
-.page[data-theme='default'][data-pattern='dots'],
-.page[data-theme='default'][data-pattern='grid'] { background-image: none; }
+/* Legacy 'dots' (still possible in saved Home appearances) and grid hide the theme's own ::before art. */
 .page[data-theme][data-pattern='dots']::before,
 .page[data-theme][data-pattern='grid']::before { background-image: none; }
-.page[data-theme='aqua']::after,
-.page[data-theme='frutiger-aero']::after {
-  content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none;
-  background: var(--wallpaper-tint, transparent); mix-blend-mode: color; opacity: .75;
-}
+/* Wallpaper tint layer for every non-Berry theme; its material is set further below. */
+.page[data-theme]:where(:not([data-theme='berry']))::after { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; }
 /* Depth and wind vary independently per particle. */
 .board-atmosphere { --wind: 8vw; --fall-speed: 1; --rain-angle: -4deg; --rain-length: 1; --glow-speed: 1; }
-.page[data-intensity='medium'] .board-atmosphere { --wind: 35vw; --fall-speed: .7; --rain-angle: -17deg; --rain-length: 1.45; --glow-speed: .8; }
-.page[data-intensity='heavy'] .board-atmosphere { --wind: 70vw; --fall-speed: .42; --rain-angle: -30deg; --rain-length: 2; --glow-speed: .6; }
+.page[data-intensity='medium'] .board-atmosphere { --effect-opacity: .65; --grid-size: 36px; --wind: 35vw; --fall-speed: .7; --rain-angle: -17deg; --rain-length: 1.45; --glow-speed: .8; }
+.page[data-intensity='heavy'] .board-atmosphere { --effect-opacity: .8; --grid-size: 24px; --wind: 70vw; --fall-speed: .42; --rain-angle: -30deg; --rain-length: 2; --glow-speed: .6; }
 .board-atmosphere span { position: absolute; display: block; border-radius: 50%; }
-.page[data-pattern='stars'] .board-atmosphere span,
 .page[data-pattern='wave'] .board-atmosphere span {
-  width: calc(var(--particle-size) * 1.6); height: calc(var(--particle-size) * 1.6);
   background: radial-gradient(circle, #fff 0 8%, #d8efffc0 18%, #aac8ed30 40%, transparent 72%);
   box-shadow: 0 0 7px #c4ddff30; filter: blur(.35px);
   animation: board-glow calc(var(--particle-duration) * 1.7 * var(--glow-speed)) ease-in-out var(--particle-delay) infinite;
 }
-.page[data-theme='default'][data-color-mode='light'][data-pattern='stars'] .board-atmosphere span,
-.page[data-theme='default'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
+.page[data-theme='berry'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
   background: radial-gradient(circle, #fff 0 8%, #90a8c6b0 18%, #7596c030 40%, transparent 72%);
 }
 .page[data-pattern='rainfall'] .board-atmosphere span {
@@ -41,20 +32,21 @@
   animation: board-rain calc(var(--particle-duration) * .42 * var(--fall-speed)) linear var(--particle-delay) infinite;
 }
 .page[data-pattern='snow'] .board-atmosphere span {
+  /* Snow intensity changes the size distribution, rather than scaling every flake. */
+  width: calc(var(--particle-size) * 2.2); height: calc(var(--particle-size) * 2.2);
   background: radial-gradient(circle, #fff 0 15%, #fffC 28%, #e4f2ff70 42%, transparent 70%);
   filter: blur(calc((1 - var(--depth)) * 2px));
   animation: board-snow calc(var(--particle-duration) * 2.4) linear var(--particle-delay) infinite;
 }
-.page[data-theme='default'][data-color-mode='light'][data-pattern='snow'] .board-atmosphere span { filter: drop-shadow(0 0 1px #7d96ae70) blur(calc((1 - var(--depth)) * 2px)); }
+.page[data-theme='berry'][data-color-mode='light'][data-pattern='snow'] .board-atmosphere span { filter: drop-shadow(0 0 1px #7d96ae70) blur(calc((1 - var(--depth)) * 2px)); }
 .page[data-pattern='sakura'] .board-atmosphere span {
   width: calc(var(--particle-size) * 2); height: calc(var(--particle-size) * 3);
   border-radius: 80% 15% 70% 35%; background: linear-gradient(135deg, #ffe3ef, #ee89b1);
   box-shadow: inset 1px 1px 2px #ffffff60;
   animation: board-petal calc(var(--particle-duration) * 2 * var(--fall-speed)) linear var(--particle-delay) infinite;
 }
-.atmosphere-grid { width: 100%; height: 100%; overflow: visible; }
-.atmosphere-grid { color: #78cdeb; }
-.page[data-theme='default'][data-color-mode='light'] .atmosphere-grid { color: #4095af; }
+.atmosphere-grid { width: 100%; height: 100%; overflow: visible; color: #78cdeb; }
+.page[data-theme='berry'][data-color-mode='light'] .atmosphere-grid { color: #4095af; }
 .page[data-pattern='wave'] .board-atmosphere span { animation-name: board-wave-glow; z-index: 1; }
 @keyframes board-glow {
   0%, 100% { opacity: calc(var(--depth) * .2); transform: scale(.8); }
@@ -84,30 +76,18 @@
   .page[data-pattern] .board-atmosphere span { animation: none; opacity: .35; transform: none; }
 }
 
-/* Pattern picker previews shared by all themes. */
-.page[data-theme] .board-pattern-options button { background-image: none; }
-
 /* Softer weather; Sakura deliberately keeps its existing wind settings. */
-.page[data-pattern='rainfall'] .board-atmosphere { --wind: 5vw; --rain-angle: -3deg; --rain-length: .65; --fall-speed: 1.3; }
-.page[data-pattern='rainfall'][data-intensity='medium'] .board-atmosphere { --wind: 14vw; --rain-angle: -7deg; --rain-length: .8; --fall-speed: 1.05; }
-.page[data-pattern='rainfall'][data-intensity='heavy'] .board-atmosphere { --wind: 24vw; --rain-angle: -12deg; --rain-length: 1; --fall-speed: .85; }
+.page[data-pattern='rainfall'] .board-atmosphere { --wind: 5vw; --rain-angle: -3deg; --rain-length: .65; --fall-speed: 1.3; --effect-opacity: .52; --drop-scale: 1; --drop-frequency: 1.15; }
+.page[data-pattern='rainfall'][data-intensity='medium'] .board-atmosphere { --wind: 14vw; --rain-angle: -7deg; --rain-length: .8; --fall-speed: 1.05; --effect-opacity: .55; --drop-scale: 1.2; --drop-frequency: .95; }
+.page[data-pattern='rainfall'][data-intensity='heavy'] .board-atmosphere { --wind: 24vw; --rain-angle: -12deg; --rain-length: 1; --fall-speed: .85; --effect-opacity: .6; --drop-scale: 1.45; --drop-frequency: .75; }
 .page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { background: url('/themes/snowflake.svg') center / contain no-repeat; filter: none; }
-.page[data-theme][data-pattern='stars'] .board-atmosphere span:nth-child(5n) { background: radial-gradient(circle, #fff9dd 0 8%, #eddb9c90 20%, #d2b56a20 45%, transparent 72%); box-shadow: none; }
-.page[data-theme][data-pattern='stars'] .board-atmosphere span:nth-child(11n) { background: radial-gradient(circle, #fff0dd 0 8%, #edba8b85 20%, #c6946420 45%, transparent 72%); box-shadow: none; }
 /* Two cached image layers replace full-screen SVG blur/filter repainting. */
 .wave-sheets { position: absolute; inset: 0; overflow: hidden; contain: paint; }
-.wave-sheet { position: absolute; inset: -5%; background: url('/themes/wave-silk.svg') center / 100% 100% no-repeat; will-change: transform; animation: wave-sheet-drift 28s ease-in-out infinite alternate; }
-.wave-sheet-back { animation-delay: -14s; animation-direction: alternate-reverse; }
-.page[data-pattern='wave'] .board-atmosphere span { filter: none; box-shadow: none; }
+.wave-sheet { position: absolute; inset: -5%; background: url('/themes/wave-silk.svg') center / 100% 100% no-repeat; will-change: transform; animation: wave-sheet-drift 28s ease-in-out infinite alternate; animation-duration: var(--wave-speed); }
+.wave-sheet-back { animation-delay: -14s; animation-direction: alternate-reverse; opacity: .28; animation-name: wave-counter-drift; animation-duration: calc(var(--wave-speed) * 1.25); }
 
 .page[data-pattern='grid'] .atmosphere-grid { color: #c9cee0; }
-.page[data-pattern='rainfall'] .board-atmosphere { --effect-opacity: .52; --drop-scale: 1; --drop-frequency: 1.15; }
-.page[data-pattern='rainfall'][data-intensity='medium'] .board-atmosphere { --effect-opacity: .55; --drop-scale: 1.2; --drop-frequency: .95; }
-.page[data-pattern='rainfall'][data-intensity='heavy'] .board-atmosphere { --effect-opacity: .6; --drop-scale: 1.45; --drop-frequency: .75; }
-.wave-sheet { animation-duration: var(--wave-speed); }
-.wave-sheet-back { opacity: .28; animation-name: wave-counter-drift; animation-duration: calc(var(--wave-speed) * 1.25); }
 @keyframes wave-counter-drift { from { transform: translate3d(3%, 1%, 0) scale(-1, .85); } to { transform: translate3d(-3%, -2%, 0) scale(-1, 1.05); } }
-.page[data-pattern='wave'] .board-atmosphere span { animation-duration: calc(var(--particle-duration) * var(--spark-speed)); }
 @keyframes board-wave-glow { 0%, 100% { opacity: .06; transform: translate3d(0, 8px, 0) scale(.65); } 42% { opacity: calc(.3 + var(--depth) * .7); transform: translate3d(calc(var(--drift) * .25), -8px, 0) scale(1.25); } 65% { opacity: .15; } }
 
 .page[data-theme] .board-pattern-options button { background: var(--theme-surface); color: var(--theme-muted); display: grid; place-items: center; }
@@ -129,31 +109,29 @@
 .page[data-pattern='wave'] .board-atmosphere { --wave-speed: 11s; --spark-speed: .55; --spark-size: 1.7; }
 .page[data-pattern='wave'][data-intensity='medium'] .board-atmosphere { --wave-speed: 8.5s; --spark-speed: .4; --spark-size: 2.1; }
 .page[data-pattern='wave'][data-intensity='heavy'] .board-atmosphere { --wave-speed: 6.5s; --spark-speed: .3; --spark-size: 2.6; }
-.page[data-pattern='wave'] .board-atmosphere span { width: calc(var(--particle-size) * var(--spark-size)); height: calc(var(--particle-size) * var(--spark-size)); }
+/* Wave sparks. The name above stays before the reduced-motion rule; these follow it. */
+.page[data-pattern='wave'] .board-atmosphere span {
+  animation-duration: calc(var(--particle-duration) * var(--spark-speed));
+  filter: none; box-shadow: none; width: calc(var(--particle-size) * var(--spark-size)); height: calc(var(--particle-size) * var(--spark-size));
+}
 @keyframes wave-sheet-drift { from { transform: translate3d(-4%, -3%, 0) scaleY(.9) rotate(-1deg); } to { transform: translate3d(4%, 3%, 0) scaleY(1.1) rotate(1deg); } }
-@media (prefers-reduced-motion: reduce) { .page[data-pattern] .grid-trail, .page[data-pattern] .screen-droplets i, .page[data-pattern] .wave-sheet { animation: none; will-change: auto; opacity: .3; } }
+@media (prefers-reduced-motion: reduce) { .page[data-pattern] .screen-droplets i, .page[data-pattern] .wave-sheet { animation: none; will-change: auto; opacity: .3; } }
 
 /* Tint follows the wallpaper's existing light and shadow instead of flattening it. */
-.page[data-theme]:not([data-theme='default'])::after {
+.page[data-theme]:not([data-theme='berry'])::after {
   background: radial-gradient(ellipse at 18% 25%, var(--wallpaper-tint, transparent), transparent 72%), linear-gradient(145deg, transparent 10%, var(--wallpaper-tint, transparent));
   mix-blend-mode: soft-light; opacity: .65;
 }
-.page[data-theme]:not([data-theme='default'])[data-color-mode='dark']::after {
+.page[data-theme]:not([data-theme='berry'])[data-color-mode='dark']::after {
   background: radial-gradient(ellipse at 18% 25%, color-mix(in srgb, var(--wallpaper-tint, transparent) 65%, transparent), transparent 72%), linear-gradient(145deg, color-mix(in srgb, var(--palette-black) 18.823529%, transparent), color-mix(in srgb, var(--wallpaper-tint, transparent) 35%, #070b16));
   mix-blend-mode: multiply; opacity: .55;
 }
 
-.page[data-pattern='stars'] .board-atmosphere { --star-size: 1.6; }
-.page[data-pattern='stars'][data-intensity='medium'] .board-atmosphere { --star-size: 2.1; }
-.page[data-pattern='stars'][data-intensity='heavy'] .board-atmosphere { --star-size: 2.8; }
-.page[data-pattern='stars'] .board-atmosphere span { width: calc(var(--particle-size) * var(--star-size)); height: calc(var(--particle-size) * var(--star-size)); }
-/* Snow intensity changes the size distribution, rather than scaling every flake. */
-.page[data-pattern='snow'] .board-atmosphere span { width: calc(var(--particle-size) * 2.2); height: calc(var(--particle-size) * 2.2); }
 .page[data-pattern='snow'] .board-atmosphere span:nth-child(7n) { width: calc(var(--particle-size) * 2.8); height: calc(var(--particle-size) * 2.8); }
 .page[data-pattern='snow'] .board-atmosphere span:nth-child(4n) { opacity: .45; }
 /* White cores with occasional pastel halos, shared with the silk ribbons. */
 .page[data-pattern='wave'] .board-atmosphere span,
-.page[data-theme='default'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
+.page[data-theme='berry'][data-color-mode='light'][data-pattern='wave'] .board-atmosphere span {
   background: radial-gradient(circle, #fff 0 8%, var(--particle-tint, #edf6ff) 18%, transparent 65%);
 }
 /* Vintage lens bokeh: luminous discs at different focus depths, not solid dots. */

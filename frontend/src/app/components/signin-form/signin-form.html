@@ -1,10 +1,10 @@
+@if (showSignup) {
 <app-signup-form
-  *ngIf="showSignup; else signin"
   (signinRequested)="showSignup = false"
 ></app-signup-form>
-<ng-template #signin>
+} @else {
   <article class="widget">
-    <h3>{{ widget?.title || 'Welcome Back!' }}</h3>
+    <h3>{{ widget()?.title || 'Welcome Back!' }}</h3>
 
     <form class="auth-form" (ngSubmit)="onSigninSubmit()">
       <label class="auth-field">
@@ -40,7 +40,9 @@
         Don't Have an Account?
       </button>
 
-      <p class="auth-message auth-message--error" *ngIf="errorMessage">{{ errorMessage }}</p>
+      @if (errorMessage) {
+        <p class="auth-message auth-message--error">{{ errorMessage }}</p>
+      }
     </form>
   </article>
-</ng-template>
+}

@@ -1,68 +1,96 @@
+import { computed, signal } from '@angular/core';
 import type { Board, BoardAppearance } from '../../models/board';
-import { BERRY_APPEARANCE, paperColor, foregroundColor } from '../../themes/appearance-values';
-import { BOARD_THEMES, type BoardThemeId } from '../../themes/board-theme';
+import { BERRY_APPEARANCE, foregroundColor } from '../../themes/appearance-values';
+import { BOARD_THEMES, normalizeThemeId } from '../../themes/board-theme';
 
-/** Owns the editable settings and their saved baseline; the page coordinates access and requests. */
+type SavedSettings = { name: string; slug: string; appearance: BoardAppearance };
+
+function normalizeAppearance(appearance: BoardAppearance): BoardAppearance {
+  return {
+    themeFamily:
+      BOARD_THEMES.find(
+        (theme) => theme.id === normalizeThemeId(appearance.themeFamily) && theme.status === 'available',
+      )?.id ?? 'berry',
+    theme: appearance.theme === 'dark' ? 'dark' : 'light',
+    radiusStep: Number(appearance.radiusStep) as BoardAppearance['radiusStep'],
+    spacingStep: Number(appearance.spacingStep ?? 2) as 1 | 2 | 3,
+    backgroundColor: appearance.backgroundColor,
+    pattern: appearance.pattern,
+    patternIntensity: appearance.patternIntensity ?? 'light',
+  };
+}
+
+/** Editable board settings and their saved baseline. The editor store coordinates requests. */
 export class BoardSettingsState {
-  boardId = '';
-  version?: number;
-  name = '';
-  slug = '';
-  savedName = '';
-  savedSlug = '';
-  savedAppearance = { ...BERRY_APPEARANCE };
-  themeFamily: BoardThemeId = 'default';
-  dark = false;
-  radius: BoardAppearance['radiusStep'] = 2;
-  gap: 1 | 2 | 3 = 2;
-  background = BERRY_APPEARANCE.backgroundColor;
-  pattern: BoardAppearance['pattern'] = 'none';
-  intensity: NonNullable<BoardAppearance['patternIntensity']> = 'light';
+  readonly boardId = signal('');
+  readonly version = signal<number | undefined>(undefined);
+  readonly name = signal('');
+  readonly slug = signal('');
+  private readonly saved = signal<SavedSettings>({
+    name: '',
+    slug: '',
+    appearance: { ...BERRY_APPEARANCE },
+  });
+  private readonly draft = signal(normalizeAppearance(BERRY_APPEARANCE));
 
-  get theme() { return BOARD_THEMES.find(theme => theme.id === this.themeFamily) ?? BOARD_THEMES[0]; }
-  get foreground() { return foregroundColor(this.background); }
-  get paper() { return paperColor(this.background); }
-  private displayedAppearance = { ...BERRY_APPEARANCE };
-  get appearance(): BoardAppearance {
-    const next: BoardAppearance = { themeFamily: this.themeFamily, theme: this.dark ? 'dark' : 'light',
-      radiusStep: Number(this.radius) as BoardAppearance['radiusStep'], spacingStep: Number(this.gap) as 1 | 2 | 3,
-      backgroundColor: this.background, pattern: this.pattern, patternIntensity: this.intensity };
-    if (Object.keys(next).some(key => next[key as keyof BoardAppearance] !== this.displayedAppearance[key as keyof BoardAppearance])) {
-      this.displayedAppearance = next;
-    }
-    return this.displayedAppearance;
-  }
-  get appearanceChanged() {
-    const draft = this.appearance, saved = this.savedAppearance;
-    return draft.spacingStep !== (saved.spacingStep ?? 2) || draft.themeFamily !== (saved.themeFamily ?? 'default') ||
-      draft.theme !== saved.theme || draft.radiusStep !== saved.radiusStep || draft.backgroundColor !== saved.backgroundColor ||
-      draft.pattern !== saved.pattern || draft.patternIntensity !== (saved.patternIntensity ?? 'light');
-  }
-  get changed() { return this.appearanceChanged || this.name !== this.savedName || this.slug !== this.savedSlug; }
+  readonly appearance = this.draft.asReadonly();
+  readonly savedName = computed(() => this.saved().name);
+  readonly savedSlug = computed(() => this.saved().slug);
+  readonly theme = computed(
+    () => BOARD_THEMES.find((theme) => theme.id === this.draft().themeFamily) ?? BOARD_THEMES[0],
+  );
+  readonly foreground = computed(() => foregroundColor(this.draft().backgroundColor));
+  /** The default light Berry surface uses dark atmosphere ink. */
+  readonly darkInk = computed(
+    () =>
+      this.theme().id === 'berry' &&
+      this.draft().theme !== 'dark' &&
+      this.foreground() === '#30302e',
+  );
+  readonly appearanceChanged = computed(() => {
+    const draft = this.draft();
+    const saved = this.saved().appearance;
+    return (
+      draft.spacingStep !== (saved.spacingStep ?? 2) ||
+      draft.themeFamily !== normalizeThemeId(saved.themeFamily) ||
+      draft.theme !== saved.theme ||
+      draft.radiusStep !== saved.radiusStep ||
+      draft.backgroundColor !== saved.backgroundColor ||
+      draft.pattern !== saved.pattern ||
+      draft.patternIntensity !== (saved.patternIntensity ?? 'light')
+    );
+  });
+  readonly changed = computed(
+    () =>
+      this.appearanceChanged() ||
+      this.name() !== this.saved().name ||
+      this.slug() !== this.saved().slug,
+  );
 
   applyAppearance(appearance: BoardAppearance) {
-    this.themeFamily = BOARD_THEMES.find(theme => theme.id === appearance.themeFamily && theme.status === 'available')?.id ?? 'default';
-    this.dark = appearance.theme === 'dark';
-    this.radius = appearance.radiusStep;
-    this.gap = appearance.spacingStep ?? 2;
-    this.background = appearance.backgroundColor;
-    this.pattern = appearance.pattern;
-    this.intensity = appearance.patternIntensity ?? 'light';
+    this.draft.set(normalizeAppearance(appearance));
+  }
+
+  patchAppearance(patch: Partial<BoardAppearance>) {
+    this.applyAppearance({ ...this.draft(), ...patch });
   }
 
   hydrate(board: Board, preserveAppearanceDraft = false) {
-    this.boardId = board.id;
-    this.version = board.version;
-    this.name = this.savedName = board.boardName;
-    this.slug = this.savedSlug = board.boardUrl;
-    this.savedAppearance = { ...BERRY_APPEARANCE, ...board.appearance };
-    if (this.savedAppearance.pattern === 'dots') this.savedAppearance.pattern = 'stars';
-    if (!preserveAppearanceDraft) this.applyAppearance(this.savedAppearance);
+    const appearance = { ...BERRY_APPEARANCE, ...board.appearance };
+    appearance.themeFamily = normalizeThemeId(appearance.themeFamily);
+    if (appearance.pattern === 'dots') appearance.pattern = 'stars';
+    this.boardId.set(board.id);
+    this.version.set(board.version);
+    this.saved.set({ name: board.boardName, slug: board.boardUrl, appearance });
+    this.name.set(board.boardName);
+    this.slug.set(board.boardUrl);
+    if (!preserveAppearanceDraft) this.applyAppearance(appearance);
   }
 
   reset() {
-    this.name = this.savedName;
-    this.slug = this.savedSlug;
-    this.applyAppearance(this.savedAppearance);
+    const saved = this.saved();
+    this.name.set(saved.name);
+    this.slug.set(saved.slug);
+    this.applyAppearance(saved.appearance);
   }
 }

@@ -47,7 +47,7 @@ describe('Signup onboarding', () => {
     ] });
     const fixture = TestBed.createComponent(SignupFormComponent);
     const component = fixture.componentInstance;
-    component.widget = { id: 1, type: 'signup', title: 'Create Account', layout: 'span-2', config: {}, enabled: true, order: 0 };
+    fixture.componentRef.setInput('widget', { id: 1, type: 'signup', title: 'Create Account', layout: 'span-2', config: {}, enabled: true, order: 0 });
     component.email = 'test@example.com';
     component.password = component.confirmPassword = 'test-password-123';
     fixture.detectChanges();

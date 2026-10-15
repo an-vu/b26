@@ -39,7 +39,7 @@ Board and Home DTOs share `AppearanceRules` for accepted themes, colors, pattern
 
 ## Data and migration boundaries
 
-PostgreSQL is the application database. Flyway manages schema changes; Hibernate validates the application schema. Fast backend tests use an H2-generated schema, and separate PostgreSQL tests cover migrations and real-database behavior.
+PostgreSQL is the application database. Flyway manages schema changes; Hibernate validates the application schema. Backend tests run against PostgreSQL with the real migrations.
 
 V37 archives legacy cards and system settings, detaches their foreign keys, and namespaces historical click targets. New clicks use link widget IDs. Historical totals remain available. See [API reference](API-Reference).
 

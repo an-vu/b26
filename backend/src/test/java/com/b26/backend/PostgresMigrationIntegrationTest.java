@@ -4,12 +4,10 @@ import java.sql.DriverManager;
 import java.util.UUID;
 import org.flywaydb.core.Flyway;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledIfEnvironmentVariable;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /** Uses a disposable schema only; never cleans or migrates the connection's default schema. */
-@EnabledIfEnvironmentVariable(named = "POSTGRES_TEST_URL", matches = ".+")
 class PostgresMigrationIntegrationTest {
   @Test
   void freshInstallAndUpgradePreserveUserData() throws Exception {
@@ -67,11 +65,43 @@ class PostgresMigrationIntegrationTest {
         statement.executeUpdate("insert into system_settings "
             + "(id, global_homepage_board_id, global_insights_board_id, global_settings_board_id, global_signin_board_id) "
             + "values (1, 'home', 'insights', 'settings', 'signin')");
+        // V42 renames theme family ids; seed every legacy id before it runs.
+        Flyway.configure().dataSource(url, user, password).schemas(schema).defaultSchema(schema)
+            .target("41").load().migrate();
+        statement.executeUpdate("insert into boards (id, board_name, board_url, name, headline, owner_user_id, appearance_theme_family) values "
+            + "('theme-aero', 'Aero', 'theme-aero', 'Aero', 'A', 'anvu', 'frutiger-aero'), "
+            + "('theme-omakase', 'Omakase', 'theme-omakase', 'Omakase', 'O', 'anvu', 'omahakase'), "
+            + "('theme-valencia', 'Valencia', 'theme-valencia', 'Valencia', 'V', 'anvu', 'lofi'), "
+            + "('theme-aqua', 'Aqua', 'theme-aqua', 'Aqua', 'Q', 'anvu', 'aqua'), "
+            + "('theme-kiwi', 'Kiwi', 'theme-kiwi', 'Kiwi', 'K', 'anvu', 'kiwi')");
+        statement.executeUpdate("update user_preferences set home_theme_family = 'lofi' where user_id = 'anvu'");
         Flyway flyway = Flyway.configure().dataSource(url, user, password)
             .schemas(schema).defaultSchema(schema).load();
         flyway.migrate();
         flyway.validate();
         assertEquals(0, flyway.migrate().migrationsExecuted);
+        try (var rows = statement.executeQuery("select id, appearance_theme_family from boards where id like 'theme-%' order by id")) {
+          var expected = java.util.Map.of("theme-aero", "aero", "theme-omakase", "omakase",
+              "theme-valencia", "valencia", "theme-aqua", "aqua", "theme-kiwi", "kiwi");
+          int count = 0;
+          while (rows.next()) { assertEquals(expected.get(rows.getString(1)), rows.getString(2), rows.getString(1)); count++; }
+          assertEquals(expected.size(), count);
+        }
+        try (var rows = statement.executeQuery("select home_theme_family from user_preferences where user_id = 'anvu'")) {
+          rows.next(); assertEquals("valencia", rows.getString(1));
+        }
+        try (var rows = statement.executeQuery("select count(*) from boards where appearance_theme_family in ('default', 'frutiger-aero', 'omahakase', 'lofi')")) {
+          rows.next(); assertEquals(0, rows.getInt(1));
+        }
+        statement.executeUpdate("insert into boards (id, board_name, board_url, name, headline, owner_user_id) "
+            + "values ('theme-new', 'New', 'theme-new', 'New', 'N', 'anvu')");
+        try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'theme-new'")) {
+          rows.next(); assertEquals("berry", rows.getString(1));
+        }
+        try (var rows = statement.executeQuery("select column_default from information_schema.columns "
+            + "where table_schema = current_schema() and table_name = 'user_preferences' and column_name = 'home_theme_family'")) {
+          rows.next(); org.junit.jupiter.api.Assertions.assertTrue(rows.getString(1).startsWith("'berry'"), rows.getString(1));
+        }
         try (var rows = statement.executeQuery("select label from legacy_cards where id = 'archive-test'")) {
           rows.next(); assertEquals("Saved link", rows.getString(1));
         }
@@ -98,7 +128,7 @@ class PostgresMigrationIntegrationTest {
           assertEquals(2, rows.getInt(2));
           assertEquals("#ffffff", rows.getString(3));
           assertEquals("none", rows.getString(4));
-          assertEquals("default", rows.getString(5));
+          assertEquals("berry", rows.getString(5));
           assertEquals("light", rows.getString(6));
         }
         statement.executeUpdate("update boards set appearance_theme = 'dark', appearance_radius_step = 3, appearance_background_color = '#e6f0ff', appearance_pattern = 'grid' where id = 'default'");
@@ -113,9 +143,12 @@ class PostgresMigrationIntegrationTest {
         statement.executeUpdate("update user_preferences set home_radius_step = 5 where user_id = 'anvu'");
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
             () -> statement.executeUpdate("update user_preferences set home_radius_step = 6 where user_id = 'anvu'"));
-        statement.executeUpdate("update boards set appearance_theme_family = 'frutiger-aero' where id = 'default'");
+        statement.executeUpdate("update boards set appearance_theme_family = 'aero' where id = 'default'");
+        // V40: appearance vocabularies are validated by the API, so new values need no migration.
+        statement.executeUpdate("update boards set appearance_theme_family = 'future-theme' where id = 'default'");
+        statement.executeUpdate("update user_preferences set home_pattern = 'future-pattern' where user_id = 'anvu'");
         org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
-            () -> statement.executeUpdate("update boards set appearance_theme_family = 'unknown' where id = 'default'"));
+            () -> statement.executeUpdate("update boards set appearance_background_color = 'url(x)' where id = 'default'"));
         statement.executeUpdate("update boards set appearance_theme_family = 'aqua' where id = 'default'");
         try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
           rows.next();
@@ -130,20 +163,18 @@ class PostgresMigrationIntegrationTest {
           statement.executeUpdate("update user_preferences set home_pattern = '" + pattern + "' where user_id = 'anvu'");
           statement.executeUpdate("update boards set appearance_pattern = '" + pattern + "', appearance_pattern_intensity = 'heavy' where id = 'default'");
         }
-        org.junit.jupiter.api.Assertions.assertThrows(java.sql.SQLException.class,
-            () -> statement.executeUpdate("update boards set appearance_pattern_intensity = 'unknown' where id = 'default'"));
         statement.executeUpdate("update boards set appearance_theme_family = 'kiwi' where id = 'default'");
         try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
           rows.next();
           assertEquals("kiwi", rows.getString(1));
         }
-        statement.executeUpdate("update boards set appearance_theme_family = 'lofi' where id = 'default'");
-        statement.executeUpdate("update user_preferences set home_theme_family = 'lofi'");
+        statement.executeUpdate("update boards set appearance_theme_family = 'valencia' where id = 'default'");
+        statement.executeUpdate("update user_preferences set home_theme_family = 'valencia'");
         try (var rows = statement.executeQuery("select appearance_theme_family from boards where id = 'default'")) {
-          rows.next(); assertEquals("lofi", rows.getString(1));
+          rows.next(); assertEquals("valencia", rows.getString(1));
         }
         try (var rows = statement.executeQuery("select home_theme_family from user_preferences")) {
-          rows.next(); assertEquals("lofi", rows.getString(1));
+          rows.next(); assertEquals("valencia", rows.getString(1));
         }
         try (var rows = statement.executeQuery("select visibility from boards where id = 'default'")) {
           rows.next(); assertEquals("public", rows.getString(1));
@@ -153,6 +184,11 @@ class PostgresMigrationIntegrationTest {
             () -> statement.executeUpdate("update boards set visibility = 'unknown' where id = 'default'"));
         try (var rows = statement.executeQuery("select global_homepage_board_id from legacy_system_settings where id = 1")) {
           rows.next(); assertEquals("home", rows.getString(1));
+        }
+        statement.executeUpdate("insert into widgets (board_id, type, title, layout, config_json, enabled, sort_order) "
+            + "values ('default', 'link', 'Json', 'span-1', '{\"url\":\"https://example.com\"}', true, 0)");
+        try (var rows = statement.executeQuery("select config_json ->> 'url' from widgets where title = 'Json'")) {
+          rows.next(); assertEquals("https://example.com", rows.getString(1));
         }
         try (var rows = statement.executeQuery("select count(*) from user_preferences p join boards b on b.id = p.main_board_id")) {
           rows.next();

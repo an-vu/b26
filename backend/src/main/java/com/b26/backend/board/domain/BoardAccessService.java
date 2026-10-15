@@ -1,10 +1,9 @@
 package com.b26.backend.board.domain;
 
-import com.b26.backend.auth.domain.AuthService;
-import com.b26.backend.auth.domain.AuthUnauthorizedException;
-import com.b26.backend.auth.domain.AuthForbiddenException;
 import com.b26.backend.board.persistence.BoardEntity;
 import com.b26.backend.board.persistence.BoardRepository;
+import com.b26.backend.common.api.AuthException;
+import com.b26.backend.common.api.NotFoundException;
 import com.b26.backend.user.persistence.AppUserEntity;
 import org.springframework.stereotype.Service;
 
@@ -12,41 +11,31 @@ import org.springframework.stereotype.Service;
 @Service
 public class BoardAccessService {
   private final BoardRepository boards;
-  private final AuthService auth;
 
-  public BoardAccessService(BoardRepository boards, AuthService auth) {
+  public BoardAccessService(BoardRepository boards) {
     this.boards = boards;
-    this.auth = auth;
   }
 
-  public void requireRead(String key, boolean byId, boolean ownerOnly, String authorization) {
+  /** @param user the signed-in reader, or null for an anonymous visitor */
+  public void requireRead(String key, boolean byId, boolean ownerOnly, AppUserEntity user) {
     BoardEntity board = findBoard(key, byId);
-    if (canManage(board, optionalUser(authorization))) return;
+    if (canManage(board, user)) return;
     if (!ownerOnly && "public".equals(board.getVisibility())) return;
     // Do not reveal whether a private board exists.
-    throw new BoardNotFoundException(key);
+    throw NotFoundException.board(key);
   }
 
-  public void requireWrite(String key, boolean byId, String authorization) {
-    AppUserEntity user = auth.getAuthenticatedUser(authorization);
-    if (!canManage(findBoard(key, byId), user)) throw new AuthForbiddenException();
+  public void requireWrite(String key, boolean byId, AppUserEntity user) {
+    if (!canManage(findBoard(key, byId), user)) throw AuthException.forbidden();
   }
 
-  public boolean canEditBoard(String slug, String authorization) {
-    return canManage(findBoard(slug, false), optionalUser(authorization));
+  public boolean canEditBoard(String slug, AppUserEntity user) {
+    return canManage(findBoard(slug, false), user);
   }
 
   private BoardEntity findBoard(String key, boolean byId) {
     return (byId ? boards.findById(key) : boards.findByBoardUrl(key))
-        .orElseThrow(() -> new BoardNotFoundException(key));
-  }
-
-  private AppUserEntity optionalUser(String authorization) {
-    try {
-      return auth.getAuthenticatedUser(authorization);
-    } catch (AuthUnauthorizedException ignored) {
-      return null;
-    }
+        .orElseThrow(() -> NotFoundException.board(key));
   }
 
   private static boolean canManage(BoardEntity board, AppUserEntity user) {

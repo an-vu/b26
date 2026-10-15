@@ -53,11 +53,11 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
   }
 
   @org.junit.jupiter.params.ParameterizedTest
-  @org.junit.jupiter.params.provider.ValueSource(strings = {"frutiger-aero", "aqua", "omahakase", "kiwi", "lofi"})
+  @org.junit.jupiter.params.provider.ValueSource(strings = {"aero", "aqua", "omakase", "kiwi", "valencia"})
   void themeFamilyPersistsAndLegacyClientsPreserveIt(String family) throws Exception {
     String token = authAnvu();
     var board = create(token);
-    assertEquals("default", board.at("/appearance/themeFamily").asText());
+    assertEquals("berry", board.at("/appearance/themeFamily").asText());
     String url = API_BOARD + "/" + board.get("boardUrl").asText();
     var update = request(board);
     ((ObjectNode) update.get("appearance")).put("themeFamily", family);
@@ -75,6 +75,21 @@ class BoardAppearanceIntegrationTest extends ApiIntegrationTestSupport {
     mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
         .contentType(MediaType.APPLICATION_JSON).content(legacy.toString()))
         .andExpect(status().isBadRequest());
+  }
+
+  @org.junit.jupiter.params.ParameterizedTest
+  @org.junit.jupiter.params.provider.CsvSource({"default,berry", "frutiger-aero,aero", "omahakase,omakase", "lofi,valencia"})
+  void legacyThemeFamilyIdsAreSavedAsCurrentIds(String legacy, String current) throws Exception {
+    String token = authAnvu();
+    var board = create(token);
+    String url = API_BOARD + "/" + board.get("boardUrl").asText();
+    var update = request(board);
+    ((ObjectNode) update.get("appearance")).put("themeFamily", legacy);
+    mockMvc.perform(patch(url + "/identity").header(AUTHORIZATION_HEADER, token)
+        .contentType(MediaType.APPLICATION_JSON).content(update.toString()))
+        .andExpect(status().isOk()).andExpect(jsonPath("$.appearance.themeFamily").value(current));
+    mockMvc.perform(get(url).header(AUTHORIZATION_HEADER, token))
+        .andExpect(jsonPath("$.appearance.themeFamily").value(current));
   }
 
   @Test

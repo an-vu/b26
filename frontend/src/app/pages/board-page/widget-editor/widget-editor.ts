@@ -1,12 +1,18 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import type { WidgetDraft } from '../board-page.widget-edit';
 
-@Component({ selector: 'app-widget-editor', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './widget-editor.html', styleUrl: './widget-editor.css' })
+/** Edits one draft; changes are emitted as patches so the store can replace the draft. */
+@Component({
+  selector: 'app-widget-editor',
+  standalone: true,
+  imports: [FormsModule],
+  templateUrl: './widget-editor.html',
+  styleUrl: './widget-editor.css',
+})
 export class WidgetEditorComponent {
-  @Input() draft: WidgetDraft = undefined!;
-  @Input() disabled: boolean = false;
-  @Input() error: string = '';
-  @Output() readonly fieldChange = new EventEmitter<void>();
+  readonly draft = input.required<WidgetDraft>();
+  readonly disabled = input(false);
+  readonly error = input('');
+  readonly draftChange = output<Partial<WidgetDraft>>();
 }

@@ -1,4 +1,4 @@
-import { DestroyRef, Injectable, NgZone, inject } from '@angular/core';
+import { DestroyRef, Injectable, inject } from '@angular/core';
 import { BehaviorSubject, distinctUntilChanged } from 'rxjs';
 
 /** Visibility, not keyboard focus: a visible side-by-side window should still animate. */
@@ -10,12 +10,10 @@ export class PageActivityService {
   constructor() {
     const update = () => this.setVisible(!document.hidden);
     const hide = () => this.setVisible(false);
-    inject(NgZone).runOutsideAngular(() => {
-      document.addEventListener('visibilitychange', update);
-      window.addEventListener('pagehide', hide);
-      window.addEventListener('pageshow', update);
-      update();
-    });
+    document.addEventListener('visibilitychange', update);
+    window.addEventListener('pagehide', hide);
+    window.addEventListener('pageshow', update);
+    update();
     inject(DestroyRef).onDestroy(() => {
       document.removeEventListener('visibilitychange', update);
       window.removeEventListener('pagehide', hide);

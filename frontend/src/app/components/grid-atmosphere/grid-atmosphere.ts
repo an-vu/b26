@@ -1,6 +1,6 @@
 import { PageActivityService } from '../../services/page-activity.service';
 import { Subscription } from 'rxjs';
-import { AfterViewInit, Component, ElementRef, Input, NgZone, OnDestroy, OnChanges, ViewChild, inject } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, OnDestroy, OnChanges, ViewChild, inject, input } from '@angular/core';
 
 type Point = { x: number; y: number };
 type Trail = { points: Point[]; head: number; speed: number; length: number; phase: number; tint: string; fading?: number };
@@ -11,10 +11,9 @@ type Trail = { points: Point[]; head: number; speed: number; length: number; pha
   styles: [':host { display:block; position:absolute; inset:0; overflow:hidden; } canvas { display:block; width:100%; height:100%; }'],
 })
 export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChanges {
-  @Input() intensity: 'light' | 'medium' | 'heavy' = 'light';
-  @Input() darkInk = false;
+  readonly intensity = input<'light' | 'medium' | 'heavy'>('light');
+  readonly darkInk = input(false);
   @ViewChild('canvas', { static: true }) canvas!: ElementRef<HTMLCanvasElement>;
-  private zone = inject(NgZone);
   private observer?: ResizeObserver;
   private activity = inject(PageActivityService);
   private visibility?: Subscription;
@@ -57,22 +56,20 @@ export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChan
   };
   private random() { this.seed ^= this.seed << 13; this.seed ^= this.seed >>> 17; this.seed ^= this.seed << 5; return (this.seed >>> 0) / 4294967296; }
   ngAfterViewInit() {
-    this.zone.runOutsideAngular(() => {
-      if (typeof ResizeObserver !== 'undefined') { this.observer = new ResizeObserver(this.resize); this.observer.observe(this.canvas.nativeElement); }
-      else window.addEventListener('resize', this.resize);
-      this.initialized = true;
-      this.motion?.addEventListener('change', this.invalidate);
-      this.resize();
-      this.visibility = this.activity.visible$.subscribe(visible => {
-        if (visible) { this.resize(); this.wake(); } else this.stop();
-      });
+    if (typeof ResizeObserver !== 'undefined') { this.observer = new ResizeObserver(this.resize); this.observer.observe(this.canvas.nativeElement); }
+    else window.addEventListener('resize', this.resize);
+    this.initialized = true;
+    this.motion?.addEventListener('change', this.invalidate);
+    this.resize();
+    this.visibility = this.activity.visible$.subscribe(visible => {
+      if (visible) { this.resize(); this.wake(); } else this.stop();
     });
   }
   ngOnChanges() { this.invalidate(); }
   private stop() { cancelAnimationFrame(this.frame); this.frame = 0; this.previous = 0; }
   private wake() {
     if (!this.initialized || !this.activity.visible || this.frame) return;
-    this.zone.runOutsideAngular(() => { this.frame = requestAnimationFrame(this.draw); });
+    this.frame = requestAnimationFrame(this.draw);
   }
   private invalidate = () => { this.staticFrame = ''; this.wake(); };
   ngOnDestroy() {
@@ -110,10 +107,11 @@ export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChan
     if (!this.initialized || !this.activity.visible) return;
     const canvas = this.canvas.nativeElement, ctx = canvas.getContext('2d');
     if (!ctx) return;
-    const signature = `${canvas.width}:${canvas.height}:${this.intensity}:${this.darkInk}`;
+    const intensity = this.intensity(), darkInk = this.darkInk();
+    const signature = `${canvas.width}:${canvas.height}:${intensity}:${darkInk}`;
     if (this.motion?.matches && this.staticFrame === signature) return;
     this.staticFrame = this.motion?.matches ? signature : '';
-    const level = this.intensity === 'heavy' ? 2 : this.intensity === 'medium' ? 1 : 0;
+    const level = intensity === 'heavy' ? 2 : intensity === 'medium' ? 1 : 0;
     const count = [7, 12, 17][level];
     const tailLength = (trail: Trail) => Math.round(9 + trail.length * [15, 25, 37][level]);
     const dt = this.previous ? Math.min((timestamp - this.previous) / 1000, .04) : 0;
@@ -124,13 +122,13 @@ export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChan
     while (this.trails.length < count) { const trail = this.spawn(); trail.head = this.random() * trail.points.length * .5; this.trails.push(trail); }
     if (this.trails.length > count) this.trails.length = count;
     ctx.setTransform(canvas.width / 1600, 0, 0, canvas.height / 1000, 0, 0); ctx.clearRect(0, 0, 1600, 1000);
-    ctx.strokeStyle = this.darkInk ? '#52678120' : '#d9e7ff20'; ctx.lineWidth = .65;
+    ctx.strokeStyle = darkInk ? '#52678120' : '#d9e7ff20'; ctx.lineWidth = .65;
     if (!this.lattice) {
       this.lattice = new Path2D();
       for (let x = 0; x <= 1600; x += 48) this.lattice.addPath(this.gridPath(x, 0, 0, 1000));
       for (let y = 0; y <= 1000; y += 48) this.lattice.addPath(this.gridPath(0, y, 1600, 0));
     }
-    const gridSignature = `${canvas.width}:${canvas.height}:${this.darkInk}`;
+    const gridSignature = `${canvas.width}:${canvas.height}:${darkInk}`;
     if (this.gridSignature !== gridSignature) {
       this.gridLayer ??= document.createElement('canvas');
       this.gridLayer.width = canvas.width; this.gridLayer.height = canvas.height;
@@ -149,7 +147,7 @@ export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChan
       }
       for (const cell of this.cells) {
         const t = Math.max(0, (now - cell.born) / cell.duration);
-        ctx.fillStyle = `rgba(${this.darkInk ? '90,110,140' : cell.tint},${Math.sin(t * Math.PI) ** 2 * .045})`;
+        ctx.fillStyle = `rgba(${darkInk ? '90,110,140' : cell.tint},${Math.sin(t * Math.PI) ** 2 * .045})`;
         ctx.fill(cell.path);
       }
     }
@@ -182,7 +180,7 @@ export class GridAtmosphereComponent implements AfterViewInit, OnDestroy, OnChan
       const gradient = ctx.createLinearGradient(a.x, a.y, b.x === a.x && b.y === a.y ? b.x + 1 : b.x, b.y);
       gradient.addColorStop(0, `rgba(105,130,165,${opacity * .04})`);
       gradient.addColorStop(.7, `rgba(${trail.tint},${opacity * .16})`);
-      gradient.addColorStop(1, this.darkInk ? `rgba(65,90,125,${opacity * twinkle * contact * .8})` : `rgba(255,255,255,${opacity * twinkle * contact})`);
+      gradient.addColorStop(1, darkInk ? `rgba(65,90,125,${opacity * twinkle * contact * .8})` : `rgba(255,255,255,${opacity * twinkle * contact})`);
       ctx.strokeStyle = gradient; ctx.lineWidth = 1.3; ctx.stroke();
       // The narrow leading stroke breathes in brightness; no separate round head.
     }

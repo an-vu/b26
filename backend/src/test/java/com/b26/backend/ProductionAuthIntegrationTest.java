@@ -8,8 +8,7 @@ import org.springframework.http.MediaType;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-/** Production guards and authentication, with an isolated test database. */
-@org.springframework.test.context.TestPropertySource(properties = "spring.datasource.url=jdbc:h2:mem:b26-production-auth;DB_CLOSE_DELAY=-1")
+/** Production guards and authentication on the test database. */
 @ActiveProfiles(value = {"prod", "test"}, inheritProfiles = false)
 class ProductionAuthIntegrationTest extends ApiIntegrationTestSupport {
   @Test

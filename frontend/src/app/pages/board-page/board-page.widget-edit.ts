@@ -105,38 +105,63 @@ export function buildWidgetPayload(draft: WidgetDraft): UpsertWidgetRequest {
   };
 }
 
-export function resetWidgetConfigForType(draft: WidgetDraft): void {
-  draft.config = {};
-  if (draft.type === 'embed') {
-    draft.linkUrl = '';
-    draft.placesText = '';
-    return;
+/**
+ * Switch a draft's type. Returning to the saved type restores its saved settings (including
+ * server metadata such as descriptions or images); any other switch starts from a clean config.
+ */
+export function withWidgetType<T extends WidgetDraft>(
+  draft: T,
+  type: WidgetType,
+  original?: WidgetDraft,
+): T {
+  if (original && original.type === type) {
+    const { config, embedUrl, linkUrl, placesText } = original;
+    return { ...draft, type, config: { ...config }, embedUrl, linkUrl, placesText };
   }
-
-  if (draft.type === 'link') {
-    draft.embedUrl = '';
-    draft.placesText = '';
-    return;
-  }
-
-  if (
-    draft.type === 'user-settings' ||
-    draft.type === 'admin-settings' ||
-    draft.type === 'signin' ||
-    draft.type === 'signup'
-  ) {
-    draft.embedUrl = '';
-    draft.linkUrl = '';
-    draft.placesText = '';
-    return;
-  }
-
-  draft.embedUrl = '';
-  draft.linkUrl = '';
+  return {
+    ...draft,
+    type,
+    config: {},
+    embedUrl: type === 'embed' ? draft.embedUrl : '',
+    linkUrl: type === 'link' ? draft.linkUrl : '',
+    placesText: type === 'map' ? draft.placesText : '',
+  };
 }
 
-export function withNormalizedOrder(drafts: WidgetDraft[]): WidgetDraft[] {
+export function withNormalizedOrder<T extends WidgetDraft>(drafts: T[]): T[] {
   return drafts.map((draft, index) => ({ ...draft, order: index }));
+}
+
+/** New drafts always count as changed; existing ones are compared field by field, config included. */
+export function hasDraftChanged(
+  draft: WidgetDraft,
+  originals: ReadonlyMap<number, WidgetDraft>,
+): boolean {
+  const original = typeof draft.id === 'number' ? originals.get(draft.id) : undefined;
+  if (!original) return true;
+  return (
+    draft.type !== original.type ||
+    draft.title !== original.title ||
+    draft.layout !== original.layout ||
+    draft.enabled !== original.enabled ||
+    draft.order !== original.order ||
+    draft.embedUrl !== original.embedUrl ||
+    draft.linkUrl !== original.linkUrl ||
+    draft.placesText !== original.placesText ||
+    JSON.stringify(draft.config ?? {}) !== JSON.stringify(original.config ?? {})
+  );
+}
+
+export function toWidgetPreview(draft: WidgetDraft, index: number): Widget {
+  return {
+    id: draft.id ?? -(index + 1),
+    type: draft.type,
+    title: draft.title,
+    layout: draft.layout,
+    config: buildWidgetPayload(draft).config,
+    enabled: draft.enabled,
+    order: draft.order,
+  };
 }
 
 export function getWidgetValidationMessage(draft: WidgetDraft): string {
