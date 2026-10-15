@@ -1,6 +1,6 @@
 # Release roadmap
 
-**Current release: 1.6.4.** It simplifies the frontend and backend, rebuilds the Stars and Lava patterns, makes each board show its own theme, and renames theme ids, with migrations V40–V42 pending deployment. About remains Version 26.1; hosted deployment status is tracked separately in [Deployment](Deployment).
+**Current release: 1.6.5.** A small follow-up to 1.6.4: correct local setup links, explicit TypeScript source roots for newer editors, and a checker for the Obsidian project map. 1.6.4 and migrations V40–V42 are deployed. About remains Version 26.1; hosted deployment status is tracked separately in [Deployment](Deployment).
 
 | Version | Scope | Status |
 | --- | --- | --- |
@@ -26,7 +26,8 @@
 | 1.6.1 | Berry glass/frost materials, Social widgets, and widget editing refinements | Committed as `5d8653d` |
 | 1.6.2 | Instagram follower/posts integration and visitor homepage | Committed as `e293ea9` |
 | 1.6.3 | Board/editor consolidation, rendering and cache optimization, and Safari measurements | Committed as `45e471d` |
-| 1.6.4 | Simplification pass, Stars and Lava rebuilds, per-board themes, and theme id rename | Committed; tested locally |
+| 1.6.4 | Simplification pass, Stars and Lava rebuilds, per-board themes, and theme id rename | Committed as `ef8d1fd`; deployed |
+| 1.6.5 | Local setup links, TypeScript editor config, and project map checker | Committed |
 | 1.7.0 | Widget library expansion I | Later |
 | 1.8.0 | Widget library expansion II | Later |
 | 1.9.0 | Insights I | Later |

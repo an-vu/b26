@@ -19,7 +19,7 @@ BlueBerry 26 (B26) is a board builder: users create pages, arrange widgets, and 
 - The local password-bypass switch is `APP_AUTH_REQUIRE_PASSWORD=false`; it requires a backend restart/recreation. See the dev-login page before using it.
 - `/settings`, `/insights`, `/signin`, and `/` are dedicated application pages. `/<username>` displays the optional public main board or a minimal profile. Open `/<username>/<board-slug>` to edit as an owner or admin. Legacy `/b/<slug>` links still work.
 - No env-file copy is needed for `./setup.sh`. The separate host-development workflow still uses `backend/.env.dev`.
-- **Current release: 1.6.4.** A codebase simplification pass, rebuilt Stars and Lava patterns, boards that show their own theme, and renamed theme ids (Berry, Aero, Aqua, Omakase, Kiwi, Valencia). See [Appearance and panels](Board-Appearance-and-Panels), [Release roadmap](Release-Roadmap), and [Testing](Testing). Hosted status is tracked separately.
+- **Current release: 1.6.5.** Setup and tooling fixes on top of 1.6.4, which brought a codebase simplification pass, rebuilt Stars and Lava patterns, boards that show their own theme, and renamed theme ids (Berry, Aero, Aqua, Omakase, Kiwi, Valencia). See [Appearance and panels](Board-Appearance-and-Panels), [Release roadmap](Release-Roadmap), and [Testing](Testing). Hosted status is tracked separately.
 
 ## Understand or maintain the project
 

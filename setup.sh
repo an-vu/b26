@@ -33,7 +33,7 @@ case "${1:-start}" in
 B26 is ready: http://localhost:4200/signin
 Local admin email: anvu@local
 Password: any placeholder (local password bypass is enabled)
-Edit the starter board: http://localhost:4200/b/default
+Edit the starter board: http://localhost:4200/anvu/default
 
 Stop: ./setup.sh stop
 Logs: ./setup.sh logs

@@ -12,8 +12,6 @@ The first run downloads dependencies, builds both apps, starts PostgreSQL, appli
 2. Use `anvu@local` with any placeholder password for the seeded local admin.
 3. Open [the sample board](http://localhost:4200/anvu/default), or create a normal account through the signup toggle.
 
-The script may still print `/b/default`; that legacy link also works.
-
 ## Everyday commands
 
 ```bash
